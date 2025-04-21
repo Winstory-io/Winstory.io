@@ -1,0 +1,1254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proof of Rewards & MINT | Winstory</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', Arial, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #000000, #0a0a0a);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(10px);
+            position: relative;
+        }
+
+        .logo {
+            width: 150px;
+            height: auto;
+            transition: transform 0.3s ease;
+        }
+
+        .logo:hover {
+            transform: scale(1.05);
+        }
+
+        .nav {
+            margin-left: 20px;
+        }
+
+        .nav a {
+            color: white;
+            text-decoration: none;
+            font-size: 18px;
+            margin-right: 10px;
+            position: relative;
+            transition: color 0.3s ease;
+        }
+
+        .nav a:hover {
+            color: #FFD700;
+        }
+
+        .nav a::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -5px;
+            left: 0;
+            background-color: #FFD700;
+            transition: width 0.3s ease;
+        }
+
+        .nav a:hover::after {
+            width: 100%;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+        }
+
+        .title-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 30px 0;
+            position: relative;
+            padding: 0 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .title-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .mint-action-group {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .title {
+            font-size: 32px;
+            margin: 0;
+        }
+
+        .highlight-green {
+            color: #4CAF50;
+        }
+
+        .highlight-yellow {
+            color: #FFD700;
+        }
+
+        .arrow-icon {
+            font-size: 24px;
+            margin: 0 5px;
+        }
+
+        .content-frame {
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            border-radius: 12px;
+            padding: 30px;
+            margin: 20px auto;
+            max-width: 1200px;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.1);
+            position: relative;
+        }
+
+        .campaign-summary {
+            background: rgba(30, 30, 30, 0.7);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin: 40px 0;
+        }
+
+        .reward-card {
+            border-radius: 12px;
+            padding: 25px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            cursor: pointer;
+        }
+
+        .reward-card.standard {
+            background: rgba(30, 60, 90, 0.2);
+            border: 1px solid rgba(100, 150, 255, 0.3);
+        }
+
+        .reward-card.premium {
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(218, 165, 32, 0.15));
+            border: 2px solid rgba(255, 215, 0, 0.5);
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.2);
+        }
+
+        .reward-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(255, 215, 0, 0.3);
+        }
+
+        .reward-card:hover .reward-edit-icon {
+            opacity: 1;
+        }
+
+        .reward-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid;
+            position: relative;
+        }
+
+        .standard .reward-header {
+            color: #64B5F6;
+            border-color: #64B5F6;
+        }
+
+        .premium .reward-header {
+            color: #FFD700;
+            border-color: #FFD700;
+        }
+
+        .reward-icon {
+            font-size: 28px;
+            margin-right: 15px;
+        }
+
+        .reward-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .reward-edit-icon {
+            position: absolute;
+            right: 0;
+            opacity: 0;
+            transition: opacity 0.3s;
+            color: #FFD700;
+        }
+
+        .reward-item {
+            margin-bottom: 20px;
+            background: rgba(20, 20, 20, 0.7);
+            border-radius: 8px;
+            padding: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .reward-type {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .reward-type-badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .standard .reward-type-badge {
+            background: rgba(100, 181, 246, 0.2);
+            color: #64B5F6;
+        }
+
+        .premium .reward-type-badge {
+            background: rgba(255, 215, 0, 0.2);
+            color: #FFD700;
+        }
+
+        .reward-verified {
+            display: flex;
+            align-items: center;
+            font-size: 0.8rem;
+        }
+
+        .reward-verified.valid {
+            color: #4CAF50;
+        }
+
+        .reward-verified.invalid {
+            color: #f44336;
+        }
+
+        .reward-access-type {
+            display: inline-flex;
+            align-items: center;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            margin-left: 8px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .reward-access-type.digital {
+            color: #64B5F6;
+        }
+
+        .reward-access-type.physical {
+            color: #FF7043;
+        }
+
+        .reward-amount {
+            font-size: 1.1rem;
+            margin: 5px 0;
+        }
+
+        .reward-media {
+            width: 100%;
+            height: 150px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            margin: 10px 0;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .reward-media:hover .media-hover-effect {
+            opacity: 1;
+        }
+
+        .media-hover-effect {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .reward-media img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .reward-media video {
+            max-width: 100%;
+            max-height: 100%;
+        }
+
+        .reward-description {
+            font-size: 0.9rem;
+            color: #aaa;
+            margin-top: 10px;
+        }
+
+        .reward-contract {
+            font-size: 0.7rem;
+            color: #666;
+            word-break: break-all;
+            margin-top: auto;
+            padding-top: 15px;
+            border-top: 1px dashed rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+        }
+
+        .chain-logo {
+            width: 16px;
+            height: 16px;
+            margin-right: 8px;
+        }
+
+        .summary-container {
+            background: rgba(30, 30, 30, 0.7);
+            border-radius: 12px;
+            padding: 25px;
+            margin: 40px 0;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+        }
+
+        .summary-title {
+            font-size: 1.2rem;
+            color: #FFD700;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .summary-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 8px;
+            background: rgba(20, 20, 20, 0.5);
+        }
+
+        .summary-icon {
+            margin-right: 15px;
+            font-size: 1.2rem;
+        }
+
+        .mint-button-container {
+            display: flex;
+            justify-content: center;
+            margin: 40px 0;
+        }
+
+        .mint-button {
+            padding: 16px 40px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #000;
+            background: linear-gradient(135deg, #FFD700, #DAA520);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 200px;
+            box-shadow: 0 5px 15px rgba(255, 215, 0, 0.3);
+        }
+
+        .mint-button:hover {
+            background: linear-gradient(135deg, #4CAF50, #2E7D32);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(76, 175, 80, 0.4);
+        }
+
+        .mint-button:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .loading-spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .checkmark {
+            display: none;
+            width: 20px;
+            height: 20px;
+        }
+
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 200px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -100px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.8rem;
+        }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.9);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 600px;
+            background: linear-gradient(135deg, #000000, #0a0a0a);
+            border: 1px solid #FFD700;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 5px 30px rgba(218, 165, 32, 0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 215, 0, 0.3);
+        }
+
+        .modal-title {
+            color: #FFD700;
+            font-size: 1.3rem;
+        }
+
+        .close-modal {
+            color: #FFD700;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .modal-body {
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #FFD700;
+        }
+
+        .form-group input, .form-group textarea, .form-group select {
+            width: 100%;
+            padding: 10px;
+            background: rgba(20, 20, 20, 0.8);
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            border-radius: 5px;
+            color: white;
+        }
+
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .modal-button {
+            padding: 8px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .modal-button.save {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+        }
+
+        .modal-button.cancel {
+            background-color: #666;
+            color: white;
+            border: none;
+        }
+
+        /* Animations */
+        .reward-card {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+
+        .reward-card.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Styles pour les icônes d'information */
+        .info-icon {
+            position: absolute;
+            top: -20px;
+            right: -20px;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 15px;
+            z-index: 10;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+
+        .info-icon.standard {
+            background-color: #3a7bd5;
+            color: white;
+            border: 1px solid #64B5F6;
+        }
+
+        .info-icon.premium {
+            background-color: #FFD700;
+            color: #1a1a1a;
+            border: 1px solid #DAA520;
+        }
+
+        .info-icon:hover {
+            transform: scale(1.1);
+        }
+
+        /* Styles pour les modaux 16:9 */
+        .info-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .info-modal-content {
+            width: 80vw;
+            max-width: 1200px;
+            height: 56.25vw;
+            max-height: 675px;
+            border-radius: 12px;
+            padding: 40px;
+            overflow-y: auto;
+            position: relative;
+            animation: modalFadeIn 0.3s ease;
+        }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .modal-standard {
+            background: linear-gradient(135deg, #1a3a5e, #0d1f33);
+            border: 2px solid #3a7bd5;
+            box-shadow: 0 0 30px rgba(58, 123, 213, 0.5);
+        }
+
+        .modal-premium {
+            background: linear-gradient(135deg, #2a2000, #1a1400);
+            border: 2px solid #FFD700;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+        }
+
+        .modal-title {
+            font-size: 28px;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid;
+        }
+
+        .modal-standard .modal-title {
+            color: #64B5F6;
+            border-color: rgba(100, 181, 246, 0.3);
+        }
+
+        .modal-premium .modal-title {
+            color: #FFD700;
+            border-color: rgba(255, 215, 0, 0.3);
+        }
+
+        .modal-body {
+            font-size: 18px;
+            line-height: 1.7;
+        }
+
+        .modal-body p {
+            margin-bottom: 20px;
+        }
+
+        .modal-body ul {
+            padding-left: 25px;
+            margin: 25px 0;
+        }
+
+        .modal-body li {
+            margin-bottom: 12px;
+        }
+
+        .modal-body strong {
+            display: block;
+            margin: 25px 0 15px;
+            font-size: 20px;
+        }
+
+        .close-info-modal {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 28px;
+            cursor: pointer;
+            color: #aaa;
+            transition: color 0.2s;
+        }
+
+        .close-info-modal:hover {
+            color: white;
+        }
+
+        /* Responsive styles */
+        @media (max-width: 768px) {
+            .cards-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .reward-card {
+                min-height: auto;
+            }
+
+            .title {
+                font-size: 24px;
+            }
+
+            .content-frame {
+                padding: 15px;
+            }
+
+            .info-modal-content {
+                width: 95vw;
+                height: auto;
+                max-height: 80vh;
+                padding: 25px;
+            }
+
+            .modal-title {
+                font-size: 22px;
+            }
+
+            .modal-body {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="logo">
+            <img src="assets/logo.svg" alt="Winstory Logo" class="logo">
+        </div>
+        <nav class="nav">
+            <a href="#">Home</a>
+            <a href="#">Explorer</a>
+            <a href="#">Enterprise</a>
+        </nav>
+        <div class="header-right">
+            <div id="wallet" class="wallet-info" style="display: none;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFD700" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                </svg>
+                <span id="wallet-address"></span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+        <div class="title-container">
+            <div class="title-group">
+                <h1 class="title">Proof of <span class="highlight-yellow">Rewards</span> & <span class="highlight-green"> MINT</span></h1>
+                <span class="arrow-icon">➡️</span>
+                <button id="mint-button" class="mint-button">
+                    <span>MINT</span>
+                    <div class="loading-spinner" id="loading-spinner"></div>
+                    <svg class="checkmark" id="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                        <circle class="checkmark__circle" cx="26" cy="26" r="25" fill="none" stroke="#4CAF50" stroke-width="2"/>
+                        <path class="checkmark__check" fill="none" stroke="#4CAF50" stroke-width="4" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <div class="content-frame">
+            <div class="campaign-summary" id="campaign-summary">
+                <!-- Will be populated by JavaScript -->
+            </div>
+
+            <div class="cards-grid">
+                <!-- Standard Rewards Card -->
+                <div class="reward-card standard" id="standard-card">
+                    <div class="reward-header">
+                        <div class="reward-icon">👤👤👤</div>
+                        <div class="reward-title">Standard Rewards</div>
+                        <div class="info-icon standard">?</div>
+                        <div class="reward-edit-icon">✏️</div>
+                    </div>
+                    <!-- Content will be populated by JavaScript -->
+                </div>
+
+                <!-- Premium Rewards Card -->
+                <div class="reward-card premium" id="premium-card">
+                    <div class="reward-header">
+                        <div class="reward-icon">🥇🥈🥉</div>
+                        <div class="reward-title">Premium Rewards</div>
+                        <div class="info-icon premium">?</div>
+                        <div class="reward-edit-icon">✏️</div>
+                    </div>
+                    <!-- Content will be populated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Summary Section -->
+            <div class="summary-container" id="summary-container">
+                <div class="summary-title">You are about to mint your campaign and lock the following rewards</div>
+                <!-- Content will be populated by JavaScript -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Info Modals (now outside the cards) -->
+    <div id="standardInfoModal" class="info-modal">
+        <div class="info-modal-content modal-standard">
+            <span class="close-info-modal">&times;</span>
+            <div class="modal-title">🎁 Standard Rewards</div>
+            <div class="modal-body">
+                <p>These rewards are distributed to all community members who MINT a validated completion of your story during the Completion Phase.</p>
+                
+                <strong>To be eligible, a community member must:</strong>
+                <ul>
+                    <li>Be connected with a wallet</li>
+                    <li>Submit a creative AI-enhanced video continuation</li>
+                    <li>Be validated by $WINC stakers (minimum 22, 2:1 YES/NO ratio, moderation and your guideline follow criteria)</li>
+                </ul>
+                
+                <strong>✅ If accepted:</strong>
+                <p>They automatically receive 1 Standard Reward per successful contribution.</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="premiumInfoModal" class="info-modal">
+        <div class="info-modal-content modal-premium">
+            <span class="close-info-modal">&times;</span>
+            <div class="modal-title">🏆 Premium Rewards</div>
+            <div class="modal-body">
+                <p>These exclusive rewards are reserved for the Top 3 contributions with the highest average score (out of 100) from the $WINC stakers.</p>
+                
+                <strong>Benefits:</strong>
+                <ul>
+                    <li>Add prestige to your campaign</li>
+                    <li>Encourage high-quality submissions</li>
+                    <li>Reward the most talented creators</li>
+                </ul>
+                
+                <strong>🕒 Distribution:</strong>
+                <p>Automatically 7 days after your campaign starts — or earlier if all MINTs are reached.</p>
+                
+                <strong>🏅 Selection:</strong>
+                <p>Only the 3 best scored completions will receive this bonus reward.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reward Edit Modal -->
+    <div id="rewardModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Edit Reward</div>
+                <span class="close-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="edit-reward-type">Type</label>
+                    <select id="edit-reward-type" disabled>
+                        <option value="Token">Token</option>
+                        <option value="NFT">NFT</option>
+                        <option value="Exclusive Access">Exclusive Access</option>
+                        <option value="Item">Item</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="edit-reward-quantity">Quantity</label>
+                    <input type="text" id="edit-reward-quantity" disabled>
+                </div>
+                <div class="form-group" id="access-type-group" style="display: none;">
+                    <label for="edit-reward-access-type">Access Type</label>
+                    <select id="edit-reward-access-type" disabled>
+                        <option value="digital">Digital</option>
+                        <option value="physical">Physical</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="edit-reward-chain">Blockchain</label>
+                    <select id="edit-reward-chain" disabled>
+                        <option value="Ethereum">Ethereum</option>
+                        <option value="Polygon">Polygon</option>
+                        <option value="BNB Chain">BNB Chain</option>
+                        <option value="Avalanche">Avalanche</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="edit-reward-contract">Contract Address</label>
+                    <input type="text" id="edit-reward-contract" disabled>
+                </div>
+                <div class="form-group">
+                    <label for="edit-reward-description">Description</label>
+                    <textarea id="edit-reward-description" disabled></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-button cancel" id="cancel-edit">Close</button>
+                <button class="modal-button save" id="save-edit" style="display: none;">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const walletElement = document.getElementById('wallet');
+        const walletAddressElement = document.getElementById('wallet-address');
+        const mintButton = document.getElementById('mint-button');
+        const loadingSpinner = document.getElementById('loading-spinner');
+        const checkmark = document.getElementById('checkmark');
+        const standardCard = document.getElementById('standard-card');
+        const premiumCard = document.getElementById('premium-card');
+        const summaryContainer = document.getElementById('summary-container');
+        const campaignSummary = document.getElementById('campaign-summary');
+        const rewardModal = document.getElementById('rewardModal');
+        const closeModal = document.querySelector('.close-modal');
+        const cancelEdit = document.getElementById('cancel-edit');
+        const saveEdit = document.getElementById('save-edit');
+        
+        // New elements for hover modals
+        const standardInfoIcon = document.querySelector('.standard .info-icon');
+        const premiumInfoIcon = document.querySelector('.premium .info-icon');
+        const standardModal = document.getElementById('standardInfoModal');
+        const premiumModal = document.getElementById('premiumInfoModal');
+        const closeModalButtons = document.querySelectorAll('.close-info-modal');
+
+        // Sample data structure (in a real app, this would come from your state management)
+        const campaignData = {
+            companyName: localStorage.getItem('companyName') || 'Your Company',
+            standardRewards: JSON.parse(localStorage.getItem('standardRewards')) || [],
+            premiumRewards: JSON.parse(localStorage.getItem('premiumRewards')) || [],
+            netProfit: localStorage.getItem('netProfit') || '0',
+            unitValue: localStorage.getItem('unitValue') || '0'
+        };
+
+        // Current reward being edited
+        let currentReward = null;
+        let currentRewardIndex = -1;
+        let isPremium = false;
+
+        // Display wallet address
+        function displayWalletAddress() {
+            const walletAddress = localStorage.getItem('walletAddress');
+            if (walletAddress) {
+                walletElement.style.display = 'flex';
+                walletAddressElement.textContent = truncateAddress(walletAddress);
+            }
+        }
+
+        // Truncate wallet address
+        function truncateAddress(address) {
+            return `${address.slice(0, 6)}...${address.slice(-4)}`;
+        }
+
+        // Get chain explorer URL
+        function getExplorerUrl(chain, address) {
+            const explorers = {
+                'Ethereum': `https://etherscan.io/address/${address}`,
+                'Polygon': `https://polygonscan.com/address/${address}`,
+                'BNB Chain': `https://bscscan.com/address/${address}`,
+                'Avalanche': `https://snowtrace.io/address/${address}`
+            };
+            return explorers[chain] || `https://etherscan.io/address/${address}`;
+        }
+
+        // Get chain logo
+        function getChainLogo(chain) {
+            const logos = {
+                'Ethereum': 'https://cryptologos.cc/logos/ethereum-eth-logo.png',
+                'Polygon': 'https://cryptologos.cc/logos/polygon-matic-logo.png',
+                'BNB Chain': 'https://cryptologos.cc/logos/bnb-bnb-logo.png',
+                'Avalanche': 'https://cryptologos.cc/logos/avalanche-avax-logo.png'
+            };
+            return logos[chain] || 'https://cryptologos.cc/logos/ethereum-eth-logo.png';
+        }
+
+        // Create reward item HTML
+        function createRewardItem(reward, isPremium = false) {
+            const accessTypeTag = reward.accessType ? `
+                <span class="reward-access-type ${reward.accessType}">
+                    ${reward.accessType === 'digital' ? '🔑 Digital' : '📍 Physical'} Access
+                </span>
+            ` : '';
+
+            return `
+                <div class="reward-item" data-index="${reward.index}">
+                    <div class="reward-type">
+                        <span class="reward-type-badge">${reward.type}</span>
+                        ${accessTypeTag}
+                        <span class="reward-verified ${reward.verified ? 'valid' : 'invalid'}">
+                            ${reward.verified ? '✅ Verified by DAO' : '❌ Not verified'}
+                        </span>
+                        ${!reward.verified ? `
+                            <div class="tooltip">
+                                <span class="tooltiptext">This reward hasn't been verified by the DAO yet</span>
+                            </div>
+                        ` : ''}
+                    </div>
+                    <div class="reward-amount">Quantity: ${reward.quantity}</div>
+                    ${reward.media ? `
+                        <div class="reward-media">
+                            ${reward.media.type === 'image' ? 
+                                `<img src="${reward.media.src}" alt="${reward.type} Preview">` : 
+                                `<video src="${reward.media.src}" muted loop></video>`}
+                            <div class="media-hover-effect">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFD700" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <circle cx="12" cy="12" r="4"></circle>
+                                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                                    <line x1="12" y1="16" x2="12" y2="16"></line>
+                                </svg>
+                            </div>
+                        </div>
+                    ` : ''}
+                    ${reward.description ? `
+                        <div class="reward-description">${reward.description}</div>
+                    ` : ''}
+                    ${reward.contract ? `
+                        <div class="reward-contract">
+                            <img src="${getChainLogo(reward.chain)}" alt="${reward.chain}" class="chain-logo">
+                            <a href="${getExplorerUrl(reward.chain, reward.contract)}" target="_blank" rel="noopener noreferrer">
+                                ${reward.contract}
+                            </a>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        // Create summary item HTML
+        function createSummaryItem(icon, text) {
+            return `
+                <div class="summary-item">
+                    <div class="summary-icon">${icon}</div>
+                    <div>${text}</div>
+                </div>
+            `;
+        }
+
+        // Load and display rewards data
+        function loadRewardsData() {
+            // Clear existing content
+            standardCard.querySelectorAll('.reward-item').forEach(el => el.remove());
+            premiumCard.querySelectorAll('.reward-item').forEach(el => el.remove());
+            
+            // Add index to rewards for editing
+            campaignData.standardRewards.forEach((reward, index) => reward.index = index);
+            campaignData.premiumRewards.forEach((reward, index) => reward.index = index);
+            
+            // Add standard rewards
+            campaignData.standardRewards.forEach(reward => {
+                standardCard.insertAdjacentHTML('beforeend', createRewardItem(reward));
+            });
+            
+            // Add premium rewards
+            campaignData.premiumRewards.forEach(reward => {
+                premiumCard.insertAdjacentHTML('beforeend', createRewardItem(reward, true));
+            });
+            
+            // Build campaign summary
+            const standardCount = campaignData.standardRewards.length;
+            const premiumCount = campaignData.premiumRewards.length;
+            const standardTypes = [...new Set(campaignData.standardRewards.map(r => r.type))].join(', ');
+            const premiumTypes = [...new Set(campaignData.premiumRewards.map(r => r.type))].join(', ');
+            
+            campaignSummary.innerHTML = `
+                This campaign includes ${standardCount} standard rewards (${standardTypes}) 
+                and ${premiumCount} premium rewards (${premiumTypes}). 
+                Estimated total distribution if 100% completion: 
+                ${standardCount + premiumCount} rewards.
+            `;
+            
+            // Build mint summary
+            let summaryHTML = '';
+            
+            if (campaignData.standardRewards.length > 0) {
+                const standardText = campaignData.standardRewards
+                    .map(r => `${r.quantity} ${r.type}${r.quantity > 1 ? 's' : ''}`)
+                    .join(' + ');
+                summaryHTML += createSummaryItem('✅', `<strong>Standard Rewards:</strong> ${standardText}`);
+            }
+            
+            if (campaignData.premiumRewards.length > 0) {
+                const premiumText = campaignData.premiumRewards
+                    .map(r => `${r.quantity} ${r.type}${r.quantity > 1 ? 's' : ''}`)
+                    .join(' + ');
+                summaryHTML += createSummaryItem('✅', `<strong>Premium Rewards:</strong> ${premiumText}`);
+            }
+            
+            summaryHTML += createSummaryItem('🎯', `<strong>Target Net Profit:</strong> $${campaignData.netProfit}`);
+            summaryHTML += createSummaryItem('⛓️', `All data will be registered on-chain and can't be edited later.`);
+            
+            summaryContainer.insertAdjacentHTML('beforeend', summaryHTML);
+        }
+
+        // Open reward edit modal
+        function openEditModal(reward, index, isPremiumReward) {
+            currentReward = reward;
+            currentRewardIndex = index;
+            isPremium = isPremiumReward;
+            
+            // Fill modal with reward data
+            document.getElementById('edit-reward-type').value = reward.type;
+            document.getElementById('edit-reward-quantity').value = reward.quantity;
+            
+            // Show/hide access type based on reward type
+            const accessTypeGroup = document.getElementById('access-type-group');
+            if (reward.type === 'Exclusive Access') {
+                accessTypeGroup.style.display = 'block';
+                document.getElementById('edit-reward-access-type').value = reward.accessType || 'digital';
+            } else {
+                accessTypeGroup.style.display = 'none';
+            }
+            
+            document.getElementById('edit-reward-chain').value = reward.chain || 'Ethereum';
+            document.getElementById('edit-reward-contract').value = reward.contract || '';
+            document.getElementById('edit-reward-description').value = reward.description || '';
+            
+            // Show modal
+            rewardModal.style.display = 'block';
+        }
+
+        // Handle mint button click
+        function handleMintClick() {
+            // Show loading spinner
+            mintButton.disabled = true;
+            loadingSpinner.style.display = 'block';
+            mintButton.querySelector('span').textContent = 'Signing...';
+
+            // Simulate a transaction (in a real app, this would be a Web3 call)
+            setTimeout(() => {
+                loadingSpinner.style.display = 'none';
+                checkmark.style.display = 'block';
+                mintButton.querySelector('span').textContent = 'Transaction Complete!';
+
+                // In a real app, you would handle the transaction result here
+            }, 3000);
+        }
+
+        // Scroll animations
+        function handleScrollAnimations() {
+            const cardPosition = standardCard.getBoundingClientRect().top;
+            const screenPosition = window.innerHeight / 1.3;
+
+            if (cardPosition < screenPosition) {
+                standardCard.classList.add('visible');
+                premiumCard.classList.add('visible');
+            }
+        }
+
+        // Initialize the page
+        window.addEventListener('DOMContentLoaded', function() {
+            displayWalletAddress();
+            loadRewardsData();
+            
+            // Add scroll event listener for animations
+            window.addEventListener('scroll', handleScrollAnimations);
+            
+            // Trigger once on load in case cards are already visible
+            handleScrollAnimations();
+
+            // Hover events for info modals
+            standardInfoIcon.addEventListener('mouseenter', () => {
+                standardModal.style.display = 'flex';
+            });
+
+            standardInfoIcon.addEventListener('mouseleave', () => {
+                // Ne pas fermer si la souris est sur le modal
+                if (!standardModal.matches(':hover')) {
+                    standardModal.style.display = 'none';
+                }
+            });
+
+            standardModal.addEventListener('mouseleave', () => {
+                standardModal.style.display = 'none';
+            });
+
+            // Même chose pour premium
+            premiumInfoIcon.addEventListener('mouseenter', () => {
+                premiumModal.style.display = 'flex';
+            });
+
+            premiumInfoIcon.addEventListener('mouseleave', () => {
+                if (!premiumModal.matches(':hover')) {
+                    premiumModal.style.display = 'none';
+                }
+            });
+
+            premiumModal.addEventListener('mouseleave', () => {
+                premiumModal.style.display = 'none';
+            });
+        });
+
+        // Mint button event listener
+        mintButton.addEventListener('click', handleMintClick);
+
+        // Reward card click handlers
+        standardCard.addEventListener('click', function(e) {
+            const rewardItem = e.target.closest('.reward-item');
+            if (rewardItem) {
+                const index = parseInt(rewardItem.dataset.index);
+                openEditModal(campaignData.standardRewards[index], index, false);
+            }
+        });
+
+        premiumCard.addEventListener('click', function(e) {
+            const rewardItem = e.target.closest('.reward-item');
+            if (rewardItem) {
+                const index = parseInt(rewardItem.dataset.index);
+                openEditModal(campaignData.premiumRewards[index], index, true);
+            }
+        });
+
+        // Modal event listeners
+        closeModal.addEventListener('click', function() {
+            rewardModal.style.display = 'none';
+        });
+
+        cancelEdit.addEventListener('click', function() {
+            rewardModal.style.display = 'none';
+        });
+
+        // Close info modals when clicking the close button
+        closeModalButtons.forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const modal = button.closest('.info-modal');
+                modal.style.display = 'none';
+            });
+        });
+
+        // Close modal when clicking outside
+        window.addEventListener('click', function(e) {
+            if (e.target === rewardModal) {
+                rewardModal.style.display = 'none';
+            }
+            if (e.target.className === 'info-modal') {
+                document.querySelectorAll('.info-modal').forEach(modal => {
+                    modal.style.display = 'none';
+                });
+            }
+        });
+    </script>
+</body>
+</html>

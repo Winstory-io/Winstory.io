@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Winstory - Welcome</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background-color: #000;
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            padding: 20px;
+            display: flex;
+            align-items: center;
+        }
+
+        .logo {
+            width: 150px;
+            height: auto;
+        }
+
+        .nav {
+            margin-left: 20px;
+        }
+
+        .nav a {
+            color: white;
+            text-decoration: none;
+            font-size: 18px;
+            margin-right: 10px;
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .title {
+            font-size: 32px;
+            margin-bottom: 50px;
+            text-align: center;
+        }
+
+        .highlight-yellow {
+            color: #FFD700;
+        }
+
+        .highlight-green {
+            color: #4CAF50;
+        }
+
+        .options-container {
+    display: flex;
+    justify-content: center;
+    align-items: stretch;
+    width: 100%;
+    max-width: 1200px;
+    gap: 20px;
+}
+
+.option {
+    flex: 1 1 30%;
+    max-width: 350px;
+    border: 1px solid #333;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.3s, border-color 0.3s;
+    min-width: 250px;
+}
+
+.option-icon {
+    width: 75px;
+    height: auto;
+    margin: 20px 0;
+    color: #FFD700;
+}
+
+@media (max-width: 768px) {
+    .options-container {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .option {
+        width: 100%;
+        max-width: 90%;
+    }
+}
+
+
+        .option:hover {
+            transform: scale(1.05);
+            border-color: #FFD700;
+        }
+
+        .option-title {
+    font-size: 18px;
+    margin-bottom: 20px;
+    font-weight: bold;
+    text-align: center;
+}
+
+.option-title .highlight-yellow {
+    color: #FFD700; /* Jaune */
+}
+
+.option-title .highlight-white {
+    color: white; /* Blanc */
+}
+
+
+        .option-icon {
+            width: 75px;
+            height: 90px;
+            margin: 20px 0;
+            color: #FFD700;
+        }
+
+        .option-benefits {
+            margin-top: 20px;
+            text-align: center;
+            width: 100%;
+        }
+
+        .benefit-item {
+            color: #4CAF50;
+            margin: 5px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .benefit-item::before {
+            content: "•";
+            margin-right: 10px;
+        }
+
+    </style>
+</head>
+<body>
+    <header>
+        <img src="assets/logo.svg" alt="Winstory Logo" class="logo">
+       
+
+        <div class="nav">
+            <a href="https://winstory.io">Home</a> | <a href="#">Explorer</a>
+        </div>
+    </header>
+
+    <main>
+        <h1 class="title">What do <span class="highlight-yellow">You</span> <span class="highlight-green">Win</span> today?</h1>
+
+        <div class="options-container">
+            <div class="option">
+                <div class="option-title">
+                    <span class="highlight-white">Initiate Campaign</span><br>
+                    <span class="highlight-yellow">as a B2C Company</span>
+                </div>
+                <svg class="option-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M20 6h-4V4c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6 0h-4V4h4v2z" fill="currentColor" />
+                </svg>
+                <div class="option-benefits">
+                    <div class="benefit-item">Visibility, notoriety, engagement</div>
+                    <div class="benefit-item">Economic profits</div>
+                </div>
+            </div>
+
+            <div class="option">
+                <div class="option-title">
+                    <span class="highlight-white">Moderate contents</span><br>
+                    <span class="highlight-yellow">as $WINC Staker</span>
+                </div>
+                <img src="assets/moderation.svg" alt="Moderation Logo" class="option-icon">
+                <div class="option-benefits">
+                    <div class="benefit-item">Staking rewards</div>
+                    <div class="benefit-item">Shape ecosystem</div>
+                </div>
+            </div>
+            
+
+            <div class="option">
+                <div class="option-title">
+                    <span class="highlight-white">Complete Campaign</span><br>
+                    <span class="highlight-yellow">as a Community Member</span>
+                </div>
+                <svg class="option-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="12" cy="8" r="4" fill="currentColor" />
+                    <path d="M12 14c-4.42 0-8 1.79-8 4v2h16v-2c0-2.21-3.58-4-8-4z" fill="currentColor" />
+                </svg>
+                <div class="option-benefits">
+                    <div class="benefit-item">Rewards from Initial Company</div>
+                    <div class="benefit-item">Loyalty and Sense of Belonging</div>
+                </div>
+        </div>
+    </main>
+
+    <script>
+        document.querySelectorAll('.option').forEach(option => {
+            option.addEventListener('click', function() {
+                // Add functionality here for each option when clicked
+                console.log('Selected:', this.querySelector('.option-title').textContent);
+                // For example: window.location.href = 'next-page.html';
+            });
+        });
+    </script>
+</body>
+</html>

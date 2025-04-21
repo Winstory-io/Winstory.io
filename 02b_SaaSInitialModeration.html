@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Initial Moderation - Winstory</title>
+    <style>
+        :root {
+            --primary: #FFD700;
+            --primary-dark: #e6c300;
+            --secondary: #4CAF50;
+            --danger: #ff3b30;
+            --warning: #FFA500;
+            --dark: #0a0a0a;
+            --darker: #000000;
+            --light: #ffffff;
+            --gray: #333333;
+            --glass: rgba(255, 215, 0, 0.05);
+            --neon-glow: 0 0 5px #FFD700, 0 0 10px #FFD700;
+            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        body {
+            background: radial-gradient(ellipse at center, var(--darker) 0%, var(--dark) 100%);
+            color: var(--light);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Glassmorphism Panel */
+        .glass-panel {
+            background: rgba(10, 10, 10, 0.7);
+            backdrop-filter: blur(12px);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            transition: var(--transition);
+        }
+
+        /* Header */
+        header {
+            padding: 15px 5%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .logo {
+            width: 64px;
+            height: 32px;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .nav-links a {
+            color: var(--light);
+            text-decoration: none;
+            font-size: 16px;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+
+        .header-icons {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .header-icon {
+            cursor: pointer;
+            font-size: 18px;
+            transition: transform 0.2s ease;
+            color: white;
+            text-decoration: none;
+        }
+
+        .header-icon:hover {
+            transform: scale(1.2);
+            color: var(--primary);
+        }
+
+        /* Main Container */
+        .moderation-container {
+            display: flex;
+            max-width: 1400px;
+            margin: 3rem auto 5rem;
+            padding: 0 5%;
+            gap: 2rem;
+            align-items: center;
+            min-height: 60vh;
+        }
+
+        /* Main title with arrow */
+        .main-title-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 3rem auto 2rem;
+            position: relative;
+            width: fit-content;
+        }
+
+        .main-title {
+            font-size: 2.4rem;
+            font-weight: bold;
+            color: white;
+            text-align: center;
+        }
+
+        .arrow {
+            margin-left: 20px;
+            font-size: 24px;
+            color: rgba(255, 215, 0, 0.7);
+        }
+
+        .completion-link {
+            margin-left: 10px;
+            color: rgba(255, 215, 0, 0.5);
+            text-decoration: none;
+            font-size: 1.5rem;
+        }
+
+        .completion-link:hover {
+            color: var(--primary);
+        }
+
+        /* Split View */
+        .moderation-panel {
+            width: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .moderation-panel:first-child {
+            width: 60%;
+        }
+
+        .moderation-panel:last-child {
+            width: 40%;
+        }
+
+        /* Video Container */
+        .video-section {
+            width: 100%;
+            position: relative;
+            margin-bottom: 2rem;
+            margin-top: 1rem;
+        }
+
+        .video-wrapper {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            position: relative;
+        }
+
+        .campaign-video {
+            width: 100%;
+            aspect-ratio: 16/9;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            background-color: #222;
+            position: relative;
+        }
+
+        .corner-bubble {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            background: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 100;
+            color: var(--dark);
+            font-size: 9px;
+            font-weight: bold;
+            text-align: center;
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            padding: 5px;
+        }
+
+        .corner-bubble:hover {
+            transform: scale(1.1);
+            box-shadow: var(--neon-glow);
+            filter: drop-shadow(0 0 5px rgba(255, 215, 0, 0.7));
+        }
+
+        .top-left {
+            top: -50px;  
+            left: -50px;
+        }
+
+        .top-right {
+            top: -50px;
+            right: -50px;
+        }
+
+        .bottom-left {
+            bottom: -50px;
+            left: -50px;
+        }
+
+        .bottom-right {
+            bottom: -50px;
+            right: -50px;
+        }
+
+        /* Progress Bars */
+        .progress-container {
+            width: 90%;
+            margin: 1rem auto 0;
+        }
+
+        .progress-item {
+            margin-bottom: 1.5rem;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+            font-size: 14px;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: var(--gray);
+            border-radius: 4px;
+            overflow: hidden;
+            width: 100%;
+        }
+
+        .progress-fill {
+            height: 100%;
+            transition: width 0.5s ease;
+        }
+
+        /* Vote Results Bar */
+        .vote-results {
+            display: flex;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            width: 100%;
+        }
+
+        .vote-valid {
+            background: var(--secondary);
+        }
+
+        .vote-refuse {
+            background: var(--danger);
+        }
+
+        /* Staking Comparison */
+        .staking-comparison {
+            display: flex;
+            justify-content: space-between;
+            font-family: 'Roboto Mono', monospace;
+            margin-top: 6px;
+        }
+
+        .staked-amount {
+            color: var(--secondary);
+        }
+
+        .mint-price {
+            color: var(--danger);
+        }
+
+        /* Moderation Controls */
+        .moderation-controls {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 2rem;
+            width: 100%;
+        }
+
+        .moderation-button {
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+            font-size: 1rem;
+            min-width: 120px;
+            text-align: center;
+            flex: 1;
+        }
+
+        .valid-button {
+            background: var(--secondary);
+            color: var(--dark);
+        }
+
+        .refuse-button {
+            background: var(--danger);
+            color: var(--light);
+        }
+
+        .moderation-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4);
+        }
+
+        /* Popup Styles */
+        .popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .popup-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .text-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.9);
+            width: 90%;
+            max-width: 700px;
+            max-height: 80vh;
+            background: #111;
+            border: 1px solid var(--primary);
+            border-radius: 10px;
+            padding: 23px;
+            z-index: 1001;
+            text-align: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            overflow-y: auto;
+        }
+
+        .text-popup.active {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .popup-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .popup-title {
+            color: var(--primary);
+            font-size: 1.3rem;
+            width: 100%;
+            text-align: center;
+        }
+
+        .close-popup {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            color: var(--light);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        /* Info Trigger */
+        .info-trigger {
+            color: var(--primary);
+            cursor: pointer;
+            text-decoration: underline dotted;
+            font-size: 0.9em;
+        }
+
+        /* Video Player Controls */
+        .video-controls {
+            position: absolute;
+            bottom: 10px;
+            left: 0;
+            right: 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            background: rgba(0,0,0,0.7);
+            height: 40px;
+            border-radius: 0 0 12px 12px;
+        }
+
+        .play-button {
+            color: white;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        .video-progress {
+            flex-grow: 1;
+            margin: 0 10px;
+            position: relative;
+            height: 4px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 2px;
+        }
+
+        .video-time {
+            color: white;
+            font-size: 12px;
+            font-family: 'Roboto Mono', monospace;
+        }
+
+        .volume-control {
+            display: flex;
+            align-items: center;
+            color: white;
+            margin-left: 15px;
+        }
+
+        .fullscreen-button {
+            color: white;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            margin-left: 15px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 992px) {
+            .moderation-container {
+                flex-direction: column;
+            }
+            
+            .moderation-panel {
+                width: 100% !important;
+                margin-bottom: 2rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                gap: 15px;
+                padding: 15px;
+            }
+            
+            .header-left {
+                flex-direction: column;
+                gap: 15px;
+                width: 100%;
+            }
+            
+            .nav-links {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            .header-icons {
+                width: 100%;
+                justify-content: flex-end;
+            }
+            
+            .corner-bubble {
+                width: 40px;
+                height: 40px;
+                font-size: 8px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .corner-bubble {
+                width: 35px;
+                height: 35px;
+                font-size: 7px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="header-left">
+            <img src="assets/logo.svg" alt="Winstory Logo" class="logo">
+            <div class="nav-links">
+                <a href="#">Home</a>
+                <span>|</span>
+                <a href="#">Explorer</a>
+            </div>
+        </div>
+        <div class="header-icons">
+            <a href="#" class="header-icon">🔍</a>
+            <a href="#" class="header-icon">🔔</a>
+            <a href="#" class="header-icon">⚖️</a>
+        </div>
+    </header>
+
+    <!-- Main Title -->
+    <div class="main-title-container">
+        <h1 class="main-title">Initial Moderation</h1>
+        <span class="arrow">→</span>
+        <a href="#" class="completion-link">Completion Moderation</a>
+    </div>
+
+    <!-- Main Moderation Interface -->
+    <div class="moderation-container">
+        <!-- Left Panel - Video and Bubbles -->
+        <div class="moderation-panel">
+            <div class="video-section">
+                <div class="video-wrapper">
+                    <div class="campaign-video">
+                        <!-- Video Controls -->
+                        <div class="video-controls">
+                            <button class="play-button">▶</button>
+                            <div class="video-time">0:00</div>
+                            <div class="video-progress"></div>
+                            <div class="volume-control">🔊</div>
+                            <button class="fullscreen-button">⛶</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Corner Bubbles - positioned outside the video -->
+                    <div class="corner-bubble top-left" id="standard-reward-bubble">
+                        Standard Reward
+                    </div>
+                    
+                    <div class="corner-bubble top-right" id="premium-reward-bubble">
+                        Premium Reward
+                    </div>
+                    
+                    <div class="corner-bubble bottom-left" id="starting-text-bubble">
+                        Starting Text
+                    </div>
+                    
+                    <div class="corner-bubble bottom-right" id="guideline-bubble">
+                        Guideline
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Right Panel - Progress Bars and Buttons -->
+        <div class="moderation-panel">
+            <div class="progress-container">
+                <div class="progress-item">
+                    <div class="progress-header">
+                        <span>Minimum 22 active stakers have voted</span>
+                        <span>15/22</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 68%; background: var(--primary);"></div>
+                    </div>
+                </div>
+                
+                <div class="progress-item">
+                    <div class="progress-header">
+                        <span>Total staked amount exceeds MINT price</span>
+                        <span class="info-trigger" onclick="openPopup('staking-info')"></span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="staked-progress" style="width: 100%; background: var(--secondary);"></div>
+                    </div>
+                    <div class="staking-comparison">
+                        <span id="staked-amount" class="staked-amount">1,240 $WINC</span>
+                        <span id="mint-price" class="mint-price">1,000 $WINC</span>
+                    </div>
+                </div>
+                
+                <div class="progress-item">
+                    <div class="progress-header">
+                        <span>Vote results</span>
+                        <span>2:1 ratio needed</span>
+                    </div>
+                    <div class="vote-results">
+                        <div class="vote-valid" style="width: 67%;"></div>
+                        <div class="vote-refuse" style="width: 33%;"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="moderation-controls">
+                <button class="moderation-button valid-button">Valid</button>
+                <button class="moderation-button refuse-button">Refuse</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Text Popups -->
+    <div class="popup-overlay" id="popup-overlay"></div>
+    
+    <div class="text-popup" id="starting-text-popup">
+        <div class="popup-header">
+            <h2 class="popup-title">Starting Text</h2>
+            <button class="close-popup" onclick="closePopup('starting-text')">&times;</button>
+        </div>
+        <div class="text-popup-content" id="starting-text-content"></div>
+    </div>
+    
+    <div class="text-popup" id="guideline-popup">
+        <div class="popup-header">
+            <h2 class="popup-title">Guideline</h2>
+            <button class="close-popup" onclick="closePopup('guideline')">&times;</button>
+        </div>
+        <div class="text-popup-content" id="guideline-content"></div>
+    </div>
+    
+    <div class="text-popup" id="standard-reward-popup">
+        <div class="popup-header">
+            <h2 class="popup-title">Standard Reward</h2>
+            <button class="close-popup" onclick="closePopup('standard-reward')">&times;</button>
+        </div>
+        <div class="text-popup-content" id="standard-reward-content"></div>
+    </div>
+    
+    <div class="text-popup" id="premium-reward-popup">
+        <div class="popup-header">
+            <h2 class="popup-title">Premium Reward</h2>
+            <button class="close-popup" onclick="closePopup('premium-reward')">&times;</button>
+        </div>
+        <div class="text-popup-content" id="premium-reward-content"></div>
+    </div>
+    
+    <!-- Popup for Staking Info -->
+    <div class="text-popup" id="staking-info-popup">
+        <div class="popup-header">
+            <h2 class="popup-title">Staking vs Mint Price</h2>
+            <button class="close-popup" onclick="closePopup('staking-info')">&times;</button>
+        </div>
+        <div class="text-popup-content"></div>
+    </div>
+
+    <script>
+        // Popup Management
+        let activePopup = null;
+
+        function openPopup(id) {
+            // Close any active popup
+            if (activePopup) {
+                document.getElementById(activePopup + '-popup').classList.remove('active');
+            }
+            
+            // Show new popup
+            document.getElementById('popup-overlay').classList.add('active');
+            document.getElementById(id + '-popup').classList.add('active');
+            activePopup = id;
+        }
+
+        function closePopup(id) {
+            document.getElementById(id + '-popup').classList.remove('active');
+            document.getElementById('popup-overlay').classList.remove('active');
+            activePopup = null;
+        }
+
+        // Close popup when clicking overlay
+        document.getElementById('popup-overlay').addEventListener('click', function(e) {
+            if (e.target === this && activePopup) {
+                closePopup(activePopup);
+            }
+        });
+
+        // Setup bubble click events for popups
+        document.getElementById('standard-reward-bubble').addEventListener('click', function() {
+            openPopup('standard-reward');
+        });
+        
+        document.getElementById('premium-reward-bubble').addEventListener('click', function() {
+            openPopup('premium-reward');
+        });
+        
+        document.getElementById('starting-text-bubble').addEventListener('click', function() {
+            openPopup('starting-text');
+        });
+        
+        document.getElementById('guideline-bubble').addEventListener('click', function() {
+            openPopup('guideline');
+        });
+
+        // Play button toggle
+        document.querySelector('.play-button').addEventListener('click', function() {
+            this.textContent = this.textContent === '▶' ? '❚❚' : '▶';
+        });
+    </script>
+</body>
+</html>

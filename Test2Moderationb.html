@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WINC Staker Moderation Portal</title>
+    <style>
+        :root {
+            --primary: #FFD700;
+            --primary-dark: #e6c300;
+            --secondary: #4CAF50;
+            --danger: #ff3b30;
+            --warning: #FFA500;
+            --dark: #0a0a0a;
+            --darker: #000000;
+            --light: #ffffff;
+            --gray: #333333;
+            --glass: rgba(255, 215, 0, 0.05);
+            --neon-glow: 0 0 5px #FFD700, 0 0 10px #FFD700;
+            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        body {
+            background: radial-gradient(ellipse at center, var(--darker) 0%, var(--dark) 100%);
+            color: var(--light);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Glassmorphism Panel */
+        .glass-panel {
+            background: rgba(10, 10, 10, 0.7);
+            backdrop-filter: blur(12px);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            transition: var(--transition);
+        }
+
+        /* Header */
+        header {
+            padding: 15px 5%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .logo {
+            width: 120px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 20px;
+        }
+
+        .nav-links a {
+            color: var(--light);
+            text-decoration: none;
+            font-size: 16px;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+
+        .header-icons {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .wallet-display {
+            background: rgba(255, 215, 0, 0.1);
+            border: 1px solid var(--primary);
+            border-radius: 12px;
+            padding: 8px 15px;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 14px;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .wallet-display::before {
+            content: "🟢";
+            font-size: 12px;
+        }
+
+        /* Main Moderation Interface */
+        .moderation-container {
+            display: flex;
+            flex-direction: column;
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 5%;
+            gap: 2rem;
+        }
+
+        /* Split View */
+        .split-view {
+            display: flex;
+            width: 100%;
+            position: relative;
+        }
+
+        .split-view::after {
+            content: "";
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 1px;
+            background: linear-gradient(to bottom, 
+                          transparent, 
+                          var(--primary), 
+                          transparent);
+        }
+
+        .moderation-panel {
+            width: 50%;
+            padding: 0 20px;
+        }
+
+        /* Video Container */
+        .video-container {
+            width: 66.66%;
+            margin: 0 auto;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .video-container video {
+            width: 100%;
+            display: block;
+        }
+
+        /* Progress Bars */
+        .progress-container {
+            margin: 1.5rem 0;
+        }
+
+        .progress-item {
+            margin-bottom: 1rem;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+            font-size: 14px;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: var(--gray);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            transition: width 0.5s ease;
+        }
+
+        /* Vote Results Bar */
+        .vote-results {
+            display: flex;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .vote-approve {
+            background: var(--secondary);
+        }
+
+        .vote-reject {
+            background: var(--danger);
+        }
+
+        /* Staking Comparison */
+        .staking-comparison {
+            display: flex;
+            justify-content: space-between;
+            font-family: 'Roboto Mono', monospace;
+            margin-top: 6px;
+        }
+
+        .staked-amount {
+            color: var(--secondary);
+        }
+
+        .mint-price {
+            color: var(--danger);
+        }
+
+        .equal {
+            color: var(--warning);
+        }
+
+        /* Moderation Controls */
+        .moderation-controls {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 2rem;
+        }
+
+        .moderation-button {
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+            font-size: 1rem;
+            min-width: 120px;
+            text-align: center;
+        }
+
+        .approve-button {
+            background: var(--secondary);
+            color: var(--dark);
+        }
+
+        .reject-button {
+            background: var(--danger);
+            color: var(--light);
+        }
+
+        .moderation-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4);
+        }
+
+        /* Rating Controls */
+        .rating-container {
+            text-align: center;
+            margin-top: 2rem;
+        }
+
+        .rating-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 0.5rem 0;
+            transition: color 0.3s;
+        }
+
+        .rating-slider {
+            width: 100%;
+            -webkit-appearance: none;
+            height: 8px;
+            border-radius: 4px;
+            background: linear-gradient(to right, var(--danger), var(--warning), var(--secondary));
+            outline: none;
+            margin: 1rem 0;
+        }
+
+        .rating-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--light);
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+            border: 2px solid var(--dark);
+        }
+
+        /* Popup Triggers */
+        .info-trigger {
+            color: var(--primary);
+            cursor: pointer;
+            text-decoration: underline dotted;
+            font-size: 0.9em;
+        }
+
+        /* Popup Styles */
+        .popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .popup-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .popup-content {
+            background: var(--dark);
+            border: 1px solid var(--primary);
+            border-radius: 12px;
+            padding: 20px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .close-popup {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            color: var(--light);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 992px) {
+            .split-view {
+                flex-direction: column;
+            }
+            
+            .split-view::after {
+                display: none;
+            }
+            
+            .moderation-panel {
+                width: 100%;
+                padding: 0;
+                margin-bottom: 2rem;
+            }
+            
+            .video-container {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                gap: 15px;
+                padding: 15px;
+            }
+            
+            .header-left {
+                flex-direction: column;
+                gap: 15px;
+                width: 100%;
+            }
+            
+            .nav-links {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            .header-icons {
+                width: 100%;
+                justify-content: flex-end;
+            }
+            
+            .moderation-controls {
+                flex-direction: column;
+            }
+            
+            .moderation-button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="glass-panel">
+        <div class="header-left">
+            <img src="assets/logo.svg" alt="Winstory Logo" class="logo">
+            <div class="nav-links">
+                <a href="#">Home</a>
+                <a href="#">Explorer</a>
+            </div>
+        </div>
+        <div class="header-icons">
+            <span>🔍</span>
+            <span>🔔</span>
+            <span>⚖️</span>
+            <div class="wallet-display" id="wallet-address">0x7f...3a4b</div>
+        </div>
+    </header>
+
+    <!-- Main Moderation Interface -->
+    <div class="moderation-container">
+        <!-- Split View -->
+        <div class="split-view">
+            <!-- Initial Content Panel -->
+            <div class="moderation-panel">
+                <h2>Initial Content Moderation</h2>
+                
+                <div class="video-container">
+                    <video controls>
+                        <source src="assets/campaign1.mp4" type="video/mp4">
+                    </video>
+                </div>
+                
+                <div class="progress-container">
+                    <div class="progress-item">
+                        <div class="progress-header">
+                            <span>Minimum 22 active stakers have voted</span>
+                            <span>15/22</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 68%; background: var(--primary);"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="progress-item">
+                        <div class="progress-header">
+                            <span>Total staked amount exceeds MINT price</span>
+                            <span class="info-trigger" onclick="openPopup('staking-info')">ℹ️</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="staked-progress" style="width: 100%; background: var(--secondary);"></div>
+                        </div>
+                        <div class="staking-comparison">
+                            <span id="staked-amount" class="staked-amount">1,240 $WINC</span>
+                            <span id="mint-price" class="mint-price">1,000 $WINC</span>
+                        </div>
+                    </div>
+                    
+                    <div class="progress-item">
+                        <div class="progress-header">
+                            <span>Vote results</span>
+                            <span>2:1 ratio needed</span>
+                        </div>
+                        <div class="vote-results">
+                            <div class="vote-approve" style="width: 67%;"></div>
+                            <div class="vote-reject" style="width: 33%;"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="moderation-controls">
+                    <button class="moderation-button approve-button">Approve</button>
+                    <button class="moderation-button reject-button">Reject</button>
+                </div>
+            </div>
+            
+            <!-- Complementary Content Panel -->
+            <div class="moderation-panel">
+                <h2>Complementary Content Rating</h2>
+                
+                <div class="video-container">
+                    <video controls>
+                        <source src="assets/campaign2.mp4" type="video/mp4">
+                    </video>
+                </div>
+                
+                <div class="rating-container">
+                    <div class="rating-value" id="rating-display">50</div>
+                    <input type="range" min="0" max="100" value="50" class="rating-slider" id="rating-slider">
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>0</span>
+                        <span>100</span>
+                    </div>
+                </div>
+                
+                <div class="moderation-controls">
+                    <button class="moderation-button" style="background: var(--primary); color: var(--dark);">Submit Rating</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Popup for Staking Info -->
+    <div class="popup-overlay" id="staking-info-popup">
+        <div class="popup-content">
+            <button class="close-popup" onclick="closePopup('staking-info')">&times;</button>
+            <h3>Staking vs Mint Price</h3>
+            <p>The total amount staked by all moderators must exceed the MINT price set by the content creator for the content to be approved.</p>
+            <p><strong>Current Status:</strong></p>
+            <ul>
+                <li>Total Staked: 1,240 $WINC</li>
+                <li>MINT Price: 1,000 $WINC</li>
+                <li>Difference: +240 $WINC (24%)</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Dynamic Rating Display
+        const ratingSlider = document.getElementById('rating-slider');
+        const ratingDisplay = document.getElementById('rating-display');
+        
+        ratingSlider.addEventListener('input', function() {
+            const value = parseInt(this.value);
+            ratingDisplay.textContent = value;
+            
+            // Calculate color between red (0) and green (100)
+            const red = Math.round(255 * (100 - value) / 100);
+            const green = Math.round(255 * value / 100);
+            ratingDisplay.style.color = `rgb(${red}, ${green}, 0)`;
+        });
+
+        // Staking comparison logic
+        function updateStakingComparison() {
+            const staked = 1240; // Example value
+            const mintPrice = 1000; // Example value
+            
+            const stakedElement = document.getElementById('staked-amount');
+            const mintElement = document.getElementById('mint-price');
+            const progress = document.getElementById('staked-progress');
+            
+            stakedElement.textContent = staked.toLocaleString() + ' $WINC';
+            mintElement.textContent = mintPrice.toLocaleString() + ' $WINC';
+            
+            if (staked > mintPrice) {
+                stakedElement.className = 'staked-amount';
+                mintElement.className = 'mint-price';
+                progress.style.background = var(--secondary);
+            } else if (staked < mintPrice) {
+                stakedElement.className = 'mint-price';
+                mintElement.className = 'staked-amount';
+                progress.style.background = var(--danger);
+            } else {
+                stakedElement.className = 'equal';
+                mintElement.className = 'equal';
+                progress.style.background = var(--warning);
+            }
+        }
+
+        // Popup controls
+        function openPopup(id) {
+            document.getElementById(id + '-popup').classList.add('active');
+        }
+
+        function closePopup(id) {
+            document.getElementById(id + '-popup').classList.remove('active');
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            updateStakingComparison();
+            
+            // Simulate wallet connection
+            document.getElementById('wallet-address').addEventListener('click', function() {
+                this.textContent = this.textContent.includes('...') ? 
+                    'Connected: 0x7f3a...b4c2' : '0x7f...3a4b';
+            });
+        });
+    </script>
+</body>
+</html>

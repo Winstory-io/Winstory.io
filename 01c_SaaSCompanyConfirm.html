@@ -1,0 +1,1301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>Confirm MINT | Winstory</title>
+   <style>
+       * {
+           margin: 0;
+           padding: 0;
+           box-sizing: border-box;
+           font-family: 'Inter', Arial, sans-serif;
+       }
+
+       body {
+           background: linear-gradient(135deg, #000000, #0a0a0a);
+           color: white;
+           min-height: 100vh;
+           display: flex;
+           flex-direction: column;
+       }
+
+       header {
+           padding: 20px;
+           display: flex;
+           align-items: center;
+           justify-content: space-between;
+           background: rgba(0,0,0,0.5);
+           backdrop-filter: blur(10px);
+           position: relative;
+       }
+
+       .logo {
+           width: 150px;
+           height: auto;
+           transition: transform 0.3s ease;
+       }
+
+       .logo:hover {
+           transform: scale(1.05);
+       }
+
+       .nav {
+           margin-left: 20px;
+       }
+
+       .nav a {
+           color: white;
+           text-decoration: none;
+           font-size: 18px;
+           margin-right: 10px;
+           position: relative;
+           transition: color 0.3s ease;
+       }
+
+       .nav a:hover {
+           color: #FFD700;
+       }
+
+       .nav a::after {
+           content: '';
+           position: absolute;
+           width: 0;
+           height: 2px;
+           bottom: -5px;
+           left: 0;
+           background-color: #FFD700;
+           transition: width 0.3s ease;
+       }
+
+       .nav a:hover::after {
+           width: 100%;
+       }
+
+       .header-right {
+           display: flex;
+           align-items: center;
+       }
+
+       .header-icon {
+           font-size: 24px;
+           margin-left: 15px;
+           cursor: pointer;
+           transition: transform 0.2s ease;
+       }
+
+       .header-icon:hover {
+           transform: scale(1.2);
+       }
+
+       .title-container {
+           display: flex;
+           align-items: center;
+           justify-content: center;
+           margin: 30px 0;
+           position: relative;
+           padding: 0 30px;
+           flex-wrap: wrap;
+           gap: 15px;
+       }
+
+       .title-group {
+           display: flex;
+           align-items: center;
+           gap: 10px;
+       }
+
+       .mint-action-group {
+           display: flex;
+           align-items: center;
+           gap: 15px;
+       }
+
+       .title {
+           font-size: 32px;
+           margin: 0;
+       }
+
+       .highlight-green {
+           color: #4CAF50;
+       }
+
+       .highlight-yellow {
+           color: #FFD700;
+       }
+
+       .info-icon {
+           width: 30px;
+           height: 30px;
+           background-color: #FFD700;
+           color: #000;
+           border-radius: 50%;
+           display: flex;
+           align-items: center;
+           justify-content: center;
+           font-size: 14px;
+           font-weight: bold;
+           cursor: pointer;
+           transition: all 0.3s;
+           position: absolute;
+           top: -10px;
+           right: -10px;
+           box-shadow: 0 0 0 2px rgba(0,0,0,0.8);
+           z-index: 1;
+       }
+
+       .info-icon:hover {
+           transform: scale(1.1);
+           box-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
+       }
+
+       .arrow-icon {
+           font-size: 24px;
+           margin: 0 5px;
+       }
+
+       .delete-button {
+           position: fixed;
+           top: 20px;
+           right: 20px;
+           color: #ff3333;
+           font-size: 28px;
+           cursor: pointer;
+           transition: all 0.3s;
+           z-index: 10;
+       }
+
+       .delete-button:hover {
+           transform: scale(1.1);
+       }
+
+       .mint-container {
+           max-width: 1600px;
+           margin: 0 auto;
+           padding: 0 30px 100px;
+           position: relative;
+       }
+
+       .content-frame {
+           border: 1px solid rgba(255, 215, 0, 0.3);
+           border-radius: 12px;
+           padding: 30px;
+           margin-top: 20px;
+           box-shadow: 0 0 20px rgba(255, 215, 0, 0.1);
+           position: relative;
+       }
+
+       .content-frame::before {
+           content: '';
+           position: absolute;
+           top: -5px;
+           left: -5px;
+           right: -5px;
+           bottom: -5px;
+           border: 1px solid rgba(255, 215, 0, 0.2);
+           border-radius: 15px;
+           pointer-events: none;
+       }
+
+       .cards-grid {
+           display: flex;
+           justify-content: center;
+           gap: 20px;
+           margin-bottom: 20px;
+           flex-wrap: wrap;
+       }
+
+       .info-card {
+           background: rgba(30,30,30,0.5);
+           border: 1px solid #333;
+           border-radius: 12px;
+           padding: 20px;
+           transition: all 0.3s ease;
+           position: relative;
+           min-height: 200px;
+           width: 30%;
+           max-width: 400px;
+       }
+
+       .info-card.editable-card {
+           background: rgba(40, 40, 30, 0.6);
+           border: 1px solid rgba(255, 215, 0, 0.3);
+       }
+
+       .info-card.non-editable-card {
+           background: rgba(30, 30, 30, 0.5);
+           border: 1px solid #333;
+       }
+
+       .info-card:hover {
+           box-shadow: 0 0 20px rgba(255,215,0,0.1);
+       }
+
+       .info-card h2 {
+           color: #FFD700;
+           font-size: 1.2rem;
+           margin-top: 0;
+           margin-bottom: 15px;
+           padding-bottom: 10px;
+           border-bottom: 2px solid #FFD700;
+       }
+
+       .info-item {
+           margin-bottom: 12px;
+           position: relative;
+       }
+
+       .info-item strong {
+           color: #FFD700;
+           display: block;
+           margin-bottom: 5px;
+           font-weight: 600;
+           font-size: 0.9rem;
+       }
+
+       .info-item span {
+           display: block;
+           padding: 8px 12px;
+           background-color: rgba(20,20,20,0.7);
+           border-radius: 5px;
+           word-break: break-word;
+           border: 1px solid #333;
+           cursor: pointer;
+           transition: all 0.3s;
+           font-size: 0.9rem;
+       }
+
+       .info-item span:hover {
+           background-color: rgba(30,30,30,0.9);
+       }
+
+       .editable {
+           border-color: #FFD700;
+           background-color: rgba(40,40,30,0.7);
+       }
+
+       .non-editable {
+           opacity: 0.7;
+           cursor: default;
+           background-color: rgba(20,20,20,0.7);
+       }
+
+       .non-editable:hover {
+           background-color: rgba(20,20,20,0.7);
+       }
+
+       .edit-icon {
+           color: #FFD700;
+           margin-left: 8px;
+           font-size: 12px;
+           opacity: 0;
+           transition: opacity 0.3s;
+       }
+
+       .editable:hover .edit-icon {
+           opacity: 1;
+       }
+
+       .video-card {
+           width: 100%;
+           max-width: 800px;
+           margin: 40px auto 0;
+           text-align: center;
+       }
+
+       .video-container {
+           position: relative;
+           width: 100%;
+           padding-bottom: 56.25%; /* 16:9 aspect ratio */
+           height: 0;
+           background-color: #000;
+           border: 1px solid #FFD700;
+           border-radius: 8px;
+           margin: 15px 0;
+           transition: box-shadow 0.3s ease;
+       }
+
+       .video-container:hover {
+           box-shadow: 0 0 30px rgba(255,215,0,0.3);
+       }
+
+       .video-container video {
+           position: absolute;
+           top: 0;
+           left: 0;
+           width: 100%;
+           height: 100%;
+       }
+
+       .no-video {
+           padding: 20px;
+           background-color: rgba(20,20,20,0.7);
+           border-radius: 10px;
+           color: #FFD700;
+           border: 1px dashed #FFD700;
+           text-align: center;
+           margin: 15px 0;
+           font-style: italic;
+           font-size: 0.9rem;
+       }
+
+       .por-button {
+           padding: 12px 30px;
+           font-size: 16px;
+           font-weight: bold;
+           color: #000;
+           background-color: #FFD700;
+           border: 2px solid #DAA520;
+           border-radius: 8px;
+           cursor: pointer;
+           transition: all 0.3s ease;
+       }
+
+       .por-button:hover {
+           background-color: #4CAF50;
+           transform: scale(1.05);
+           box-shadow: 0 10px 20px rgba(255,215,0,0.3);
+       }
+
+       .por-button:disabled {
+           background-color: #666;
+           cursor: not-allowed;
+           transform: none;
+           box-shadow: none;
+           border-color: #333;
+       }
+
+       /* Modal Styles */
+       .modal {
+           display: none;
+           position: fixed;
+           z-index: 1000;
+           left: 0;
+           top: 0;
+           width: 100%;
+           height: 100%;
+           background-color: rgba(0,0,0,0.9);
+           overflow-y: auto;
+       }
+
+       .modal-content {
+           background: linear-gradient(135deg, #000000, #0a0a0a);
+           margin: 50px auto;
+           padding: 0; /* Supprimé le padding global */
+           border-radius: 10px;
+           width: 100%;
+           max-width: 1000px;
+           border: 1px solid #FFD700;
+           box-shadow: 0 5px 30px rgba(218, 165, 32, 0.3);
+           position: relative;
+           display: flex;
+           flex-direction: column;
+           max-height: 80vh;
+       }
+
+       .modal-header {
+            color: #FFD700;
+            margin: 0;
+            font-size: 0.85rem;
+            text-align: center;
+        }
+
+        .modal-scrollable-content {
+        flex: 1;
+        overflow-y: scroll;
+        padding: 0 25px;
+        
+        /* Ligne jaune verticale fine (1px) et claire - UNIQUEMENT verticale */
+        border-right: 1px solid rgba(255, 215, 0, 0.6);
+        margin-right: 4px; /* Espace pour le curseur */
+    }
+        .modal-scrollable-content::-webkit-scrollbar {
+            width: 8px;
+            background: transparent;
+        }
+
+        .modal-scrollable-content::-webkit-scrollbar-track {
+            background: transparent; 
+    }
+    
+    /* Ligne jaune fine en arrière-plan */
+    .modal-scrollable-content::-webkit-scrollbar-track:before {
+        content: '';
+        display: block;
+        position: absolute;
+        right: 4px;
+        width: 1px;
+        background: #FFD700;
+        height: 100%;
+    }
+
+        .modal-scrollable-content::-webkit-scrollbar-thumb {
+            background: white;
+        border-radius: 3px;
+        border: 1px solid rgba(255, 215, 0, 0.8);
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+
+        .modal-scrollable-content::-webkit-scrollbar-thumb:hover {
+        background-color: #f0f0f0;
+    }
+
+       .modal-header h2 {
+           color: #FFD700;
+           margin: 0;
+           font-size: 0.85rem;
+           text-align: center;
+           margin-top: 10px;
+           margin-bottom: 10px;
+       }
+
+       .modal-scrollable-content {
+        flex: 1;
+        overflow-y: scroll;
+        padding: 0 25px;
+        scrollbar-width: thin;
+        scrollbar-color: white transparent;
+        
+        /* Ligne jaune verticale fine (1px) et claire */
+        border-right: 1px solid rgba(255, 215, 0, 0.5);
+        margin-right: 5px;
+    }
+
+       .modal-scrollable-content::-webkit-scrollbar {
+           width: 8px;
+           background: transparent;
+       }
+
+       .modal-scrollable-content::-webkit-scrollbar-track {
+        background: transparent;
+       }
+
+       .modal-scrollable-content::-webkit-scrollbar-thumb {
+        background: white !important;
+        border-radius: 3px;
+        border: 1px solid rgba(255, 215, 0, 0.7);
+        opacity: 1 !important;
+        visibility: visible !important;
+    }
+
+       .modal-scrollable-content::-webkit-scrollbar-thumb:hover {
+           background-color: #e0e0e0;
+       }
+
+   .validation-message {
+       color: #4CAF50;
+       margin: 10px 0;
+       padding: 10px;
+       background-color: rgba(76, 175, 80, 0.1);
+       border-left: 3px solid #4CAF50;
+       font-size: 0.8rem;
+       padding: 0.5rem;
+   }
+
+   .rejection-message {
+       color: #f44336;
+       margin: 10px 0;
+       padding: 10px;
+       background-color: rgba(244, 67, 54, 0.1);
+       border-left: 3px solid #f44336;
+       font-size: 0.8rem;
+       padding: 0.5rem;
+   }
+
+   .modal-body {
+            font-size: 0.9rem;
+            line-height: 1.7;
+                }
+
+       .modal-body p, .modal-body ul {
+           font-size: 0.9rem;
+           margin-bottom: 1rem;
+       }
+  
+       .modal-body strong {
+           color: #FFD700;
+           font-size: 0.9rem;
+       }
+
+       .modal-body ul {
+           padding-left: 20px;
+       }
+
+       .modal-body li {
+        font-size: 0.9rem;
+        margin-bottom: 0.8rem;
+      }
+     
+      .validation-message {
+        color: #4CAF50;
+        font-weight: bold;
+     }
+    
+         .rejection-message {
+        color: #f44336;
+        font-weight: bold;
+         }
+
+         .important-bold {
+        font-weight: bold;
+        color: #FFD700;
+    }
+    
+    .critical-red {
+        color: #f44336;
+        font-weight: bold;
+    }
+    
+
+       .modal-footer {
+            padding: 15px 25px 20px;
+            flex-shrink: 0;
+            border-top: 1px solid rgba(255, 215, 0, 0.3);
+        }
+
+       .checkbox-container {
+           display: flex;
+           align-items: center;
+           margin-bottom: 15px;
+       }
+
+       .checkbox-container input {
+           margin-right: 10px;
+           width: 16px;
+           height: 16px;
+           accent-color: #FFD700;
+       }
+
+       .checkbox-container label {
+           user-select: none;
+           color: #FFD700;
+           font-size: 0.9rem;
+       }
+
+       .continue-button {
+           background-color: #FFD700;
+           color: #000;
+           border: none;
+           padding: 10px 25px;
+           font-weight: bold;
+           border-radius: 5px;
+           cursor: pointer;
+           transition: all 0.3s;
+           display: block;
+           margin: 0 auto;
+           font-size: 0.9rem;
+       }
+
+       .continue-button:hover {
+           background-color: #4CAF50;
+           transform: scale(1.05);
+       }
+
+       .continue-button:disabled {
+           background-color: #666;
+           cursor: not-allowed;
+           transform: none;
+       }
+
+       /* Delete Confirmation Popup */
+       .delete-popup {
+           display: none;
+           position: fixed;
+           top: 50%;
+           left: 50%;
+           transform: translate(-50%, -50%);
+           width: 90%;
+           max-width: 450px;
+           background: rgba(40, 0, 0, 0.95);
+           border: 2px solid #ff3333;
+           border-radius: 10px;
+           padding: 25px;
+           z-index: 1001;
+           box-shadow: 0 5px 30px rgba(255, 0, 0, 0.3);
+           text-align: center;
+       }
+
+       .delete-popup h3 {
+           color: #ff3333;
+           margin-top: 0;
+           margin-bottom: 15px;
+           font-size: 1.3rem;
+       }
+
+       .delete-popup p {
+           margin-bottom: 20px;
+           line-height: 1.5;
+           font-size: 0.9rem;
+       }
+
+       .delete-popup .close-delete-popup {
+           position: absolute;
+           top: 10px;
+           right: 10px;
+           font-size: 20px;
+           color: #ff3333;
+           cursor: pointer;
+       }
+
+       .delete-popup-buttons {
+           display: flex;
+           justify-content: center;
+           gap: 15px;
+       }
+
+       .confirm-delete {
+           padding: 8px 20px;
+           background-color: #ff3333;
+           color: white;
+           border: none;
+           border-radius: 5px;
+           cursor: pointer;
+           font-weight: bold;
+           transition: all 0.3s;
+           font-size: 0.9rem;
+       }
+
+       .confirm-delete:hover {
+           background-color: #ff0000;
+           transform: scale(1.05);
+       }
+
+       .cancel-delete {
+           padding: 8px 20px;
+           background-color: #333;
+           color: white;
+           border: none;
+           border-radius: 5px;
+           cursor: pointer;
+           font-weight: bold;
+           transition: all 0.3s;
+           font-size: 0.9rem;
+       }
+
+       .cancel-delete:hover {
+           background-color: #444;
+           transform: scale(1.05);
+       }
+
+       /* Expanded Card Styles */
+       .expanded-card {
+           position: fixed;
+           top: 50%;
+           left: 50%;
+           transform: translate(-50%, -50%);
+           width: 80%;
+           max-width: 800px;
+           background: rgba(30,30,30,0.95);
+           border: 2px solid #FFD700;
+           border-radius: 12px;
+           padding: 30px;
+           z-index: 1002;
+           box-shadow: 0 10px 40px rgba(0,0,0,0.7);
+       }
+
+       .expanded-card h2 {
+           color: #FFD700;
+           margin-top: 0;
+           margin-bottom: 20px;
+       }
+
+       .expanded-card-content {
+           max-height: 60vh;
+           overflow-y: auto;
+           padding-right: 10px;
+       }
+
+       .expanded-card textarea {
+           width: 100%;
+           min-height: 200px;
+           padding: 15px;
+           background: rgba(20,20,20,0.8);
+           border: 1px solid #FFD700;
+           border-radius: 8px;
+           color: white;
+           font-family: 'Inter', Arial, sans-serif;
+           font-size: 0.9rem;
+           margin-bottom: 15px;
+           resize: vertical;
+       }
+
+       .expanded-card-buttons {
+           display: flex;
+           justify-content: flex-end;
+           gap: 15px;
+       }
+
+       .save-button {
+           padding: 8px 20px;
+           background-color: #4CAF50;
+           color: white;
+           border: none;
+           border-radius: 5px;
+           cursor: pointer;
+           font-weight: bold;
+           transition: all 0.3s;
+       }
+
+       .save-button:hover {
+           background-color: #3e8e41;
+           transform: scale(1.05);
+       }
+
+       .cancel-button {
+           padding: 8px 20px;
+           background-color: #666;
+           color: white;
+           border: none;
+           border-radius: 5px;
+           cursor: pointer;
+           font-weight: bold;
+           transition: all 0.3s;
+       }
+
+       .cancel-button:hover {
+           background-color: #777;
+           transform: scale(1.05);
+       }
+
+       /* Overlay */
+       .overlay {
+           display: none;
+           position: fixed;
+           top: 0;
+           left: 0;
+           width: 100%;
+           height: 100%;
+           background-color: rgba(0,0,0,0.8);
+           z-index: 1001;
+       }
+
+       /* Responsive Styles */
+       @media (max-width: 1024px) {
+           .info-card {
+               width: 45%;
+           }
+       }
+
+       @media (max-width: 768px) {
+           .nav {
+               display: none;
+           }
+
+           .title {
+               font-size: 24px;
+           }
+
+           .info-card {
+               width: 100%;
+               max-width: 100%;
+           }
+
+           .delete-button {
+               top: 15px;
+               right: 15px;
+               font-size: 24px;
+           }
+
+           .content-frame {
+               padding: 15px;
+           }
+
+           .title-container {
+               flex-direction: column;
+               align-items: center;
+               gap: 10px;
+           }
+
+           .mint-action-group {
+               margin-top: 15px;
+           }
+       }
+   </style>
+</head>
+<body>
+   <!-- Header -->
+   <header>
+       <div class="logo">
+           <img src="assets/logo.svg" alt="Winstory Logo" class="logo">
+       </div>
+       <nav class="nav">
+           <a href="#">Home</a>
+           <a href="#">Explorer</a>
+           <a href="#">Enterprise</a>
+       </nav>
+       <div class="header-right">
+           <div id="wallet" class="wallet-info" style="display: none;">
+               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFD700" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                   <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+               </svg>
+               <span id="wallet-address"></span>
+           </div>
+       </div>
+   </header>
+
+   <!-- Delete Button -->
+   <div class="delete-button" id="delete-button">✕</div>
+
+   <!-- Main Content -->
+   <main class="mint-container">
+       <div class="title-container">
+           <div class="title-group">
+               <h1 class="title"><span class="highlight-green">Confirm</span> here your <span class="highlight-yellow">infos</span></h1>
+               <span class="arrow-icon">➡️</span>
+           </div>
+           <div class="mint-action-group">
+               <button id="por-button" class="por-button">Go to Proof of Rewards</button>
+           </div>
+       </div>
+
+       <!-- Golden frame around content -->
+       <div class="content-frame">
+           <div class="info-icon" id="info-icon">?</div>
+           <div class="cards-grid">
+               <div class="info-card editable-card">
+                   <h2>Company Details</h2>
+                   <div class="info-item">
+                       <strong>Company Name</strong>
+                       <span id="company-name" class="editable"><span class="edit-icon">✏️</span></span>
+                   </div>
+                   <div class="info-item">
+                       <strong>Professional Email</strong>
+                       <span id="professional-email" class="editable"><span class="edit-icon">✏️</span></span>
+                   </div>
+                   <div class="info-item">
+                       <strong>Activity Sector</strong>
+                       <span id="activity-sector" class="editable"><span class="edit-icon">✏️</span></span>
+                   </div>
+               </div>
+
+               <div class="info-card editable-card">
+                   <h2>Campaign Content</h2>
+                   <div class="info-item">
+                       <strong>Title</strong>
+                       <span id="title" class="editable"><span class="edit-icon">✏️</span></span>
+                   </div>
+                   <div class="info-item">
+                       <strong>Starting Text</strong>
+                       <span id="starting-text" class="editable"><span class="edit-icon">✏️</span></span>
+                   </div>
+                   <div class="info-item">
+                       <strong>Guideline</strong>
+                       <span id="guideline" class="editable"><span class="edit-icon">✏️</span></span>
+                   </div>
+               </div>
+
+               <div class="info-card non-editable-card">
+                   <h2>Financial Information</h2>
+                   <div class="info-item">
+                       <strong>Unit Value</strong>
+                       <span id="unit-value" class="non-editable"></span>
+                   </div>
+                   <div class="info-item">
+                       <strong>Net Profit</strong>
+                       <span id="net-profit" class="non-editable"></span>
+                   </div>
+                   <div class="info-item">
+                       <strong>Maximum Mint</strong>
+                       <span id="max-mint" class="non-editable"></span>
+                   </div>
+               </div>
+
+               <div class="info-card video-card">
+                   <h2>Film <small>(AI-generated by Winstory)</small></h2>
+                   <div id="video-placeholder">
+                       <div class="video-container">
+                           <video id="uploaded-video" controls style="display: none;"></video>
+                       </div>
+                       <div id="no-video" class="no-video">
+                           Winstory will create the Starting A.I. film to match your Starting text
+                       </div>
+                   </div>
+               </div>
+           </div>
+       </div>
+   </main>
+
+   <!-- Information Modal -->
+   <!-- Information Modal -->
+<div id="infoModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>What you need to know before launching your Campaign</h2>
+        </div>
+        <div class="modal-scrollable-content">
+            <div class="modal-body">
+                <p><strong>1. Final Confirmation & MINT ☀️</strong><br>
+                Once you confirm your campaign details, you will proceed to the Proof of Rewards and complete the MINT in one single blockchain transaction.</p>
+                
+                <p>This transaction includes:</p>
+                <ul>
+                    <li>The on-chain creation of your campaign</li>
+                    <li>The automatic deposit of all your promised Standard & Premium Rewards from your connected wallet to Winstory's smart contract</li>
+                </ul>
+                
+                <p>No second step, no delay — everything is committed immediately and transparently.</p>
+                
+                <p class="critical-red">⚠️ If any reward is missing or mismatched, the entire transaction will be reverted.<br>
+                No campaign will be minted. Only gas fees apply in case of failure.</p>
+                
+                <p><strong>2. Pending Phase (only if no video is attached) ☀️☀️</strong><br>
+                If you haven't uploaded a film, Winstory's creative team will automatically produce an AI-generated video based on your Starting Text during the 24h Pending Phase.</p>
+                
+                <p>This phase is invisible to the public and reserved for internal production.</p>
+                
+                <p><strong>3. Moderation Phase by $WINC Stakers (from +24h00:00) ☀️☀️☀️</strong><br>
+                Once the pending phase ends, your campaign is submitted to community moderation by $WINC stakers.</p>
+                
+                <p>Each staker will review your campaign and vote:</p>
+                <ul>
+                    <li class="validation-message">✅ Validate — if your campaign respects Winstory's standards and your rewards are properly registered</li>
+                    <li class="rejection-message">❌ Refuse — if the content is problematic or the smart contract data (rewards, structure) is not coherent</li>
+                </ul>
+                
+                <p>To be officially approved, your campaign must meet 3 validation criteria:</p>
+                <ol>
+                    <li class="important-bold">1/3 ➡️ Minimum 22 active stakers have voted</li>
+                    <li class="important-bold">2/3 ➡️ The total staked amount exceeds your MINT price</li>
+                    <li class="important-bold">3/3 ➡️ The vote result reaches a 2:1 majority (either Valid or Refuse)</li>
+                </ol>
+                
+                <p>You can monitor the real-time progress of moderation in your enterprise dashboard.</p>
+                
+                <p><strong>4. Open Completion Phase (if validated) ☀️☀️☀️☀️</strong><br>
+                Once approved, your campaign becomes visible and open to community contribution.</p>
+                
+                <p>Completers (participants) will:</p>
+                <ul>
+                    <li>Access your content and propose creative video continuations</li>
+                    <li>Pay a participation fee based on your reward settings (Free or Paid)</li>
+                    <li>Compete to earn Standard Rewards (for validated completions) or Premium Rewards (Top 3 highest scores)</li>
+                </ul>
+                
+                <p>Completers also retain copyrights on their creation, unless they license it further. Winstory holds only the right of exploitation.</p>
+                
+                <p><strong>5. Scoring Phase (real-time, by stakers) ☀️☀️☀️☀️☀️</strong><br>
+                As new completions arrive, stakers will:</p>
+                <ul>
+                    <li>Validate or reject each contribution</li>
+                    <li>Score each approved one from 0 to 100</li>
+                    <li>Automatically trigger reward distribution based on results</li>
+                </ul>
+                
+                <p>Standard Rewards go to all validated completers.<br>
+                Premium Rewards go to the 3 best average scores after 7 days or 100% completions.</p>
+                
+                <p><strong>6. Campaign Outcomes</strong></p>
+                
+                <p><strong>✅ A. Fully completed</strong></p>
+                <ul>
+                    <li>100% of completions reached</li>
+                    <li>Targeted net profit achieved</li>
+                    <li>All rewards distributed automatically</li>
+                </ul>
+                
+                <p><strong>🟠 B. Incomplete</strong></p>
+                <ul>
+                    <li>Campaign validated but not fully completed</li>
+                    <li>Undistributed rewards returned</li>
+                    <li>Partial refund applied if break-even point not reached</li>
+                </ul>
+                
+                <p class="critical-red">❌ C. Refused</p>
+                <ul class="critical-red">
+                    <li>Rejected by moderation (lack of coherence or violation of Winstory's rules)</li>
+                    <li>MINT payment lost</li>
+                    <li>Campaign never published or accessible to the public</li>
+                </ul>
+                
+                <p><strong>⚠️ Important business model notes</strong></p>
+                <ul>
+                    <li class="important-bold">Initial MINT: 51% goes to Stakers / 49% to Winstory</li>
+                    <li class="important-bold">Paid Completion: 50% to your Company / 40% to Stakers / 10% to Winstory</li>
+                    <li class="important-bold">Free Completion: Only blockchain fees apply</li>
+                </ul>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <div class="checkbox-container">
+                <input type="checkbox" id="acknowledgeCheckbox">
+                <label for="acknowledgeCheckbox">I understand</label>
+            </div>
+            <button id="continue-button" class="continue-button" disabled>Continue to MINT</button>
+        </div>
+    </div>
+</div>
+
+   <!-- Delete Confirmation Popup -->
+   <div id="deletePopup" class="delete-popup">
+       <span class="close-delete-popup">&times;</span>
+       <h3>Delete and Restart</h3>
+       <p>Are you sure you want to delete all entered data and restart the campaign creation ? This action cannot be undone.</p>
+       <div class="delete-popup-buttons">
+           <button id="confirm-delete" class="confirm-delete">Delete</button>
+           <button id="cancel-delete" class="cancel-delete">Cancel</button>
+       </div>
+   </div>
+
+   <!-- Expanded Card Modal -->
+   <div class="overlay" id="overlay"></div>
+   <div class="expanded-card" id="expanded-card" style="display: none;">
+       <h2 id="expanded-card-title"></h2>
+       <div class="expanded-card-content">
+           <textarea id="expanded-card-textarea"></textarea>
+       </div>
+       <div class="expanded-card-buttons">
+           <button id="cancel-button" class="cancel-button">Cancel</button>
+           <button id="save-button" class="save-button">Save</button>
+       </div>
+   </div>
+
+   <script>
+       // DOM Elements
+       const walletElement = document.getElementById('wallet');
+       const walletAddressElement = document.getElementById('wallet-address');
+       const mintButton = document.getElementById('por-button');
+       const infoModal = document.getElementById('infoModal');
+       const acknowledgeCheckbox = document.getElementById('acknowledgeCheckbox');
+       const continueButton = document.getElementById('continue-button');
+       const infoIcon = document.getElementById('info-icon');
+       const deleteButton = document.getElementById('delete-button');
+       const deletePopup = document.getElementById('deletePopup');
+       const confirmDeleteBtn = document.getElementById('confirm-delete');
+       const cancelDeleteBtn = document.getElementById('cancel-delete');
+       const closeDeletePopup = document.querySelector('.close-delete-popup');
+       const overlay = document.getElementById('overlay');
+       const expandedCard = document.getElementById('expanded-card');
+       const expandedCardTitle = document.getElementById('expanded-card-title');
+       const expandedCardTextarea = document.getElementById('expanded-card-textarea');
+       const saveButton = document.getElementById('save-button');
+       const cancelButton = document.getElementById('cancel-button');
+
+       // Current editable field
+       let currentEditableField = null;
+       let currentFieldId = null;
+
+       // Display wallet address
+       function displayWalletAddress() {
+           const walletAddress = localStorage.getItem('walletAddress');
+           if (walletAddress) {
+               walletElement.style.display = 'flex';
+               walletAddressElement.textContent = truncateAddress(walletAddress);
+           }
+       }
+
+       // Truncate wallet address
+       function truncateAddress(address) {
+           return `${address.slice(0, 6)}...${address.slice(-4)}`;
+       }
+
+       // Load campaign data from localStorage
+       function loadCampaignData() {
+           // Retrieve all data from localStorage
+           const campaignData = {
+               companyName: localStorage.getItem('companyName'),
+               professionalEmail: localStorage.getItem('professionalEmail'),
+               activitySector: localStorage.getItem('activitySector'),
+               title: localStorage.getItem('title'),
+               startingText: localStorage.getItem('startingText'),
+               guideline: localStorage.getItem('guideline'),
+               unitValue: localStorage.getItem('unitValue'),
+               netProfit: localStorage.getItem('netProfit'),
+               maxMint: localStorage.getItem('maxMint'),
+               videoUrl: localStorage.getItem('videoUrl'),
+               standardReward: localStorage.getItem('standardReward'),
+               premiumReward: localStorage.getItem('premiumReward')
+           };
+
+           // Update the UI with the retrieved data
+           document.getElementById('company-name').textContent = campaignData.companyName || '';
+           document.getElementById('professional-email').textContent = campaignData.professionalEmail || '';
+           document.getElementById('activity-sector').textContent = campaignData.activitySector || '';
+           document.getElementById('title').textContent = campaignData.title || '';
+           document.getElementById('starting-text').textContent = campaignData.startingText || '';
+           document.getElementById('guideline').textContent = campaignData.guideline || '';
+           document.getElementById('unit-value').textContent = campaignData.unitValue ? `${campaignData.unitValue} WINC` : '';
+           document.getElementById('net-profit').textContent = campaignData.netProfit ? `${campaignData.netProfit} WINC` : '';
+           document.getElementById('max-mint').textContent = campaignData.maxMint ? `${campaignData.maxMint} WINC` : '';
+
+           // Handle video display
+           const videoElement = document.getElementById('uploaded-video');
+           const noVideoElement = document.getElementById('no-video');
+
+           if (campaignData.videoUrl) {
+               videoElement.src = campaignData.videoUrl;
+               videoElement.style.display = 'block';
+               noVideoElement.style.display = 'none';
+           } else {
+               videoElement.style.display = 'none';
+               noVideoElement.style.display = 'block';
+           }
+
+           // Check if all required data is present
+           checkRequiredData();
+
+           // Setup editable fields
+           setupEditableFields();
+       }
+
+       // Setup editable fields
+       function setupEditableFields() {
+           const editableFields = document.querySelectorAll('.editable');
+
+           editableFields.forEach(field => {
+               field.addEventListener('click', function() {
+                   const fieldId = this.id;
+                   const fieldValue = this.textContent.trim().replace('✏️', '');
+                   const fieldLabel = this.parentElement.querySelector('strong').textContent;
+                   const cardTitle = this.closest('.info-card').querySelector('h2').textContent;
+
+                   currentEditableField = this;
+                   currentFieldId = fieldId;
+
+                   expandedCardTitle.textContent = `${cardTitle} - ${fieldLabel}`;
+                   expandedCardTextarea.value = fieldValue;
+
+                   overlay.style.display = 'block';
+                   expandedCard.style.display = 'block';
+               });
+           });
+       }
+
+       // Check if all required data is present
+       function checkRequiredData() {
+           const requiredFields = [
+               'companyName',
+               'professionalEmail',
+               'title',
+               'startingText',
+               'standardReward',
+               'premiumReward'
+           ];
+
+           let allFieldsPresent = true;
+
+           for (const field of requiredFields) {
+               if (!localStorage.getItem(field)) {
+                   allFieldsPresent = false;
+                   break;
+               }
+           }
+
+           if (allFieldsPresent) {
+               mintButton.disabled = false;
+           }
+       }
+
+       // Show modal on load
+       function showInfoModal() {
+           infoModal.style.display = 'block';
+       }
+
+       // Close modal and accept terms
+       function acceptTerms() {
+           localStorage.setItem('mintTermsAccepted', 'true');
+           infoModal.style.display = 'none';
+       }
+
+       // Initialize MINT process
+       function initMint() {
+           // Here you would typically:
+           // 1. Connect to the user's wallet
+           // 2. Prepare the transaction
+           // 3. Send the transaction
+           // 4. Handle the response
+
+           alert('MINT transaction will be initiated. In a real implementation, this would connect to Web3 and sign the transaction.');
+       }
+
+       // Restart the process
+       function restartProcess() {
+           deletePopup.style.display = 'none';
+
+           // Clear all relevant localStorage items
+           const keysToRemove = [
+               'companyName',
+               'professionalEmail',
+               'activitySector',
+               'title',
+               'startingText',
+               'guideline',
+               'unitValue',
+               'netProfit',
+               'maxMint',
+               'videoUrl',
+               'standardReward',
+               'premiumReward',
+               'mintTermsAccepted'
+           ];
+
+           keysToRemove.forEach(key => {
+               localStorage.removeItem(key);
+           });
+
+           // Redirect to SaaS Company page
+           window.location.href = 'saas-company.html';
+       }
+
+       // Save edited field
+       function saveEditedField() {
+           if (currentEditableField && currentFieldId) {
+               const newValue = expandedCardTextarea.value;
+               currentEditableField.textContent = newValue + ' ✏️';
+               localStorage.setItem(currentFieldId, newValue);
+
+               overlay.style.display = 'none';
+               expandedCard.style.display = 'none';
+
+               checkRequiredData();
+           }
+       }
+
+       // Close expanded card
+       function closeExpandedCard() {
+           overlay.style.display = 'none';
+           expandedCard.style.display = 'none';
+       }
+
+       // Event Listeners
+       acknowledgeCheckbox.addEventListener('change', function() {
+           continueButton.disabled = !this.checked;
+       });
+
+       continueButton.addEventListener('click', acceptTerms);
+
+       infoIcon.addEventListener('click', function() {
+           infoModal.style.display = 'block';
+       });
+
+       deleteButton.addEventListener('click', function() {
+           deletePopup.style.display = 'block';
+       });
+
+       confirmDeleteBtn.addEventListener('click', restartProcess);
+
+       cancelDeleteBtn.addEventListener('click', function() {
+           deletePopup.style.display = 'none';
+       });
+
+       closeDeletePopup.addEventListener('click', function() {
+           deletePopup.style.display = 'none';
+       });
+
+       mintButton.addEventListener('click', initMint);
+
+       saveButton.addEventListener('click', saveEditedField);
+
+       cancelButton.addEventListener('click', closeExpandedCard);
+
+       overlay.addEventListener('click', closeExpandedCard);
+
+       // Initialize the page
+       window.addEventListener('DOMContentLoaded', function() {
+           displayWalletAddress();
+           loadCampaignData();
+           showInfoModal(); // Always show modal on load
+       });
+   </script>
+</body>
+</html>

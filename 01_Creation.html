@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Creation</title>
+    <style>
+      
+ /* Base styles */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #000;
+    color: #fff;
+    margin: 0;
+    padding: 20px;
+}
+
+/* Story section */
+#title {
+    width: 22%;
+    padding: 8px;
+    margin-bottom: 15px;
+    border: 1px solid #ffd700;
+    border-radius: 4px;
+    background-color: #fff;
+    color: #000;
+}
+
+#starting-text {
+    width: 100%;
+    height: 200px;
+    padding: 12px;
+    border: 1px solid #ffd700;
+    border-radius: 4px;
+    resize: vertical;
+    background-color: #fff;
+    color: #000;
+}
+
+/* Parameters section */
+#company-name,
+#pro-mail {
+    width: 22%;
+    padding: 8px;
+    margin-bottom: 15px;
+    border: 1px solid #ffd700;
+    border-radius: 4px;
+    background-color: #fff;
+    color: #000;
+}
+
+#company-logo {
+    max-width: 200px;
+    margin: 10px 0;
+    border: 1px solid #ffd700;
+    border-radius: 4px;
+}
+
+#activity-sector {
+    width: 25%;
+    padding: 8px;
+    margin-bottom: 15px;
+    border: 1px solid #ffd700;
+    border-radius: 4px;
+    background-color: #fff;
+    color: #000;
+}
+
+#guideline {
+    width: 100%;
+    height: 150px;
+    padding: 12px;
+    border: 1px solid #ffd700;
+    border-radius: 4px;
+    resize: vertical;
+    background-color: #fff;
+    color: #000;
+}
+
+/* Rewards section */
+#unit-value,
+#net-profit {
+    width: 150px;
+    padding: 8px;
+    margin-bottom: 10px;
+    border: 1px solid #ffd700;
+    border-radius: 4px;
+    background-color: #fff;
+    color: #000;
+}
+
+#selected-unit-value,
+#selected-net-profit,
+#maximum-mint,
+#total-revenue {
+    font-weight: bold;
+    color: #ffd700;
+}
+
+/* Video upload section */
+     .video-upload {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0px 0;
+            color: #fff;
+        }
+
+        .video-container {
+            position: relative;
+            width: 75%;
+            padding-bottom: 42.18%; /* 16:9 */
+            height: 0;
+            background-color: #000; /* Change background color to black */
+            border: 1px solid #ffd700;
+            border-radius: 4px;
+            margin: 15px 0;
+        }
+
+        .video-container video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+/* Rewards setup section */
+#standard-reward-type,
+#premium-reward-type {
+    width: 200px;
+    padding: 8px;
+    margin-bottom: 15px;
+    border: 1px solid #ffd700;
+    border-radius: 4px;
+    background-color: #fff;
+    color: black;
+}
+
+#standard-reward-details,
+#premium-reward-details {
+    margin-top: 10px;
+    padding: 15px;
+    background-color: #222;
+    border: 1px solid #ffd700;
+    border-radius: 4px;
+    color: black;
+
+}
+
+/* Section headers */
+h2 {
+    color: #ffd700;
+    padding: 10px 0;
+    margin: 20px 0;
+
+}
+
+/* Form labels */
+label {
+    display: block;
+    margin: 10px 0 5px;
+    font-weight: bold;
+    color: #fff;
+}
+
+/* Form labels */
+label {
+    display: block;
+    margin: 10px 0 5px;
+    font-weight: bold;
+    color: #fff;
+}
+
+  .button-container {
+            position: relative;
+            display: inline-block;
+        }
+      .mint-button {
+        padding: 15px 25px;
+        font-size: 16px;
+        font-weight: bold;
+        color: #000; /* Texte noir */
+        background-color: #ffd700; /* Fond jaune */
+        border: 2px solid #daa520; /* Encadrement doré */
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s, transform 0.2s;
+    }
+           .mint-button:hover {
+        background-color: #ffcc00; /* Légèrement plus clair au survol */
+        transform: scale(1.05); /* Légère mise en avant */
+    }
+        .popup {
+    visibility: hidden;
+    width: 610px;
+    background: linear-gradient(135deg, #FFD700, #DAA520); /* Dégradé or dynamique */
+    color: #1a1a1a;
+    text-align: left;
+    padding: 25px;
+    border: 2px solid #B8860B; /* Bordure dorée plus profonde */
+    border-radius: 15px; /* Coins plus arrondis */
+    box-shadow: 0 6px 12px rgba(218, 165, 32, 0.3), 
+                inset 0 2px 5px rgba(255, 255, 255, 0.2); /* Ombre sophistiquée */
+    position: absolute;
+    bottom: 120%;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1;
+    opacity: 0;
+    transition: visibility 0s, opacity 0.3s;
+    font-family: 'Arial', sans-serif;
+    line-height: 1.6;
+}
+
+.popup h3 {
+    color: #000;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.popup h4 {
+    text-align: center;
+    color: #333;
+    font-size: 0.9em;
+    margin: 15px 0 10px;
+}
+
+.popup ul {
+    padding-left: 20px;
+}
+
+.popup li {
+    margin-bottom: 10px;
+}
+
+.popup strong {
+    color: #8B4513; /* Marron doré pour le texte en gras */
+}
+        .popup::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -10px;
+            border-width: 10px;
+            border-style: solid;
+            border-color: #fff transparent transparent transparent;
+        }
+        .button-container:hover .popup {
+            visibility: visible;
+            opacity: 1;
+        }
+
+
+/* Campaign creation container */
+.campaign-creation {
+    background-color: #000 !important;
+    color: #fff !important;
+    padding: 20px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    #title,
+    #company-name,
+    #pro-mail,
+    #activity-sector {
+        width: 100%;
+    }
+    
+    #video-preview {
+        width: 100%;
+        height: auto;
+    }
+    
+    #standard-reward-type,
+    #premium-reward-type {
+        width: 100%;
+    }
+    
+        .campaign-section {
+            margin-bottom: 40px;
+        }
+        
+        .video-preview-section {
+            margin: 30px 0;
+        }
+        
+        .guidelines-section {
+            margin: 20px 0 40px 0;
+        }
+}
+
+/* Section headers */
+h2 {
+    padding: 10px;
+    margin: 20px 0;
+    border-radius: 4px;
+}
+
+/* Form labels */
+label {
+    display: block;
+    margin: 10px 0 5px;
+    font-weight: bold;
+}
+
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    #title,
+    #company-name,
+    #pro-mail,
+    #activity-sector {
+        width: 100%;
+    }
+    
+    #video-preview {
+        width: 100%;
+        height: auto;
+    }
+    
+    #standard-reward-type,
+    #premium-reward-type {
+        width: 100%;
+    }
+    
+.white-text {
+    color: white;
+}
+
+}
+        
+    </style>
+</head>
+<body>    
+    <div class="campaign-creation" style="background-color: white; color: black;">
+        <!-- Section Campaign to Write -->
+        <div class="campaign-section">
+            <h2 style="padding: 10px;">New Campaign</h2>
+            <label for="title">Title :</label>
+            <input type="text" id="title" name="title" style="width: 22%;">
+            
+            <label for="starting-text">Starting Text:</label>
+            <textarea id="starting-text" name="starting-text" style="width: 90%; height: 100px;"></textarea>
+            
+            <!-- Guidelines section déplacée ici -->
+            <div class="guidelines-section">
+                <label for="guideline">Guideline to help Community to complete Starting Text:</label>
+                <textarea id="guideline" name="guideline" style="width: 50%; height: 25px;"></textarea>
+            </div>
+        </div>
+
+            <!-- Video Upload Section déplacée ici -->
+        <div class="video-preview-section">
+            <h2 style="padding: 10px;">Upload your A.I. Film according to your Starting Story</h2>
+            <div class="video-upload">
+                <div class="video-container">
+                    <video id="video-preview" controls></video>
+                </div>
+                <input type="file" id="video-upload" name="video-upload" accept=".mp4">
+            </div>
+        </div>
+
+
+        <!-- Parameters Section -->
+        <h2 style="padding: 10px;">Parameters</h2>
+        <div class="parameters-section">
+            <label for="company-name">Your Company Name:</label>
+            <input type="text" id="company-name" name="company-name">
+            <img id="company-logo" src="" alt="Company Logo">
+            <label for="pro-mail">Your E-Mail :</label>
+            <input type="text" id="pro-mail" name="pro-mail" style="width: 22%;">
+            <label for="activity-sector">Activity Sector Company:</label>
+            <select id="activity-sector" name="activity-sector">
+    <optgroup label="Web2">
+        <option value="e-commerce">E-commerce</option>
+        <option value="social-networks">Social Networks</option>
+        <option value="media-entertainment">Media and Entertainment</option>
+        <option value="technology">Technology</option>
+        <option value="fintech">Financial Services (FinTech)</option>
+        <option value="education">Education</option>
+        <option value="health">Health</option>
+        <option value="mobility-transport">Mobility and Transport</option>
+        <option value="tourism-hospitality">Tourism and Hospitality</option>
+        <option value="digital-marketing">Digital Marketing and Advertising</option>
+    </optgroup>
+    <optgroup label="Web3">
+        <option value="defi">Decentralized Finance (DeFi)</option>
+        <option value="nfts-digital-art">NFTs and Digital Art</option>
+        <option value="blockchain-gaming">Blockchain Gaming</option>
+        <option value="dao">DAO (Decentralized Autonomous Organizations)</option>
+        <option value="digital-identity-privacy">Digital Identity and Privacy</option>
+        <option value="blockchain-infrastructure">Blockchain Infrastructure</option>
+        <option value="decentralized-social-networks">Decentralized Social Networks</option>
+        <option value="stablecoins-digital-currencies">Stablecoins and Digital Currencies</option>
+        <option value="decentralized-media-content">Decentralized Media and Content</option>
+        <option value="staking-yield-farming">Staking and Yield Farming</option>
+    </optgroup>
+</select>
+
+        <div>
+        <h2 style="padding: 10px;">With Winstory, you decide your marketing story, you decide your R.O.I. win</h2>
+        <div class="rewards-section">
+            <label for="unit-value">Price of one Completion $</label>
+            <input type="text" id="unit-value" name="unit-value">
+            <p>Unit value of a Complementary MINT = standard reward = <span id="selected-unit-value"></span></p>
+            <label for="net-profit">Choose your Company net profit you want to achieve with this Winstory campaign :</label>
+            <input type="text" id="net-profit" name="net-profit">
+            <p>Selected Net Profit: <span id="selected-net-profit"></span></p>
+             <p id="net-profit-phrase"></p>
+            <p>The maximum number of community MINT completions available for your campaign will be : <span id="maximum-mint"></span></p>
+            <p>Total Revenue = <span id="total-revenue"></span></p>
+         <div class="rewards-setup">
+    <div class="standard-rewards">
+        <h2>Set-up Standards Rewards</h2>
+        <select id="standard-reward-type">
+            <option value="">Select a reward type</option>
+            <option value="digital-tokens">Digital Tokens</option>
+            <option value="digital-exclusive-items">Digital Exclusive Items</option>
+            <option value="digital-exclusive-access">Digital Exclusive Access</option>
+            <option value="physical-exclusive-event-access">Physical Exclusive Event Access</option>
+        </select>
+        <div id="standard-reward-details"></div>
+    </div>
+    <div class="premium-rewards">
+        <h2>Set-up Premium Rewards</h2>
+        <select id="premium-reward-type">
+            <option value="">Select a reward type</option>
+            <option value="digital-tokens">Digital Tokens</option>
+            <option value="digital-exclusive-items">Digital Exclusive Items</option>
+            <option value="digital-exclusive-access">Digital Exclusive Access</option>
+            <option value="physical-exclusive-event-access">Physical Exclusive Event Access</option>
+        </select>
+        <div id="premium-reward-details"></div>
+    </div>
+</div>
+
+<div class="button-container">
+    <a href="https://www.winstory.io/mint-company" style="text-decoration: none;">
+        <button class="mint-button">
+            MINT ON WINSTORY WITH POLYGON (1000$)
+        </button>
+      <div class="popup">
+    <h3>What you need to know before your MINT</h3>
+    
+    <h4>Phase Pending (24h)</h4>
+    <p>As soon as the MINT is completed, a 24-hour waiting period begins. During this time, you must send the entirety of the promised Community Standard and Premium Rewards to Winstory.</p>
+    
+    <h4>Phase Open Moderation</h4>
+    <p>24 hours after your MINT, the Stakers will start moderating your content.</p>
+    
+    <ul>
+        <li><strong>Validation:</strong> Your text and AI-assisted video must be coherent with each other and comply with the moderation rules.</li>
+        <li><strong>Rejection:</strong> Your content will be refused if:
+            <ul>
+                <li>It contains inappropriate elements (explicit content, racism, pedopornography, deepfake, or any other illegal or offensive material).</li>
+                <li>The promised rewards are incomplete or not sent within 24 hours after the MINT.</li>
+            </ul>
+        </li>
+    </ul>
+    
+    <p><strong>Conditions for the Final Decision by Stakers</strong>: To finalize the Stakers' decision (Validation = Completion available, Rejection = Appeal possible or process terminated), the following three conditions must be met:</p>
+    
+    <ul>
+        <li><strong>Minimum of 22 Stakers</strong> involved in the moderation.</li>
+        <li><strong>Majority-to-minority ratio</strong> of at least 2:1 (Valid/Refuse or Refuse/Valid).</li>
+        <li><strong>Staking Pool exceeding the MINT price</strong> ($1,000).</li>
+    </ul>
+    
+    <p><strong>Important:</strong></p>
+    <ul>
+        <li>A partial refund may be considered only if your initial campaign does not reach 100% complementary completion.</li>
+        <li>Any violation of the rules may result in the loss of your MINT, as decided by the Stakers, without the possibility of any refund—partial or full.</li>
+    </ul>
+</div>
+    </a>
+</div>
+
+
+    <script>
+   // Fonction pour tronquer l'adresse du wallet
+        function truncateAddress(address) {
+            return `${address.slice(0, 6)}...${address.slice(-4)}`;
+        }
+
+        // Vérifier si l'adresse Ethereum est stockée et la récupérer pour l'afficher
+        function displayWalletAddress() {
+            const walletAddress = localStorage.getItem('walletAddress');
+            const walletButton = document.getElementById('wallet');
+
+            if (walletAddress) {
+                walletButton.innerText = truncateAddress(walletAddress);
+                walletButton.style.display = 'inline-block';
+            }
+        }
+
+        // Appeler la fonction pour afficher l'adresse quand la page est chargée
+        window.addEventListener('DOMContentLoaded', displayWalletAddress);
+
+      // Gestion des données de la campagne
+const campaignData = {
+  title: '',
+  startingText: '',
+  companyName: '',
+  activitySector: '',
+  guideline: '',
+  unitValue: 0,
+  netProfit: 0,
+  videoFile: null
+};
+
+// Fonction pour sauvegarder les données de la campagne
+function saveCampaignData() {
+  Object.keys(campaignData).forEach(key => {
+    localStorage.setItem(key, campaignData[key]);
+  });
+}
+
+// Fonction pour charger les données de la campagne
+function loadCampaignData() {
+  Object.keys(campaignData).forEach(key => {
+    campaignData[key] = localStorage.getItem(key) || '';
+  });
+  updateCampaignUI();
+}
+
+// Fonction pour mettre à jour l'interface utilisateur avec les données de la campagne
+function updateCampaignUI() {
+  document.getElementById('title').value = campaignData.title;
+  document.getElementById('starting-text').value = campaignData.startingText;
+  document.getElementById('company-name').value = campaignData.companyName;
+  document.getElementById('activity-sector').value = campaignData.activitySector;
+  document.getElementById('guideline').value = campaignData.guideline;
+  document.getElementById('unit-value').value = campaignData.unitValue;
+  document.getElementById('net-profit').value = campaignData.netProfit;
+  document.getElementById('video-file-name').innerText = campaignData.videoFile ? campaignData.videoFile.name : 'Aucun fichier sélectionné';
+}
+
+// Gestion du téléchargement de la vidéo
+const videoUploadInput = document.getElementById('video-upload');
+videoUploadInput.addEventListener('change', function() {
+  campaignData.videoFile = this.files[0];
+  saveCampaignData();
+});
+
+// Calcul des valeurs
+function calculateValues() {
+  const unitValue = parseFloat(document.getElementById('unit-value').value);
+  const netProfit = parseFloat(document.getElementById('net-profit').value);
+
+  if (!isNaN(unitValue) && !isNaN(netProfit)) {
+    const maximumMint = Math.ceil((1000 + netProfit) / (unitValue * 0.5));
+    const totalRevenue = netProfit + 1000;
+
+    document.getElementById('selected-unit-value').textContent = unitValue.toFixed(2);
+    document.getElementById('selected-net-profit').textContent = netProfit.toFixed(2);
+    document.getElementById('maximum-mint').textContent = maximumMint;
+    document.getElementById('total-revenue').textContent = totalRevenue.toFixed(2);
+  }
+}
+
+// Chargement initial des données
+window.addEventListener('DOMContentLoaded', loadCampaignData);
+document.getElementById('unit-value').addEventListener('change', calculateValues);
+document.getElementById('net-profit').addEventListener('change', calculateValues);
+       
+
+        // Fonction pour calculer et afficher les valeurs
+        function calculateValues() {
+            const unitValue = parseFloat(document.getElementById('unit-value').value);
+            const netProfit = parseFloat(document.getElementById('net-profit').value);
+            const selectedUnitValueOutput = document.getElementById('selected-unit-value');
+            const selectedNetProfitOutput = document.getElementById('selected-net-profit');
+            const maximumMintOutput = document.getElementById('maximum-mint');
+            const totalRevenueOutput = document.getElementById('total-revenue');
+
+            if (!isNaN(unitValue) && !isNaN(netProfit)) {
+                const maximumMint = Math.ceil((1000 + netProfit) / (unitValue * 0.5));
+                const totalRevenue = netProfit + 1000;
+
+                selectedUnitValueOutput.textContent = unitValue.toFixed(2);
+                selectedNetProfitOutput.textContent = netProfit.toFixed(2);
+                maximumMintOutput.textContent = maximumMint;
+                totalRevenueOutput.textContent = totalRevenue.toFixed(2);
+            }
+        }
+
+        // Ajouter des écouteurs d'événements pour les boutons
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('standard-rewards-button').addEventListener('click', function(event) {
+                event.preventDefault();
+                saveCampaignCreationData();
+                window.location.href = this.href;
+            });
+            document.getElementById('premium-rewards-button').addEventListener('click', function(event) {
+                event.preventDefault();
+                saveCampaignCreationData();
+                window.location.href = this.href;
+            });
+            document.getElementById('mint-button').addEventListener('click', function(event) {
+                event.preventDefault();
+                saveCampaignCreationData();
+                window.location.href = this.href;
+            });
+
+            displayCampaignCreationData();
+
+            document.getElementById('unit-value').addEventListener('change', calculateValues);
+            document.getElementById('net-profit').addEventListener('change', calculateValues);
+        });
+  
+        // Attendre que la page soit chargée avant d'exécuter le code
+        window.addEventListener('load', function() {
+            console.log('Le code JavaScript est en cours d\'exécution');
+
+            // Obtenir les éléments d'entrée
+            const unitValueInput = document.getElementById('unit-value');
+            const netProfitInput = document.getElementById('net-profit');
+            const companyNameInput = document.getElementById('company-name');
+            const companyLogoImg = document.getElementById('company-logo');
+
+            // Obtenir les éléments de sortie
+            const selectedUnitValueOutput = document.getElementById('selected-unit-value');
+            const selectedNetProfitOutput = document.getElementById('selected-net-profit');
+            const maximumMintOutput = document.getElementById('maximum-mint');
+            const totalRevenueOutput = document.getElementById('total-revenue');
+
+            // Ajouter des écouteurs d'événements aux éléments d'entrée
+            unitValueInput.addEventListener('change', calculateValues);
+            netProfitInput.addEventListener('change', calculateValues);
+            companyNameInput.addEventListener('input', updateCompanyLogo);
+
+            // Fonction pour calculer les valeurs
+            function calculateValues() {
+                const unitValue = parseFloat(unitValueInput.value);
+                const netProfit = parseFloat(netProfitInput.value);
+
+                // Calculer les valeurs de maximum mint et de total revenue
+                const maximumMint = Math.ceil((1000 + netProfit) / (unitValue * 0.5));
+                const totalRevenue = netProfit + 1000;
+
+                // Mettre à jour les éléments de sortie
+                selectedUnitValueOutput.textContent = unitValue.toFixed(2);
+                selectedNetProfitOutput.textContent = netProfit.toFixed(2);
+                maximumMintOutput.textContent = maximumMint;
+                totalRevenueOutput.textContent = totalRevenue.toFixed(2);
+
+                // Mettre à jour la phrase "With All Completions Minted, Company Has a Net Profit of \$ equivalent to \$WINC"
+                const netProfitElement = document.querySelector("#selected-net-profit");
+                const totalRevenueElement = document.querySelector("#total-revenue");
+                const netProfitPhrase = `With All Completions Minted, Company Has a Net Profit of ${netProfitElement.textContent}$ equivalent to $WINC`;
+                document.querySelector("#net-profit-phrase").textContent = netProfitPhrase;
+            }
+
+            // Fonction pour mettre à jour le logo de l'entreprise
+            function updateCompanyLogo() {
+                const companyName = companyNameInput.value;
+                const logoUrl = `https://img.logo.dev/${companyName}.com?token=pk_CcfxIagsSJCBxLGvrpKHhw`;
+                companyLogoImg.src = logoUrl;
+                localStorage.setItem('companyLogoUrl', logoUrl);
+            }
+
+            // Récupérer l'URL du logo de l'entreprise à partir du localStorage
+            const storedLogoUrl = localStorage.getItem('companyLogoUrl');
+            if (storedLogoUrl) {
+                companyLogoImg.src = storedLogoUrl;
+            }
+
+            // Add event listener to video upload input
+            const videoUploadInput = document.getElementById('video-upload');
+            const videoPreview = document.getElementById('video-preview');
+            videoUploadInput.addEventListener('change', function() {
+                const file = this.files[0];
+                if (file) {
+                    const url = URL.createObjectURL(file);
+                    videoPreview.src = url;
+                    localStorage.setItem('videoUrl', url);
+                }
+            });
+
+            // Check if video URL is stored in localStorage and set it as the video source
+            const storedVideoUrl = localStorage.getItem('videoUrl');
+            if (storedVideoUrl) {
+                videoPreview.src = storedVideoUrl;
+            }
+
+            // Fonction pour afficher les données de Campaign Creation
+            function displayCampaignCreationData() {
+                const title = localStorage.getItem('title');
+                const startingText = localStorage.getItem('startingText');
+                const companyName = localStorage.getItem('companyName');
+                const activitySectorCompany = localStorage.getItem('activitySectorCompany');
+                const guideline = localStorage.getItem('guideline');
+                const unitValue = localStorage.getItem('unitValue');
+                const netProfit = localStorage.getItem('netProfit');
+                const videoFile = localStorage.getItem('videoFile');
+
+                document.getElementById('title').value = title;
+                document.getElementById('starting-text').value = startingText;
+                document.getElementById('company-name').value = companyName;
+                document.getElementById('activity-sector').value = activitySectorCompany;
+                document.getElementById('guideline').value = guideline;
+                document.getElementById('unit-value').value = unitValue;
+                document.getElementById('net-profit').value = netProfit;
+                // Afficher le nom du fichier vidéo
+                document.getElementById('video-file-name').innerText = videoFile ? videoFile.name : '';
+            }
+
+            // Fonction pour afficher les données de récompenses
+            function displayRewardsData() {
+                const standardRewardType = localStorage.getItem('standardRewardType');
+                const tokenName = localStorage.getItem('tokenName');
+                const tokensPerMinter = localStorage.getItem('tokensPerMinter');
+                const itemName = localStorage.getItem('itemName');
+                const itemsPerMinter = localStorage.getItem('itemsPerMinter');
+const communityValidatedMinters = localStorage.getItem('communityValidatedMinters');
+const premiumRewardType = localStorage.getItem('premiumRewardType');
+const premiumTokenName = localStorage.getItem('premiumTokenName');
+const premiumTokensPerMinter = localStorage.getItem('premiumTokensPerMinter');
+const premiumItemName = localStorage.getItem('premiumItemName');
+const premiumItemsPerMinter = localStorage.getItem('premiumItemsPerMinter');
+
+// Afficher les données de récompenses standard
+document.getElementById('standard-reward-type').value = standardRewardType;
+document.getElementById('token-name').value = tokenName;
+document.getElementById('tokens-per-minter').value = tokensPerMinter;
+document.getElementById('item-name').value = itemName;
+document.getElementById('items-per-minter').value = itemsPerMinter;
+document.getElementById('total-community-validated-minters').innerText = communityValidatedMinters;
+
+// Afficher les données de récompenses premium
+document.getElementById('premium-reward-type').value = premiumRewardType;
+document.getElementById('premium-token-name').value = premiumTokenName;
+document.getElementById('premium-tokens-per-minter').value = premiumTokensPerMinter;
+document.getElementById('premium-item-name').value = premiumItemName;
+document.getElementById('premium-items-per-minter').value = premiumItemsPerMinter;
+}
+
+// Appeler les fonctions pour afficher les données lorsque la page est chargée
+window.addEventListener('DOMContentLoaded', function() {
+displayCampaignCreationData();
+displayRewardsData();
+});
+
+// Fonction pour sauvegarder les données de Campaign Creation
+function saveCampaignCreationData() {
+const title = document.getElementById('title').value;
+const startingText = document.getElementById('starting-text').value;
+const companyName = document.getElementById('company-name').value;
+const activitySectorCompany = document.getElementById('activity-sector').value;
+const guideline = document.getElementById('guideline').value;
+const unitValue = document.getElementById('unit-value').value;
+const netProfit = document.getElementById('net-profit').value;
+const videoFile = document.getElementById('video-upload').files[0];
+
+localStorage.setItem('title', title);
+localStorage.setItem('startingText', startingText);
+localStorage.setItem('companyName', companyName);
+localStorage.setItem('activitySectorCompany', activitySectorCompany);
+localStorage.setItem('guideline', guideline);
+localStorage.setItem('unitValue', unitValue);
+localStorage.setItem('netProfit', netProfit);
+localStorage.setItem('videoFile', videoFile);
+}
+
+   // Fonction pour mettre à jour les détails des récompenses standard
+        function updateStandardRewardDetails() {
+            const selectedOption = document.getElementById('standard-reward-type').value;
+            let details = '';
+
+            switch (selectedOption) {
+                case 'digital-tokens':
+                    details = `
+                        <label for="token-name">Name of the token ?</label>
+                        <input type="text" id="token-name" name="token-name">
+                        <label for="tokens-per-minter">HOW MANY TOKENS PER INDIVIDUAL COMMUNITY MINTER VALIDATED ?</label>
+                        <input type="number" id="tokens-per-minter" name="tokens-per-minter">
+                        <p style="color: white;">SEND WITH YOUR ETHEREUM ADDRESS CURRENTLY CONNECTED TO WINSTORY.IO <span id="total-tokens"></span> TOKENS (<span id="token-name-display"></span>) TO OUR WINSTORY ADDRESS</p>
+                    `;
+                    break;
+                case 'digital-exclusive-items':
+                    details = `
+                        <label for="item-name">Name of the item ?</label>
+                        <input type="text" id="item-name" name="item-name">
+                        <label for="items-per-minter">HOW MANY ITEM(S) PER INDIVIDUAL COMMUNITY MINTER VALIDATED ?</label>
+                        <input type="number" id="items-per-minter" name="items-per-minter">
+                        <p style="color: white;">SEND WITH YOUR ETHEREUM ADDRESS CURRENTLY CONNECTED TO WINSTORY.IO <span id="total-items"></span> ITEMS TO OUR WINSTORY ADDRESS</p>
+                    `;
+                    break;
+                case 'digital-exclusive-access':
+                    details = `
+                        <p style="color: white;">SEND WITH YOUR ETHEREUM ADDRESS CURRENTLY CONNECTED TO WINSTORY.IO 1 EVENT ACCESS NFT TO OUR WINSTORY ADDRESS</p>
+                        <p style="color: white;">We will duplicate to <span id="total-community-validated-minters"></span> Community Validated Minters</p>
+                    `;
+                    break;
+                case 'physical-exclusive-event-access':
+                    details = `
+                        <p style="color: white;">SEND WITH YOUR ETHEREUM ADDRESS CURRENTLY CONNECTED TO WINSTORY.IO 1 EVENT ACCESS NFT TO OUR WINSTORY ADDRESS</p>
+                        <p style="color: white;">We will duplicate to <span id="total-community-validated-minters"></span> Community Validated Minters</p>
+                    `;
+                    break;
+            }
+
+            document.getElementById('standard-reward-details').innerHTML = details;
+        }
+
+        // Fonction pour mettre à jour les détails des récompenses premium
+        function updatePremiumRewardDetails() {
+            const selectedOption = document.getElementById('premium-reward-type').value;
+            let details = '';
+
+            switch (selectedOption) {
+                case 'digital-tokens':
+                    details = `
+                        <label for="premium-token-name">Name of the token ?</label>
+                        <input type="text" id="premium-token-name" name="premium-token-name">
+                        <label for="premium-tokens-per-minter">HOW MANY TOKENS PER INDIVIDUAL COMMUNITY MINTER VALIDATED ?</label>
+                        <input type="number" id="premium-tokens-per-minter" name="premium-tokens-per-minter">
+                        <p style="color: white;">SEND WITH YOUR ETHEREUM ADDRESS CURRENTLY CONNECTED TO WINSTORY.IO <span id="total-premium-tokens"></span> TOKENS (<span id="premium-token-name-display"></span>) TO OUR WINSTORY ADDRESS</p>
+                    `;
+                    break;
+                case 'digital-exclusive-items':
+                    details = `
+                        <label for="premium-item-name">Name of the item ?</label>
+                        <input type="text" id="premium-item-name" name="premium-item-name">
+                        <label for="premium-items-per-minter">HOW MANY ITEM(S) PER INDIVIDUAL COMMUNITY MINTER VALIDATED ?</label>
+                        <input type="number" id="premium-items-per-minter" name="premium-items-per-minter">
+                        <p style="color: white;">SEND WITH YOUR ETHEREUM ADDRESS CURRENTLY CONNECTED TO WINSTORY.IO <span id="total-premium-items"></span> ITEMS TO OUR WINSTORY ADDRESS</p>
+                    `;
+                    break;
+                case 'digital-exclusive-access':
+                    details = `
+                        <p style="color: white;">SEND WITH YOUR ETHEREUM ADDRESS CURRENTLY CONNECTED TO WINSTORY.IO 1 EVENT ACCESS NFT TO OUR WINSTORY ADDRESS</p>
+                        <p style="color: white;">We will duplicate to <span id="total-premium-community-validated-minters"></span> Premium Community Validated Minters</p>
+                    `;
+                    break;
+                case 'physical-exclusive-event-access':
+                    details = `
+                        <p style="color: white;">SEND WITH YOUR ETHEREUM ADDRESS CURRENTLY CONNECTED TO WINSTORY.IO 1 EVENT ACCESS NFT TO OUR WINSTORY ADDRESS</p>
+                        <p style="color: white;">We will duplicate to <span id="total-premium-community-validated-minters"></span> Premium Community Validated Minters</p>
+                    `;
+                    break;
+            }
+
+            document.getElementById('premium-reward-details').innerHTML = details;
+        }
+
+        // Ajouter des écouteurs d'événements aux éléments <select>
+        document.getElementById('standard-reward-type').addEventListener('change', updateStandardRewardDetails);
+        document.getElementById('premium-reward-type').addEventListener('change', updatePremiumRewardDetails);
+    
+  // Initialisation des éléments pour le Set-Up Rewards
+        let rewardsData = {
+            profitROI: 0,
+            unitValueReward: 0,
+            contributionsRequired: 0,
+            standardRewardType: "",
+            premiumRewardType: ""
+        };
+
+        // Fonction pour mettre à jour les paramètres des récompenses
+        function updateRewardsData(field, value) {
+            rewardsData[field] = value;
+            console.log(`Updated ${field} to ${value}`);
+            saveRewardsData(); // Sauvegarde automatique
+        }
+
+        // Fonction pour sauvegarder les données des récompenses
+        function saveRewardsData() {
+            localStorage.setItem("rewardsData", JSON.stringify(rewardsData));
+            console.log("Rewards Data Saved Locally");
+        }
+
+        // Fonction pour charger les données des récompenses sauvegardées
+        function loadRewardsData() {
+            const savedData = localStorage.getItem("rewardsData");
+            if (savedData) {
+                rewardsData = JSON.parse(savedData);
+                console.log("Rewards Data Loaded from Local Storage", rewardsData);
+                
+                // Mettre à jour l'interface avec les données chargées
+                document.getElementById('standard-reward-type').value = rewardsData.standardRewardType;
+                document.getElementById('premium-reward-type').value = rewardsData.premiumRewardType;
+
+                // Appeler les fonctions de mise à jour des détails en fonction des sélections sauvegardées
+                updateStandardRewardDetails();
+                updatePremiumRewardDetails();
+            }
+        }
+
+        // Fonction pour calculer le nombre de contributions nécessaires
+        function calculateContributions(netProfit, unitRewardValue, communityPercentage = 50) {
+            rewardsData.contributionsRequired = Math.ceil((netProfit / unitRewardValue) * (communityPercentage / 100));
+            updateRewardsData("contributionsRequired", rewardsData.contributionsRequired);
+            console.log("Calculated Contributions Required:", rewardsData.contributionsRequired);
+        }
+
+        // Initialisation au chargement de la page
+        window.onload = function () {
+            loadRewardsData();
+            updateContributions(); // Mise à jour initiale
+        };
+
+        // Fonction d'initialisation pour tester la sauvegarde des paramètres de récompense
+        function initTestRewards() {
+            updateRewardsData("profitROI", 1500);
+            updateRewardsData("unitValueReward", 100);
+            calculateContributions(rewardsData.profitROI, rewardsData.unitValueReward);
+        }
+
+        // Vérifier si l'adresse Ethereum est stockée et la récupérer pour l'afficher
+        function displayWalletAddress() {
+            const walletAddress = localStorage.getItem('walletAddress');
+            const walletButton = document.getElementById('wallet');
+
+            if (walletAddress) {
+                walletButton.innerText = truncateAddress(walletAddress);
+                walletButton.style.display = 'inline-block';
+            }
+        }
+
+        // Appeler la fonction pour afficher l'adresse quand la page est chargée
+        window.addEventListener('DOMContentLoaded', displayWalletAddress);
+
+        // Fonction pour tronquer l'adresse du wallet
+        function truncateAddress(address) {
+            return `${address.slice(0, 6)}...${address.slice(-4)}`;
+        }
+
+
+        
+        // Ajouter un écouteur d'événements au bouton "MINT" pour sauvegarder les données et rediriger vers MINT Company
+        document.getElementById('mint-button').addEventListener('click', function(event) {
+            event.preventDefault();
+            saveRewardsData();
+            saveCampaignCreationData();
+            window.location.href = '/mint-company';
+
+        });
+
+        const standardRewardTypeSelect = document.getElementById('standard-reward-type');
+        const standardRewardDetails = document.getElementById('standard-reward-details');
+        const premiumRewardTypeSelect = document.getElementById('premium-reward-type');
+        const premiumRewardDetails = document.getElementById('premium-reward-details');
+
+        standardRewardTypeSelect.addEventListener('change', updateStandardRewardDetails);
+        premiumRewardTypeSelect.addEventListener('change', updatePremiumRewardDetails);
+			
+       // Ajouter un écouteur d'événements au bouton "OK" pour sauvegarder les données
+document.getElementById('premium-reward-button').addEventListener('click', function(event) {
+event.preventDefault();
+saveCampaignCreationData();
+window.location.href = '/mint-company';
+
+});
+});
+</script>
+
