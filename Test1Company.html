@@ -1285,39 +1285,39 @@
                     const stdTokens = state.rewardData.standard.tokensPerMinter || 0;
                     const stdTotalTokens = stdTokens * parseInt(DOM.maximumMint.textContent);
                     details = `
-                        <label for="standard-token-name">Name of the token ?</label>
-                        <input type="text" id="standard-token-name" name="standard-token-name"
-                               value="${state.rewardData.standard.tokenName || ''}">
-    
-                        <label for="standard-tokens-per-minter">HOW MANY TOKENS PER INDIVIDUAL COMMUNITY MINTER VALIDATED ?</label>
-                        <input type="number" id="standard-tokens-per-minter" name="standard-tokens-per-minter"
-                               value="${stdTokens}">
-    
-                        <p style="color: white;">SEND WITH YOUR ADDRESS CURRENTLY CONNECTED TO WINSTORY.IO
-                            <span id="standard-total-tokens" class="highlight-yellow">${stdTotalTokens}</span> TOKENS
-                            <span id="standard-token-name-display" class="highlight-yellow">${state.rewardData.standard.tokenName || ''}</span> TO OUR WINSTORY ADDRESS
-                        </p>
-                    `;
-                    break;
-    
-                case 'digital-exclusive-items':
-                    const stdItems = state.rewardData.standard.itemsPerMinter || 0;
-                    const stdTotalItems = stdItems * parseInt(DOM.maximumMint.textContent);
-                    details = `
-                        <label for="standard-item-name">Name of the item ?</label>
-                        <input type="text" id="standard-item-name" name="standard-item-name"
-                               value="${state.rewardData.standard.itemName || ''}">
-    
-                        <label for="standard-items-per-minter">HOW MANY ITEM(S) PER INDIVIDUAL COMMUNITY MINTER VALIDATED ?</label>
-                        <input type="number" id="standard-items-per-minter" name="standard-items-per-minter"
-                               value="${stdItems}">
-    
-                        <p style="color: white;">SEND WITH YOUR ADDRESS CURRENTLY CONNECTED TO WINSTORY.IO
-                            <span id="standard-total-items" class="highlight-yellow">${stdTotalItems}</span> ITEMS
-                            <span id="standard-item-name-display" class="highlight-yellow">${state.rewardData.standard.itemName || ''}</span> TO OUR WINSTORY ADDRESS
-                        </p>
-                    `;
-                    break;
+                <label for="standard-token-name">Name of the token ?</label>
+                <input type="text" id="standard-token-name" name="standard-token-name"
+                       value="${state.rewardData.standard.tokenName || ''}">
+
+                <label for="standard-tokens-per-minter">HOW MANY TOKENS PER INDIVIDUAL COMMUNITY MINTER VALIDATED ?</label>
+                <input type="number" id="standard-tokens-per-minter" name="standard-tokens-per-minter" step="0.00001"
+                       value="${stdTokens}">
+
+                <p style="color: white;">SEND WITH YOUR ADDRESS CURRENTLY CONNECTED TO WINSTORY.IO
+                    <span id="standard-total-tokens" class="highlight-yellow">${stdTotalTokens}</span> TOKENS
+                    <span id="standard-token-name-display" class="highlight-yellow">${state.rewardData.standard.tokenName || ''}</span> TO OUR WINSTORY ADDRESS
+                </p>
+            `;
+            break;
+
+        case 'digital-exclusive-items':
+            const stdItems = parseFloat(state.rewardData.standard.itemsPerMinter) || 0;
+            const stdTotalItems = (stdItems * parseFloat(DOM.maximumMint.textContent)).toFixed(5);
+            details = `
+                <label for="standard-item-name">Name of the item ?</label>
+                <input type="text" id="standard-item-name" name="standard-item-name"
+                       value="${state.rewardData.standard.itemName || ''}">
+
+                <label for="standard-items-per-minter">HOW MANY ITEM(S) PER INDIVIDUAL COMMUNITY MINTER VALIDATED ?</label>
+                <input type="number" id="standard-items-per-minter" name="standard-items-per-minter" step="0.00001"
+                       value="${stdItems}">
+
+                <p style="color: white;">SEND WITH YOUR ADDRESS CURRENTLY CONNECTED TO WINSTORY.IO
+                    <span id="standard-total-items" class="highlight-yellow">${stdTotalItems}</span> ITEMS
+                    <span id="standard-item-name-display" class="highlight-yellow">${state.rewardData.standard.itemName || ''}</span> TO OUR WINSTORY ADDRESS
+                </p>
+            `;
+            break;
     
                 case 'digital-exclusive-access':
                 case 'physical-exclusive-event-access':
@@ -1342,38 +1342,39 @@
                 case 'digital-tokens':
                     const premTokens = state.rewardData.premium.tokensPerMinter || 0;
                     details = `
-                        <label for="premium-token-name">Name of the token ?</label>
-                        <input type="text" id="premium-token-name" name="premium-token-name"
-                               value="${state.rewardData.premium.tokenName || ''}">
-    
-                        <label for="premium-tokens-per-minter">HOW MANY TOKENS PER INDIVIDUAL COMMUNITY MINTER VALIDATED ?</label>
-                        <input type="number" id="premium-tokens-per-minter" name="premium-tokens-per-minter"
-                               value="${premTokens}">
-    
-                        <p style="color: white;">SEND WITH YOUR ADDRESS CURRENTLY CONNECTED TO WINSTORY.IO
-                            <span id="premium-total-tokens" class="highlight-yellow">${3 * premTokens}</span> TOKENS
-                            <span id="premium-token-name-display" class="highlight-yellow">${state.rewardData.premium.tokenName || ''}</span> TO OUR WINSTORY ADDRESS
-                        </p>
-                    `;
-                    break;
-    
-                case 'digital-exclusive-items':
-                    const premItems = state.rewardData.premium.itemsPerMinter || 0;
-                    details = `
-                        <label for="premium-item-name">Name of the item ?</label>
-                        <input type="text" id="premium-item-name" name="premium-item-name"
-                               value="${state.rewardData.premium.itemName || ''}">
-    
-                        <label for="premium-items-per-minter">HOW MANY ITEM(S) PER INDIVIDUAL COMMUNITY MINTER VALIDATED ?</label>
-                        <input type="number" id="premium-items-per-minter" name="premium-items-per-minter"
-                               value="${premItems}">
-    
-                        <p style="color: white;">SEND WITH YOUR ADDRESS CURRENTLY CONNECTED TO WINSTORY.IO
-                            <span id="premium-total-items" class="highlight-yellow">${3 * premItems}</span> ITEMS
-                            <span id="premium-item-name-display" class="highlight-yellow">${state.rewardData.premium.itemName || ''}</span> TO OUR WINSTORY ADDRESS
-                        </p>
-                    `;
-                    break;
+                <label for="premium-token-name">Name of the token ?</label>
+                <input type="text" id="premium-token-name" name="premium-token-name"
+                       value="${state.rewardData.premium.tokenName || ''}">
+
+                <label for="premium-tokens-per-minter">HOW MANY TOKENS PER INDIVIDUAL COMMUNITY MINTER VALIDATED ?</label>
+                <input type="number" id="premium-tokens-per-minter" name="premium-tokens-per-minter" step="0.00001"
+                       value="${premTokens}">
+
+                <p style="color: white;">SEND WITH YOUR ADDRESS CURRENTLY CONNECTED TO WINSTORY.IO
+                    <span id="premium-total-tokens" class="highlight-yellow">${premTotalTokens}</span> TOKENS
+                    <span id="premium-token-name-display" class="highlight-yellow">${state.rewardData.premium.tokenName || ''}</span> TO OUR WINSTORY ADDRESS
+                </p>
+            `;
+            break;
+
+        case 'digital-exclusive-items':
+            const premItems = parseFloat(state.rewardData.premium.itemsPerMinter) || 0;
+            const premTotalItems = (3 * premItems).toFixed(5);
+            details = `
+                <label for="premium-item-name">Name of the item ?</label>
+                <input type="text" id="premium-item-name" name="premium-item-name"
+                       value="${state.rewardData.premium.itemName || ''}">
+
+                <label for="premium-items-per-minter">HOW MANY ITEM(S) PER INDIVIDUAL COMMUNITY MINTER VALIDATED ?</label>
+                <input type="number" id="premium-items-per-minter" name="premium-items-per-minter" step="0.00001"
+                       value="${premItems}">
+
+                <p style="color: white;">SEND WITH YOUR ADDRESS CURRENTLY CONNECTED TO WINSTORY.IO
+                    <span id="premium-total-items" class="highlight-yellow">${premTotalItems}</span> ITEMS
+                    <span id="premium-item-name-display" class="highlight-yellow">${state.rewardData.premium.itemName || ''}</span> TO OUR WINSTORY ADDRESS
+                </p>
+            `;
+            break;
     
                 case 'digital-exclusive-access':
                 case 'physical-exclusive-event-access':
@@ -1390,72 +1391,74 @@
             DOM.premiumRewardDetails.innerHTML = details;
         }
     
-        // Setup Dynamic Event Listeners
-        function setupDynamicEventListeners() {
-            // Standard Reward Listeners
-            document.getElementById('standard-token-name')?.addEventListener('input', function() {
-                state.rewardData.standard.tokenName = this.value;
-                document.getElementById('standard-token-name-display').textContent = this.value;
-            });
+       // Modifications pour Setup Dynamic Event Listeners
+function setupDynamicEventListeners() {
+    // Standard Reward Listeners
+    document.getElementById('standard-token-name')?.addEventListener('input', function() {
+        state.rewardData.standard.tokenName = this.value;
+        document.getElementById('standard-token-name-display').textContent = this.value;
+    });
+
+    document.getElementById('standard-tokens-per-minter')?.addEventListener('input', function() {
+        state.rewardData.standard.tokensPerMinter = parseFloat(this.value) || 0;
+        const total = (state.rewardData.standard.tokensPerMinter * parseFloat(DOM.maximumMint.textContent)).toFixed(5);
+        document.getElementById('standard-total-tokens').textContent = total;
+    });
+
+    document.getElementById('standard-item-name')?.addEventListener('input', function() {
+        state.rewardData.standard.itemName = this.value;
+        document.getElementById('standard-item-name-display').textContent = this.value;
+    });
+
+    document.getElementById('standard-items-per-minter')?.addEventListener('input', function() {
+        state.rewardData.standard.itemsPerMinter = parseFloat(this.value) || 0;
+        const total = (state.rewardData.standard.itemsPerMinter * parseFloat(DOM.maximumMint.textContent)).toFixed(5);
+        document.getElementById('standard-total-items').textContent = total;
+    });
+
+    // Premium Reward Listeners
+    document.getElementById('premium-token-name')?.addEventListener('input', function() {
+        state.rewardData.premium.tokenName = this.value;
+        document.getElementById('premium-token-name-display').textContent = this.value;
+    });
+
+    document.getElementById('premium-tokens-per-minter')?.addEventListener('input', function() {
+        state.rewardData.premium.tokensPerMinter = parseFloat(this.value) || 0;
+        const total = (3 * state.rewardData.premium.tokensPerMinter).toFixed(5);
+        document.getElementById('premium-total-tokens').textContent = total;
+    });
+
+    document.getElementById('premium-item-name')?.addEventListener('input', function() {
+        state.rewardData.premium.itemName = this.value;
+        document.getElementById('premium-item-name-display').textContent = this.value;
+    });
+
+    document.getElementById('premium-items-per-minter')?.addEventListener('input', function() {
+        state.rewardData.premium.itemsPerMinter = parseFloat(this.value) || 0;
+        const total = (3 * state.rewardData.premium.itemsPerMinter).toFixed(5);
+        document.getElementById('premium-total-items').textContent = total;
+    });
+}
     
-            document.getElementById('standard-tokens-per-minter')?.addEventListener('input', function() {
-                state.rewardData.standard.tokensPerMinter = parseInt(this.value) || 0;
-                const total = state.rewardData.standard.tokensPerMinter * parseInt(DOM.maximumMint.textContent);
-                document.getElementById('standard-total-tokens').textContent = total;
-            });
-    
-            document.getElementById('standard-item-name')?.addEventListener('input', function() {
-                state.rewardData.standard.itemName = this.value;
-                document.getElementById('standard-item-name-display').textContent = this.value;
-            });
-    
-            document.getElementById('standard-items-per-minter')?.addEventListener('input', function() {
-                state.rewardData.standard.itemsPerMinter = parseInt(this.value) || 0;
-                const total = state.rewardData.standard.itemsPerMinter * parseInt(DOM.maximumMint.textContent);
-                document.getElementById('standard-total-items').textContent = total;
-            });
-    
-            // Premium Reward Listeners
-            document.getElementById('premium-token-name')?.addEventListener('input', function() {
-                state.rewardData.premium.tokenName = this.value;
-                document.getElementById('premium-token-name-display').textContent = this.value;
-            });
-    
-            document.getElementById('premium-tokens-per-minter')?.addEventListener('input', function() {
-                state.rewardData.premium.tokensPerMinter = parseInt(this.value) || 0;
-                document.getElementById('premium-total-tokens').textContent = 3 * state.rewardData.premium.tokensPerMinter;
-            });
-    
-            document.getElementById('premium-item-name')?.addEventListener('input', function() {
-                state.rewardData.premium.itemName = this.value;
-                document.getElementById('premium-item-name-display').textContent = this.value;
-            });
-    
-            document.getElementById('premium-items-per-minter')?.addEventListener('input', function() {
-                state.rewardData.premium.itemsPerMinter = parseInt(this.value) || 0;
-                document.getElementById('premium-total-items').textContent = 3 * state.rewardData.premium.itemsPerMinter;
-            });
-        }
-    
-        // Update Reward Calculations
-        function updateRewardCalculations() {
-            // Update validator counts
-            const mints = DOM.maximumMint.textContent;
-            document.querySelectorAll('#standard-total-community-validated-minters, #premium-total-community-validated-minters').forEach(el => {
-                if (el) el.textContent = mints;
-            });
-    
-            // Update token/item totals for standard rewards
-            if (state.rewardData.standard.type === 'digital-tokens' && document.getElementById('standard-tokens-per-minter')) {
-                const stdTokens = parseInt(document.getElementById('standard-tokens-per-minter').value) || 0;
-                document.getElementById('standard-total-tokens').textContent = stdTokens * parseInt(mints);
-            }
-    
-            if (state.rewardData.standard.type === 'digital-exclusive-items' && document.getElementById('standard-items-per-minter')) {
-                const stdItems = parseInt(document.getElementById('standard-items-per-minter').value) || 0;
-                document.getElementById('standard-total-items').textContent = stdItems * parseInt(mints);
-            }
-        }
+        // Modifications pour Update Reward Calculations
+function updateRewardCalculations() {
+    // Update validator counts
+    const mints = DOM.maximumMint.textContent;
+    document.querySelectorAll('#standard-total-community-validated-minters, #premium-total-community-validated-minters').forEach(el => {
+        if (el) el.textContent = mints;
+    });
+
+    // Update token/item totals for standard rewards
+    if (state.rewardData.standard.type === 'digital-tokens' && document.getElementById('standard-tokens-per-minter')) {
+        const stdTokens = parseFloat(document.getElementById('standard-tokens-per-minter').value) || 0;
+        document.getElementById('standard-total-tokens').textContent = (stdTokens * parseFloat(mints)).toFixed(5);
+    }
+
+    if (state.rewardData.standard.type === 'digital-exclusive-items' && document.getElementById('standard-items-per-minter')) {
+        const stdItems = parseFloat(document.getElementById('standard-items-per-minter').value) || 0;
+        document.getElementById('standard-total-items').textContent = (stdItems * parseFloat(mints)).toFixed(5);
+    }
+}
     
         // Initialize the application
         init();
