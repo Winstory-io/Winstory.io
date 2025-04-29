@@ -1,0 +1,149 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    background-color: #000;
+    color: white;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+header {
+    padding: 20px;
+    display: flex;
+    align-items: center;
+}
+
+.logo {
+    width: 150px;
+    height: auto;
+}
+
+.nav {
+    margin-left: 20px;
+}
+
+.nav a {
+    color: white;
+    text-decoration: none;
+    font-size: 18px;
+    margin-right: 10px;
+}
+
+main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.title {
+    font-size: 32px;
+    margin-bottom: 50px;
+    text-align: center;
+}
+
+.highlight-yellow {
+    color: #FFD700;
+}
+
+.highlight-green {
+    color: #4CAF50;
+}
+
+.options-container {
+display: flex;
+justify-content: center;
+align-items: stretch;
+width: 100%;
+max-width: 1200px;
+gap: 20px;
+}
+
+.option {
+flex: 1 1 30%;
+max-width: 350px;
+border: 1px solid #333;
+padding: 20px;
+display: flex;
+flex-direction: column;
+align-items: center;
+text-align: center;
+cursor: pointer;
+transition: transform 0.3s, border-color 0.3s;
+min-width: 250px;
+}
+
+.option-icon {
+width: 75px;
+height: auto;
+margin: 20px 0;
+color: #FFD700;
+}
+
+@media (max-width: 768px) {
+.options-container {
+flex-direction: column;
+align-items: center;
+}
+
+.option {
+width: 100%;
+max-width: 90%;
+}
+}
+
+
+.option:hover {
+    transform: scale(1.05);
+    border-color: #FFD700;
+}
+
+.option-title {
+font-size: 18px;
+margin-bottom: 20px;
+font-weight: bold;
+text-align: center;
+}
+
+.option-title .highlight-yellow {
+color: #FFD700; /* Jaune */
+}
+
+.option-title .highlight-white {
+color: white; /* Blanc */
+}
+
+
+.option-icon {
+    width: 75px;
+    height: 90px;
+    margin: 20px 0;
+    color: #FFD700;
+}
+
+.option-benefits {
+    margin-top: 20px;
+    text-align: center;
+    width: 100%;
+}
+
+.benefit-item {
+    color: #4CAF50;
+    margin: 5px 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.benefit-item::before {
+    content: "•";
+    margin-right: 10px;
+}
