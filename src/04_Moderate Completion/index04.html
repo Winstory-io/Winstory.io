@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Completion Moderation - Winstory</title>
+    <link rel="stylesheet" href="./index04.css">
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="header-left">
+            <img src="../../assets/logo.svg" alt="Winstory Logo" class="logo">
+            <div class="nav-links">
+                <a href="#">Home</a>
+                <span>|</span>
+                <a href="#">Explorer</a>
+            </div>
+        </div>
+        <div class="header-icons">
+            <a href="#" class="header-icon">🔍</a>
+            <a href="#" class="header-icon">🔔</a>
+            <a href="#" class="header-icon">⚖️</a>
+        </div>
+    </header>
+
+    <!-- Main Title -->
+    <div class="main-title-container">
+        <div class="title-group">
+            <h1 class="main-title">Completion Moderation</h1>
+        </div>
+        <div class="nav-section">
+            <span class="nav-arrow">→</span>
+            <a href="initial-moderation.html" class="initial-moderation-link">Initial Moderation</a>
+        </div>
+        <div class="wallet-address" id="wallet-address"></div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container">
+        <!-- Left Sidebar -->
+        <div class="sidebar">
+            <div class="divider"></div>
+            <div class="company-info">
+                <div class="company-name">Company Name</div>
+                <div class="campaign-title">Title</div>
+            </div>
+            
+            <div class="bubbles-container">
+                <button class="bubble large" onclick="openPopup('initialFilm')">Watch<br>initial<br>Company<br>Film</button>
+                
+                <div class="bubble-row">
+                    <button class="bubble small" onclick="openPopup('startingText')">Starting<br>Text</button>
+                    <button class="bubble small" onclick="openPopup('guideline')">Guideline</button>
+                </div>
+                
+                <div class="bubble-row">
+                    <button class="bubble small" onclick="openPopup('standardReward')">Standard<br>Reward</button>
+                    <button class="bubble small" onclick="openPopup('premiumReward')">Premium<br>Reward</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="video-container">
+                <video class="completion-video" controls>
+                    <source src="community_video.mp4" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+            </div>
+
+            <div class="completion-footer">
+                <div class="completing-bubble" onclick="openPopup('completingText')">Completing<br>Text</div>
+                
+                <div class="completion-controls">
+                    <div class="progress-section">
+                        <div>
+                            <div class="progress-line">
+                                <span>Minimum 22 active stakers have voted this completion</span>
+                                <strong id="current-voters">15/22</strong>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill green" id="voters-progress" style="width: 68%;"></div>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-top: 15px;">
+                            <div class="progress-line">
+                                <span>Total staked amount exceeds <span style="color: var(--primary);">MINT price</span></span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill green" id="staked-progress" style="width: 124%;"></div>
+                            </div>
+                            <div class="progress-values">
+                                <span class="left" id="staked-amount">1,240 $</span>
+                                <span class="right" id="mint-price">1,000 $</span>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-top: 15px;">
+                            <div class="progress-line">
+                                <span>Vote results</span>
+                                <strong>Minimum 2:1 ratio needed</strong>
+                            </div>
+                            <div class="progress-bar">
+                                <div id="vote-ratio-container" style="width: 100%; height: 100%; display: flex;">
+                                    <div class="progress-fill green" id="approve-ratio" style="width: 67%;"></div>
+                                    <div class="progress-fill red" id="reject-ratio" style="width: 33%;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="actions">
+                        <button class="action-btn approve" id="validScoreBtn">
+                            Valid & Score
+                            <div class="tooltip approve-tooltip">
+                                <div class="tooltip-title">🟢 <strong>Validate & Score this Completion</strong></div>
+                                <p>By validating this content, you confirm that it:</p>
+                                <ul>
+                                    <li>✅ <strong>Complies with Winstory's moderation standards</strong> (overall coherence)</li>
+                                    <li>✅ <strong>Follows the narrative, visual, and guideline</strong> defined by the initial company</li>
+                                    <li>✅ <strong>Does not violate any of the listed refusal rules</strong></li>
+                                </ul>
+                                <p>🎯 Once validated, you'll assign a score from the worst 0/100 to the best 100/100 based on the overall quality of Completion. If a score has already been used by you for another completion in the same initial campaign, it won't be available. This means you'll progressively rank the content you validate by quality, then you can score up to 100 different contributions per campaign.</p>
+                                <p>🏆 This scoring system helps identify the <strong>top 3 highest-rated contributions</strong>, they will win the <strong>3 Premium Rewards</strong>.</p>
+                                <p>⚠️ Your decision engages a proportional part of your staked WINC.<br>
+                                If the majority of stakers vote YES, and you also voted YES, you earn a share of the rewards pool.<br>
+                                If the final vote is NO and you validated it, you lose part of your stake.</p>
+                            </div>
+                        </button>
+                        <button class="action-btn reject">
+                            Refuse
+                            <div class="tooltip reject-tooltip">
+                                <div class="tooltip-title">🔴 <strong>Refuse this Completion</strong></div>
+                                <p>You should refuse this content if it falls under <strong>any of the following criteria</strong>:</p>
+                                <ul>
+                                    <li>🚫 The film was <strong>not created, assisted, or enhanced</strong> by Generative A.I. or digital post-production</li>
+                                    <li>🚫 The <strong>film or text does not follow</strong> the company's initial creative guidelines</li>
+                                    <li>🚫 The content promotes <strong>hate, racism, xenophobia, or harassment</strong></li>
+                                    <li>🚫 The content includes a <strong>deepfake</strong> that may threaten the <strong>dignity</strong> or <strong>integrity</strong> of a person</li>
+                                    <li>🚫 It presents clear <strong>geopolitical risks</strong></li>
+                                    <li>🚫 It contains <strong>explicit pornography</strong></li>
+                                </ul>
+                                <p>🛑 Refusing content is a strong decision. Make sure it clearly meets <strong>at least one</strong> of these criteria.</p>
+                                <p>⚠️ Your decision engages a proportional part of your staked WINC.<br>
+                                If the majority of stakers vote NO, and you also voted NO, you earn a share of the rewards pool.<br>
+                                If the final vote is YES and you refused it, you lose part of your stake.</p>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Popups -->
+    <div class="popup" id="initialFilmPopup">
+        <div class="popup-content">
+            <button class="close-btn" onclick="closePopup('initialFilm')">×</button>
+            <h2>Initial Company Film</h2>
+            <video class="popup-video" controls>
+                <source src="company_video.mp4" type="video/mp4">
+            </video>
+        </div>
+    </div>
+
+    <div class="popup" id="startingTextPopup">
+        <div class="popup-content">
+            <button class="close-btn" onclick="closePopup('startingText')">×</button>
+            <h2>Starting Text</h2>
+            <p>[DYNAMIC: Starting text from the company]</p>
+        </div>
+    </div>
+
+    <div class="popup" id="guidelinePopup">
+        <div class="popup-content">
+            <button class="close-btn" onclick="closePopup('guideline')">×</button>
+            <h2>Guideline</h2>
+            <p>[DYNAMIC: Rules for correctly completing the story]</p>
+        </div>
+    </div>
+
+    <div class="popup" id="standardRewardPopup">
+        <div class="popup-content">
+            <button class="close-btn" onclick="closePopup('standardReward')">×</button>
+            <h2>Standard Reward</h2>
+            <p>[DYNAMIC: Details of standard rewards for validated completions]</p>
+        </div>
+    </div>
+
+    <div class="popup" id="premiumRewardPopup">
+        <div class="popup-content">
+            <button class="close-btn" onclick="closePopup('premiumReward')">×</button>
+            <h2>Premium Reward</h2>
+            <p>[DYNAMIC: Rewards for the top 3 completions]</p>
+        </div>
+    </div>
+
+    <div class="popup" id="completingTextPopup">
+        <div class="popup-content">
+            <button class="close-btn" onclick="closePopup('completingText')">×</button>
+            <h2>Completing Text</h2>
+            <p>[DYNAMIC: Text transcription or description of the video submitted by the community]</p>
+        </div>
+    </div>
+
+    <!-- Scoring Popup -->
+    <div class="popup" id="scoringPopup">
+        <div class="popup-content scoring-popup">
+            <button class="close-btn" onclick="closePopup('scoring')">×</button>
+            <h2>Score this completion</h2>
+            <p class="scoring-description">Move the slider to assign a score from 0 to 100 based on the overall quality of this completion</p>
+            
+            <div class="slider-container">
+                <div class="score-labels">
+                    <span>0</span>
+                    <span>100</span>
+                </div>
+                <div class="slider-track">
+                    <input type="range" min="0" max="100" value="50" class="slider" id="scoreSlider">
+                    <div class="slider-fill"></div>
+                </div>
+                <div class="current-score" id="currentScore">50</div>
+            </div>
+            
+            <div class="unavailable-scores" id="unavailableScores">
+                <!-- Example of unavailable scores (will be populated dynamically) -->
+                <div class="unavailable-marker" style="left: 25%;"></div>
+                <div class="unavailable-marker" style="left: 75%;"></div>
+            </div>
+            
+            <div class="score-description" id="scoreDescription">Average quality content</div>
+            
+            <button class="score-confirm-btn" id="confirmScoreBtn">Score 50/100</button>
+            
+            <div class="score-note">
+                <p>Each score can only be used once per campaign. Unavailable scores are marked on the slider.</p>
+            </div>
+        </div>
+    </div>
+</body>
+    <script src="index04.js"></script>
+</html>

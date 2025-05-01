@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Initial Moderation - Winstory</title>
+    <link rel="stylesheet" href="./index02.css"></head>
+
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="header-left">
+            <img src="../../assets/logo.svg" alt="Winstory Logo" class="logo">
+            <div class="nav-links">
+                <a href="#">Home</a>
+                <span>|</span>
+                <a href="#">Explorer</a>
+            </div>
+        </div>
+        <div class="header-icons">
+            <a href="#" class="header-icon">🔍</a>
+            <a href="#" class="header-icon">🔔</a>
+            <a href="#" class="header-icon">⚖️</a>
+        </div>
+    </header>
+
+    <!-- Main Title -->
+    <div class="main-title-container">
+        <h1 class="main-title">Initial Moderation</h1>
+        <span class="arrow">→</span>
+        <a href="#" class="completion-link">Completion Moderation</a>
+    </div>
+
+    <!-- Main Moderation Interface -->
+    <div class="moderation-container">
+        <!-- Left Panel - Video and Bubbles -->
+        <div class="moderation-panel">
+            <div class="video-section">
+                <div class="video-wrapper">
+                    <div class="campaign-video">
+                        <!-- Video Controls -->
+                        <div class="video-controls">
+                            <button class="play-button">▶</button>
+                            <div class="video-time">0:00</div>
+                            <div class="video-progress"></div>
+                            <div class="volume-control">🔊</div>
+                            <button class="fullscreen-button">⛶</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Corner Bubbles - positioned outside the video -->
+                    <div class="corner-bubble top-left" id="standard-reward-bubble">
+                        Standard Reward
+                    </div>
+                    
+                    <div class="corner-bubble top-right" id="premium-reward-bubble">
+                        Premium Reward
+                    </div>
+                    
+                    <div class="corner-bubble bottom-left" id="starting-text-bubble">
+                        Starting Text
+                    </div>
+                    
+                    <div class="corner-bubble bottom-right" id="guideline-bubble">
+                        Guideline
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Right Panel - Progress Bars and Buttons -->
+        <div class="moderation-panel">
+            <div class="progress-container">
+                <div class="progress-item">
+                    <div class="progress-header">
+                        <span>Minimum 22 active stakers have voted</span>
+                        <span>15/22</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 68%; background: var(--primary);"></div>
+                    </div>
+                </div>
+                
+                <div class="progress-item">
+                    <div class="progress-header">
+                        <span>Total staked amount exceeds MINT price</span>
+                        <span class="info-trigger" onclick="openPopup('staking-info')"></span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="staked-progress" style="width: 100%; background: var(--secondary);"></div>
+                    </div>
+                    <div class="staking-comparison">
+                        <span id="staked-amount" class="staked-amount">1,240 $WINC</span>
+                        <span id="mint-price" class="mint-price">1,000 $WINC</span>
+                    </div>
+                </div>
+                
+                <div class="progress-item">
+                    <div class="progress-header">
+                        <span>Vote results</span>
+                        <span>2:1 ratio needed</span>
+                    </div>
+                    <div class="vote-results">
+                        <div class="vote-valid" style="width: 67%;"></div>
+                        <div class="vote-refuse" style="width: 33%;"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="moderation-controls">
+                <button class="moderation-button valid-button">Valid</button>
+                <button class="moderation-button refuse-button">Refuse</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Text Popups -->
+    <div class="popup-overlay" id="popup-overlay"></div>
+    
+    <div class="text-popup" id="starting-text-popup">
+        <div class="popup-header">
+            <h2 class="popup-title">Starting Text</h2>
+            <button class="close-popup" onclick="closePopup('starting-text')">&times;</button>
+        </div>
+        <div class="text-popup-content" id="starting-text-content"></div>
+    </div>
+    
+    <div class="text-popup" id="guideline-popup">
+        <div class="popup-header">
+            <h2 class="popup-title">Guideline</h2>
+            <button class="close-popup" onclick="closePopup('guideline')">&times;</button>
+        </div>
+        <div class="text-popup-content" id="guideline-content"></div>
+    </div>
+    
+    <div class="text-popup" id="standard-reward-popup">
+        <div class="popup-header">
+            <h2 class="popup-title">Standard Reward</h2>
+            <button class="close-popup" onclick="closePopup('standard-reward')">&times;</button>
+        </div>
+        <div class="text-popup-content" id="standard-reward-content"></div>
+    </div>
+    
+    <div class="text-popup" id="premium-reward-popup">
+        <div class="popup-header">
+            <h2 class="popup-title">Premium Reward</h2>
+            <button class="close-popup" onclick="closePopup('premium-reward')">&times;</button>
+        </div>
+        <div class="text-popup-content" id="premium-reward-content"></div>
+    </div>
+    
+    <!-- Popup for Staking Info -->
+    <div class="text-popup" id="staking-info-popup">
+        <div class="popup-header">
+            <h2 class="popup-title">Staking vs Mint Price</h2>
+            <button class="close-popup" onclick="closePopup('staking-info')">&times;</button>
+        </div>
+        <div class="text-popup-content"></div>
+    </div>
+
+</body>
+
+      <script src="index02.js"></script>
+      
+ </html>

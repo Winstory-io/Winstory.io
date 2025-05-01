@@ -1,0 +1,580 @@
+:root {
+    --primary: #FFD700;
+    --secondary: #4CAF50;
+    --dark: #0a0a0a;
+    --darker: #000000;
+    --light: #ffffff;
+    --gray: #333333;
+    --neon-glow: 0 0 5px #FFD700, 0 0 10px #FFD700;
+    --red: #ff3b30;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', Arial, sans-serif;
+}
+
+body {
+    background: linear-gradient(135deg, var(--darker), var(--dark));
+    color: var(--light);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Header */
+header {
+    padding: 15px 5%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(10px);
+    position: relative;
+    z-index: 100;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+}
+
+.logo {
+    width: 120px;
+    height: auto;
+}
+
+.nav {
+    margin-left: 30px;
+}
+
+.nav a {
+    color: var(--light);
+    text-decoration: none;
+    margin-right: 20px;
+    font-size: 16px;
+    transition: color 0.3s ease;
+}
+
+.nav a:hover {
+    color: var(--primary);
+    text-decoration: underline;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.header-icon {
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.wallet-button {
+    background: rgba(255, 215, 0, 0.2);
+    border: 1px solid var(--primary);
+    border-radius: 18px;
+    padding: 8px 15px;
+    font-size: 14px;
+    color: var(--primary);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.wallet-button:hover {
+    background: rgba(255, 215, 0, 0.3);
+}
+
+/* Company and Title Section */
+.company-title-section {
+    text-align: center;
+    margin: 10px 0;
+    padding: 0 5%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+}
+
+.company-name {
+    font-size: 1.5rem;
+    color: var(--primary);
+    font-weight: bold;
+}
+
+.campaign-title {
+    font-size: 1.3rem;
+    color: var(--light);
+    font-style: italic;
+}
+
+/* Main Campaign Layout */
+.campaign-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 1400px;
+    margin: 20px auto;
+    padding: 0 5%;
+}
+
+/* Video Section */
+.video-section {
+    width: 100%;
+    margin: 0 auto;
+    position: relative;
+}
+
+.video-wrapper {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    position: relative;
+}
+
+.campaign-video {
+    max-width: 100%;
+    max-height: 60vh;
+    object-fit: contain;
+    border-radius: 8px;
+    background: #000;
+    z-index: 1;
+}
+
+.video-horizontal {
+    width: 80%;
+    aspect-ratio: 16/9;
+}
+
+.video-vertical {
+    width: 40%;
+    aspect-ratio: 9/16;
+}
+
+/* Corner Bubbles */
+.corner-bubble {
+    position: absolute;
+    width: 75px;
+    height: 75px;
+    background: var(--primary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 10;
+    color: var(--dark);
+    font-size: 12px;
+    font-weight: bold;
+    text-align: center;
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    padding: 5px;
+}
+
+.corner-bubble:hover {
+    transform: scale(1.1);
+    box-shadow: var(--neon-glow);
+}
+
+.top-left {
+    top: 15px;
+    left: 15px;
+}
+
+.top-right {
+    top: 15px;
+    right: 15px;
+}
+
+.bottom-left {
+    bottom: 15px;
+    left: 15px;
+}
+
+.bottom-right {
+    bottom: 15px;
+    right: 15px;
+}
+
+/* Navigation Arrows */
+.nav-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 50px;
+    height: 50px;
+    background: rgba(0,0,0,0.7);
+    border: 2px solid var(--primary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 10;
+    color: var(--primary);
+    font-size: 24px;
+    transition: all 0.3s ease;
+}
+
+.nav-arrow:hover {
+    background: rgba(255, 215, 0, 0.2);
+}
+
+.arrow-left { left: 2%; }
+.arrow-right { right: 2%; }
+
+/* Actions and Progress Container */
+.actions-progress-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+    width: 100%;
+}
+
+/* Left Side - Price and Button */
+.actions-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-left: 10%;
+}
+
+/* Price Display */
+.mint-price {
+    font-size: 1.1rem;
+    color: var(--primary);
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 215, 0, 0.3);
+    width: fit-content;
+}
+
+.mint-price span {
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+/* Completion Button */
+.complete-button {
+    padding: 12px 25px;
+    background: var(--light);
+    color: #000;
+    border: none;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+}
+
+.complete-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: all 0.5s ease;
+    z-index: -1;
+}
+
+.complete-button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(255, 255, 255, 0.5);
+}
+
+.complete-button:hover::before {
+    left: 100%;
+}
+
+/* Right Side - Progress Bar */
+.progress-container {
+    width: 40%;
+    margin-top: 0;
+}
+
+.progress-header {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 10px;
+}
+
+.progress-bar {
+    height: 8px;
+    background: var(--gray);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary), var(--secondary));
+    width: 0%;
+    transition: width 0.5s ease;
+}
+
+/* Time remaining */
+.time-remaining {
+    font-size: 0.9rem;
+    color: var(--primary);
+    text-align: right;
+    margin-top: 5px;
+}
+
+/* Popup Styles */
+.popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.8);
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.popup-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.completion-popup, .text-popup {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.9);
+    width: 90%;
+    max-width: 600px;
+    background: #111;
+    border: 1px solid var(--primary);
+    border-radius: 10px;
+    padding: 23px;
+    z-index: 1001;
+    text-align: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.text-popup {
+    max-width: 700px;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.completion-popup.active, .text-popup.active {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+    visibility: visible;
+}
+
+.popup-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.popup-title {
+    color: var(--primary);
+    font-size: 1.3rem;
+    width: 100%;
+    text-align: center;
+}
+
+.close-popup {
+    color: var(--red);
+    font-size: 21px;
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 4px;
+    position: absolute;
+    right: 15px;
+    top: 15px;
+}
+
+.popup-video-container {
+    width: 100%;
+    margin-bottom: 15px;
+}
+
+.popup-video {
+    width: 100%;
+    max-height: 300px;
+    background: #000;
+    border-radius: 8px;
+}
+
+.popup-textarea {
+    width: 100%;
+    height: 150px;
+    background: #222;
+    border: 1px solid var(--primary);
+    border-radius: 8px;
+    padding: 11px;
+    color: var(--light);
+    margin-bottom: 15px;
+    resize: none;
+    font-size: 14px;
+}
+
+.file-upload-label {
+    display: block;
+    width: 100%;
+    padding: 11px;
+    background: #222;
+    border: 1px dashed var(--primary);
+    border-radius: 8px;
+    text-align: center;
+    cursor: pointer;
+    margin-bottom: 15px;
+    transition: all 0.3s ease;
+}
+
+.file-upload-label:hover {
+    background: #333;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+    .nav-arrow {
+        width: 40px;
+        height: 40px;
+        font-size: 20px;
+    }
+    
+    .corner-bubble {
+        width: 65px;
+        height: 65px;
+        font-size: 11px;
+    }
+    
+    .actions-progress-container {
+        flex-direction: column;
+        gap: 20px;
+        align-items: flex-start;
+    }
+    
+    .actions-container {
+        margin-left: 0;
+    }
+    
+    .progress-container {
+        width: 100%;
+    }
+}
+
+@media (max-width: 900px) {
+    .video-horizontal {
+        width: 90%;
+    }
+    
+    .video-vertical {
+        width: 60%;
+    }
+    
+    .corner-bubble {
+        width: 60px;
+        height: 60px;
+        font-size: 10px;
+    }
+}
+
+@media (max-width: 768px) {
+    .nav {
+        margin-left: 15px;
+    }
+    
+    .nav a {
+        margin-right: 15px;
+        font-size: 14px;
+    }
+    
+    .header-icon {
+        font-size: 18px;
+    }
+    
+    .video-horizontal {
+        width: 100%;
+    }
+    
+    .video-vertical {
+        width: 80%;
+    }
+    
+    .nav-arrow {
+        width: 35px;
+        height: 35px;
+        font-size: 18px;
+    }
+    
+    .company-title-section {
+        flex-direction: column;
+        gap: 5px;
+    }
+                
+    .corner-bubble {
+        width: 50px;
+        height: 50px;
+        font-size: 9px;
+    }
+    
+    .company-name {
+        font-size: 1.3rem;
+    }
+    
+    .campaign-title {
+        font-size: 1.1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .header-left {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .nav {
+        margin-left: 0;
+        margin-top: 10px;
+    }
+    
+    .video-vertical {
+        width: 100%;
+    }
+    
+    .nav-arrow {
+        display: none;
+    }
+    
+    .corner-bubble {
+        width: 45px;
+        height: 45px;
+        font-size: 8px;
+    }
+    
+    .company-name {
+        font-size: 1.2rem;
+    }
+    
+    .campaign-title {
+        font-size: 1rem;
+    }
+}

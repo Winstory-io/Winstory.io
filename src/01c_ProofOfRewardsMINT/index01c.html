@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proof of Rewards & MINT | Winstory</title>
+    <link rel="stylesheet" href="./index01c.css"></head>
+
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="logo">
+            <img src="../../assets/logo.svg" alt="Winstory Logo" class="logo">
+        </div>
+        <nav class="nav">
+            <a href="#">Home</a>
+            <a href="#">Explorer</a>
+            <a href="#">Enterprise</a>
+        </nav>
+        <div class="header-right">
+            <div id="wallet" class="wallet-info" style="display: none;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFD700" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                </svg>
+                <span id="wallet-address"></span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+        <div class="title-container">
+            <div class="title-group">
+                <h1 class="title">Proof of <span class="highlight-yellow">Rewards</span> & <span class="highlight-green"> MINT</span></h1>
+                <span class="arrow-icon">➡️</span>
+                <button id="mint-button" class="mint-button">
+                    <span>MINT</span>
+                    <div class="loading-spinner" id="loading-spinner"></div>
+                    <svg class="checkmark" id="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                        <circle class="checkmark__circle" cx="26" cy="26" r="25" fill="none" stroke="#4CAF50" stroke-width="2"/>
+                        <path class="checkmark__check" fill="none" stroke="#4CAF50" stroke-width="4" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <div class="content-frame">
+            <div class="campaign-summary" id="campaign-summary">
+                <!-- Will be populated by JavaScript -->
+            </div>
+
+            <div class="cards-grid">
+                <!-- Standard Rewards Card -->
+                <div class="reward-card standard" id="standard-card">
+                    <div class="reward-header">
+                        <div class="reward-icon">👤👤👤</div>
+                        <div class="reward-title">Standard Rewards</div>
+                        <div class="info-icon standard">?</div>
+                        <div class="reward-edit-icon">✏️</div>
+                    </div>
+                    <!-- Content will be populated by JavaScript -->
+                </div>
+
+                <!-- Premium Rewards Card -->
+                <div class="reward-card premium" id="premium-card">
+                    <div class="reward-header">
+                        <div class="reward-icon">🥇🥈🥉</div>
+                        <div class="reward-title">Premium Rewards</div>
+                        <div class="info-icon premium">?</div>
+                        <div class="reward-edit-icon">✏️</div>
+                    </div>
+                    <!-- Content will be populated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Summary Section -->
+            <div class="summary-container" id="summary-container">
+                <div class="summary-title">You are about to mint your campaign and lock the following rewards</div>
+                <!-- Content will be populated by JavaScript -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Info Modals (now outside the cards) -->
+    <div id="standardInfoModal" class="info-modal">
+        <div class="info-modal-content modal-standard">
+            <span class="close-info-modal">&times;</span>
+            <div class="modal-title">🎁 Standard Rewards</div>
+            <div class="modal-body">
+                <p>These rewards are distributed to all community members who MINT a validated completion of your story during the Completion Phase.</p>
+                
+                <strong>To be eligible, a community member must:</strong>
+                <ul>
+                    <li>Be connected with a wallet</li>
+                    <li>Submit a creative AI-enhanced video continuation</li>
+                    <li>Be validated by $WINC stakers (minimum 22, 2:1 YES/NO ratio, moderation and your guideline follow criteria)</li>
+                </ul>
+                
+                <strong>✅ If accepted:</strong>
+                <p>They automatically receive 1 Standard Reward per successful contribution.</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="premiumInfoModal" class="info-modal">
+        <div class="info-modal-content modal-premium">
+            <span class="close-info-modal">&times;</span>
+            <div class="modal-title">🏆 Premium Rewards</div>
+            <div class="modal-body">
+                <p>These exclusive rewards are reserved for the Top 3 contributions with the highest average score (out of 100) from the $WINC stakers.</p>
+                
+                <strong>Benefits:</strong>
+                <ul>
+                    <li>Add prestige to your campaign</li>
+                    <li>Encourage high-quality submissions</li>
+                    <li>Reward the most talented creators</li>
+                </ul>
+                
+                <strong>🕒 Distribution:</strong>
+                <p>Automatically 7 days after your campaign starts — or earlier if all MINTs are reached.</p>
+                
+                <strong>🏅 Selection:</strong>
+                <p>Only the 3 best scored completions will receive this bonus reward.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reward Edit Modal -->
+    <div id="rewardModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Edit Reward</div>
+                <span class="close-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="edit-reward-type">Type</label>
+                    <select id="edit-reward-type" disabled>
+                        <option value="Token">Token</option>
+                        <option value="NFT">NFT</option>
+                        <option value="Exclusive Access">Exclusive Access</option>
+                        <option value="Item">Item</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="edit-reward-quantity">Quantity</label>
+                    <input type="text" id="edit-reward-quantity" disabled>
+                </div>
+                <div class="form-group" id="access-type-group" style="display: none;">
+                    <label for="edit-reward-access-type">Access Type</label>
+                    <select id="edit-reward-access-type" disabled>
+                        <option value="digital">Digital</option>
+                        <option value="physical">Physical</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="edit-reward-chain">Blockchain</label>
+                    <select id="edit-reward-chain" disabled>
+                        <option value="Ethereum">Ethereum</option>
+                        <option value="Polygon">Polygon</option>
+                        <option value="BNB Chain">BNB Chain</option>
+                        <option value="Avalanche">Avalanche</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="edit-reward-contract">Contract Address</label>
+                    <input type="text" id="edit-reward-contract" disabled>
+                </div>
+                <div class="form-group">
+                    <label for="edit-reward-description">Description</label>
+                    <textarea id="edit-reward-description" disabled></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-button cancel" id="cancel-edit">Close</button>
+                <button class="modal-button save" id="save-edit" style="display: none;">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</body>
+
+ <script src="index01c.js"></script>
+
+</html>

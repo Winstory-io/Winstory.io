@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SaaS Company</title>
+    <link rel="stylesheet" href="./index01.css"></head>
+<body>
+<header>
+    <div class="header-left">
+        <img src="../../assets/logo.svg" alt="Winstory Logo" class="logo">
+        <div class="nav">
+            <a href="#">Home</a>
+            <a href="#">Explorer</a>
+        </div>
+    </div>
+    <div class="header-right">
+        <span class="header-icon" id="search-icon">🔍</span>
+        <span class="header-icon">🔔</span>
+        <span class="header-icon">💼</span>
+    </div>
+</header>
+
+<div id="search-modal">
+  <div class="search-container">
+    <input type="text" class="search-input" placeholder="Search campaigns, companies...">
+  </div>
+</div>
+
+<div class="zero-value-popup" id="zero-value-popup">
+    <span class="close-btn" id="close-popup">&times;</span>
+    <h2>Congratulations !</h2>
+    <p>You've made a bold and strategic choice by setting the Unit Value of rewards to $0. This means you're prioritizing community engagement over direct financial returns.
+       An excellent way to strengthen your brand's image and appreciation.</p>
+    
+    <br>
+    <h4>➡️ What does this mean for your company ?</h4>
+    <ul>
+        <li>No direct profits will be generated from the completion process.</li>
+        <li>Your return on investment comes from community engagement, appreciation, and enhanced brand image.</li>
+        <li>By offering a limited number of free rewards, you create exclusivity and drive meaningful participation.</li>
+    </ul>
+    
+    <h4>➡️ How does it work ?</h4>
+    <ul>
+        <li>The community will only cover transaction fees related to the rewards they receive upon validation.</li>
+        <li>You must define the maximum number of MINTs available for the community.</li>
+    </ul>
+    
+    <p><strong>Next Step:</strong></p>
+    <br>
+
+    <p>✅ Set the maximum number of MINTs, it determines the total number of participations possible. This approach allows you to maximize impact, attract engaged contributors, and elevate your brand's presence within the ecosystem. 🚀
+    </p>
+    
+    <button class="ok-btn" id="ok-popup" style="background-color: black; color: green;">OK</button>
+</div>
+
+<main>
+    <div class="create-campaign-section">
+        <h2 class="subtitle">Create Campaign as a B2C Company</h2>
+     
+        <div class="campaign-creation">
+            <div class="campaign-section" style="display: flex; flex-direction: column;">
+                <h2>Your informations</h2>
+             
+             
+                <label for="company-name">Company Name :</label>
+                <input type="text" id="company-name" name="company-name">
+             
+                <label for="pro-mail">Professional Email :</label>
+                <input type="text" id="pro-mail" name="pro-mail">
+             
+                <label for="activity-sector">Activity Sector Company:</label>
+                <select id="activity-sector" name="activity-sector">
+        <optgroup label="Web2">
+            <option value="e-commerce">E-commerce</option>
+            <option value="social-networks">Social Networks</option>
+            <option value="media-entertainment">Media and Entertainment</option>
+            <option value="technology">Technology</option>
+            <option value="fintech">Financial Services (FinTech)</option>
+            <option value="education">Education</option>
+            <option value="health">Health</option>
+            <option value="mobility-transport">Mobility and Transport</option>
+            <option value="tourism-hospitality">Tourism and Hospitality</option>
+            <option value="digital-marketing">Digital Marketing and Advertising</option>
+        </optgroup>
+        <optgroup label="Web3">
+            <option value="defi">Decentralized Finance (DeFi)</option>
+            <option value="nfts-digital-art">NFTs and Digital Art</option>
+            <option value="blockchain-gaming">Blockchain Gaming</option>
+            <option value="dao">DAO (Decentralized Autonomous Organizations)</option>
+            <option value="digital-identity-privacy">Digital Identity and Privacy</option>
+            <option value="blockchain-infrastructure">Blockchain Infrastructure</option>
+            <option value="decentralized-social-networks">Decentralized Social Networks</option>
+            <option value="stablecoins-digital-currencies">Stablecoins and Digital Currencies</option>
+            <option value="decentralized-media-content">Decentralized Media and Content</option>
+            <option value="staking-yield-farming">Staking and Yield Farming</option>
+        </optgroup>
+    </select>
+             
+                <h2>Your winStory </h2>
+
+                <label for="title">Title :</label>
+                <input type="text" id="title" name="title" placeholder="Enter title, hook your audience in a few words. Go for impact !">
+
+                <label for="starting-text">Starting Story :</label>
+                <textarea id="starting-text" name="starting-text" placeholder="Like a cinematic script with your scenario and visual effects ! Write, invent, imagine your Starting Text highlighting your brand's impact and added value, then open-ended at the perfect suspense moment and let your community co-create! Imagine a decor, a mood, characters, plot-twist etc.  Sophistication, imagination, your creativity is your only limit! Please note that we do not tolerate any incitement to hatred, violence or other forms of discrimination, like Hate Speech, in our version nor in future."></textarea>
+             
+                <div class="guidelines-section">
+                    <label for="guideline">Guideline to help Community to complete Starting Text :</label>
+                    <textarea id="guideline" name="guideline" placeholder="Guide your community completions, with style, tone, key elements. Your story, your rules ! This will help both the moderators in scoring completions and the community to be more coherent."></textarea>
+                </div>
+            </div>
+
+            <div class="video-preview-section">
+                <h2>Your Film according to your Starting Story</h2>
+                <div class="video-upload" id="video-upload-section">
+                    <div class="video-container" id="video-container">
+                        <video id="video-preview" controls></video>
+                        <div class="video-placeholder">
+                            <i class="fas fa-film"></i>
+                            <span>Upload your horizontal or vertical video</span>
+                        </div>
+                    </div>
+                    <input type="file" id="video-upload" name="video-upload" accept=".mp4">
+                    <p>Maximum file size: 100MB. Supported format: MP4</p>
+                    <div class="winstory-film-checkbox">
+                        <input type="checkbox" id="winstory-film">
+                        <label for="winstory-film">I prefer Winstory creates the film based on my Starting Story</label>
+                        <span class="price-tag">+$500</span>
+                    </div>
+                </div>
+             </div>
+            <div class="rewards-section">
+                <h2>Rewards<div class="tooltip-container">
+                    <div class="tooltip-bubble" id="rewards-tooltip">?</div>
+                </div></h2>
+                
+                <div class="tooltip-overlay" id="tooltip-overlay"></div>
+                <div class="tooltip-popup" id="rewards-tooltip-popup">
+                    <span class="close-btn" id="close-tooltip">&times;</span>
+                    <h2>Understanding Rewards</h2>
+                    <p><strong>Offer engaging rewards to motivate the community to complete your Story.
+                    <br><span style="color:#FFD700">Winstory</span> guides you every step of the way.</strong></p>
+                    
+                    <p>☀️ <strong>Key Terms explained</strong> :</p>
+                    
+                    <li><strong>Unit Value</strong> : The amount paid by each community member to participate in your campaign, usually in stablecoin (e.g., 25 USDC).</li>
+
+                    <p><em>You can set the Unit Value paid, slightly below the perceived value of the reward in order to make it easier to attract the individuals Community.
+                    To make them want to complete and obtain the standard reward.
+                    And even to produce the best possible completion in order to obtain the Premium reward as well !</em></p>
+                    
+                    <p><em>You can also set the Unit Value to 0 to allow free participation (excluding transaction fees).
+                    In this case, there's no direct return on investment—but your brand image gets a powerful boost.</em></p>
+                    
+                    <li><strong>Net Profit</strong> : The profit goal your company wants to achieve from the campaign, after MINTs costs.
+                    This amount is fully customizable.</li>
+                    
+                    <li><strong>Maximum Mint</strong> : The total number of community participations you allow.
+                    It defines the maximum number of rewards needed and helps frame the campaign.</li>
+                    
+                    <p><em>Maximum Mint = (Initial MINT Cost + Net Profit) / (Unit Value × 50%)  
+                    <br>Why 50%? : 50% of participation fees fund active and passive Stakers + <span style="color:#FFD700">Winstory</span>. 
+                    <br>The other 50% goes to you.</em></p>
+                    
+                    <li><strong>Total Revenue</strong> : The total turnover (i.e. gross revenue) expected from your campaign.
+                    <br>Formula = Selected Net Profit + Your initial MINT price</li>
+                    
+                    <li><strong>Your initial MINT price</strong> : The price your company pays to launch the campaign :
+                    <br>$1000: You provide your own video.
+                    <br>$1500: You want <span style="color:#FFD700">Winstory</span> to create the film based on your Starting Story.</li>
+                    
+                    
+                    <p><strong style="color:#FFD700">🎁 Types of Rewards</strong> :</p>
+                    
+                   <ul>
+    <li><strong>Digital Tokens</strong>: Blockchain-based tokens (e.g., $WINC or others).</li>
+    <li><strong>Digital Items</strong>: Unique digital collectibles (via NFTs, e.g. video-game character element).</li>
+    <li><strong>Digital Exclusive Access</strong>: Privileged access to online content or experiences. (via NFTs, e.g. exclusive webinar,)</li>
+    <li><strong>Physical Exclusive Access</strong>: Access to real-world events or physical goods (via NFTs e.g. VIP event).</li>
+</ul>
+                    
+                    <p><strong style="color:#FFD700">Standard & Premium</strong> :</p>
+                    
+                    <p><strong>Standard Rewards</strong> 👤👤👤 :
+                    Sent to every contributor whose completion is validated by the moderators (Stakers).
+                    These are distributed automatically once your campaign ends or reaches full participation.</p>
+                    
+                    <p><strong>Premium Rewards</strong> 🥇🥈🥉 :
+                    Awarded to the top 3 contributors with the highest average score, based on moderation, criteria, guidelina, coherence, scored by Stakers.
+                    This encourages creativity, effort, and storymaking quality.</p>
+                    
+                    
+                    <p><strong style="color:#FFD700">Easy distribution</strong> :</p>
+                    
+                    <p>Rewards are sent automatically during the MINT, in a single transaction.
+                    Simply provide the token, NFT, or access address on the blockchain.
+                    <span style="color:#FFD700">Winstory</span> ensures everything is securely distributed to validated contributors by Smart Contract.
+                    You'll only be able to publish your campaign once all rewards are properly registered and validated.
+                    Once launched, everything runs automatically.</p>
+                    
+                    <p>🚨 <strong style="color:#FFD700">Important</strong></p>
+                    
+                    <p>Rewards are automatically distributed as soon as the 3 validation conditions are met :</p>
+                    
+                    <p style="color:#FFD700">✅ At least 22 stakers voted</p>
+                    <p style="color:#FFD700">✅ The staking pool exceeds the Unit Value</p>
+                    <p style="color:#FFD700">✅ 2:1 majority votes YES</p>
+                    
+                    <p><strong>These same 3/3 conditions apply for both :</strong></p>
+                    <li><strong>Your Initial Story to be available <br>(At least 22 stakers voted + Staking pool > your MINT price + 2:1 majority votes YES)</strong></li>
+                    <li><strong>All community Completions</strong></li>
+                    
+                </div>            
+               <div class="reward-parameters">
+                   <div class="unit-value-container">
+                       <p>Unit Value : <input type="number" id="unit-value" name="unit-value" min="0.00" step="0.01" value="1.00" class="unit-value-input"> $</p>
+                       <div class="free-reward-checkbox">
+                           <input type="checkbox" id="free-reward">
+                           <label for="free-reward">Make the rewards free to $0 for your community (excluding transaction fees)</label>
+                       </div>
+                   </div>
+                   <p>Selected Unit Value : <span id="selected-unit-value">1.00</span> $</p>
+                
+                   <p>Net Profit : <input type="number" id="net-profit" name="net-profit" min="1" value="1000"> $</p>
+                   <p>Selected Net Profit : <span id="selected-net-profit">1000</span> $</p>
+                   <p>Maximum Mint : <span id="maximum-mint">3000</span></p>
+                   <p>Your initial MINT price : <span id="initial-mint-price">1000</span> $</p>
+                   <p>Total Revenue : <span id="total-revenue">2000.00</span> $</p>
+               </div>
+              
+               <!-- New max mints input for zero value -->
+               <div class="max-mints-container" id="max-mints-container">
+                   <label for="max-mints">Select the maximum number of complementary MINTs at 0$ :</label>
+                   <input type="number" id="max-mints" name="max-mints" min="1" value="100">
+               </div>
+            
+               <div class="rewards-setup">
+                   <div class="standard-rewards">
+                       <h3>Standard Rewards</h3>
+                       <select id="standard-reward-type">
+                          <option value="">Select a reward type</option>
+                          <option value="digital-tokens">Digital Tokens</option>
+                          <option value="digital-exclusive-items">Digital Exclusive Items</option>
+                          <option value="digital-exclusive-access">Digital Exclusive Access</option>
+                          <option value="physical-exclusive-event-access">Physical Exclusive Event Access</option>
+                      </select>
+                    
+                       <div id="standard-reward-details">
+                           <label for="standard-reward-title">Reward Title :</label>
+                           <input type="text" id="standard-reward-title" name="standard-reward-title">
+                        
+                           <label for="standard-reward-description">Description :</label>
+                           <textarea id="standard-reward-description" name="standard-reward-description"></textarea>
+                        
+                           <label for="standard-reward-value">Value :</label>
+                           <input type="text" id="standard-reward-value" name="standard-reward-value">
+                       </div>
+                   </div>
+                
+                   <div class="premium-rewards">
+                       <h3>Premium Rewards</h3>
+                       <select id="premium-reward-type">
+                          <option value="">Select a reward type</option>
+                          <option value="digital-tokens">Digital Tokens</option>
+                          <option value="digital-exclusive-items">Digital Exclusive Items</option>
+                          <option value="digital-exclusive-access">Digital Exclusive Access</option>
+                          <option value="physical-exclusive-event-access">Physical Exclusive Event Access</option>
+                      </select>
+                    
+                       <div id="premium-reward-details">
+                           <label for="premium-reward-title">Reward Title :</label>
+                           <input type="text" id="premium-reward-title" name="premium-reward-title">
+                        
+                           <label for="premium-reward-description">Description :</label>
+                           <textarea id="premium-reward-description" name="premium-reward-description"></textarea>
+                        
+                           <label for="premium-reward-value">Value :</label>
+                           <input type="text" id="premium-reward-value" name="premium-reward-value">
+                       </div>
+                   </div>
+               </div>
+            </div>
+
+            <div class="mint-section" style="display: flex; justify-content: center; align-items: center;">
+              <div class="button-container">
+                  <button class="next-button">Next</button>
+              </div>
+          </div>
+        </div>
+    </div>
+</main>
+</body>
+<script src="index01.js"></script>
+
+</html>

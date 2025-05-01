@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SaaS Community - Winstory</title>
+    <link rel="stylesheet" href="./index03.css">
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="header-left">
+            <img src="../../assets/logo.svg" alt="Winstory Logo" class="logo">
+            <div class="nav">
+                <a href="#">Home</a>
+                <a href="#">Explorer</a>
+            </div>
+        </div>
+        <div class="header-right">
+            <span class="header-icon" id="search-icon">🔍</span>
+            <span class="header-icon">🔔</span>
+            <span class="header-icon">👤</span>
+            <button class="wallet-button" id="wallet-connect">
+                <span id="wallet-address">Connect Wallet</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Company and Title Section -->
+    <div class="company-title-section">
+        <div class="company-name" id="company-name-display"></div>
+        <div class="campaign-title" id="campaign-title-display"></div>
+    </div>
+
+    <!-- Main Campaign Container -->
+    <div class="campaign-container">
+        <!-- Video Section with Corner Bubbles -->
+        <div class="video-section">
+            <div class="nav-arrow arrow-left" onclick="prevCampaign()">❮</div>
+            <div class="video-wrapper">
+                <video class="campaign-video video-horizontal" controls id="main-video">
+                    <source src="" type="video/mp4">
+                </video>
+                
+                <!-- Corner Bubbles -->
+                <div class="corner-bubble top-left" id="standard-reward-bubble">
+                    Standard Reward
+                </div>
+                
+                <div class="corner-bubble top-right" id="premium-reward-bubble">
+                    Premium Reward
+                </div>
+                
+                <div class="corner-bubble bottom-left" id="starting-text-bubble">
+                    Starting Text
+                </div>
+                
+                <div class="corner-bubble bottom-right" id="guideline-bubble">
+                    Guideline
+                </div>
+            </div>
+            <div class="nav-arrow arrow-right" onclick="nextCampaign()">❯</div>
+        </div>
+
+        <!-- Actions and Progress Container -->
+        <div class="actions-progress-container">
+            <!-- Left Side - Price and Button -->
+            <div class="actions-container">
+                <div class="mint-price">
+                    MINT Price: <span id="mint-price-value"></span>
+                </div>
+                <button class="complete-button" onclick="openCompletionPopup()">Complete Story</button>
+            </div>
+            
+            <!-- Right Side - Progress Bar -->
+            <div class="progress-container">
+                <div class="progress-header">
+                    <span id="completion-rate">0% completed</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill"></div>
+                </div>
+                <div class="time-remaining" id="time-remaining">Time remaining: loading...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Popup Overlay -->
+    <div class="popup-overlay" id="popup-overlay"></div>
+    
+    <!-- Completion Popup -->
+    <div class="completion-popup" id="completion-popup">
+        <div class="popup-header">
+            <h2 class="popup-title">Complete the Story</h2>
+            <button class="close-popup" onclick="closeCompletionPopup()">&times;</button>
+        </div>
+        
+        <div class="popup-video-container">
+            <video class="popup-video" id="upload-preview" controls></video>
+        </div>
+        
+        <textarea class="popup-textarea" placeholder="Tell your story continuation... (Minimum 100 characters)" id="story-text"></textarea>
+        
+        <input type="file" id="video-upload" accept="video/*" style="display: none;">
+        <label for="video-upload" class="file-upload-label">📹 Upload Your Video (MP4, max 60s)</label>
+        
+        <button class="complete-button" onclick="submitCompletion()">MINT Completion</button>
+    </div>
+
+    <!-- Text Popups -->
+    <div class="text-popup" id="starting-text-popup">
+        <div class="popup-header">
+            <h2 class="popup-title">Starting Text</h2>
+        </div>
+        <div class="text-popup-content" id="starting-text-content"></div>
+    </div>
+    
+    <div class="text-popup" id="guideline-popup">
+        <div class="popup-header">
+            <h2 class="popup-title">Guideline</h2>
+        </div>
+        <div class="text-popup-content" id="guideline-content"></div>
+    </div>
+    
+    <div class="text-popup" id="standard-reward-popup">
+        <div class="popup-header">
+            <h2 class="popup-title">Standard Reward</h2>
+        </div>
+        <div class="text-popup-content" id="standard-reward-content"></div>
+    </div>
+    
+    <div class="text-popup" id="premium-reward-popup">
+        <div class="popup-header">
+            <h2 class="popup-title">Premium Reward</h2>
+        </div>
+        <div class="text-popup-content" id="premium-reward-content"></div>
+    </div>
+</body>
+    <script src="index03.js"></script>
+</html>
