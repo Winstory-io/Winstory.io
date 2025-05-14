@@ -182,6 +182,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
         updateInitialMintPrice();
+        updateCalculations();
     }
 
     // Check for zero values
@@ -259,7 +260,12 @@ document.addEventListener('DOMContentLoaded', function() {
             updateFreeRewardCalculations();
         } else {
             // Calculate maximum mints and total revenue for paid rewards
-            let maximumMint = Math.ceil((1000 + netProfit) / (unitValue * 0.5));
+            let maximumMint;
+            if (winstoryFilmChecked) {
+                maximumMint = Math.ceil((1500 + netProfit) / (unitValue * 0.5));
+            } else {
+                maximumMint = Math.ceil((1000 + netProfit) / (unitValue * 0.5));
+            }
             
             // Ensure minimum of 5
             if (maximumMint < 5) {
