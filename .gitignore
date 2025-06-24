@@ -1,0 +1,25 @@
+# Node modules
+node_modules/
+
+# Next.js build output
+.next/
+
+# Local env files
+.env*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Editor directories and files
+.vscode/
+.idea/
+*.swp
+
+# Build output
+out/ 
