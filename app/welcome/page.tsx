@@ -7,8 +7,10 @@ import ModerationIcon from '@/components/icons/ModerationIcon';
 import CompletionIcon from '@/components/icons/CompletionIcon';
 import ExplorerIcon from '@/components/icons/ExplorerIcon';
 
-const rowStyle = 'flex items-center mb-16 w-full max-w-xs sm:max-w-md';
-const textStyle = 'text-2xl sm:text-3xl font-bold tracking-wide text-yellow-400';
+const buttonStyle =
+  'flex items-center gap-6 py-6 select-none transition-transform active:scale-95 focus:outline-none';
+const textStyle =
+  'text-4xl sm:text-5xl font-extrabold tracking-wide text-yellow-400 drop-shadow-lg';
 
 const Home = () => {
   const handleClick = (action: string) => {
@@ -25,34 +27,49 @@ const Home = () => {
       case 'Explorer':
         window.location.href = '/app/explorer';
         break;
+      case 'Tooltip':
+        window.location.href = '/app/welcome/tooltip';
+        break;
       default:
         break;
     }
   };
 
   return (
-    <div className="min-h-screen bg-black flex flex-col items-center justify-center relative font-inter">
-      <TipBox />
+    <div className="min-h-screen w-full flex flex-col justify-between items-center relative font-inter bg-black" style={{ background: '#000' }}>
+      {/* Fond noir global */}
+      <style>{`body { background: #000 !important; }`}</style>
 
-      <button className={rowStyle} onClick={() => handleClick('Create Campaign')}>
-        <span className="mr-6"><CreationIcon /></span>
-        <span className={textStyle}>Create Campaign</span>
-      </button>
+      {/* Ampoule cliquable en haut à droite */}
+      <div className="absolute top-8 right-8 z-50 cursor-pointer" onClick={() => handleClick('Tooltip')}>
+        <TipBox />
+      </div>
 
-      <button className={rowStyle} onClick={() => handleClick('Moderate')}>
-        <span className="mr-6"><ModerationIcon /></span>
-        <span className={textStyle}>Moderate</span>
-      </button>
+      {/* Section centrale verticale et centrée */}
+      <div className="flex flex-col items-center justify-center flex-1 w-full gap-12">
+        <button className={buttonStyle} style={{ background: 'none', border: 'none' }} onClick={() => handleClick('Create Campaign')}>
+          <span className="text-7xl text-yellow-400"><CreationIcon /></span>
+          <span className={textStyle} style={{ color: '#FFD600' }}>Create Campaign</span>
+        </button>
 
-      <button className={rowStyle} onClick={() => handleClick('Complete Campaign')}>
-        <span className="mr-6"><CompletionIcon /></span>
-        <span className={textStyle}>Complete Campaign</span>
-      </button>
+        <button className={buttonStyle} style={{ background: 'none', border: 'none' }} onClick={() => handleClick('Moderate')}>
+          <span className="text-7xl text-yellow-400"><ModerationIcon /></span>
+          <span className={textStyle} style={{ color: '#FFD600' }}>Moderate</span>
+        </button>
 
-      <button className="flex flex-col items-center mt-16" onClick={() => handleClick('Explorer')}>
-        <ExplorerIcon />
-        <span className={textStyle}>Explorer</span>
-      </button>
+        <button className={buttonStyle} style={{ background: 'none', border: 'none' }} onClick={() => handleClick('Complete Campaign')}>
+          <span className="text-7xl text-yellow-400"><CompletionIcon /></span>
+          <span className={textStyle} style={{ color: '#FFD600' }}>Complete Campaign</span>
+        </button>
+      </div>
+
+      {/* Explorer tout en bas, centré */}
+      <div className="flex flex-col items-center mb-16">
+        <button className="flex flex-col items-center" style={{ background: 'none', border: 'none' }} onClick={() => handleClick('Explorer')}>
+          <span className="text-7xl text-yellow-400"><ExplorerIcon /></span>
+          <span className={textStyle} style={{ color: '#FFD600' }}>Explorer</span>
+        </button>
+      </div>
     </div>
   );
 };
