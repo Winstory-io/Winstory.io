@@ -28,7 +28,7 @@ const Home = () => {
         window.location.href = '/app/explorer';
         break;
       case 'Tooltip':
-        window.location.href = '/app/welcome/tooltip';
+        window.location.href = '/welcome/tooltip';
         break;
       default:
         break;
