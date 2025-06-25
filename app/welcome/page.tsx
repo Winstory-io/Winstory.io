@@ -6,6 +6,7 @@ import CreationIcon from '@/components/icons/CreationIcon';
 import ModerationIcon from '@/components/icons/ModerationIcon';
 import CompletionIcon from '@/components/icons/CompletionIcon';
 import ExplorerIcon from '@/components/icons/ExplorerIcon';
+import { useRouter } from 'next/navigation';
 
 const buttonStyle =
   'flex items-center gap-6 py-6 select-none transition-transform active:scale-95 focus:outline-none';
@@ -13,10 +14,11 @@ const textStyle =
   'text-4xl sm:text-5xl font-extrabold tracking-wide text-yellow-400 drop-shadow-lg';
 
 const Home = () => {
+  const router = useRouter();
   const handleClick = (action: string) => {
     switch (action) {
       case 'Create Campaign':
-        window.location.href = '/creation';
+        router.push('/creation/youare');
         break;
       case 'Moderate':
         window.location.href = '/app/moderation';

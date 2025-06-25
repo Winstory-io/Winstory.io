@@ -1,0 +1,20 @@
+html, body, #__next, main, .min-h-screen, .w-full, .flex, .relative, .font-inter {
+  background: #000 !important;
+  color: #FFD600;
+}
+
+:root {
+  --background-dark: #000;
+  --background-light: #fff;
+  --text-dark: #FFD600;
+  --text-light: #222;
+}
+
+body[data-theme='light'] {
+  background: var(--background-light) !important;
+  color: var(--text-light) !important;
+}
+body[data-theme='dark'] {
+  background: var(--background-dark) !important;
+  color: var(--text-dark) !important;
+}
