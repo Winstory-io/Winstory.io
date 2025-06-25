@@ -16,7 +16,7 @@ const Home = () => {
   const handleClick = (action: string) => {
     switch (action) {
       case 'Create Campaign':
-        window.location.href = '/app/creation';
+        window.location.href = '/creation';
         break;
       case 'Moderate':
         window.location.href = '/app/moderation';
