@@ -10,6 +10,11 @@
       "static/chunks/main-app.js",
       "static/chunks/app/welcome/layout.js"
     ],
+    "/welcome/tooltip/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/welcome/tooltip/page.js"
+    ],
     "/welcome/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
@@ -34,6 +39,36 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/completion/login/page.js"
+    ],
+    "/creation/layout": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/creation/layout.js"
+    ],
+    "/creation/youare/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/creation/youare/page.js"
+    ],
+    "/creation/individual/login/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/creation/individual/login/page.js"
+    ],
+    "/creation/agencyb2c/login/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/creation/agencyb2c/login/page.js"
+    ],
+    "/creation/b2c/login/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/creation/b2c/login/page.js"
+    ],
+    "/_not-found/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/_not-found/page.js"
     ]
   }
 }

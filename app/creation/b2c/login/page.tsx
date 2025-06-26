@@ -11,6 +11,7 @@ export default function B2CLoginPage() {
           icon={<span role="img" aria-label="email">📧</span>}
           text="With your Pro E-mail"
           required
+          color="#fff"
         />
         <LoginButton
           icon={<span role="img" aria-label="wallet">💳</span>}
