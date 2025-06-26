@@ -29,6 +29,11 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/creation/b2c/login/page.js"
+    ],
+    "/creation/b2c/yourwinstory/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/creation/b2c/yourwinstory/page.js"
     ]
   }
 }
