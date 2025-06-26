@@ -5,12 +5,13 @@ interface LoginButtonProps {
   text: string;
   required?: boolean;
   optional?: boolean;
+  color?: string;
   onClick?: () => void;
 }
 
-const LoginButton: React.FC<LoginButtonProps> = ({ icon, text, required, optional, onClick }) => {
-  const borderColor = required ? '#fff' : '#FFD600';
-  const textColor = required ? '#fff' : '#FFD600';
+const LoginButton: React.FC<LoginButtonProps> = ({ icon, text, required, optional, color = '#FFD600', onClick }) => {
+  const borderColor = color;
+  const textColor = color;
   const mention = required ? 'REQUIRED' : optional ? 'OPTIONAL' : '';
   const mentionColor = required ? '#fff' : '#FFD600';
   return (
@@ -39,9 +40,11 @@ const LoginButton: React.FC<LoginButtonProps> = ({ icon, text, required, optiona
         <span style={{ fontSize: 32 }}>{icon}</span>
         <span>{text}</span>
       </button>
-      <div style={{ color: mentionColor, fontWeight: 700, fontSize: 16, marginTop: 8, fontStyle: optional ? 'italic' : 'normal' }}>
-        {mention}
-      </div>
+      {mention && (
+        <div style={{ color: mentionColor, fontWeight: 700, fontSize: 16, marginTop: 8, fontStyle: optional ? 'italic' : 'normal' }}>
+          {mention}
+        </div>
+      )}
     </div>
   );
 };

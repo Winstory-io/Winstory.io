@@ -81,7 +81,7 @@ export default function Home() {
             gap: 24,
             cursor: 'pointer',
           }}
-          onClick={() => router.push('/moderation')}
+          onClick={() => router.push('/moderation/login')}
         >
           <span style={{ fontSize: 56 }}>
             <ModerationIcon />
@@ -100,7 +100,7 @@ export default function Home() {
             gap: 24,
             cursor: 'pointer',
           }}
-          onClick={() => router.push('/completion')}
+          onClick={() => router.push('/completion/login')}
         >
           <span style={{ fontSize: 56 }}>
             <CompletionIcon />
