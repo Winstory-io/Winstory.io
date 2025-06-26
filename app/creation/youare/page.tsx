@@ -111,7 +111,7 @@ export default function YouAre() {
       )}
 
       {/* B2C Brand */}
-      <Link href="/creation/b2c" style={{ textDecoration: 'none' }}>
+      <Link href="/creation/b2c/login" style={{ textDecoration: 'none' }}>
         <div style={{ ...boxStyle, margin: '0 24px 16px 24px' }}>
           <span style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             {/* Mallette + graphique */}
@@ -131,13 +131,13 @@ export default function YouAre() {
 
       {/* Question agence */}
       <div style={{ textAlign: 'center', margin: '0 0 16px 0' }}>
-        <Link href="/creation/agencyb2c" style={{ color: yellow, fontStyle: 'italic', textDecoration: 'underline', fontWeight: 600, fontSize: 20 }}>
+        <Link href="/creation/agencyb2c/login" style={{ color: yellow, fontStyle: 'italic', textDecoration: 'underline', fontWeight: 600, fontSize: 20 }}>
           You are an agency working with a B2C client ?
         </Link>
       </div>
 
       {/* Individual Member */}
-      <Link href="/creation/individual" style={{ textDecoration: 'none' }}>
+      <Link href="/creation/individual/login" style={{ textDecoration: 'none' }}>
         <div style={{ ...boxStyle, margin: '0 24px' }}>
           <span style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             {/* Profil */}

@@ -25,10 +25,35 @@
       "static/chunks/main-app.js",
       "static/chunks/app/creation/youare/page.js"
     ],
-    "/_not-found/page": [
+    "/creation/b2c/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/_not-found/page.js"
+      "static/chunks/app/creation/b2c/page.js"
+    ],
+    "/creation/individual/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/creation/individual/page.js"
+    ],
+    "/creation/agencyb2c/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/creation/agencyb2c/page.js"
+    ],
+    "/creation/b2c/login/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/creation/b2c/login/page.js"
+    ],
+    "/creation/agencyb2c/login/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/creation/agencyb2c/login/page.js"
+    ],
+    "/creation/individual/login/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/creation/individual/login/page.js"
     ]
   }
 }

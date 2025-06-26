@@ -1,5 +1,8 @@
 {
-  "/_not-found/page": "app/_not-found/page.js",
+  "/creation/youare/page": "app/creation/youare/page.js",
+  "/creation/b2c/login/page": "app/creation/b2c/login/page.js",
   "/welcome/page": "app/welcome/page.js",
-  "/creation/youare/page": "app/creation/youare/page.js"
+  "/creation/individual/page": "app/creation/individual/page.js",
+  "/creation/individual/login/page": "app/creation/individual/login/page.js",
+  "/creation/agencyb2c/login/page": "app/creation/agencyb2c/login/page.js"
 }
