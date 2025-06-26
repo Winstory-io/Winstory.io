@@ -26,6 +26,43 @@ export default function Home() {
         position: 'relative',
       }}
     >
+      {/* Logo en haut à gauche */}
+      <div
+        style={{
+          position: 'absolute',
+          top: 24,
+          left: 24,
+          zIndex: 10,
+          display: 'flex',
+          alignItems: 'center',
+        }}
+      >
+        <button
+          onClick={() => router.push('/')}
+          style={{
+            background: 'none',
+            border: 'none',
+            padding: 0,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+          }}
+          aria-label="Accueil"
+        >
+          <img
+            src="/logo.svg"
+            alt="Logo Winstory"
+            style={{
+              width: '10vw',
+              minWidth: 48,
+              maxWidth: 120,
+              height: 'auto',
+              display: 'block',
+            }}
+          />
+        </button>
+      </div>
+
       {/* Ampoule en haut à droite */}
       <div
         style={{
