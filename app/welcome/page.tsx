@@ -8,72 +8,138 @@ import CompletionIcon from '@/components/icons/CompletionIcon';
 import ExplorerIcon from '@/components/icons/ExplorerIcon';
 import { useRouter } from 'next/navigation';
 
-const buttonStyle =
-  'flex items-center gap-6 py-6 select-none transition-transform active:scale-95 focus:outline-none';
-const textStyle =
-  'text-4xl sm:text-5xl font-extrabold tracking-wide text-yellow-400 drop-shadow-lg';
-
-const Home = () => {
+export default function Home() {
   const router = useRouter();
-  const handleClick = (action: string) => {
-    switch (action) {
-      case 'Create Campaign':
-        router.push('/creation/youare');
-        break;
-      case 'Moderate':
-        window.location.href = '/app/moderation';
-        break;
-      case 'Complete Campaign':
-        window.location.href = '/app/completion';
-        break;
-      case 'Explorer':
-        window.location.href = '/app/explorer';
-        break;
-      case 'Tooltip':
-        window.location.href = '/welcome/tooltip';
-        break;
-      default:
-        break;
-    }
-  };
 
   return (
-    <div className="min-h-screen w-full flex flex-col justify-between items-center relative font-inter bg-black" style={{ background: '#000' }}>
-      {/* Fond noir global */}
-      <style>{`body { background: #000 !important; }`}</style>
-
-      {/* Ampoule cliquable en haut à droite */}
-      <div className="absolute top-8 right-8 z-50 cursor-pointer" onClick={() => handleClick('Tooltip')}>
+    <div
+      style={{
+        minHeight: '100vh',
+        width: '100vw',
+        background: '#000',
+        color: '#FFD600',
+        fontFamily: 'Inter, sans-serif',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        position: 'relative',
+      }}
+    >
+      {/* Ampoule en haut à droite */}
+      <div
+        style={{
+          position: 'absolute',
+          top: 32,
+          right: 32,
+          cursor: 'pointer',
+          zIndex: 10,
+        }}
+        onClick={() => router.push('/welcome/tooltip')}
+      >
         <TipBox />
       </div>
 
-      {/* Section centrale verticale et centrée */}
-      <div className="flex flex-col items-center justify-center flex-1 w-full gap-12">
-        <button className={buttonStyle} style={{ background: 'none', border: 'none' }} onClick={() => handleClick('Create Campaign')}>
-          <span className="text-7xl text-yellow-400"><CreationIcon /></span>
-          <span className={textStyle} style={{ color: '#FFD600' }}>Create Campaign</span>
+      {/* Actions principales */}
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: 48,
+          marginBottom: 80,
+        }}
+      >
+        <button
+          style={{
+            background: 'none',
+            border: 'none',
+            color: '#FFD600',
+            fontWeight: 900,
+            fontSize: 40,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 24,
+            cursor: 'pointer',
+          }}
+          onClick={() => router.push('/creation/youare')}
+        >
+          <span style={{ fontSize: 56 }}>
+            <CreationIcon />
+          </span>
+          Create Campaign
         </button>
-
-        <button className={buttonStyle} style={{ background: 'none', border: 'none' }} onClick={() => handleClick('Moderate')}>
-          <span className="text-7xl text-yellow-400"><ModerationIcon /></span>
-          <span className={textStyle} style={{ color: '#FFD600' }}>Moderate</span>
+        <button
+          style={{
+            background: 'none',
+            border: 'none',
+            color: '#FFD600',
+            fontWeight: 900,
+            fontSize: 40,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 24,
+            cursor: 'pointer',
+          }}
+          onClick={() => router.push('/moderation')}
+        >
+          <span style={{ fontSize: 56 }}>
+            <ModerationIcon />
+          </span>
+          Moderate
         </button>
-
-        <button className={buttonStyle} style={{ background: 'none', border: 'none' }} onClick={() => handleClick('Complete Campaign')}>
-          <span className="text-7xl text-yellow-400"><CompletionIcon /></span>
-          <span className={textStyle} style={{ color: '#FFD600' }}>Complete Campaign</span>
+        <button
+          style={{
+            background: 'none',
+            border: 'none',
+            color: '#FFD600',
+            fontWeight: 900,
+            fontSize: 40,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 24,
+            cursor: 'pointer',
+          }}
+          onClick={() => router.push('/completion')}
+        >
+          <span style={{ fontSize: 56 }}>
+            <CompletionIcon />
+          </span>
+          Complete Campaign
         </button>
       </div>
 
-      {/* Explorer tout en bas, centré */}
-      <div className="flex flex-col items-center mb-16">
-        <button className="flex flex-col items-center" style={{ background: 'none', border: 'none' }} onClick={() => handleClick('Explorer')}>
-          <span className="text-7xl text-yellow-400"><ExplorerIcon /></span>
-          <span className={textStyle} style={{ color: '#FFD600' }}>Explorer</span>
+      {/* Explorer en bas */}
+      <div
+        style={{
+          position: 'absolute',
+          bottom: 48,
+          left: 0,
+          width: '100%',
+          display: 'flex',
+          justifyContent: 'center',
+        }}
+      >
+        <button
+          style={{
+            background: 'none',
+            border: 'none',
+            color: '#FFD600',
+            fontWeight: 900,
+            fontSize: 32,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 20,
+            cursor: 'pointer',
+          }}
+          onClick={() => router.push('/explorer')}
+        >
+          <span style={{ fontSize: 48 }}>
+            <ExplorerIcon />
+          </span>
+          Explorer
         </button>
       </div>
     </div>
   );
-};
-
-export default Home;
+}

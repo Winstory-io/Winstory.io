@@ -9,76 +9,112 @@ const TooltipPage = () => {
   const router = useRouter();
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-black font-inter" style={{ background: '#000' }}>
-      <div className="relative max-w-lg w-full bg-black border-4 border-yellow-400 rounded-2xl p-6 sm:p-10 shadow-2xl">
+    <div
+      style={{
+        minHeight: '100vh',
+        width: '100vw',
+        background: '#000',
+        color: '#FFD600',
+        fontFamily: 'Inter, sans-serif',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        position: 'relative',
+      }}
+    >
+      <div
+        style={{
+          position: 'relative',
+          maxWidth: 600,
+          width: '90vw',
+          background: '#000',
+          border: '4px solid #FFD600',
+          borderRadius: 24,
+          padding: '28px 12px 20px 12px',
+          boxShadow: '0 0 32px #000',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+        }}
+      >
         {/* Croix rouge pour fermer */}
         <button
-          className="absolute top-4 right-4 text-4xl font-bold text-red-500 hover:text-red-700 transition-colors z-10"
           aria-label="Close"
           onClick={() => router.push('/welcome')}
+          style={{
+            position: 'absolute',
+            top: 14,
+            right: 14,
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            zIndex: 10,
+          }}
         >
-          ×
+          <svg width="28" height="28" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <line x1="10" y1="10" x2="30" y2="30" stroke="#FF2D2D" strokeWidth="3" strokeLinecap="round"/>
+            <line x1="30" y1="10" x2="10" y2="30" stroke="#FF2D2D" strokeWidth="3" strokeLinecap="round"/>
+          </svg>
         </button>
         {/* Titre sans ampoule */}
-        <div className="flex items-center justify-center mb-8">
-          <h1 style={{ color: '#FFD600' }} className="text-4xl sm:text-5xl font-extrabold text-center tracking-wide drop-shadow-lg font-inter">What do you Win today?</h1>
-        </div>
-        <div className="space-y-10 text-lg">
+        <h1 style={{ color: '#FFD600', fontSize: 28, fontWeight: 900, textAlign: 'center', marginBottom: 18, letterSpacing: 1 }}>What do you Win today?</h1>
+        <div style={{ width: '100%', fontSize: 16, display: 'flex', flexDirection: 'column', gap: 18 }}>
           {/* Explorer */}
           <div>
-            <div className="flex items-center mb-1">
-              <span className="text-2xl mr-2" role="img" aria-label="compass">🧭</span>
-              <h2 style={{ color: '#FFD600' }} className="text-2xl sm:text-3xl font-extrabold mb-1 drop-shadow-lg font-inter">Explorer</h2>
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: 4 }}>
+              <span style={{ fontSize: 20, marginRight: 8 }} role="img" aria-label="compass">🧭</span>
+              <h2 style={{ color: '#FFD600', fontSize: 20, fontWeight: 800, marginBottom: 0 }}>Explorer</h2>
             </div>
-            <h3 style={{ color: '#FFD600' }} className="font-bold mb-1 font-inter">For You. Humanity. With Love <span className="text-red-500">❤️</span></h3>
-            <ul className="list-disc ml-7">
-              <li className={listItem}>All in one place <span className="text-yellow-300">☀️</span></li>
-              <li className={listItem}>Discover Winstory world.</li>
-              <li className={listItem}>Creations and best Completions.</li>
+            <h3 style={{ color: '#FFD600', fontWeight: 700, marginBottom: 4 }}>For You. Humanity. With Love <span style={{ color: '#FF2D2D' }}>❤️</span></h3>
+            <ul style={{ color: '#fff', marginLeft: 18, fontSize: 15, fontWeight: 500 }}>
+              <li>All in one place <span style={{ color: '#FFD600' }}>☀️</span></li>
+              <li>Discover Winstory world.</li>
+              <li>Creations and best Completions.</li>
             </ul>
           </div>
           {/* Create Campaign */}
           <div>
-            <div className="flex items-center mb-1">
-              <span className="text-2xl mr-2" role="img" aria-label="play">▶️</span>
-              <h2 style={{ color: '#FFD600' }} className="text-2xl sm:text-3xl font-extrabold mb-1 drop-shadow-lg font-inter">Create Campaign</h2>
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: 4 }}>
+              <span style={{ fontSize: 20, marginRight: 8 }} role="img" aria-label="play">▶️</span>
+              <h2 style={{ color: '#FFD600', fontSize: 20, fontWeight: 800, marginBottom: 0 }}>Create Campaign</h2>
             </div>
-            <h3 style={{ color: '#FFD600' }} className="font-bold mb-1 font-inter">For B2C Companies & creative individuals</h3>
-            <ul className="list-disc ml-7">
-              <li className={listItem}>Launch interactive narrative stories</li>
-              <li className={listItem}>As a B2C Company : <span className="text-yellow-300">Your storytelling with ROI</span></li>
-              <li className={listItem}>As an Individual : <span className="text-yellow-300">Your vision with $WINC</span></li>
-              <li className={listItem}>Base the creative contributions</li>
-              <li className={listItem}>Turn storytelling into visibility and impact</li>
+            <h3 style={{ color: '#FFD600', fontWeight: 700, marginBottom: 4 }}>For B2C Companies & creative individuals</h3>
+            <ul style={{ color: '#fff', marginLeft: 18, fontSize: 15, fontWeight: 500 }}>
+              <li>Launch interactive narrative stories</li>
+              <li>As a B2C Company : <span style={{ color: '#FFD600' }}>Your storytelling with ROI</span></li>
+              <li>As an Individual : <span style={{ color: '#FFD600' }}>Your vision with $WINC</span></li>
+              <li>Base the creative contributions</li>
+              <li>Turn storytelling into visibility and impact</li>
             </ul>
           </div>
           {/* Moderate */}
           <div>
-            <div className="flex items-center mb-1">
-              <span className="text-2xl mr-2" role="img" aria-label="check and cross">✅❌</span>
-              <h2 style={{ color: '#FFD600' }} className="text-2xl sm:text-3xl font-extrabold mb-1 drop-shadow-lg font-inter">Moderate</h2>
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: 4 }}>
+              <span style={{ fontSize: 20, marginRight: 8 }} role="img" aria-label="check and cross">✅❌</span>
+              <h2 style={{ color: '#FFD600', fontSize: 20, fontWeight: 800, marginBottom: 0 }}>Moderate</h2>
             </div>
-            <h3 style={{ color: '#FFD600' }} className="font-bold mb-1 font-inter">For $WINC Stakers / DAO members only</h3>
-            <ul className="list-disc ml-7">
-              <li className={listItem}>Shape what deserves to rise</li>
-              <li className={listItem}>Vote on the quality of completions</li>
-              <li className={listItem}>Win <span className="text-yellow-300">$WINC</span> based on alignment</li>
-              <li className={listItem}>Governance & rewards powered by your judgment</li>
+            <h3 style={{ color: '#FFD600', fontWeight: 700, marginBottom: 4 }}>For $WINC Stakers / DAO members only</h3>
+            <ul style={{ color: '#fff', marginLeft: 18, fontSize: 15, fontWeight: 500 }}>
+              <li>Shape what deserves to rise</li>
+              <li>Vote on the quality of completions</li>
+              <li>Win <span style={{ color: '#FFD600' }}>$WINC</span> based on alignment</li>
+              <li>Governance & rewards powered by your judgment</li>
             </ul>
           </div>
           {/* Complete Campaign */}
           <div>
-            <div className="flex items-center mb-1">
-              <span className="text-2xl mr-2" role="img" aria-label="fast forward">➡️</span>
-              <h2 style={{ color: '#FFD600' }} className="text-2xl sm:text-3xl font-extrabold mb-1 drop-shadow-lg font-inter">Complete Campaign</h2>
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: 4 }}>
+              <span style={{ fontSize: 20, marginRight: 8 }} role="img" aria-label="fast forward">➡️</span>
+              <h2 style={{ color: '#FFD600', fontSize: 20, fontWeight: 800, marginBottom: 0 }}>Complete Campaign</h2>
             </div>
-            <h3 style={{ color: '#FFD600' }} className="font-bold mb-1 font-inter">For Community Members</h3>
-            <ul className="list-disc ml-7">
-              <li className={listItem}>Take a story. Make it yours.</li>
-              <li className={listItem}>Extend campaigns with your creative completion</li>
-              <li className={listItem}>Win exclusive rewards from brands or Winstory</li>
-              <li className={listItem}>Top 3 completions unlock <span className="text-yellow-300">Premium Rewards</span></li>
-              <li className={listItem}>Inspire, tell, and get noticed</li>
+            <h3 style={{ color: '#FFD600', fontWeight: 700, marginBottom: 4 }}>For Community Members</h3>
+            <ul style={{ color: '#fff', marginLeft: 18, fontSize: 15, fontWeight: 500 }}>
+              <li>Take a story. Make it yours.</li>
+              <li>Extend campaigns with your creative completion</li>
+              <li>Win exclusive rewards from brands or Winstory</li>
+              <li>Top 3 completions unlock <span style={{ color: '#FFD600' }}>Premium Rewards</span></li>
+              <li>Inspire, tell, and get noticed</li>
             </ul>
           </div>
         </div>

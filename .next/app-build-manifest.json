@@ -54,6 +54,11 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/creation/individual/login/page.js"
+    ],
+    "/welcome/tooltip/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/welcome/tooltip/page.js"
     ]
   }
 }
