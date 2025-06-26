@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 // Icône mallette (SVG simplifié, à remplacer par le SVG complet si besoin)
 const BriefcaseIcon = () => (
@@ -10,11 +11,66 @@ const BriefcaseIcon = () => (
   </svg>
 );
 
+// Flèche verte dans un rond
+const GreenArrowButton = ({ onClick, disabled }: { onClick: () => void, disabled: boolean }) => (
+  <button
+    onClick={onClick}
+    disabled={disabled}
+    aria-label="Next"
+    style={{
+      position: 'absolute',
+      bottom: 16,
+      right: 16,
+      background: 'none',
+      border: 'none',
+      cursor: disabled ? 'not-allowed' : 'pointer',
+      padding: 0,
+      outline: 'none',
+      opacity: disabled ? 0.6 : 1,
+    }}
+  >
+    <svg width="56" height="56" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="24" cy="24" r="18" fill="#18C964"/>
+      <path d="M16 22L24 30L32 22" stroke="#111" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  </button>
+);
+
 export default function YourWinstoryB2C() {
+  const router = useRouter();
   const [title, setTitle] = useState('');
   const [story, setStory] = useState('');
   const [guideline, setGuideline] = useState('');
   const [focus, setFocus] = useState({ title: false, story: false, guideline: false });
+  const [touched, setTouched] = useState({ title: false, story: false, guideline: false });
+  const [error, setError] = useState<{title?: string, story?: string, guideline?: string}>({});
+
+  // Validation
+  const isTitleValid = !!title.trim();
+  const isStoryValid = !!story.trim();
+  const isGuidelineValid = !!guideline.trim();
+  const allValid = isTitleValid && isStoryValid && isGuidelineValid;
+
+  const handleNext = () => {
+    const newError: typeof error = {};
+    if (!isTitleValid) newError.title = 'This field is required.';
+    if (!isStoryValid) newError.story = 'This field is required.';
+    if (!isGuidelineValid) newError.guideline = 'This field is required.';
+    setError(newError);
+    setTouched({ title: true, story: true, guideline: true });
+    if (Object.keys(newError).length === 0) {
+      // Aller à la page suivante (à adapter selon le flow)
+      router.push('/creation/b2c/nextstep');
+    }
+  };
+
+  // Couleur dynamique
+  const getColor = (valid: boolean, touched: boolean, focus: boolean) => {
+    if (focus) return '#FFD600';
+    if (valid) return '#18C964'; // vert
+    if (touched) return '#F31260'; // rouge
+    return '#FFD600'; // jaune
+  };
 
   return (
     <div style={{ minHeight: '100vh', background: '#000', color: '#FFD600', fontFamily: 'Inter, sans-serif', padding: 0, margin: 0 }}>
@@ -27,38 +83,67 @@ export default function YourWinstoryB2C() {
 
       {/* Bloc: Starting Title */}
       <section style={{ maxWidth: 600, margin: '0 auto', marginTop: 48 }}>
-        <h2 style={{ color: '#FFD600', fontSize: 28, fontWeight: 700, textAlign: 'center', marginBottom: 16 }}>Starting Title</h2>
-        <div style={{ border: '2px solid #FFD600', borderRadius: 6, padding: 18, background: 'rgba(0,0,0,0.7)', marginBottom: 48 }}>
+        <h2 style={{
+          color: getColor(isTitleValid, touched.title, focus.title),
+          fontSize: 28,
+          fontWeight: 700,
+          textAlign: 'center',
+          marginBottom: 16
+        }}>Starting Title</h2>
+        <div style={{
+          border: `2px solid ${getColor(isTitleValid, touched.title, focus.title)}`,
+          borderRadius: 6,
+          padding: 18,
+          background: 'rgba(0,0,0,0.7)',
+          marginBottom: 8,
+          position: 'relative',
+        }}>
           <input
             type="text"
             value={title}
-            onChange={e => setTitle(e.target.value)}
+            onChange={e => { setTitle(e.target.value); if (touched.title) setTouched(t => ({ ...t, title: false })); setError(e => ({ ...e, title: undefined })); }}
             onFocus={() => setFocus(f => ({ ...f, title: true }))}
-            onBlur={() => setFocus(f => ({ ...f, title: false }))}
+            onBlur={() => { setFocus(f => ({ ...f, title: false })); setTouched(t => ({ ...t, title: true })); }}
             placeholder={focus.title || title ? '' : 'Enter title, hook your audience in a few words. Go for impact !'}
             style={{
               width: '100%',
               background: 'transparent',
               border: 'none',
               outline: 'none',
-              color: '#FFD600',
+              color: getColor(isTitleValid, touched.title, focus.title),
               fontSize: 18,
               fontStyle: !focus.title && !title ? 'italic' : 'normal',
               fontFamily: 'inherit',
             }}
           />
         </div>
+        {error.title && (
+          <div style={{ color: '#F31260', fontSize: 15, marginBottom: 32, textAlign: 'center' }}>{error.title}</div>
+        )}
       </section>
 
       {/* Bloc: Starting Story */}
       <section style={{ maxWidth: 700, margin: '0 auto', marginTop: 24 }}>
-        <h2 style={{ color: '#FFD600', fontSize: 28, fontWeight: 700, textAlign: 'center', marginBottom: 16 }}>Starting Story</h2>
-        <div style={{ border: '2px solid #FFD600', borderRadius: 6, padding: 18, background: 'rgba(0,0,0,0.7)', marginBottom: 48 }}>
+        <h2 style={{
+          color: getColor(isStoryValid, touched.story, focus.story),
+          fontSize: 28,
+          fontWeight: 700,
+          textAlign: 'center',
+          marginBottom: 16
+        }}>Starting Story</h2>
+        <div style={{
+          border: `2px solid ${getColor(isStoryValid, touched.story, focus.story)}`,
+          borderRadius: 6,
+          padding: 18,
+          background: 'rgba(0,0,0,0.7)',
+          marginBottom: 8,
+          position: 'relative',
+        }}>
           <textarea
             value={story}
-            onChange={e => setStory(e.target.value)}
+            onChange={e => { setStory(e.target.value); if (touched.story) setTouched(t => ({ ...t, story: false })); setError(e => ({ ...e, story: undefined })); }}
             onFocus={() => setFocus(f => ({ ...f, story: true }))}
-            onBlur={() => setFocus(f => ({ ...f, story: false }))}
+            onBlur={() => { setFocus(f => ({ ...f, story: false })); setTouched(t => ({ ...t, story: true })); }}
             placeholder={focus.story || story ? '' : `Like a cinematic script with your scenario and visual effects !\n\nWrite, invent, imagine your Starting Text highlighting your brand's impact and added value, then open-ended at the perfect suspense moment and let your community co-create! Imagine a decor, a mood, characters, plot-twist etc.\n\nSophistication, imagination, your creativity is your only limit !\n\nPlease note that we don't tolerate any incitement to hatred, violence or other forms of discrimination, like Hate Speech, in our version nor in future.`}
             rows={8}
             style={{
@@ -66,7 +151,7 @@ export default function YourWinstoryB2C() {
               background: 'transparent',
               border: 'none',
               outline: 'none',
-              color: '#FFD600',
+              color: getColor(isStoryValid, touched.story, focus.story),
               fontSize: 17,
               fontStyle: !focus.story && !story ? 'italic' : 'normal',
               fontFamily: 'inherit',
@@ -74,17 +159,32 @@ export default function YourWinstoryB2C() {
             }}
           />
         </div>
+        {error.story && (
+          <div style={{ color: '#F31260', fontSize: 15, marginBottom: 32, textAlign: 'center' }}>{error.story}</div>
+        )}
       </section>
 
       {/* Bloc: Guideline */}
       <section style={{ maxWidth: 700, margin: '0 auto', marginTop: 24, marginBottom: 64 }}>
-        <h2 style={{ color: '#FFD600', fontSize: 28, fontWeight: 700, textAlign: 'center', marginBottom: 16 }}>Guideline</h2>
-        <div style={{ border: '2px solid #FFD600', borderRadius: 6, padding: 18, background: 'rgba(0,0,0,0.7)' }}>
+        <h2 style={{
+          color: getColor(isGuidelineValid, touched.guideline, focus.guideline),
+          fontSize: 28,
+          fontWeight: 700,
+          textAlign: 'center',
+          marginBottom: 16
+        }}>Guideline</h2>
+        <div style={{
+          border: `2px solid ${getColor(isGuidelineValid, touched.guideline, focus.guideline)}`,
+          borderRadius: 6,
+          padding: 18,
+          background: 'rgba(0,0,0,0.7)',
+          minHeight: 120,
+        }}>
           <textarea
             value={guideline}
-            onChange={e => setGuideline(e.target.value)}
+            onChange={e => { setGuideline(e.target.value); if (touched.guideline) setTouched(t => ({ ...t, guideline: false })); setError(e => ({ ...e, guideline: undefined })); }}
             onFocus={() => setFocus(f => ({ ...f, guideline: true }))}
-            onBlur={() => setFocus(f => ({ ...f, guideline: false }))}
+            onBlur={() => { setFocus(f => ({ ...f, guideline: false })); setTouched(t => ({ ...t, guideline: true })); }}
             placeholder={focus.guideline || guideline ? '' : `Guide your community completions, with style, tone, key elements.\nYour story, your rules ! This will help both the moderators in scoring completions and the community to be more coherent.`}
             rows={5}
             style={{
@@ -92,13 +192,19 @@ export default function YourWinstoryB2C() {
               background: 'transparent',
               border: 'none',
               outline: 'none',
-              color: '#FFD600',
+              color: getColor(isGuidelineValid, touched.guideline, focus.guideline),
               fontSize: 17,
               fontStyle: !focus.guideline && !guideline ? 'italic' : 'normal',
               fontFamily: 'inherit',
               resize: 'vertical',
             }}
           />
+        </div>
+        {error.guideline && (
+          <div style={{ color: '#F31260', fontSize: 15, marginTop: 8, textAlign: 'center' }}>{error.guideline}</div>
+        )}
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: 32 }}>
+          <GreenArrowButton onClick={handleNext} disabled={false} />
         </div>
       </section>
     </div>
