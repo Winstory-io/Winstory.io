@@ -52,6 +52,11 @@ export default function YourWinstoryB2C() {
   const isGuidelineValid = !!guideline.trim();
   const allValid = isTitleValid && isStoryValid && isGuidelineValid;
 
+  // Helper pour savoir si on doit afficher l'erreur
+  const showTitleError = !isTitleValid && touched.title;
+  const showStoryError = !isStoryValid && touched.story;
+  const showGuidelineError = !isGuidelineValid && touched.guideline;
+
   const handleNext = () => {
     const newError: typeof error = {};
     if (!isTitleValid) newError.title = 'This field is required.';
@@ -112,14 +117,14 @@ export default function YourWinstoryB2C() {
       {/* Bloc: Starting Title */}
       <section style={{ maxWidth: 600, margin: '0 auto', marginTop: 48 }}>
         <h2 style={{
-          color: getColor(isTitleValid, touched.title, focus.title),
+          color: showTitleError ? '#F31260' : getColor(isTitleValid, touched.title, focus.title),
           fontSize: 28,
           fontWeight: 700,
           textAlign: 'center',
           marginBottom: 16
         }}>Starting Title</h2>
         <div style={{
-          border: `2px solid ${getColor(isTitleValid, touched.title, focus.title)}`,
+          border: `2px solid ${showTitleError ? '#F31260' : getColor(isTitleValid, touched.title, focus.title)}`,
           borderRadius: 6,
           padding: 18,
           background: 'rgba(0,0,0,0.7)',
@@ -138,29 +143,29 @@ export default function YourWinstoryB2C() {
               background: 'transparent',
               border: 'none',
               outline: 'none',
-              color: getColor(isTitleValid, touched.title, focus.title),
+              color: showTitleError ? '#F31260' : getColor(isTitleValid, touched.title, focus.title),
               fontSize: 18,
               fontStyle: !focus.title && !title ? 'italic' : 'normal',
               fontFamily: 'inherit',
             }}
           />
         </div>
-        {error.title && (
-          <div style={{ color: '#F31260', fontSize: 15, marginBottom: 32, textAlign: 'center' }}>{error.title}</div>
+        {showTitleError && (
+          <div style={{ color: '#F31260', fontSize: 15, marginBottom: 32, textAlign: 'center' }}>This field is required.</div>
         )}
       </section>
 
       {/* Bloc: Starting Story */}
       <section style={{ maxWidth: 700, margin: '0 auto', marginTop: 24 }}>
         <h2 style={{
-          color: getColor(isStoryValid, touched.story, focus.story),
+          color: showStoryError ? '#F31260' : getColor(isStoryValid, touched.story, focus.story),
           fontSize: 28,
           fontWeight: 700,
           textAlign: 'center',
           marginBottom: 16
         }}>Starting Story</h2>
         <div style={{
-          border: `2px solid ${getColor(isStoryValid, touched.story, focus.story)}`,
+          border: `2px solid ${showStoryError ? '#F31260' : getColor(isStoryValid, touched.story, focus.story)}`,
           borderRadius: 6,
           padding: 18,
           background: 'rgba(0,0,0,0.7)',
@@ -179,7 +184,7 @@ export default function YourWinstoryB2C() {
               background: 'transparent',
               border: 'none',
               outline: 'none',
-              color: getColor(isStoryValid, touched.story, focus.story),
+              color: showStoryError ? '#F31260' : getColor(isStoryValid, touched.story, focus.story),
               fontSize: 17,
               fontStyle: !focus.story && !story ? 'italic' : 'normal',
               fontFamily: 'inherit',
@@ -187,22 +192,22 @@ export default function YourWinstoryB2C() {
             }}
           />
         </div>
-        {error.story && (
-          <div style={{ color: '#F31260', fontSize: 15, marginBottom: 32, textAlign: 'center' }}>{error.story}</div>
+        {showStoryError && (
+          <div style={{ color: '#F31260', fontSize: 15, marginBottom: 32, textAlign: 'center' }}>This field is required.</div>
         )}
       </section>
 
       {/* Bloc: Guideline */}
       <section style={{ maxWidth: 700, margin: '0 auto', marginTop: 24, marginBottom: 64 }}>
         <h2 style={{
-          color: getColor(isGuidelineValid, touched.guideline, focus.guideline),
+          color: showGuidelineError ? '#F31260' : getColor(isGuidelineValid, touched.guideline, focus.guideline),
           fontSize: 28,
           fontWeight: 700,
           textAlign: 'center',
           marginBottom: 16
         }}>Guideline</h2>
         <div style={{
-          border: `2px solid ${getColor(isGuidelineValid, touched.guideline, focus.guideline)}`,
+          border: `2px solid ${showGuidelineError ? '#F31260' : getColor(isGuidelineValid, touched.guideline, focus.guideline)}`,
           borderRadius: 6,
           padding: 18,
           background: 'rgba(0,0,0,0.7)',
@@ -220,7 +225,7 @@ export default function YourWinstoryB2C() {
               background: 'transparent',
               border: 'none',
               outline: 'none',
-              color: getColor(isGuidelineValid, touched.guideline, focus.guideline),
+              color: showGuidelineError ? '#F31260' : getColor(isGuidelineValid, touched.guideline, focus.guideline),
               fontSize: 17,
               fontStyle: !focus.guideline && !guideline ? 'italic' : 'normal',
               fontFamily: 'inherit',
@@ -228,11 +233,11 @@ export default function YourWinstoryB2C() {
             }}
           />
         </div>
-        {error.guideline && (
-          <div style={{ color: '#F31260', fontSize: 15, marginTop: 8, textAlign: 'center' }}>{error.guideline}</div>
+        {showGuidelineError && (
+          <div style={{ color: '#F31260', fontSize: 15, marginTop: 8, textAlign: 'center' }}>This field is required.</div>
         )}
         <div style={{ display: 'flex', justifyContent: 'center', marginTop: 32 }}>
-          <GreenArrowButton onClick={handleNext} disabled={!allValid} />
+          <GreenArrowButton onClick={handleNext} disabled={false} />
         </div>
       </section>
     </div>
