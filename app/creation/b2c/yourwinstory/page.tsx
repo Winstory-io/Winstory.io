@@ -44,6 +44,7 @@ export default function YourWinstoryB2C() {
   const [focus, setFocus] = useState({ title: false, story: false, guideline: false });
   const [touched, setTouched] = useState({ title: false, story: false, guideline: false });
   const [error, setError] = useState<{title?: string, story?: string, guideline?: string}>({});
+  const [showModal, setShowModal] = useState(false);
 
   // Validation
   const isTitleValid = !!title.trim();
@@ -60,7 +61,7 @@ export default function YourWinstoryB2C() {
     setTouched({ title: true, story: true, guideline: true });
     if (Object.keys(newError).length === 0) {
       // Aller à la page suivante (à adapter selon le flow)
-      router.push('/creation/b2c/nextstep');
+      router.push('/creation/b2c/yourfilm');
     }
   };
 
@@ -75,11 +76,38 @@ export default function YourWinstoryB2C() {
   return (
     <div style={{ minHeight: '100vh', background: '#000', color: '#FFD600', fontFamily: 'Inter, sans-serif', padding: 0, margin: 0 }}>
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', paddingTop: 40, paddingBottom: 24 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', paddingTop: 40, paddingBottom: 24, position: 'relative' }}>
         <BriefcaseIcon />
         <h1 style={{ fontSize: 32, fontWeight: 700, margin: 0, letterSpacing: 1 }}>Your winStory</h1>
-        <span style={{ fontSize: 36, marginLeft: 16 }}>💡</span>
+        <span
+          style={{ fontSize: 36, marginLeft: 16, cursor: 'pointer' }}
+          onClick={() => setShowModal(true)}
+          aria-label="Show info"
+        >💡</span>
       </div>
+      {/* Modal for the bulb */}
+      {showModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          background: 'rgba(0,0,0,0.7)',
+          zIndex: 1000,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}>
+          <div style={{ background: '#111', color: '#FFD600', padding: 32, borderRadius: 16, minWidth: 320, textAlign: 'center', position: 'relative' }}>
+            <button onClick={() => setShowModal(false)} style={{ position: 'absolute', top: 12, right: 12, background: 'none', border: 'none', cursor: 'pointer' }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M18 6L6 18" stroke="#F31260" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M6 6L18 18" stroke="#F31260" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            </button>
+            <div style={{ fontSize: 20, fontWeight: 600, marginBottom: 12 }}>Info</div>
+            <div style={{ fontSize: 16 }}>This popup will be customized later.</div>
+          </div>
+        </div>
+      )}
 
       {/* Bloc: Starting Title */}
       <section style={{ maxWidth: 600, margin: '0 auto', marginTop: 48 }}>
@@ -204,7 +232,7 @@ export default function YourWinstoryB2C() {
           <div style={{ color: '#F31260', fontSize: 15, marginTop: 8, textAlign: 'center' }}>{error.guideline}</div>
         )}
         <div style={{ display: 'flex', justifyContent: 'center', marginTop: 32 }}>
-          <GreenArrowButton onClick={handleNext} disabled={false} />
+          <GreenArrowButton onClick={handleNext} disabled={!allValid} />
         </div>
       </section>
     </div>
