@@ -250,7 +250,7 @@ export default function RewardsOrNotB2C() {
               </ul>
               These same 3/3 conditions apply for both :
               <ul style={{ margin: '8px 0 8px 18px' }}>
-                <li>Your Initial Story to be available<br/>(At least 22 stakers voted + Staking pool > your MINT price + 2:1 majority votes YES)</li>
+                <li>Your Initial Story to be available<br/>(At least 22 stakers voted + Staking pool &gt; your MINT price + 2:1 majority votes YES)</li>
                 <li>All community Completions</li>
               </ul>
             </div>
