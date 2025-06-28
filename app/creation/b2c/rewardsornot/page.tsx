@@ -15,16 +15,88 @@ const LockIcon = ({ open }: { open: boolean }) => open ? (
   <svg width="28" height="28" viewBox="0 0 24 24" fill="none" style={{marginLeft:12,verticalAlign:'middle'}} xmlns="http://www.w3.org/2000/svg"><rect x="5" y="11" width="14" height="8" rx="2" stroke="#888" strokeWidth="2"/><path d="M8 11V8a4 4 0 1 1 8 0v3" stroke="#888" strokeWidth="2" strokeLinecap="round"/><path d="M12 15v3" stroke="#888" strokeWidth="2" strokeLinecap="round"/></svg>
 );
 
-const Stepper = ({ value, setValue, min, max, step, color, disabled }: { value: number, setValue: (v:number)=>void, min?:number, max?:number, step?:number, color?:string, disabled?:boolean }) => (
-  <div style={{ display: 'flex', flexDirection: 'column', marginLeft: 12 }}>
-    <button onClick={()=>!disabled && setValue(Math.min(max ?? value+step!, value+step!))} disabled={disabled} style={{ background: 'none', border: 'none', cursor: disabled ? 'not-allowed' : 'pointer', color: color||'#FFD600', fontSize: 22, padding: 0, marginBottom: 2, lineHeight:1 }} aria-label="Increase">
-      ▲
-    </button>
-    <button onClick={()=>!disabled && setValue(Math.max(min ?? value-step!, value-step!))} disabled={disabled} style={{ background: 'none', border: 'none', cursor: disabled ? 'not-allowed' : 'pointer', color: color||'#FFD600', fontSize: 22, padding: 0, marginTop: 2, lineHeight:1 }} aria-label="Decrease">
-      ▼
-    </button>
-  </div>
-);
+const Stepper = ({ value, setValue, min, max, step, color, disabled }) => {
+  const [pressed, setPressed] = React.useState<null | number>(null);
+  const intervalRef = React.useRef<NodeJS.Timeout | null>(null);
+
+  React.useEffect(() => {
+    if (pressed !== null) {
+      intervalRef.current = setInterval(() => {
+        let newValue = value + pressed;
+        if (typeof min === 'number') newValue = Math.max(min, newValue);
+        if (typeof max === 'number') newValue = Math.min(max, newValue);
+        setValue(Number(newValue.toFixed(4)));
+      }, 80);
+    } else if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [pressed, value, min, max, setValue]);
+
+  const handleStep = (delta: number) => {
+    if (disabled) return;
+    let newValue = value + delta;
+    if (typeof min === 'number') newValue = Math.max(min, newValue);
+    if (typeof max === 'number') newValue = Math.min(max, newValue);
+    setValue(Number(newValue.toFixed(4)));
+  };
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', marginLeft: 12 }}>
+      <span
+        role="button"
+        tabIndex={-1}
+        aria-label="Increase"
+        style={{
+          background: 'none',
+          border: 'none',
+          cursor: disabled ? 'not-allowed' : 'pointer',
+          color: color || '#FFD600',
+          fontSize: 22,
+          padding: 0,
+          marginBottom: 2,
+          lineHeight: 1,
+          userSelect: 'none',
+          outline: 'none',
+        }}
+        onMouseDown={() => { handleStep(step || 1); setPressed(step || 1); }}
+        onMouseUp={() => setPressed(null)}
+        onMouseLeave={() => setPressed(null)}
+        onTouchStart={() => { handleStep(step || 1); setPressed(step || 1); }}
+        onTouchEnd={() => setPressed(null)}
+      >
+        ▲
+      </span>
+      <span
+        role="button"
+        tabIndex={-1}
+        aria-label="Decrease"
+        style={{
+          background: 'none',
+          border: 'none',
+          cursor: disabled ? 'not-allowed' : 'pointer',
+          color: color || '#FFD600',
+          fontSize: 22,
+          padding: 0,
+          marginTop: 2,
+          lineHeight: 1,
+          userSelect: 'none',
+          outline: 'none',
+        }}
+        onMouseDown={() => { handleStep(-(step || 1)); setPressed(-(step || 1)); }}
+        onMouseUp={() => setPressed(null)}
+        onMouseLeave={() => setPressed(null)}
+        onTouchStart={() => { handleStep(-(step || 1)); setPressed(-(step || 1)); }}
+        onTouchEnd={() => setPressed(null)}
+      >
+        ▼
+      </span>
+    </div>
+  );
+};
 
 const GreenArrowButton = ({ onClick, disabled }: { onClick: () => void, disabled: boolean }) => (
   <button
@@ -85,14 +157,14 @@ export default function RewardsOrNotB2C() {
   };
 
   // Encarts chiffres + $ à gauche + stepper jaune à droite
-  const renderMoneyInput = (value: number|null, setValue: (v:number)=>void, disabled: boolean, step: number, min: number) => (
+  const renderMoneyInput = (value: number|null, setValue: (v:number)=>void, disabled: boolean, step: number, min: number, decimals: number = 2) => (
     <div style={{ display: 'flex', alignItems: 'center', width: 180, position: 'relative' }}>
       <span style={{ position: 'absolute', left: 10, color: '#FFD600', fontWeight: 700, fontSize: 18, pointerEvents: 'none' }}>$</span>
       <input
         type="text"
         inputMode="decimal"
-        pattern="[0-9]*"
-        value={value === null ? '' : value}
+        pattern="[0-9.]*"
+        value={value === null ? '' : value.toFixed(Math.min(4, (value.toString().split('.')[1]?.length || 0)))}
         onChange={e => {
           const val = e.target.value.replace(/[^\d.]/g, '');
           setValue(val === '' ? null : parseFloat(val));
@@ -117,7 +189,7 @@ export default function RewardsOrNotB2C() {
         onFocus={e => e.target.select()}
         autoComplete="off"
       />
-      {!disabled && <Stepper value={value||0} setValue={setValue} min={min} step={step} color="#FFD600" />}
+      {!disabled && <Stepper value={value||0} setValue={v => setValue(Number(v.toFixed(2)))} min={min} step={step} color="#FFD600" />}
     </div>
   );
 
@@ -291,11 +363,11 @@ export default function RewardsOrNotB2C() {
               {!freeReward && <>
                 <div style={{ display: 'flex', alignItems: 'center', marginBottom: 20 }}>
                   <span style={{ color: '#FFD600', fontWeight: 600, fontSize: 18, flex: 1 }}>Unit Value of the Completion</span>
-                  {renderMoneyInput(unitValue, setUnitValue, freeReward, 0.01, 0)}
+                  {renderMoneyInput(unitValue, setUnitValue, freeReward, 0.01, 0, 4)}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', marginBottom: 20 }}>
                   <span style={{ color: '#FFD600', fontWeight: 600, fontSize: 18, flex: 1 }}>Net Profits targeted</span>
-                  {renderMoneyInput(netProfit, setNetProfit, freeReward, 1, 0)}
+                  {renderMoneyInput(netProfit, setNetProfit, freeReward, 1, 0, 0)}
                 </div>
               </>}
               {/* Maximum completions, texte dynamique, stepper vert, cadenas */}
