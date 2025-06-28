@@ -173,19 +173,27 @@ export default function RewardsOrNotB2C() {
         >💡</span>
       </header>
       {showModal && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100vw',
-          height: '100vh',
-          background: 'rgba(0,0,0,0.7)',
-          zIndex: 1000,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}>
-          <div style={{ background: '#111', color: '#fff', padding: 36, borderRadius: 18, minWidth: 340, maxWidth: 600, maxHeight: '90vh', overflowY: 'auto', textAlign: 'left', position: 'relative', boxShadow: '0 0 24px #000' }}>
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+            background: 'rgba(0,0,0,0.7)',
+            zIndex: 1000,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+          onClick={e => {
+            if (e.target === e.currentTarget) setShowModal(false);
+          }}
+        >
+          <div
+            style={{ background: '#111', color: '#fff', padding: 36, borderRadius: 18, minWidth: 340, maxWidth: 600, maxHeight: '90vh', overflowY: 'auto', textAlign: 'left', position: 'relative', boxShadow: '0 0 24px #000' }}
+            onClick={e => e.stopPropagation()}
+          >
             <button onClick={() => setShowModal(false)} style={{ position: 'absolute', top: 18, right: 18, background: 'none', border: 'none', cursor: 'pointer' }}>
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M18 6L6 18" stroke="#F31260" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M6 6L18 18" stroke="#F31260" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
             </button>
@@ -218,9 +226,11 @@ export default function RewardsOrNotB2C() {
               Formula = Selected Net Profit + Your initial MINT price
             </div>
             <div style={{ marginBottom: 10 }}>
-              <b>Your initial MINT price</b> : The price your company pays to launch the campaign :<br/>
-              <span style={{ color: '#FFD600' }}>$1000</span>: You provide your own video.<br/>
-              <span style={{ color: '#FFD600' }}>$1500</span>: You want <span style={{ color: '#FFD600' }}>Winstory</span> to create the film based on your Starting Story.
+              <b>Your initial MINT price</b> : The price your company pays to launch the campaign on Winstory :<br/>
+              <span style={{ color: '#FFD600' }}>$1000</span>: Initial Price (but you must import your own film based on your Starting Story and have rewards to set up)<br/>
+              <span style={{ color: '#FFD600' }}>2 options :</span><br/>
+              <span style={{ color: '#FFD600' }}>➕ $500</span>: Winstory creates the film based on your Starting Story.<br/>
+              <span style={{ color: '#FFD600' }}>➕ $1000</span>: No rewards to set up (free completions for the community).
             </div>
             <div style={{ fontWeight: 700, color: '#FFD600', margin: '18px 0 6px 0', fontSize: 18 }}>🎁 Types of Rewards :</div>
             <ul style={{ marginBottom: 10, paddingLeft: 22 }}>
