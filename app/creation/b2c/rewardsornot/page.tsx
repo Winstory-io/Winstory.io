@@ -185,12 +185,89 @@ export default function RewardsOrNotB2C() {
           alignItems: 'center',
           justifyContent: 'center',
         }}>
-          <div style={{ background: '#111', color: '#FFD600', padding: 32, borderRadius: 16, minWidth: 320, textAlign: 'center', position: 'relative' }}>
-            <button onClick={() => setShowModal(false)} style={{ position: 'absolute', top: 12, right: 12, background: 'none', border: 'none', cursor: 'pointer' }}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M18 6L6 18" stroke="#F31260" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M6 6L18 18" stroke="#F31260" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          <div style={{ background: '#111', color: '#fff', padding: 36, borderRadius: 18, minWidth: 340, maxWidth: 600, maxHeight: '90vh', overflowY: 'auto', textAlign: 'left', position: 'relative', boxShadow: '0 0 24px #000' }}>
+            <button onClick={() => setShowModal(false)} style={{ position: 'absolute', top: 18, right: 18, background: 'none', border: 'none', cursor: 'pointer' }}>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M18 6L6 18" stroke="#F31260" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M6 6L18 18" stroke="#F31260" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
             </button>
-            <div style={{ fontSize: 20, fontWeight: 600, marginBottom: 12 }}>Info</div>
-            <div style={{ fontSize: 16 }}>This popup will be customized later.</div>
+            <h2 style={{ color: '#FFD600', fontWeight: 800, fontSize: 26, marginBottom: 12 }}>Understanding Rewards</h2>
+            <div style={{ fontWeight: 600, fontSize: 16, marginBottom: 16 }}>
+              Offer engaging rewards to motivate the community to complete your Story.<br/>
+              <span style={{ color: '#FFD600' }}>Winstory</span> guides you every step of the way.
+            </div>
+            <div style={{ fontWeight: 700, color: '#FFD600', margin: '18px 0 6px 0', fontSize: 18 }}>☀️ Key Terms explained :</div>
+            <div style={{ marginBottom: 10 }}>
+              <b>Unit Value</b> : The amount paid by each community member to participate in your campaign, usually in stablecoin (e.g., 25 USDC).<br/>
+              <span style={{ fontStyle: 'italic', color: '#FFD600' }}>
+                You can set the Unit Value paid, slightly below the perceived value of the reward in order to make it easier to attract the individuals Community. To make them want to complete and obtain the standard reward. And even to produce the best possible completion in order to obtain the Premium reward as well !<br/>
+                You can also set the Unit Value to 0 to allow free participation (excluding transaction fees). In this case, there's no direct return on investment—but your brand image gets a powerful boost.
+              </span>
+            </div>
+            <div style={{ marginBottom: 10 }}>
+              <b>Net Profit</b> : The profit goal your company wants to achieve from the campaign, after MINTs costs. This amount is fully customizable.
+            </div>
+            <div style={{ marginBottom: 10 }}>
+              <b>Maximum Mint</b> : The total number of community participations you allow. It defines the maximum number of rewards needed and helps frame the campaign.<br/>
+              <span style={{ fontStyle: 'italic', color: '#FFD600' }}>
+                Maximum Mint = (Initial MINT Cost + Net Profit) / (Unit Value × 50%)<br/>
+                Why 50%? : 50% of participation fees fund active and passive Stakers + <span style={{ color: '#FFD600' }}>Winstory</span>.<br/>
+                The other 50% goes to you.
+              </span>
+            </div>
+            <div style={{ marginBottom: 10 }}>
+              <b>Total Revenue</b> : The total turnover (i.e. gross revenue) expected from your campaign.<br/>
+              Formula = Selected Net Profit + Your initial MINT price
+            </div>
+            <div style={{ marginBottom: 10 }}>
+              <b>Your initial MINT price</b> : The price your company pays to launch the campaign :<br/>
+              <span style={{ color: '#FFD600' }}>$1000</span>: You provide your own video.<br/>
+              <span style={{ color: '#FFD600' }}>$1500</span>: You want <span style={{ color: '#FFD600' }}>Winstory</span> to create the film based on your Starting Story.
+            </div>
+            <div style={{ fontWeight: 700, color: '#FFD600', margin: '18px 0 6px 0', fontSize: 18 }}>🎁 Types of Rewards :</div>
+            <ul style={{ marginBottom: 10, paddingLeft: 22 }}>
+              <li><b>Digital Tokens</b>: Blockchain-based tokens (e.g., $WINC or others).</li>
+              <li><b>Digital Items</b>: Unique digital collectibles (via NFTs, e.g. video-game character element).</li>
+              <li><b>Digital Exclusive Access</b>: Privileged access to online content or experiences. (via NFTs, e.g. exclusive webinar,)</li>
+              <li><b>Physical Exclusive Access</b>: Access to real-world events or physical goods (via NFTs e.g. VIP event).</li>
+            </ul>
+            <div style={{ fontWeight: 700, color: '#FFD600', margin: '18px 0 6px 0', fontSize: 18 }}>Standard & Premium :</div>
+            <div style={{ marginBottom: 10 }}>
+              <b>Standard Rewards 👤👤👤</b> : Sent to every contributor whose completion is validated by the moderators (Stakers). These are distributed automatically once your campaign ends or reaches full participation.
+            </div>
+            <div style={{ marginBottom: 10 }}>
+              <b>Premium Rewards 🥇🥈🥉</b> : Awarded to the top 3 contributors with the highest average score, based on moderation, criteria, guidelina, coherence, scored by Stakers. This encourages creativity, effort, and storymaking quality.
+            </div>
+            <div style={{ fontWeight: 700, color: '#FFD600', margin: '18px 0 6px 0', fontSize: 18 }}>Easy distribution :</div>
+            <div style={{ marginBottom: 10 }}>
+              Rewards are sent automatically during the MINT, in a single transaction. Simply provide the token, NFT, or access address on the blockchain. <span style={{ color: '#FFD600' }}>Winstory</span> ensures everything is securely distributed to validated contributors by Smart Contract. You'll only be able to publish your campaign once all rewards are properly registered and validated. Once launched, everything runs automatically.
+            </div>
+            <div style={{ fontWeight: 700, color: '#FFD600', margin: '18px 0 6px 0', fontSize: 18 }}>🚨 Important</div>
+            <div style={{ marginBottom: 10 }}>
+              Rewards are automatically distributed as soon as the 3 validation conditions are met :
+              <ul style={{ margin: '8px 0 8px 18px' }}>
+                <li>✅ At least 22 stakers voted</li>
+                <li>✅ The staking pool exceeds the Unit Value</li>
+                <li>✅ 2:1 majority votes YES</li>
+              </ul>
+              These same 3/3 conditions apply for both :
+              <ul style={{ margin: '8px 0 8px 18px' }}>
+                <li>Your Initial Story to be available<br/>(At least 22 stakers voted + Staking pool > your MINT price + 2:1 majority votes YES)</li>
+                <li>All community Completions</li>
+              </ul>
+            </div>
+            <div style={{ fontWeight: 700, color: '#FFD600', margin: '18px 0 6px 0', fontSize: 18 }}>No Reward to give? No problem.</div>
+            <div style={{ marginBottom: 10 }}>
+              If you don't wish to offer any reward (digital or physical), you can simply <b>check the "No Reward" box</b> when setting up your campaign.<br/><br/>
+              <span style={{ color: '#FFD600', fontWeight: 700 }}>☑️ No Reward to give? No problem — free completions<br/>+ $1000</span>
+              <br/><br/>
+              In this case:
+              <ul style={{ margin: '8px 0 8px 18px' }}>
+                <li>You skip the reward setup entirely.</li>
+                <li>Community members can participate for free (you define the max number of completions).</li>
+                <li>You pay a <b>$1000 additional fee</b> on top of your base MINT cost to cover visibility and platform infrastructure.</li>
+                <li>The best completions may still be awarded <b>$WINC tokens</b> by Winstory to encourage creativity and quality storytelling.</li>
+              </ul>
+              This option helps brands test narrative engagement without needing to manage reward logistics.
+            </div>
           </div>
         </div>
       )}
@@ -215,30 +292,34 @@ export default function RewardsOrNotB2C() {
             {renderMaxCompletions()}
           </div>
         </div>
-        {/* Checkbox free reward, italique, SOUS l'encart Rewards */}
-        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 32, justifyContent: 'flex-start', maxWidth: 500, width: '100%' }}>
+        {/* Checkbox free reward, italique, SOUS l'encart Rewards, police réduite, centrée, verte si cochée, sur une seule ligne */}
+        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 32, justifyContent: 'center', maxWidth: 500, width: '100%' }}>
           <input
             type="checkbox"
             checked={freeReward}
             onChange={e => setFreeReward(e.target.checked)}
-            style={{ width: 24, height: 24, accentColor: '#FFD600', marginRight: 12 }}
+            style={{ width: 28, height: 28, accentColor: freeReward ? '#18C964' : '#FFD600', marginRight: 18, transition: 'accent-color 0.2s' }}
           />
-          <span style={{ fontStyle: 'italic', color: '#FFD600', fontSize: 16 }}>
+          <span style={{ fontStyle: 'italic', fontWeight: 700, fontSize: 18, color: freeReward ? '#18C964' : '#FFD600', width: '100%', textAlign: 'center', transition: 'color 0.2s', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             Make the rewards free to $0 for your community
           </span>
         </div>
         {/* Bloc Or Not */}
         <h2 style={{ color: '#FFD600', fontSize: 24, fontWeight: 700, marginBottom: 8, textAlign: 'center' }}>Or not</h2>
         <div style={{ border: '2px solid #FFD600', borderRadius: 16, padding: 32, maxWidth: 500, width: '100%', marginBottom: 40 }}>
-          <div style={{ color: 'white', fontWeight: 600, fontSize: 18, marginBottom: 16, textAlign: 'center' }}>No Reward to give ? No Problem, free completions</div>
+          <div style={{ color: noReward ? '#18C964' : 'white', fontWeight: 700, fontSize: 20, marginBottom: 16, textAlign: 'center', transition: 'color 0.2s' }}>
+            No Reward to give ? No Problem, free completions
+          </div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <input
               type="checkbox"
               checked={noReward}
               onChange={e => setNoReward(e.target.checked)}
-              style={{ width: 28, height: 28, accentColor: '#FFD600', marginRight: 16 }}
+              style={{ width: 28, height: 28, accentColor: noReward ? '#18C964' : '#FFD600', marginRight: 16, transition: 'accent-color 0.2s' }}
             />
-            <span style={{ color: '#FFD600', fontWeight: 700, fontSize: 22 }}>$1000</span>
+            <span style={{ color: noReward ? '#18C964' : '#FFD600', fontWeight: 700, fontSize: 26, display: 'flex', alignItems: 'center', transition: 'color 0.2s' }}>
+              <span style={{ fontSize: 28, marginRight: 6, fontWeight: 900 }}>+</span>$1000
+            </span>
           </div>
         </div>
       </main>
