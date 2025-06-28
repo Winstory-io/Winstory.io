@@ -283,55 +283,63 @@ export default function RewardsOrNotB2C() {
       )}
       <main style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
         {/* Bloc Rewards */}
-        <h2 style={{ color: '#FFD600', fontSize: 24, fontWeight: 700, marginBottom: 8, textAlign: 'center' }}>Rewards</h2>
-        <div style={{ border: '2px solid #FFD600', borderRadius: 16, padding: 32, marginBottom: 16, maxWidth: 500, width: '100%' }}>
-          {/* Si pas freeReward, afficher les deux champs */}
-          {!freeReward && <>
-            <div style={{ display: 'flex', alignItems: 'center', marginBottom: 20 }}>
-              <span style={{ color: '#FFD600', fontWeight: 600, fontSize: 18, flex: 1 }}>Unit Value of the Completion</span>
-              {renderMoneyInput(unitValue, setUnitValue, freeReward, 0.01, 0)}
+        {!noReward && (
+          <>
+            <h2 style={{ color: freeReward ? '#18C964' : '#FFD600', fontSize: 24, fontWeight: 700, marginBottom: 8, textAlign: 'center', transition: 'color 0.2s' }}>Rewards</h2>
+            <div style={{ border: `2px solid ${freeReward ? '#18C964' : '#FFD600'}`, borderRadius: 16, padding: 32, marginBottom: 16, maxWidth: 500, width: '100%', transition: 'border-color 0.2s' }}>
+              {/* Si pas freeReward, afficher les deux champs */}
+              {!freeReward && <>
+                <div style={{ display: 'flex', alignItems: 'center', marginBottom: 20 }}>
+                  <span style={{ color: '#FFD600', fontWeight: 600, fontSize: 18, flex: 1 }}>Unit Value of the Completion</span>
+                  {renderMoneyInput(unitValue, setUnitValue, freeReward, 0.01, 0)}
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', marginBottom: 20 }}>
+                  <span style={{ color: '#FFD600', fontWeight: 600, fontSize: 18, flex: 1 }}>Net Profits targeted</span>
+                  {renderMoneyInput(netProfit, setNetProfit, freeReward, 1, 0)}
+                </div>
+              </>}
+              {/* Maximum completions, texte dynamique, stepper vert, cadenas */}
+              <div style={{ color: freeReward ? '#18C964' : '#888', fontWeight: 700, fontSize: 18, marginBottom: 8, textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {freeReward ? 'Select the maximum number of completions available at 0$ :' : 'Maximum Completions auto-calculated'}
+                {renderMaxCompletions()}
+              </div>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', marginBottom: 20 }}>
-              <span style={{ color: '#FFD600', fontWeight: 600, fontSize: 18, flex: 1 }}>Net Profits targeted</span>
-              {renderMoneyInput(netProfit, setNetProfit, freeReward, 1, 0)}
+            {/* Checkbox free reward, italique, SOUS l'encart Rewards, police réduite, centrée, verte si cochée, sur une seule ligne */}
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: 32, justifyContent: 'center', maxWidth: 500, width: '100%' }}>
+              <input
+                type="checkbox"
+                checked={freeReward}
+                onChange={e => setFreeReward(e.target.checked)}
+                style={{ width: 28, height: 28, accentColor: freeReward ? '#18C964' : '#FFD600', marginRight: 18, transition: 'accent-color 0.2s' }}
+              />
+              <span style={{ fontStyle: 'italic', fontWeight: 700, fontSize: 18, color: freeReward ? '#18C964' : '#FFD600', width: '100%', textAlign: 'center', transition: 'color 0.2s', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                Make the rewards free to $0 for your community
+              </span>
             </div>
-          </>}
-          {/* Maximum completions, texte dynamique, stepper vert, cadenas */}
-          <div style={{ color: freeReward ? '#18C964' : '#888', fontWeight: 700, fontSize: 18, marginBottom: 8, textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            {freeReward ? 'Select the maximum number of completions available at 0$ :' : 'Maximum Completions auto-calculated'}
-            {renderMaxCompletions()}
-          </div>
-        </div>
-        {/* Checkbox free reward, italique, SOUS l'encart Rewards, police réduite, centrée, verte si cochée, sur une seule ligne */}
-        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 32, justifyContent: 'center', maxWidth: 500, width: '100%' }}>
-          <input
-            type="checkbox"
-            checked={freeReward}
-            onChange={e => setFreeReward(e.target.checked)}
-            style={{ width: 28, height: 28, accentColor: freeReward ? '#18C964' : '#FFD600', marginRight: 18, transition: 'accent-color 0.2s' }}
-          />
-          <span style={{ fontStyle: 'italic', fontWeight: 700, fontSize: 18, color: freeReward ? '#18C964' : '#FFD600', width: '100%', textAlign: 'center', transition: 'color 0.2s', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-            Make the rewards free to $0 for your community
-          </span>
-        </div>
+          </>
+        )}
         {/* Bloc Or Not */}
-        <h2 style={{ color: '#FFD600', fontSize: 24, fontWeight: 700, marginBottom: 8, textAlign: 'center' }}>Or not</h2>
-        <div style={{ border: '2px solid #FFD600', borderRadius: 16, padding: 32, maxWidth: 500, width: '100%', marginBottom: 40 }}>
-          <div style={{ color: noReward ? '#18C964' : 'white', fontWeight: 700, fontSize: 20, marginBottom: 16, textAlign: 'center', transition: 'color 0.2s' }}>
-            No Reward to give ? No Problem, free completions
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <input
-              type="checkbox"
-              checked={noReward}
-              onChange={e => setNoReward(e.target.checked)}
-              style={{ width: 28, height: 28, accentColor: noReward ? '#18C964' : '#FFD600', marginRight: 16, transition: 'accent-color 0.2s' }}
-            />
-            <span style={{ color: noReward ? '#18C964' : '#FFD600', fontWeight: 700, fontSize: 26, display: 'flex', alignItems: 'center', transition: 'color 0.2s' }}>
-              <span style={{ fontSize: 28, marginRight: 6, fontWeight: 900 }}>+</span>$1000
-            </span>
-          </div>
-        </div>
+        {!freeReward && (
+          <>
+            <h2 style={{ color: noReward ? '#18C964' : '#FFD600', fontSize: 24, fontWeight: 700, marginBottom: 8, textAlign: 'center', transition: 'color 0.2s' }}>Or not</h2>
+            <div style={{ border: `2px solid ${noReward ? '#18C964' : '#FFD600'}`, borderRadius: 16, padding: 32, maxWidth: 500, width: '100%', marginBottom: 40, transition: 'border-color 0.2s' }}>
+              <div style={{ color: noReward ? '#18C964' : 'white', fontWeight: 700, fontSize: 20, marginBottom: 16, textAlign: 'center', transition: 'color 0.2s' }}>
+                No Reward to give ? No Problem, free completions
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <input
+                  type="checkbox"
+                  checked={noReward}
+                  onChange={e => setNoReward(e.target.checked)}
+                  style={{ width: 28, height: 28, accentColor: noReward ? '#18C964' : '#FFD600', marginRight: 16, transition: 'accent-color 0.2s' }}
+                />
+                <span style={{ color: noReward ? '#18C964' : '#FFD600', fontWeight: 700, fontSize: 26, display: 'flex', alignItems: 'center', transition: 'color 0.2s' }}>
+                  <span style={{ fontSize: 28, marginRight: 6, fontWeight: 900 }}>+</span>$1000
+                </span>
+              </div>
+            </div>
+          </>
+        )}
       </main>
       <GreenArrowButton onClick={handleNext} disabled={!canProceed} />
     </div>
