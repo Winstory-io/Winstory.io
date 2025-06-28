@@ -189,7 +189,7 @@ export default function RewardsOrNotB2C() {
         onFocus={e => e.target.select()}
         autoComplete="off"
       />
-      {!disabled && <Stepper value={value||0} setValue={v => setValue(Number(v.toFixed(2)))} min={min} step={step} color="#FFD600" />}
+      {!disabled && <Stepper value={value||0} setValue={v => setValue(Number(v.toFixed(2)))} min={min} max={undefined} step={step} color="#FFD600" disabled={disabled} />}
     </div>
   );
 
@@ -221,7 +221,7 @@ export default function RewardsOrNotB2C() {
               }}
               autoComplete="off"
             />
-            <Stepper value={userMaxCompletions} setValue={v=>setUserMaxCompletions(Math.max(1, Math.min(1000, v)))} min={1} max={1000} step={1} color="#18C964" />
+            <Stepper value={userMaxCompletions} setValue={v=>setUserMaxCompletions(Math.max(1, Math.min(1000, v)))} min={1} max={1000} step={1} color="#18C964" disabled={false} />
           </div>
         </>
       ) : (
