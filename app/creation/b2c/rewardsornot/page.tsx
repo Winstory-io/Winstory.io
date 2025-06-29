@@ -154,7 +154,7 @@ export default function RewardsOrNotB2C() {
 
   const handleNext = () => {
     if ((freeReward || (!!unitValue && !!netProfit)) && !noReward) {
-      router.push("/creation/b2c/rewards");
+      router.push("/creation/b2c/standardrewards");
     } else {
       router.push("/creation/b2c/yourwinstory");
     }

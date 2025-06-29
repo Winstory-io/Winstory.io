@@ -40,11 +40,22 @@
       "static/chunks/main-app.js",
       "static/chunks/app/creation/b2c/rewardsornot/page.js"
     ],
-    "/creation/b2c/rewards/page": [
+    "/creation/b2c/standardrewards/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/css/app/creation/b2c/rewards/page.css",
-      "static/chunks/app/creation/b2c/rewards/page.js"
+      "static/css/app/creation/b2c/standardrewards/page.css",
+      "static/chunks/app/creation/b2c/standardrewards/page.js"
+    ],
+    "/creation/b2c/premiumrewards/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/creation/b2c/premiumrewards/page.css",
+      "static/chunks/app/creation/b2c/premiumrewards/page.js"
+    ],
+    "/_not-found/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/_not-found/page.js"
     ]
   }
 }
