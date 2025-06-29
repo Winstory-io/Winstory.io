@@ -153,7 +153,11 @@ export default function RewardsOrNotB2C() {
   const canProceed = freeReward || noReward || (!!unitValue && !!netProfit);
 
   const handleNext = () => {
-    router.push("/creation/b2c/yourwinstory");
+    if ((freeReward || (!!unitValue && !!netProfit)) && !noReward) {
+      router.push("/creation/b2c/rewards");
+    } else {
+      router.push("/creation/b2c/yourwinstory");
+    }
   };
 
   // Encarts chiffres + $ à gauche + stepper jaune à droite

@@ -1,7 +1,7 @@
 {
-  "/welcome/page": "app/welcome/page.js",
   "/creation/youare/page": "app/creation/youare/page.js",
   "/creation/b2c/yourwinstory/page": "app/creation/b2c/yourwinstory/page.js",
   "/creation/b2c/yourfilm/page": "app/creation/b2c/yourfilm/page.js",
-  "/creation/b2c/rewardsornot/page": "app/creation/b2c/rewardsornot/page.js"
+  "/creation/b2c/rewardsornot/page": "app/creation/b2c/rewardsornot/page.js",
+  "/creation/b2c/rewards/page": "app/creation/b2c/rewards/page.js"
 }
