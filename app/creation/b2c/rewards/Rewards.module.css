@@ -1,0 +1,187 @@
+.container {
+  background: #000;
+  min-height: 100vh;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 32px 0;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin-bottom: 24px;
+  position: relative;
+}
+
+.iconLeft {
+  position: absolute;
+  left: 0;
+  font-size: 2.5rem;
+  margin-left: 24px;
+}
+
+.iconRight {
+  position: absolute;
+  right: 0;
+  background: none;
+  border: none;
+  font-size: 2.5rem;
+  cursor: pointer;
+  margin-right: 24px;
+}
+
+.title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #fff;
+  text-align: center;
+}
+
+.subtitles {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.choose {
+  font-size: 1.2rem;
+  margin-bottom: 8px;
+}
+
+.standard {
+  color: #FFD600;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.italic {
+  font-size: 1.1rem;
+  color: #fff;
+  margin-bottom: 24px;
+}
+
+.validated {
+  color: #00C46C;
+  font-style: normal;
+  font-weight: 600;
+}
+
+.optionsContainer {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: flex-start;
+  width: 100%;
+  max-width: 700px;
+  margin-top: 24px;
+}
+
+.column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.columnTitle {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-bottom: 24px;
+}
+
+.separator {
+  width: 0;
+  border-left: 3px dashed #FFD600;
+  height: 440px;
+  margin: 0 32px;
+}
+
+.rewardBtn {
+  width: 220px;
+  background: none;
+  border: 2px solid #FFD600;
+  color: #FFD600;
+  font-size: 1.1rem;
+  font-weight: 600;
+  border-radius: 8px;
+  margin-bottom: 18px;
+  padding: 18px 0;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rewardBtn:hover {
+  background: #FFD600;
+  color: #000;
+}
+
+.btnLabel {
+  margin-left: 10px;
+  font-style: italic;
+}
+
+.iconBulb {
+  background: none;
+  border: none;
+  font-size: 2rem;
+  margin-left: 12px;
+  cursor: pointer;
+  vertical-align: middle;
+}
+
+.closeBtn {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: none;
+  border: none;
+  font-size: 2rem;
+  cursor: pointer;
+  padding: 8px;
+  z-index: 2;
+}
+
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,0.7);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modalContent {
+  background: #111;
+  color: #fff;
+  padding: 36px;
+  border-radius: 18px;
+  min-width: 340px;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  text-align: left;
+  position: relative;
+  box-shadow: 0 0 24px #000;
+}
+
+.modalClose {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #F31260;
+} 
