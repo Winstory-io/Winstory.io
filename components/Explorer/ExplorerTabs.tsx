@@ -13,7 +13,7 @@ type ExplorerTabsProps = {
 
 export default function ExplorerTabs({ tabs, activeTab, onTabChange }: ExplorerTabsProps) {
   return (
-    <nav style={{ display: 'flex', gap: 32, borderBottom: '2px solid #FFD600', padding: '0 2rem', marginBottom: 24 }}>
+    <nav style={{ display: 'flex', gap: 32, padding: '0 2rem', marginBottom: 24 }}>
       {tabs.map(tab => (
         <button
           key={tab.key}

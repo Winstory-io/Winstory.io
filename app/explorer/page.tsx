@@ -1,5 +1,6 @@
 "use client";
-import React, { useState } from "react";
+
+import { useState } from 'react';
 import ExplorerTabs from "../../components/Explorer/ExplorerTabs";
 import ExplorerSubTabs from "../../components/Explorer/ExplorerSubTabs";
 import VideoCarousel from "../../components/Explorer/VideoCarousel";
@@ -8,35 +9,33 @@ import VideoMosaic from "../../components/Explorer/VideoMosaic";
 import CampaignInfoModal from "../../components/Explorer/CampaignInfoModal";
 import ExplorerIntroModal from "../../components/Explorer/ExplorerIntroModal";
 
-// Placeholders pour logo, ampoule, loupe
-const LogoWinstory = () => {
-  return (
-    <button
-      onClick={() => window.location.href = '/'}
+const LogoWinstory = () => (
+  <button
+    onClick={() => window.location.href = '/welcome'}
+    style={{
+      background: 'none',
+      border: 'none',
+      padding: 0,
+      cursor: 'pointer',
+      display: 'flex',
+      alignItems: 'center',
+    }}
+    aria-label="Accueil"
+  >
+    <img
+      src="/logo.svg"
+      alt="Logo Winstory"
       style={{
-        background: 'none',
-        border: 'none',
-        padding: 0,
-        cursor: 'pointer',
-        display: 'flex',
-        alignItems: 'center',
+        width: '10vw',
+        minWidth: 48,
+        maxWidth: 120,
+        height: 'auto',
+        display: 'block',
       }}
-      aria-label="Accueil"
-    >
-      <img
-        src="/logo.svg"
-        alt="Logo Winstory"
-        style={{
-          width: '10vw',
-          minWidth: 48,
-          maxWidth: 120,
-          height: 'auto',
-          display: 'block',
-        }}
-      />
-    </button>
-  );
-};
+    />
+  </button>
+);
+
 const BulbIcon = () => (
   <span style={{ fontSize: 32, color: '#FFD600', marginLeft: 8, cursor: 'pointer' }}>💡</span>
 );

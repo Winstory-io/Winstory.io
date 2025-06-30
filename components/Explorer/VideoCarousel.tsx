@@ -11,6 +11,7 @@ type Video = {
 
 type VideoCarouselProps = {
   videos: Video[];
+  subTab?: string;
   onInfoClick: (campaign: Video) => void;
 };
 
@@ -20,7 +21,22 @@ export default function VideoCarousel({ videos, onInfoClick }: VideoCarouselProp
       {videos.map(video => (
         <div key={video.id} style={{ minWidth: 280, background: '#181818', borderRadius: 12, boxShadow: '0 2px 12px #0008', position: 'relative', padding: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
-            <span style={{ color: '#FFD600', fontWeight: 700, fontSize: 16 }}>@{video.company}</span>
+            <button
+              onClick={() => window.location.href = '/welcome'}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#00FFB0',
+                fontWeight: 700,
+                fontSize: 16,
+                cursor: 'pointer',
+                padding: 0,
+                marginRight: 4,
+              }}
+              aria-label="Go to Welcome"
+            >
+              @{video.company}
+            </button>
             <button
               onClick={() => onInfoClick(video)}
               style={{
