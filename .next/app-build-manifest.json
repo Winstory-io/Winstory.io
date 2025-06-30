@@ -15,58 +15,6 @@
       "static/chunks/main-app.js",
       "static/chunks/app/welcome/page.js"
     ],
-    "/creation/layout": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/creation/layout.js"
-    ],
-    "/creation/youare/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/creation/youare/page.js"
-    ],
-    "/creation/b2c/yourwinstory/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/creation/b2c/yourwinstory/page.js"
-    ],
-    "/creation/b2c/yourfilm/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/creation/b2c/yourfilm/page.js"
-    ],
-    "/creation/b2c/rewardsornot/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/creation/b2c/rewardsornot/page.js"
-    ],
-    "/creation/b2c/standardrewards/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/css/app/creation/b2c/standardrewards/page.css",
-      "static/chunks/app/creation/b2c/standardrewards/page.js"
-    ],
-    "/creation/b2c/premiumrewards/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/css/app/creation/b2c/premiumrewards/page.css",
-      "static/chunks/app/creation/b2c/premiumrewards/page.js"
-    ],
-    "/completion/layout": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/completion/layout.js"
-    ],
-    "/completion/login/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/completion/login/page.js"
-    ],
-    "/welcome/tooltip/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/welcome/tooltip/page.js"
-    ],
     "/explorer/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
@@ -76,31 +24,6 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/explorer/page.js"
-    ],
-    "/creation/agencyb2c/login/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/creation/agencyb2c/login/page.js"
-    ],
-    "/creation/agencyb2c/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/creation/agencyb2c/page.js"
-    ],
-    "/creation/agencyb2c/yourwinstory/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/creation/agencyb2c/yourwinstory/page.js"
-    ],
-    "/creation/agencyb2c/yourfilm/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/creation/agencyb2c/yourfilm/page.js"
-    ],
-    "/_not-found/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/_not-found/page.js"
     ]
   }
 }

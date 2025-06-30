@@ -1,8 +1,4 @@
 {
-  "/_not-found/page": "app/_not-found/page.js",
-  "/creation/b2c/premiumrewards/page": "app/creation/b2c/premiumrewards/page.js",
-  "/creation/agencyb2c/yourfilm/page": "app/creation/agencyb2c/yourfilm/page.js",
-  "/creation/b2c/yourfilm/page": "app/creation/b2c/yourfilm/page.js",
-  "/creation/agencyb2c/yourwinstory/page": "app/creation/agencyb2c/yourwinstory/page.js",
-  "/creation/b2c/yourwinstory/page": "app/creation/b2c/yourwinstory/page.js"
+  "/welcome/page": "app/welcome/page.js",
+  "/explorer/page": "app/explorer/page.js"
 }
