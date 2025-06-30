@@ -1,7 +1,7 @@
 "use client";
 
 import RewardsHeader from '../standardrewards/RewardsHeader';
-import RewardsOptions from '../standardrewards/RewardsOptions';
+import RewardsOptions from './RewardsOptions';
 import styles from '../standardrewards/Rewards.module.css';
 
 export default function PremiumRewardsPage() {
