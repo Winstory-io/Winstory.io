@@ -8,6 +8,7 @@ import VideoPodium from "../../components/Explorer/VideoPodium";
 import VideoMosaic from "../../components/Explorer/VideoMosaic";
 import CampaignInfoModal from "../../components/Explorer/CampaignInfoModal";
 import ExplorerIntroModal from "../../components/Explorer/ExplorerIntroModal";
+import ExplorerSearchBar from "../../components/Explorer/ExplorerSearchBar";
 
 const LogoWinstory = () => (
   <button
@@ -57,6 +58,7 @@ export default function ExplorerPage() {
   const [activeTab, setActiveTab] = useState('active');
   const [activeSubTab, setActiveSubTab] = useState('company');
   const [showIntro, setShowIntro] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
   const [selectedCampaign, setSelectedCampaign] = useState(null);
 
   // TODO: fetch campaigns/videos from API
@@ -77,7 +79,7 @@ export default function ExplorerPage() {
             </button>
           </h1>
         </div>
-        <button style={{ background: 'none', border: 'none', padding: 0 }}>
+        <button style={{ background: 'none', border: 'none', padding: 0 }} onClick={() => setShowSearch(true)}>
           <SearchIcon />
         </button>
       </header>
@@ -100,6 +102,7 @@ export default function ExplorerPage() {
         <CampaignInfoModal campaign={selectedCampaign} onClose={() => setSelectedCampaign(null)} />
       )}
       {showIntro && <ExplorerIntroModal onClose={() => setShowIntro(false)} />}
+      {showSearch && <ExplorerSearchBar onClose={() => setShowSearch(false)} />}
     </div>
   );
 }

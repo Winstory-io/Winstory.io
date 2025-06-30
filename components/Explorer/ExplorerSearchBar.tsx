@@ -39,7 +39,7 @@ export default function ExplorerSearchBar({ onClose }: ExplorerSearchBarProps) {
         <input
           ref={inputRef}
           type="text"
-          placeholder="Rechercher une histoire ou une entreprise…"
+          placeholder="Search keywords, stories, companies"
           style={{
             flex: 1,
             fontSize: 18,
