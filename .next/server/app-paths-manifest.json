@@ -1,6 +1,8 @@
 {
+  "/_not-found/page": "app/_not-found/page.js",
   "/creation/b2c/premiumrewards/page": "app/creation/b2c/premiumrewards/page.js",
-  "/creation/b2c/rewardsornot/page": "app/creation/b2c/rewardsornot/page.js",
-  "/creation/b2c/standardrewards/page": "app/creation/b2c/standardrewards/page.js",
+  "/creation/agencyb2c/yourfilm/page": "app/creation/agencyb2c/yourfilm/page.js",
+  "/creation/b2c/yourfilm/page": "app/creation/b2c/yourfilm/page.js",
+  "/creation/agencyb2c/yourwinstory/page": "app/creation/agencyb2c/yourwinstory/page.js",
   "/creation/b2c/yourwinstory/page": "app/creation/b2c/yourwinstory/page.js"
 }
