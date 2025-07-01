@@ -1,0 +1,251 @@
+/* Variables globales supprimées, à placer dans globals.css */
+
+.moderationBg {
+  background: radial-gradient(ellipse at center, #000000 0%, #0a0a0a 100%);
+  color: #ffffff;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+.moderationContainer {
+  display: flex;
+  max-width: 1400px;
+  margin: 3rem auto 5rem;
+  padding: 0 5%;
+  gap: 2rem;
+  align-items: flex-start;
+  min-height: 60vh;
+  overflow: visible;
+}
+
+.moderationPanelLeft {
+  width: 60%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.moderationPanelRight {
+  width: 40%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.videoSection {
+  width: 100%;
+  position: relative;
+  margin-bottom: 2rem;
+  margin-top: 1rem;
+}
+
+.videoWrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  position: relative;
+}
+
+.campaignVideo {
+  width: 100%;
+  aspect-ratio: 16/9;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  background-color: #222;
+  position: relative;
+}
+
+.cornerBubble {
+  position: relative;
+  width: 60px;
+  height: 60px;
+  background: #FFD700;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 1000;
+  color: #0a0a0a;
+  font-size: 10px;
+  font-weight: bold;
+  text-align: center;
+  box-shadow: 0 2px 12px #000;
+  border: 2px solid #e6c300;
+  transition: box-shadow 0.2s, background 0.2s;
+  visibility: visible;
+  display: flex;
+}
+.cornerBubble:hover {
+  box-shadow: 0 0 12px 2px #FFD700;
+  background: #fffbe6;
+}
+.topLeft { top: 8px; left: 8px; }
+.topRight { top: 8px; right: 8px; }
+.bottomLeft { bottom: 8px; left: 8px; }
+.bottomRight { bottom: 8px; right: 8px; }
+
+.progressContainer {
+  width: 100%;
+  margin-bottom: 2rem;
+}
+.progressItem {
+  margin-bottom: 1.5rem;
+}
+.progressHeader {
+  display: flex;
+  justify-content: space-between;
+  font-size: 1rem;
+  color: #FFD700;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+.progressBar {
+  width: 100%;
+  height: 16px;
+  background: #222;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+.progressFill {
+  height: 100%;
+  border-radius: 8px;
+  transition: width 0.4s;
+}
+.voteResults {
+  width: 100%;
+  height: 16px;
+  display: flex;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.voteValid {
+  background: #37FF00;
+  height: 100%;
+  transition: width 0.4s;
+}
+.voteRefuse {
+  background: #FF0000;
+  height: 100%;
+  transition: width 0.4s;
+}
+.stakingComparison {
+  display: flex;
+  justify-content: space-between;
+  font-size: 1rem;
+  margin-top: 0.2rem;
+}
+.stakedAmount {
+  color: #37FF00;
+  font-weight: 700;
+}
+.mintPrice {
+  color: #FFD700;
+  font-weight: 700;
+}
+.moderationControls {
+  display: flex;
+  gap: 32px;
+  width: 100%;
+  justify-content: center;
+  margin-top: 2rem;
+}
+.moderationButton {
+  font-weight: 700;
+  font-size: 22px;
+  border: none;
+  border-radius: 12px;
+  padding: 18px 48px;
+  cursor: pointer;
+  min-width: 140px;
+  transition: background 0.2s, color 0.2s;
+  box-shadow: 0 2px 12px #000;
+}
+.validButton {
+  background: #37FF00;
+  color: #111;
+}
+.refuseButton {
+  background: #FF0000;
+  color: #fff;
+}
+.moderationButton:hover {
+  filter: brightness(1.1);
+}
+.popupOverlay {
+  position: fixed;
+  top: 0; left: 0; width: 100vw; height: 100vh;
+  background: rgba(0,0,0,0.7);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.textPopup {
+  background: #222;
+  color: #FFD600;
+  border-radius: 16px;
+  padding: 32px;
+  min-width: 320px;
+  max-width: 420px;
+  box-shadow: 0 4px 32px #000;
+  position: relative;
+  border: 2px solid #FFD700;
+}
+.popupHeader {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.popupTitle {
+  font-weight: 700;
+  font-size: 22px;
+  margin-bottom: 0;
+  color: #FFD700;
+}
+.closePopup {
+  background: none;
+  border: none;
+  color: #FFD700;
+  font-size: 28px;
+  cursor: pointer;
+  margin-left: 16px;
+}
+.textPopupContent {
+  font-size: 16px;
+  line-height: 1.5;
+  color: #fff;
+  margin-top: 8px;
+}
+@media (max-width: 992px) {
+  .moderationContainer {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  .moderationPanelLeft, .moderationPanelRight {
+    width: 100%;
+  }
+}
+@media (max-width: 600px) {
+  .videoWrapper {
+    min-width: 0;
+  }
+  .campaignVideo {
+    aspect-ratio: 9/16;
+    min-width: 180px;
+    max-width: 100vw;
+  }
+  .cornerBubble {
+    width: 44px;
+    height: 44px;
+    font-size: 8px;
+  }
+  .textPopup {
+    min-width: 90vw;
+    max-width: 98vw;
+    padding: 16px;
+  }
+} 

@@ -1,3 +1,17 @@
+/* Variables globales pour toute l'app */
+:root {
+  --primary: #FFD700;
+  --primary-dark: #e6c300;
+  --secondary: #4CAF50;
+  --danger: #ff3b30;
+  --warning: #FFA500;
+  --dark: #0a0a0a;
+  --darker: #000000;
+  --light: #ffffff;
+  --gray: #333333;
+  --glass: rgba(255, 215, 0, 0.05);
+}
+
 html, body, #__next, main, .min-h-screen, .w-full, .flex, .relative, .font-inter {
   background: #000 !important;
   color: #FFD600;

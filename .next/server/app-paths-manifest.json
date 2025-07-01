@@ -1,8 +1,8 @@
 {
-  "/creation/individual/login/page": "app/creation/individual/login/page.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/moderation/page": "app/moderation/page.js",
+  "/welcome/page": "app/welcome/page.js",
+  "/moderation/login/page": "app/moderation/login/page.js",
   "/creation/b2c/login/page": "app/creation/b2c/login/page.js",
-  "/creation/agencyb2c/login/page": "app/creation/agencyb2c/login/page.js",
-  "/creation/agencyb2c/yourwinstory/page": "app/creation/agencyb2c/yourwinstory/page.js",
-  "/creation/youare/page": "app/creation/youare/page.js",
-  "/creation/agencyb2c/yourfilm/page": "app/creation/agencyb2c/yourfilm/page.js"
+  "/explorer/page": "app/explorer/page.js"
 }
