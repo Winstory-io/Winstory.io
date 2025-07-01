@@ -1,21 +1,20 @@
 "use client";
-import React from 'react';
-import { ThirdwebProvider } from '@thirdweb-dev/react';
-import { Ethereum } from '@thirdweb-dev/chains';
-import Providers from '@/components/Providers';
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useState } from "react";
+import Providers from "@/components/Providers";
+
+export default function RootLayout({ children }) {
+  const [queryClient] = useState(() => new QueryClient());
+
   return (
     <html lang="en">
       <body style={{ background: '#000', color: '#fff', fontFamily: 'Inter, sans-serif' }}>
-        <ThirdwebProvider
-          activeChain={Ethereum}
-          clientId="4ddc5eed2e073e550a7307845d10f348" // Remplace par ton vrai clientId thirdweb si besoin
-        >
+        <QueryClientProvider client={queryClient}>
           <Providers>
             {children}
           </Providers>
-        </ThirdwebProvider>
+        </QueryClientProvider>
       </body>
     </html>
   );

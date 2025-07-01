@@ -1,40 +1,43 @@
 'use client';
 
-import React from 'react';
-import { ConnectWallet } from '@thirdweb-dev/react';
+import { ConnectButton } from "thirdweb/react";
+import { ThirdwebProvider } from "thirdweb/react";
+import { createThirdwebClient } from "thirdweb";
+import { ethereum } from "thirdweb/chains";
+import { inAppWallet } from "thirdweb/wallets";
 
-interface WalletConnectProps {
-    title?: string;
+const client = createThirdwebClient({
+    clientId: "4ddc5eed2e073e550a7307845d10f348",
+});
+
+const wallets = [
+    inAppWallet({
+        auth: { options: ["email", "google"] },
+        // imag: {
+        //     name: "Winstory",
+        //     image: {
+        //         src: "/logo.svg",
+        //         width: 100,
+        //         height: 100,
+        //     },
+        // },
+        // executionMode: {
+        //     mode: "EIP7702",
+        //     sponsorGas: true,
+        // },
+    }),
+];
+
+function WalletConnectContent() {
+    return (
+        <ConnectButton client={client} wallets={wallets} />
+    );
 }
 
-export default function WalletConnect({ title = "Connect Wallet" }: WalletConnectProps) {
+export default function WalletConnect() {
     return (
-        <ConnectWallet
-            theme="dark"
-            btnTitle={title}
-            modalTitle="Connect your wallet"
-            modalSize="wide"
-            welcomeScreen={{
-                title: "Welcome to Winstory",
-                subtitle: "Connect your wallet to get started",
-            }}
-            modalTitleIconUrl="/logo.svg"
-            style={{
-                backgroundColor: 'transparent',
-                color: '#FFD600',
-                border: '2px solid #FFD600',
-                borderRadius: '8px',
-                padding: '8px 16px',
-                fontSize: '14px',
-                fontWeight: '600',
-                cursor: 'pointer',
-                fontFamily: 'Inter, sans-serif',
-                minWidth: '140px',
-                height: '40px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-            }}
-        />
+        <ThirdwebProvider>
+            <WalletConnectContent />
+        </ThirdwebProvider>
     );
 }
