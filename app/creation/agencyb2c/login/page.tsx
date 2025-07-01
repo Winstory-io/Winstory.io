@@ -1,5 +1,5 @@
+"use client";
 import React, { useState } from 'react';
-import LoginHeader from '@/components/LoginHeader';
 import LoginButton from '@/components/LoginButton';
 
 export default function AgencyB2CLoginPage() {
@@ -7,14 +7,18 @@ export default function AgencyB2CLoginPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#000', color: '#fff', fontFamily: 'Inter, sans-serif', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', paddingTop: 24 }}>
-      <LoginHeader />
-      <h1>Creation Agency login</h1>
-      <button onClick={() => setShowPopup(true)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
-        <span style={{ fontSize: 32, color: '#FFD600' }}>💡</span>
-      </button>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', maxWidth: 500, margin: '32px auto 32px auto', position: 'relative' }}>
+        <span style={{ fontSize: 40, fontWeight: 700, color: '#2eea8b', letterSpacing: 1, whiteSpace: 'nowrap' }}>Creation Agency login</span>
+        <button onClick={() => setShowPopup(true)} style={{ background: 'none', border: 'none', marginLeft: 16, marginRight: 8, cursor: 'pointer', fontSize: 32 }} aria-label="Ampoule">
+          💡
+        </button>
+        <button style={{ background: 'none', border: 'none', marginLeft: 8, cursor: 'pointer', fontSize: 32, color: '#FF2D2D' }} aria-label="Fermer" onClick={() => { window.location.href = '/welcome'; }}>
+          ×
+        </button>
+      </div>
       {showPopup && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.7)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ background: '#181818', border: '2px solid #FFD600', borderRadius: 12, padding: 32, color: '#fff' }}>
+          <div style={{ background: '#181818', border: '2px solid #FFD600', borderRadius: 12, padding: 32, color: '#fff', position: 'relative' }}>
             <button onClick={() => setShowPopup(false)} style={{ position: 'absolute', top: 12, right: 12, background: 'none', border: 'none', color: '#FF5252', fontSize: 28, cursor: 'pointer' }}>×</button>
             <div>Popup à paramétrer ultérieurement</div>
           </div>
