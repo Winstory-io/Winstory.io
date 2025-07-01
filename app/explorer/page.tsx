@@ -67,26 +67,36 @@ export default function ExplorerPage() {
 
   return (
     <div style={{ background: '#000', minHeight: '100vh', color: '#fff' }}>
-      <header style={{ display: 'flex', alignItems: 'center', padding: '1rem 2rem', justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <LogoWinstory />
+      <div style={{
+        position: 'relative',
+        background: '#000',
+        borderBottom: '2px solid #FFD600',
+        paddingBottom: 0,
+        zIndex: 20,
+      }}>
+        <header style={{ position: 'relative', display: 'flex', alignItems: 'center', padding: '1rem 2rem', justifyContent: 'space-between' }}>
+          <div style={{ position: 'absolute', top: 24, left: 24, zIndex: 10, display: 'flex', alignItems: 'center' }}>
+            <LogoWinstory />
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', flex: 1, justifyContent: 'center' }}>
+            <h1 style={{ fontSize: '2rem', fontWeight: 700, color: '#FFD600', margin: 0, display: 'flex', alignItems: 'center' }}>
+              Explorer
+              <button onClick={() => setShowIntro(true)} style={{ background: 'none', border: 'none', padding: 0, marginLeft: 8 }}>
+                <BulbIcon />
+              </button>
+            </h1>
+          </div>
+          <button style={{ background: 'none', border: 'none', padding: 0 }} onClick={() => setShowSearch(true)}>
+            <SearchIcon />
+          </button>
+        </header>
+        <div style={{ paddingTop: 24 }}>
+          <ExplorerTabs tabs={MAIN_TABS} activeTab={activeTab} onTabChange={setActiveTab} />
+          {activeTab === 'active' && (
+            <ExplorerSubTabs tabs={SUB_TABS} activeSubTab={activeSubTab} onSubTabChange={setActiveSubTab} />
+          )}
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', flex: 1, justifyContent: 'center' }}>
-          <h1 style={{ fontSize: '2rem', fontWeight: 700, color: '#FFD600', margin: 0, display: 'flex', alignItems: 'center' }}>
-            Explorer
-            <button onClick={() => setShowIntro(true)} style={{ background: 'none', border: 'none', padding: 0, marginLeft: 8 }}>
-              <BulbIcon />
-            </button>
-          </h1>
-        </div>
-        <button style={{ background: 'none', border: 'none', padding: 0 }} onClick={() => setShowSearch(true)}>
-          <SearchIcon />
-        </button>
-      </header>
-      <ExplorerTabs tabs={MAIN_TABS} activeTab={activeTab} onTabChange={setActiveTab} />
-      {activeTab === 'active' && (
-        <ExplorerSubTabs tabs={SUB_TABS} activeSubTab={activeSubTab} onSubTabChange={setActiveSubTab} />
-      )}
+      </div>
       <main style={{ padding: '2rem 0' }}>
         {loading ? (
           <div style={{ textAlign: 'center', color: '#FFD600' }}>Chargement...</div>

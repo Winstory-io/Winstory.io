@@ -1,4 +1,7 @@
 {
   "/explorer/page": "app/explorer/page.js",
+  "/completion/login/page": "app/completion/login/page.js",
+  "/creation/youare/page": "app/creation/youare/page.js",
+  "/moderation/login/page": "app/moderation/login/page.js",
   "/welcome/page": "app/welcome/page.js"
 }
