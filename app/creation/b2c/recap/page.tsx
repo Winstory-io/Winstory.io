@@ -2,9 +2,22 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
+const Modal = ({ open, onClose, children }: { open: boolean, onClose: () => void, children: React.ReactNode }) => {
+  if (!open) return null;
+  return (
+    <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.7)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={onClose}>
+      <div style={{ background: '#181818', color: '#FFD600', padding: 32, borderRadius: 18, minWidth: 320, maxWidth: 420, maxHeight: '80vh', overflowY: 'auto', position: 'relative' }} onClick={e => e.stopPropagation()}>
+        <button onClick={onClose} style={{ position: 'absolute', top: 12, right: 12, background: 'none', border: 'none', color: '#FFD600', fontSize: 28, cursor: 'pointer' }}>×</button>
+        {children}
+      </div>
+    </div>
+  );
+};
+
 export default function RecapB2C() {
   const router = useRouter();
   const [recap, setRecap] = useState<any>({});
+  const [modal, setModal] = useState<{ open: boolean, content: React.ReactNode }>({ open: false, content: null });
 
   useEffect(() => {
     // Récupération des données stockées (à adapter selon la structure réelle)
@@ -34,60 +47,89 @@ export default function RecapB2C() {
     alert("Paiement à venir !");
   };
 
+  // Gestion modals pour chaque champ
+  const openModal = (label: string, value: string | undefined, isFilm?: boolean) => {
+    setModal({
+      open: true,
+      content: isFilm && recap.film?.url ? (
+        <video src={recap.film.url} controls style={{ width: '100%', borderRadius: 12 }} />
+      ) : (
+        <div style={{ color: '#FFD600', fontSize: 18, whiteSpace: 'pre-line' }}>
+          <b>{label}</b>
+          <div style={{ marginTop: 16, color: '#fff', fontWeight: 400 }}>{value}</div>
+        </div>
+      )
+    });
+  };
+
+  // Modal d'aide (ampoule)
+  const openHelpModal = () => {
+    setModal({
+      open: true,
+      content: (
+        <div style={{ color: '#FFD600', fontSize: 18 }}>
+          <b>Recap Help</b>
+          <div style={{ marginTop: 16, color: '#fff', fontWeight: 400 }}>
+            Ici s'affichera l'aide contextuelle pour la page Recap.<br/>À personnaliser ultérieurement.
+          </div>
+        </div>
+      )
+    });
+  };
+
   return (
-    <div style={{ minHeight: "100vh", background: "#000", color: "#fff", padding: 24 }}>
-      <div style={{ display: "flex", alignItems: "center", marginBottom: 32 }}>
+    <div style={{ minHeight: "100vh", background: "#000", color: "#fff", padding: 24, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      {/* Titre centré avec ampoule cliquable */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: 'center', marginBottom: 32, width: '100%' }}>
         <span style={{ fontSize: 48, marginRight: 16 }}>💼</span>
-        <h1 style={{ fontSize: 36, fontWeight: 700, margin: 0 }}>Recap</h1>
-        <span style={{ fontSize: 40, marginLeft: 16 }}>💡</span>
+        <h1 style={{ fontSize: 36, fontWeight: 700, margin: 0, textAlign: 'center' }}>Recap</h1>
+        <button onClick={openHelpModal} style={{ background: 'none', border: 'none', marginLeft: 16, cursor: 'pointer', fontSize: 40, color: '#FFD600', padding: 0, lineHeight: 1 }}>💡</button>
       </div>
       {/* Bloc utilisateur/entreprise */}
-      <div style={{ border: "2px solid #fff", borderRadius: 24, padding: 24, marginBottom: 24 }}>
+      <div style={{ border: "2px solid #fff", borderRadius: 24, padding: 24, marginBottom: 40, maxWidth: 420, width: '100%', marginLeft: 'auto', marginRight: 'auto' }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           <div style={{ display: "flex", alignItems: "center" }}>
-            <span style={{ fontWeight: 600, fontSize: 22, width: 160 }}>You</span>
-            <div style={{ flex: 1, border: "2px solid #FFD600", borderRadius: 12, padding: 12, color: "#FFD600", fontStyle: "italic", fontSize: 18 }}>{email}</div>
+            <span style={{ fontWeight: 600, fontSize: 18, width: 120 }}>You</span>
+            <button onClick={() => openModal('Your email', email)} style={{ flex: 1, border: "2px solid #FFD600", borderRadius: 12, padding: 12, color: "#FFD600", fontStyle: "italic", fontSize: 16, background: 'none', cursor: 'pointer', fontWeight: 700, marginLeft: 8 }}>{email}</button>
           </div>
           <div style={{ display: "flex", alignItems: "center" }}>
-            <span style={{ fontWeight: 600, fontSize: 22, width: 160 }}>Your Company</span>
-            <div style={{ flex: 1, border: "2px solid #FFD600", borderRadius: 12, padding: 12, color: "#FFD600", fontStyle: "italic", fontSize: 18 }}>{companyName}</div>
+            <span style={{ fontWeight: 600, fontSize: 18, width: 120 }}>Your Company</span>
+            <button onClick={() => openModal('Your company', companyName)} style={{ flex: 1, border: "2px solid #FFD600", borderRadius: 12, padding: 12, color: "#FFD600", fontStyle: "italic", fontSize: 16, background: 'none', cursor: 'pointer', fontWeight: 700, marginLeft: 8 }}>{companyName}</button>
           </div>
         </div>
       </div>
       {/* Bloc story */}
-      <div style={{ border: "2px solid #fff", borderRadius: 24, padding: 24, marginBottom: 24 }}>
+      <div style={{ border: "2px solid #fff", borderRadius: 24, padding: 24, marginBottom: 40, maxWidth: 420, width: '100%', marginLeft: 'auto', marginRight: 'auto' }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           <div>
-            <span style={{ fontWeight: 600, fontSize: 22 }}>Title</span>
-            <div style={{ border: "2px solid #FFD600", borderRadius: 12, padding: 12, color: "#FFD600", fontStyle: "italic", fontSize: 18 }}>{title}</div>
+            <span style={{ fontWeight: 600, fontSize: 18 }}>Title</span>
+            <button onClick={() => openModal('Title', title)} style={{ border: "2px solid #FFD600", borderRadius: 12, padding: 12, color: "#FFD600", fontStyle: "italic", fontSize: 16, background: 'none', cursor: 'pointer', fontWeight: 700, marginLeft: 8, width: '100%', textAlign: 'left' }}>{title}</button>
           </div>
           <div>
-            <span style={{ fontWeight: 600, fontSize: 22 }}>Starting Story</span>
-            <div style={{ border: "2px solid #FFD600", borderRadius: 12, padding: 12, color: "#FFD600", fontStyle: "italic", fontSize: 18 }}>{startingStory}</div>
+            <span style={{ fontWeight: 600, fontSize: 18 }}>Starting Story</span>
+            <button onClick={() => openModal('Starting Story', startingStory)} style={{ border: "2px solid #FFD600", borderRadius: 12, padding: 12, color: "#FFD600", fontStyle: "italic", fontSize: 16, background: 'none', cursor: 'pointer', fontWeight: 700, marginLeft: 8, width: '100%', textAlign: 'left' }}>{startingStory}</button>
           </div>
           <div>
-            <span style={{ fontWeight: 600, fontSize: 22 }}>Guideline</span>
-            <div style={{ border: "2px solid #FFD600", borderRadius: 12, padding: 12, color: "#FFD600", fontStyle: "italic", fontSize: 18 }}>{guideline}</div>
+            <span style={{ fontWeight: 600, fontSize: 18 }}>Guideline</span>
+            <button onClick={() => openModal('Guideline', guideline)} style={{ border: "2px solid #FFD600", borderRadius: 12, padding: 12, color: "#FFD600", fontStyle: "italic", fontSize: 16, background: 'none', cursor: 'pointer', fontWeight: 700, marginLeft: 8, width: '100%', textAlign: 'left' }}>{guideline}</button>
           </div>
         </div>
       </div>
       {/* Bloc film */}
-      <div style={{ border: "2px solid #fff", borderRadius: 24, padding: 24, marginBottom: 24 }}>
+      <div style={{ border: "2px solid #fff", borderRadius: 24, padding: 24, marginBottom: 40, maxWidth: 420, width: '100%', marginLeft: 'auto', marginRight: 'auto' }}>
         <div style={{ display: "flex", alignItems: "center" }}>
-          <span style={{ fontWeight: 600, fontSize: 22, width: 160 }}>Film</span>
-          <div style={{ flex: 1, border: "2px solid #FFD600", borderRadius: 12, padding: 12, color: "#FFD600", fontStyle: "italic", fontSize: 18 }}>
-            {recap.film?.aiRequested ? (
-              <span>{filmLabel}</span>
-            ) : recap.film?.url ? (
-              <button style={{ color: '#FFD600', background: 'none', border: 'none', textDecoration: 'underline', cursor: 'pointer', fontSize: 18 }} onClick={() => window.open(recap.film.url, '_blank')}>View your film</button>
-            ) : (
-              <span>{filmLabel}</span>
-            )}
-          </div>
+          <span style={{ fontWeight: 600, fontSize: 18, width: 120 }}>Film</span>
+          {recap.film?.aiRequested ? (
+            <button disabled style={{ flex: 1, border: "2px solid #FFD600", borderRadius: 12, padding: 12, color: "#FFD600", fontStyle: "italic", fontSize: 16, background: 'none', fontWeight: 700, marginLeft: 8, opacity: 0.7 }}>{filmLabel}</button>
+          ) : recap.film?.url ? (
+            <button onClick={() => openModal('Your film', filmLabel, true)} style={{ flex: 1, border: "2px solid #FFD600", borderRadius: 12, padding: 12, color: "#FFD600", fontStyle: "italic", fontSize: 16, background: 'none', cursor: 'pointer', fontWeight: 700, marginLeft: 8 }}>{filmLabel}</button>
+          ) : (
+            <button onClick={() => openModal('Your film', filmLabel)} style={{ flex: 1, border: "2px solid #FFD600", borderRadius: 12, padding: 12, color: "#FFD600", fontStyle: "italic", fontSize: 16, background: 'none', cursor: 'pointer', fontWeight: 700, marginLeft: 8 }}>{filmLabel}</button>
+          )}
         </div>
       </div>
       {/* Bloc rewards */}
-      <div style={{ border: "2px solid #fff", borderRadius: 24, padding: 24, marginBottom: 24, textAlign: 'center', fontWeight: 600, fontSize: 22 }}>
+      <div style={{ border: "2px solid #fff", borderRadius: 24, padding: 24, marginBottom: 40, textAlign: 'center', fontWeight: 600, fontSize: 18, maxWidth: 420, width: '100%', marginLeft: 'auto', marginRight: 'auto' }}>
         {rewardLabel}
       </div>
       {/* Bouton Confirm */}
@@ -99,9 +141,9 @@ export default function RecapB2C() {
             border: '2px solid #18C964',
             color: '#18C964',
             borderRadius: 32,
-            fontSize: 28,
+            fontSize: 24,
             fontWeight: 700,
-            padding: '18px 64px',
+            padding: '14px 48px',
             cursor: 'pointer',
             transition: 'background 0.2s, color 0.2s',
             marginTop: 16,
@@ -110,6 +152,9 @@ export default function RecapB2C() {
           Confirm
         </button>
       </div>
+      <Modal open={modal.open} onClose={() => setModal({ open: false, content: null })}>
+        {modal.content}
+      </Modal>
     </div>
   );
 } 
