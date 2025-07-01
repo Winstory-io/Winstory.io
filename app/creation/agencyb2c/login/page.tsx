@@ -1,6 +1,7 @@
 "use client";
 import React, { useState } from 'react';
 import LoginButton from '@/components/LoginButton';
+import WalletConnect from '@/components/WalletConnect';
 
 export default function AgencyB2CLoginPage() {
   const [showPopup, setShowPopup] = useState(false);
@@ -24,7 +25,7 @@ export default function AgencyB2CLoginPage() {
           </div>
         </div>
       )}
-      <div style={{ width: '100%', maxWidth: 400, margin: '0 auto', marginTop: 32 }}>
+      {/* <div style={{ width: '100%', maxWidth: 400, margin: '0 auto', marginTop: 32 }}>
         <LoginButton
           icon={<span role="img" aria-label="email">📧</span>}
           text="With your Pro E-mail"
@@ -36,6 +37,10 @@ export default function AgencyB2CLoginPage() {
           text="With your Web.3 Wallet"
           optional
         />
+      </div> */}
+      <div style={{ width: '100%', maxWidth: 400, margin: '0 auto', marginTop: 32, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 24 }}>
+        {/* <WalletConnect title="With your Pro E-mail" /> */}
+        <WalletConnect isEmailLogin={true} />
       </div>
     </div>
   );

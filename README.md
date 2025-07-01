@@ -36,6 +36,7 @@ npm start
 
 ### 6. Environment variables
 - Create a `.env.local` file if needed for secrets (see `.env.example` if present)
+- For authentication setup, see [AUTH_SETUP.md](./AUTH_SETUP.md)
 
 ### 7. Useful scripts
 - `npm run dev` : Start dev server
@@ -80,6 +81,7 @@ npm start
 
 ### 6. Variables d'environnement
 - Créez un fichier `.env.local` si besoin pour les secrets (voir `.env.example` si présent)
+- Pour la configuration de l'authentification, voir [AUTH_SETUP.md](./AUTH_SETUP.md)
 
 ### 7. Scripts utiles
 - `npm run dev` : Lancer le serveur de dev
