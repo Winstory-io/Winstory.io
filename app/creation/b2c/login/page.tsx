@@ -13,7 +13,6 @@ export default function B2CLoginPage() {
         <button onClick={() => setShowPopup(true)} style={{ background: 'none', border: 'none', marginLeft: 16, marginRight: 8, cursor: 'pointer', fontSize: 32 }} aria-label="Ampoule">
           💡
         </button>
-        <WalletConnect />
         <button style={{ background: 'none', border: 'none', marginLeft: 8, cursor: 'pointer', fontSize: 32, color: '#FF2D2D' }} aria-label="Fermer" onClick={() => { window.location.href = '/welcome'; }}>
           ×
         </button>
@@ -38,6 +37,7 @@ export default function B2CLoginPage() {
           text="With your Web.3 Wallet"
           optional
         />
+        <WalletConnect />
       </div>
     </div>
   );

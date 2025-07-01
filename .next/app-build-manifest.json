@@ -5,6 +5,16 @@
       "static/chunks/main-app.js",
       "static/chunks/app/layout.js"
     ],
+    "/creation/layout": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/creation/layout.js"
+    ],
+    "/creation/b2c/login/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/creation/b2c/login/page.js"
+    ],
     "/welcome/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
@@ -15,20 +25,10 @@
       "static/chunks/main-app.js",
       "static/chunks/app/welcome/page.js"
     ],
-    "/creation/layout": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/creation/layout.js"
-    ],
     "/creation/youare/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/creation/youare/page.js"
-    ],
-    "/creation/b2c/login/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/creation/b2c/login/page.js"
     ],
     "/creation/individual/login/page": [
       "static/chunks/webpack.js",

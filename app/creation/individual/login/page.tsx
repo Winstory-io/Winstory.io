@@ -12,17 +12,17 @@ export default function IndividualLoginPage() {
         <button style={{ background: 'none', border: 'none', marginLeft: 16, marginRight: 8, cursor: 'pointer', fontSize: 32 }} aria-label="Ampoule" onClick={() => { }}>
           💡
         </button>
-        <WalletConnect />
         <Link href="/creation/youare" style={{ marginLeft: 8, cursor: 'pointer', fontSize: 32, color: '#FF2D2D', display: 'flex', alignItems: 'center' }} aria-label="Close">
           ×
         </Link>
       </div>
-      <div style={{ width: '100%', maxWidth: 400, margin: '0 auto', marginTop: 32 }}>
+      <div style={{ width: '100%', maxWidth: 400, margin: '0 auto', marginTop: 32, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 24 }}>
         <LoginButton
           icon={<span role="img" aria-label="wallet">💳</span>}
           text="With your Web.3 Wallet"
           color="#FFD600"
         />
+        <WalletConnect />
       </div>
     </div>
   );
