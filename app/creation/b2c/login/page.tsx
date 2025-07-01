@@ -25,19 +25,14 @@ export default function B2CLoginPage() {
           </div>
         </div>
       )}
-      <div style={{ width: '100%', maxWidth: 400, margin: '0 auto', marginTop: 32 }}>
-        <LoginButton
-          icon={<span role="img" aria-label="email">📧</span>}
-          text="With your Pro E-mail"
-          required
-          color="#fff"
-        />
-        <LoginButton
+      <div style={{ width: '100%', maxWidth: 400, margin: '0 auto', marginTop: 32, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 24 }}>
+        <WalletConnect title="With your Pro E-mail" />
+        {/* <LoginButton
           icon={<span role="img" aria-label="wallet">💳</span>}
           text="With your Web.3 Wallet"
           optional
-        />
-        <WalletConnect />
+        /> */}
+        {/* <WalletConnect /> */}
       </div>
     </div>
   );

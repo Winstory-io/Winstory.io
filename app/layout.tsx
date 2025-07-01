@@ -2,6 +2,7 @@
 import React from 'react';
 import { ThirdwebProvider } from '@thirdweb-dev/react';
 import { Ethereum } from '@thirdweb-dev/chains';
+import Providers from '@/components/Providers';
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -11,7 +12,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           activeChain={Ethereum}
           clientId="4ddc5eed2e073e550a7307845d10f348" // Remplace par ton vrai clientId thirdweb si besoin
         >
-          {children}
+          <Providers>
+            {children}
+          </Providers>
         </ThirdwebProvider>
       </body>
     </html>

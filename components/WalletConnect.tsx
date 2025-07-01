@@ -3,11 +3,15 @@
 import React from 'react';
 import { ConnectWallet } from '@thirdweb-dev/react';
 
-export default function WalletConnect() {
+interface WalletConnectProps {
+    title?: string;
+}
+
+export default function WalletConnect({ title = "Connect Wallet" }: WalletConnectProps) {
     return (
         <ConnectWallet
             theme="dark"
-            btnTitle="Connect Wallet"
+            btnTitle={title}
             modalTitle="Connect your wallet"
             modalSize="wide"
             welcomeScreen={{
