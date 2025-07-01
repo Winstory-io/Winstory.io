@@ -101,10 +101,21 @@
       "static/css/app/moderation/page.css",
       "static/chunks/app/moderation/page.js"
     ],
-    "/_not-found/page": [
+    "/creation/b2c/rewardsornot/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/_not-found/page.js"
+      "static/chunks/app/creation/b2c/rewardsornot/page.js"
+    ],
+    "/creation/b2c/standardrewards/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/creation/b2c/standardrewards/page.css",
+      "static/chunks/app/creation/b2c/standardrewards/page.js"
+    ],
+    "/creation/b2c/recap/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/creation/b2c/recap/page.js"
     ]
   }
 }

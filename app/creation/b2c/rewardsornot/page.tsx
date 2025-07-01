@@ -152,9 +152,26 @@ export default function RewardsOrNotB2C() {
 
   const canProceed = freeReward || noReward || (!!unitValue && !!netProfit);
 
+  const handleNoRewardChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setNoReward(e.target.checked);
+    if (e.target.checked) {
+      localStorage.setItem(
+        'campaignReward',
+        JSON.stringify({
+          rewardType: 'none',
+          rewardLabel: 'No Reward to give? No Problem, free completions +$1000',
+        })
+      );
+    } else {
+      localStorage.removeItem('campaignReward');
+    }
+  };
+
   const handleNext = () => {
     if ((freeReward || (!!unitValue && !!netProfit)) && !noReward) {
       router.push("/creation/b2c/standardrewards");
+    } else if (noReward) {
+      router.push("/creation/b2c/recap");
     } else {
       router.push("/creation/b2c/yourwinstory");
     }
@@ -394,27 +411,57 @@ export default function RewardsOrNotB2C() {
             </div>
           </>
         )}
-        {/* Bloc Or Not */}
+        {/* Bloc "Or not" harmonisé, affiché seulement si freeReward n'est pas coché */}
         {!freeReward && (
-          <>
-            <h2 style={{ color: noReward ? '#18C964' : '#FFD600', fontSize: 24, fontWeight: 700, marginBottom: 8, textAlign: 'center', transition: 'color 0.2s' }}>Or not</h2>
-            <div style={{ border: `2px solid ${noReward ? '#18C964' : '#FFD600'}`, borderRadius: 16, padding: 32, maxWidth: 500, width: '100%', marginBottom: 40, transition: 'border-color 0.2s' }}>
-              <div style={{ color: noReward ? '#18C964' : 'white', fontWeight: 700, fontSize: 20, marginBottom: 16, textAlign: 'center', transition: 'color 0.2s' }}>
-                No Reward to give ? No Problem, free completions
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <input
-                  type="checkbox"
-                  checked={noReward}
-                  onChange={e => setNoReward(e.target.checked)}
-                  style={{ width: 28, height: 28, accentColor: noReward ? '#18C964' : '#FFD600', marginRight: 16, transition: 'accent-color 0.2s' }}
-                />
-                <span style={{ color: noReward ? '#18C964' : '#FFD600', fontWeight: 700, fontSize: 26, display: 'flex', alignItems: 'center', transition: 'color 0.2s' }}>
-                  <span style={{ fontSize: 28, marginRight: 6, fontWeight: 900 }}>+</span>$1000
-                </span>
-              </div>
+          <div style={{ margin: '48px 0 40px 0', textAlign: 'center', width: '100%' }}>
+            <h2 style={{ color: '#FFD600', fontSize: 24, fontWeight: 700, marginBottom: 8 }}>Or not</h2>
+            <div
+              style={{
+                border: `2px solid ${noReward ? '#18C964' : '#FFD600'}`,
+                borderRadius: 16,
+                padding: 32,
+                margin: '0 auto',
+                maxWidth: 500,
+                width: '100%',
+                background: noReward ? '#18C964' : '#181818',
+                display: 'flex',
+                alignItems: 'center',
+                transition: 'border-color 0.2s, background 0.2s',
+                boxSizing: 'border-box',
+              }}
+            >
+              <input
+                type="checkbox"
+                id="noRewardCheckbox"
+                checked={noReward}
+                onChange={handleNoRewardChange}
+                style={{
+                  width: 24,
+                  height: 24,
+                  accentColor: noReward ? '#18C964' : '#FFD600',
+                  marginRight: 18,
+                  transition: 'accent-color 0.2s',
+                }}
+              />
+              <label
+                htmlFor="noRewardCheckbox"
+                style={{
+                  fontSize: 18,
+                  color: noReward ? '#fff' : '#FFD600',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  lineHeight: 1.2,
+                  display: 'flex',
+                  alignItems: 'center',
+                  transition: 'color 0.2s',
+                }}
+              >
+                <span style={{ fontWeight: 700, color: noReward ? '#fff' : '#FFD600', marginRight: 8 }}>No Reward to give?</span>
+                <span style={{ color: noReward ? '#fff' : '#fff', fontWeight: 400, marginRight: 8 }}>No Problem, free completions</span>
+                <span style={{ color: noReward ? '#fff' : '#FFD600', fontWeight: 900 }}>+${'1000'}</span>
+              </label>
             </div>
-          </>
+          </div>
         )}
       </main>
       <GreenArrowButton onClick={handleNext} disabled={!canProceed} />
