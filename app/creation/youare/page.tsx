@@ -17,12 +17,19 @@ const boxStyle = {
   transition: 'box-shadow 0.2s',
 };
 
+const cardStyle = {
+  ...boxStyle,
+  width: '400px',
+  maxWidth: '95vw',
+  margin: '0 auto 40px auto',
+};
+
 export default function YouAre() {
   const [showTooltip, setShowTooltip] = useState(false);
   return (
     <div style={{ minHeight: '100vh', background: '#000', color: yellow, fontFamily: 'Inter, sans-serif', position: 'relative', padding: 0 }}>
       {/* Croix rouge en haut à droite */}
-      <Link href="/welcome" style={{ position: 'absolute', top: 24, right: 24, zIndex: 10 }}>
+      <Link href="/welcome" style={{ position: 'absolute', top: 8, right: 24, zIndex: 10 }}>
         <span title="Close">
           <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
             <line x1="10" y1="10" x2="30" y2="30" stroke="#FF2D2D" strokeWidth="3" strokeLinecap="round"/>
@@ -112,7 +119,7 @@ export default function YouAre() {
 
       {/* B2C Brand */}
       <Link href="/creation/b2c/login" style={{ textDecoration: 'none' }}>
-        <div style={{ ...boxStyle, margin: '0 24px 16px 24px' }}>
+        <div style={cardStyle}>
           <span style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             {/* Mallette + graphique */}
             <span>
@@ -130,15 +137,15 @@ export default function YouAre() {
       </Link>
 
       {/* Question agence */}
-      <div style={{ textAlign: 'center', margin: '0 0 16px 0' }}>
-        <Link href="/creation/agencyb2c/login" style={{ color: yellow, fontStyle: 'italic', textDecoration: 'underline', fontWeight: 600, fontSize: 20 }}>
+      <div style={{ textAlign: 'center', margin: '0 0 40px 0' }}>
+        <Link href="/creation/agencyb2c/login" style={{ color: yellow, fontStyle: 'italic', textDecoration: 'underline', fontWeight: 600, fontSize: 20, display: 'inline-block', margin: '0 auto', padding: '12px 0' }}>
           You are an agency working with a B2C client ?
         </Link>
       </div>
 
       {/* Individual Member */}
       <Link href="/creation/individual/login" style={{ textDecoration: 'none' }}>
-        <div style={{ ...boxStyle, margin: '0 24px' }}>
+        <div style={cardStyle}>
           <span style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             {/* Profil */}
             <span>
