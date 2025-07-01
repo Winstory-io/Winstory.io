@@ -1,6 +1,7 @@
 "use client";
 import React, { useState } from 'react';
 import LoginButton from '@/components/LoginButton';
+import WalletConnect from '@/components/WalletConnect';
 
 export default function B2CLoginPage() {
   const [showPopup, setShowPopup] = useState(false);
@@ -12,6 +13,7 @@ export default function B2CLoginPage() {
         <button onClick={() => setShowPopup(true)} style={{ background: 'none', border: 'none', marginLeft: 16, marginRight: 8, cursor: 'pointer', fontSize: 32 }} aria-label="Ampoule">
           💡
         </button>
+        <WalletConnect />
         <button style={{ background: 'none', border: 'none', marginLeft: 8, cursor: 'pointer', fontSize: 32, color: '#FF2D2D' }} aria-label="Fermer" onClick={() => { window.location.href = '/welcome'; }}>
           ×
         </button>

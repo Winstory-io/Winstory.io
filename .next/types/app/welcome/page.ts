@@ -1,4 +1,4 @@
-// File: /Users/voteer/Downloads/Winstory.io-main/app/welcome/page.tsx
+// File: /Users/theo/Workspace/Winstory/Winstory.io/app/welcome/page.tsx
 import * as entry from '../../../../app/welcome/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

@@ -24,7 +24,12 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
+    "@thirdweb-dev/chains": "^0.1.120",
+    "@thirdweb-dev/react": "^4.9.4",
+    "@thirdweb-dev/sdk": "^4.0.99",
+    "@thirdweb-dev/wallets": "^2.5.39",
     "next": "^15.3.4",
+    "pino-pretty": "^13.0.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
   },
