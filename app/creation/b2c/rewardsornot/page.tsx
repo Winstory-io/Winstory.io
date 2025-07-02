@@ -423,7 +423,7 @@ export default function RewardsOrNotB2C() {
         {/* Bloc "Or not" harmonisé, affiché seulement si freeReward n'est pas coché */}
         {!freeReward && (
           <div style={{ margin: '48px 0 40px 0', textAlign: 'center', width: '100%' }}>
-            <h2 style={{ color: '#FFD600', fontSize: 24, fontWeight: 700, marginBottom: 8 }}>Or not</h2>
+            <h2 style={{ color: noReward ? '#18C964' : '#FFD600', fontSize: 24, fontWeight: 700, marginBottom: 8, transition: 'color 0.2s' }}>Or not</h2>
             <div
               style={{
                 border: `2px solid ${noReward ? '#18C964' : '#FFD600'}`,
@@ -432,7 +432,7 @@ export default function RewardsOrNotB2C() {
                 margin: '0 auto',
                 maxWidth: 500,
                 width: '100%',
-                background: noReward ? '#18C964' : '#181818',
+                background: noReward ? '#000' : '#181818',
                 display: 'flex',
                 alignItems: 'center',
                 transition: 'border-color 0.2s, background 0.2s',
@@ -456,7 +456,7 @@ export default function RewardsOrNotB2C() {
                 htmlFor="noRewardCheckbox"
                 style={{
                   fontSize: 18,
-                  color: noReward ? '#fff' : '#FFD600',
+                  color: noReward ? '#18C964' : '#FFD600',
                   fontWeight: 700,
                   cursor: 'pointer',
                   lineHeight: 1.2,
@@ -465,9 +465,9 @@ export default function RewardsOrNotB2C() {
                   transition: 'color 0.2s',
                 }}
               >
-                <span style={{ fontWeight: 700, color: noReward ? '#fff' : '#FFD600', marginRight: 8 }}>No Reward to give?</span>
-                <span style={{ color: noReward ? '#fff' : '#fff', fontWeight: 400, marginRight: 8 }}>No Problem, free completions</span>
-                <span style={{ color: noReward ? '#fff' : '#FFD600', fontWeight: 900 }}>+${'1000'}</span>
+                <span style={{ fontWeight: 700, color: noReward ? '#18C964' : '#FFD600', marginRight: 8 }}>No Reward to give?</span>
+                <span style={{ color: noReward ? '#18C964' : '#fff', fontWeight: 400, marginRight: 8 }}>No Problem, free completions</span>
+                <span style={{ color: noReward ? '#18C964' : '#FFD600', fontWeight: 900 }}>+${'1000'}</span>
               </label>
             </div>
           </div>
