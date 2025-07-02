@@ -36,6 +36,14 @@ const GreenArrowButton = ({ onClick, disabled }: { onClick: () => void, disabled
   </button>
 );
 
+// Croix rouge réutilisable
+const CloseIcon = ({ onClick, size = 24 }: { onClick: () => void; size?: number }) => (
+  <svg onClick={onClick} width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ cursor: 'pointer', position: 'absolute', top: 32, right: 32, zIndex: 100 }}>
+    <path d="M18 6L6 18" stroke="#F31260" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M6 6L18 18" stroke="#F31260" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
 export default function YourWinstoryB2C() {
   const router = useRouter();
   const [title, setTitle] = useState('');
@@ -80,6 +88,8 @@ export default function YourWinstoryB2C() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#000', color: '#FFD600', fontFamily: 'Inter, sans-serif', padding: 0, margin: 0 }}>
+      {/* Croix rouge en haut à droite */}
+      <CloseIcon onClick={() => router.push('/welcome')} size={32} />
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', paddingTop: 40, paddingBottom: 24, position: 'relative' }}>
         <BriefcaseIcon />
