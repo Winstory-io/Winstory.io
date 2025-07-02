@@ -150,6 +150,12 @@ export default function RewardsOrNotB2C() {
     if (noReward) setFreeReward(false);
   }, [freeReward, noReward]);
 
+  useEffect(() => {
+    if (freeReward && userMaxCompletions < 5) {
+      setUserMaxCompletions(5);
+    }
+  }, [freeReward, userMaxCompletions]);
+
   const canProceed = freeReward || noReward || (!!unitValue && !!netProfit);
 
   const handleNoRewardChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -225,10 +231,13 @@ export default function RewardsOrNotB2C() {
               inputMode="numeric"
               pattern="[0-9]*"
               value={userMaxCompletions}
-              min={1}
-              max={1000}
+              min={5}
               step={1}
-              onChange={e => setUserMaxCompletions(Math.max(1, Math.min(1000, parseInt(e.target.value.replace(/[^\d]/g, ''))||1)))}
+              onChange={e => {
+                let val = parseInt(e.target.value.replace(/[^\d]/g, '')) || 5;
+                if (val < 5) val = 5;
+                setUserMaxCompletions(val);
+              }}
               style={{
                 background: 'transparent',
                 border: 'none',
@@ -242,7 +251,7 @@ export default function RewardsOrNotB2C() {
               }}
               autoComplete="off"
             />
-            <Stepper value={userMaxCompletions} setValue={v=>setUserMaxCompletions(Math.max(1, Math.min(1000, v)))} min={1} max={1000} step={1} color="#18C964" disabled={false} />
+            <Stepper value={userMaxCompletions} setValue={v=>setUserMaxCompletions(v < 5 ? 5 : v)} min={5} max={undefined} step={1} color="#18C964" disabled={false} />
           </div>
         </>
       ) : (
