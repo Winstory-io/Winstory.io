@@ -2,15 +2,6 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-// Icône mallette (SVG simplifié, à remplacer par le SVG complet si besoin)
-const BriefcaseIcon = () => (
-  <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginRight: 16 }}>
-    <rect x="8" y="16" width="32" height="20" rx="3" fill="#FFD600" stroke="#FFD600" strokeWidth="2"/>
-    <rect x="14" y="10" width="20" height="8" rx="2" fill="#FFD600" stroke="#FFD600" strokeWidth="2"/>
-    <rect x="8" y="16" width="32" height="20" rx="3" fill="none" stroke="#FFD600" strokeWidth="2"/>
-  </svg>
-);
-
 // Flèche verte dans un rond
 const GreenArrowButton = ({ onClick, disabled }: { onClick: () => void, disabled: boolean }) => (
   <button
@@ -92,7 +83,7 @@ export default function YourWinstoryB2C() {
       <CloseIcon onClick={() => router.push('/welcome')} size={32} />
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', paddingTop: 40, paddingBottom: 24, position: 'relative' }}>
-        <BriefcaseIcon />
+        <img src="/company.svg" alt="Company Icon" style={{ width: 96, height: 96, marginRight: 16 }} />
         <h1 style={{ fontSize: 32, fontWeight: 700, margin: 0, letterSpacing: 1 }}>Your winStory</h1>
         <span
           style={{ fontSize: 36, marginLeft: 16, cursor: 'pointer' }}
