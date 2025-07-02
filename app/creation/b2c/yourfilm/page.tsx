@@ -142,8 +142,8 @@ export default function YourFilmPage() {
     };
 
     const handleNext = () => {
-        // Replace with the actual next page route
-        router.push('/creation/b2c/yourwinstory'); 
+        // Redirige vers la page Rewards or Not pour la suite du process B2C
+        router.push('/creation/b2c/rewardsornot');
     };
 
     const handleUploadClick = () => {
