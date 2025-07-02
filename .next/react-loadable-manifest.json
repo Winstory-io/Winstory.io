@@ -328,8 +328,8 @@
   "node_modules/thirdweb/dist/esm/react/web/ui/ConnectWallet/screens/Buy/LazyBuyScreen.js -> ./BuyScreen.js": {
     "id": 89677,
     "files": [
-      "static/chunks/51879.65715887f38feb9e.js",
-      "static/chunks/89677.5edbb07bce159e77.js"
+      "static/chunks/93666.29a4b33bbc44aae6.js",
+      "static/chunks/89677.2415050287a31517.js"
     ]
   },
   "node_modules/thirdweb/dist/esm/react/web/ui/ConnectWallet/screens/LinkProfileScreen.js -> ../../../wallets/in-app/InAppWalletConnectUI.js": {
@@ -597,14 +597,14 @@
   "node_modules/thirdweb/dist/esm/transaction/actions/encode.js -> ../../utils/encoding/helpers/concat-hex.js": {
     "id": 3348,
     "files": [
-      "static/chunks/3348.f1c2510e645dbee3.js"
+      "static/chunks/3348.3d9736eb5d41a072.js"
     ]
   },
   "node_modules/thirdweb/dist/esm/transaction/actions/estimate-gas-cost.js -> ../../gas/estimate-l1-fee.js": {
-    "id": 32072,
+    "id": 56653,
     "files": [
-      "static/chunks/98503.f272cd719ead7d0f.js",
-      "static/chunks/32072.c664d174781b4261.js"
+      "static/chunks/56002.3c0e79c6e0790e27.js",
+      "static/chunks/56653.33ee09f07035954b.js"
     ]
   },
   "node_modules/thirdweb/dist/esm/transaction/actions/estimate-gas.js -> ../../rpc/actions/eth_estimateGas.js": {
@@ -648,7 +648,7 @@
   "node_modules/thirdweb/dist/esm/transaction/actions/send-transaction.js -> ./zksync/send-eip712-transaction.js": {
     "id": 99134,
     "files": [
-      "static/chunks/99134.6bdc28bfaf9c91e2.js"
+      "static/chunks/99134.a78ebfffafe10bfc.js"
     ]
   },
   "node_modules/thirdweb/dist/esm/transaction/actions/to-serializable-transaction.js -> ../../rpc/actions/eth_getTransactionCount.js": {
@@ -660,7 +660,7 @@
   "node_modules/thirdweb/dist/esm/transaction/actions/to-serializable-transaction.js -> ./zksync/send-eip712-transaction.js": {
     "id": 99134,
     "files": [
-      "static/chunks/99134.6bdc28bfaf9c91e2.js"
+      "static/chunks/99134.a78ebfffafe10bfc.js"
     ]
   },
   "node_modules/thirdweb/dist/esm/utils/any-evm/zksync/isZkSyncChain.js -> ../../../chains/utils.js": {
@@ -5890,7 +5890,7 @@
   "node_modules/thirdweb/dist/esm/wallets/coinbase/coinbase-web.js -> @coinbase/wallet-sdk": {
     "id": 56687,
     "files": [
-      "static/chunks/56687.e25b914e2dd3a1a7.js"
+      "static/chunks/56687.1ccd015cbe920e76.js"
     ]
   },
   "node_modules/thirdweb/dist/esm/wallets/create-wallet.js -> ./coinbase/utils.js": {
@@ -5956,8 +5956,8 @@
   "node_modules/thirdweb/dist/esm/wallets/in-app/core/wallet/index.js -> ../../../smart/index.js": {
     "id": 31463,
     "files": [
-      "static/chunks/99134.6bdc28bfaf9c91e2.js",
-      "static/chunks/31463.114ac4bc0b4e1d69.js"
+      "static/chunks/99134.a78ebfffafe10bfc.js",
+      "static/chunks/31463.30c2556611ddd6c9.js"
     ]
   },
   "node_modules/thirdweb/dist/esm/wallets/in-app/web/ecosystem.js -> ./lib/web-connector.js": {
@@ -5983,11 +5983,11 @@
     "files": []
   },
   "node_modules/thirdweb/dist/esm/wallets/smart/index.js -> ./lib/signing.js": {
-    "id": 72412,
+    "id": 26207,
     "files": [
-      "static/chunks/51879.65715887f38feb9e.js",
-      "static/chunks/98503.f272cd719ead7d0f.js",
-      "static/chunks/72412.1ae05113a7d29e81.js"
+      "static/chunks/93666.29a4b33bbc44aae6.js",
+      "static/chunks/56002.3c0e79c6e0790e27.js",
+      "static/chunks/26207.b0cdaf983c93d835.js"
     ]
   },
   "node_modules/thirdweb/dist/esm/wallets/smart/lib/signing.js -> ../../../transaction/actions/send-transaction.js": {
@@ -6005,8 +6005,8 @@
   "node_modules/thirdweb/dist/esm/wallets/smart/smart-wallet.js -> ./index.js": {
     "id": 31463,
     "files": [
-      "static/chunks/99134.6bdc28bfaf9c91e2.js",
-      "static/chunks/31463.114ac4bc0b4e1d69.js"
+      "static/chunks/99134.a78ebfffafe10bfc.js",
+      "static/chunks/31463.30c2556611ddd6c9.js"
     ]
   },
   "node_modules/thirdweb/dist/esm/wallets/utils/getTokenBalance.js -> ../../extensions/erc20/read/getBalance.js": {
