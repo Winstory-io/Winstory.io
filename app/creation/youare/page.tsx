@@ -56,8 +56,10 @@ export default function YouAre() {
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', width: '100%' }}>
         {/* Tooltip modale */}
         {showTooltip && (
-          <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.7)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <div style={{ background: '#111', border: `2px solid ${yellow}`, borderRadius: 24, padding: 32, minWidth: 340, maxWidth: 480, color: yellow, position: 'relative', textAlign: 'center', boxShadow: '0 0 24px #000' }}>
+          <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.7)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            onClick={() => setShowTooltip(false)}>
+            <div style={{ background: '#111', border: `2px solid ${yellow}`, borderRadius: 24, padding: 32, minWidth: 340, maxWidth: 480, color: yellow, position: 'relative', textAlign: 'center', boxShadow: '0 0 24px #000' }}
+              onClick={e => e.stopPropagation()}>
               <button
                 aria-label="Fermer le tooltip"
                 onClick={() => setShowTooltip(false)}

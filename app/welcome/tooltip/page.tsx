@@ -22,6 +22,7 @@ const TooltipPage = () => {
         justifyContent: 'center',
         position: 'relative',
       }}
+      onClick={() => router.push('/welcome')}
     >
       <div
         style={{
@@ -37,6 +38,7 @@ const TooltipPage = () => {
           flexDirection: 'column',
           alignItems: 'center',
         }}
+        onClick={e => e.stopPropagation()}
       >
         {/* Croix rouge pour fermer */}
         <button
