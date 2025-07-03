@@ -18,6 +18,7 @@ export default function RecapB2C() {
   const router = useRouter();
   const [recap, setRecap] = useState<any>({});
   const [modal, setModal] = useState<{ open: boolean, content: React.ReactNode }>({ open: false, content: null });
+  const [confirmed, setConfirmed] = useState(false);
 
   useEffect(() => {
     // Récupération des données stockées (à adapter selon la structure réelle)
@@ -43,8 +44,10 @@ export default function RecapB2C() {
   const rewardLabel = recap.reward?.rewardLabel || "No Rewards";
 
   const handleConfirm = () => {
-    // À remplacer par la navigation vers la page de paiement
-    alert("Paiement à venir !");
+    setConfirmed(true);
+    setTimeout(() => {
+      router.push("/creation/b2c/mint");
+    }, 1000); // 1 seconde pour laisser voir l'animation de la coche
   };
 
   // Gestion modals pour chaque champ
@@ -132,26 +135,49 @@ export default function RecapB2C() {
       <div style={{ border: "2px solid #fff", borderRadius: 24, padding: 24, marginBottom: 40, textAlign: 'center', fontWeight: 600, fontSize: 18, maxWidth: 420, width: '100%', marginLeft: 'auto', marginRight: 'auto' }}>
         {rewardLabel}
       </div>
-      {/* Bouton Confirm */}
-      <div style={{ display: 'flex', justifyContent: 'center', marginTop: 32 }}>
-        <button
-          onClick={handleConfirm}
-          style={{
-            background: 'none',
-            border: '2px solid #18C964',
-            color: '#18C964',
-            borderRadius: 32,
-            fontSize: 24,
-            fontWeight: 700,
-            padding: '14px 48px',
-            cursor: 'pointer',
-            transition: 'background 0.2s, color 0.2s',
-            marginTop: 16,
-          }}
-        >
-          Confirm
-        </button>
-      </div>
+      {/* Bouton Confirm flottant (bulle en bas à droite, toujours un cercle) */}
+      <button
+        onClick={handleConfirm}
+        style={{
+          position: 'fixed',
+          right: 24,
+          bottom: 24,
+          zIndex: 1100,
+          background: '#18C964',
+          border: 'none',
+          color: '#fff',
+          borderRadius: '50%',
+          fontSize: confirmed ? 32 : 20,
+          fontWeight: 700,
+          width:  confirmed ? 88 : 88,
+          height: 88,
+          boxShadow: '0 4px 32px rgba(24,201,100,0.35)',
+          cursor: 'pointer',
+          transition: 'background 0.2s, color 0.2s, box-shadow 0.2s, width 0.2s, height 0.2s, font-size 0.2s',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          textAlign: 'center',
+          whiteSpace: 'pre-line',
+          padding: 0,
+        }}
+        className="confirm-fab"
+        aria-label="Confirm"
+      >
+        {confirmed ? '✓' : 'Confirm'}
+      </button>
+      {/* Responsive style pour mobile : cercle plus petit mais toujours rond */}
+      <style>{`
+        @media (max-width: 600px) {
+          .confirm-fab {
+            right: 10px !important;
+            bottom: 10px !important;
+            width: 64px !important;
+            height: 64px !important;
+            font-size: ${'${confirmed ? 24 : 14}'}px !important;
+          }
+        }
+      `}</style>
       <Modal open={modal.open} onClose={() => setModal({ open: false, content: null })}>
         {modal.content}
       </Modal>

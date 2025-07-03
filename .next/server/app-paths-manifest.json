@@ -1,8 +1,8 @@
 {
-  "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js",
-  "/auth/signin/page": "app/auth/signin/page.js",
-  "/creation/b2c/login/page": "app/creation/b2c/login/page.js",
+  "/creation/b2c/recap/page": "app/creation/b2c/recap/page.js",
+  "/creation/b2c/mint/page": "app/creation/b2c/mint/page.js",
+  "/creation/b2c/rewardsornot/page": "app/creation/b2c/rewardsornot/page.js",
+  "/creation/b2c/yourfilm/page": "app/creation/b2c/yourfilm/page.js",
   "/creation/b2c/yourwinstory/page": "app/creation/b2c/yourwinstory/page.js",
-  "/creation/youare/page": "app/creation/youare/page.js",
   "/welcome/page": "app/welcome/page.js"
 }

@@ -122,7 +122,7 @@ export default function YourWinstoryB2C() {
       )}
 
       {/* Bloc: Starting Title */}
-      <section style={{ maxWidth: 600, margin: '0 auto', marginTop: 48 }}>
+      <section style={{ maxWidth: 600, margin: '0 auto', marginTop: 20 }}>
         <h2 style={{
           color: showTitleError ? '#F31260' : getColor(isTitleValid, touched.title, focus.title),
           fontSize: 28,
@@ -163,7 +163,7 @@ export default function YourWinstoryB2C() {
       </section>
 
       {/* Bloc: Starting Story */}
-      <section style={{ maxWidth: 700, margin: '0 auto', marginTop: 24 }}>
+      <section style={{ maxWidth: 700, margin: '0 auto', marginTop: 16 }}>
         <h2 style={{
           color: showStoryError ? '#F31260' : getColor(isStoryValid, touched.story, focus.story),
           fontSize: 28,
@@ -216,9 +216,9 @@ export default function YourWinstoryB2C() {
         <div style={{
           border: `2px solid ${showGuidelineError ? '#F31260' : getColor(isGuidelineValid, touched.guideline, focus.guideline)}`,
           borderRadius: 6,
-          padding: 18,
+          padding: 9,
           background: 'rgba(0,0,0,0.7)',
-          minHeight: 120,
+          minHeight: 60,
         }}>
           <textarea
             value={guideline}
