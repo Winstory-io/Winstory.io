@@ -79,6 +79,12 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/creation/b2c/mint/page.js"
+    ],
+    "/creation/b2c/standardrewards/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/creation/b2c/standardrewards/page.css",
+      "static/chunks/app/creation/b2c/standardrewards/page.js"
     ]
   }
 }

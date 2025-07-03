@@ -1,8 +1,7 @@
 {
-  "/creation/b2c/recap/page": "app/creation/b2c/recap/page.js",
-  "/creation/b2c/mint/page": "app/creation/b2c/mint/page.js",
-  "/creation/b2c/rewardsornot/page": "app/creation/b2c/rewardsornot/page.js",
   "/creation/b2c/yourfilm/page": "app/creation/b2c/yourfilm/page.js",
-  "/creation/b2c/yourwinstory/page": "app/creation/b2c/yourwinstory/page.js",
-  "/welcome/page": "app/welcome/page.js"
+  "/creation/b2c/standardrewards/page": "app/creation/b2c/standardrewards/page.js",
+  "/creation/b2c/recap/page": "app/creation/b2c/recap/page.js",
+  "/creation/b2c/rewardsornot/page": "app/creation/b2c/rewardsornot/page.js",
+  "/creation/b2c/mint/page": "app/creation/b2c/mint/page.js"
 }
