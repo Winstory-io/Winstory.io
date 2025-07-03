@@ -142,6 +142,11 @@ export default function YourFilmPage() {
     };
 
     const handleNext = () => {
+        // Sauvegarde dans le localStorage
+        localStorage.setItem("film", JSON.stringify({
+          aiRequested: preferWinstory,
+          url: videoPreview // null si pas de vidéo
+        }));
         // Redirige vers la page Rewards or Not pour la suite du process B2C
         router.push('/creation/b2c/rewardsornot');
     };

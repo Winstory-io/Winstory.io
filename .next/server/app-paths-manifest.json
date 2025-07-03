@@ -1,6 +1,8 @@
 {
   "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js",
+  "/auth/signin/page": "app/auth/signin/page.js",
+  "/creation/b2c/login/page": "app/creation/b2c/login/page.js",
+  "/creation/b2c/yourwinstory/page": "app/creation/b2c/yourwinstory/page.js",
   "/creation/youare/page": "app/creation/youare/page.js",
-  "/moderation/login/page": "app/moderation/login/page.js",
-  "/completion/login/page": "app/completion/login/page.js"
+  "/welcome/page": "app/welcome/page.js"
 }

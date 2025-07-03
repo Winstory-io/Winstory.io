@@ -2,9 +2,21 @@
 import React, { useState } from 'react';
 import LoginButton from '@/components/LoginButton';
 import WalletConnect from '@/components/WalletConnect';
+import { useRouter } from 'next/navigation';
 
 export default function B2CLoginPage() {
   const [showPopup, setShowPopup] = useState(false);
+  const router = useRouter();
+
+  // Fonction à appeler après un login réussi
+  const handleLoginSuccess = (email) => {
+    if (!email) return;
+    const domain = email.split('@')[1] || '';
+    localStorage.setItem("user", JSON.stringify({ email }));
+    localStorage.setItem("company", JSON.stringify({ name: domain }));
+    // Rediriger ou autre logique si besoin
+    router.push('/creation/b2c/yourwinstory');
+  };
 
   return (
     <div style={{ minHeight: '100vh', background: '#000', color: '#fff', fontFamily: 'Inter, sans-serif', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', paddingTop: 24 }}>
@@ -26,7 +38,7 @@ export default function B2CLoginPage() {
         </div>
       )}
       <div style={{ width: '100%', maxWidth: 400, margin: '0 auto', marginTop: 32, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 24 }}>
-        <WalletConnect isBothLogin={true} />
+        <WalletConnect isBothLogin={true} onLoginSuccess={handleLoginSuccess} />
         {/* <LoginButton
           icon={<span role="img" aria-label="wallet">💳</span>}
           text="With your Web.3 Wallet"

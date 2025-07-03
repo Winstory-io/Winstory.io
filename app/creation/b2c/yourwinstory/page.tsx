@@ -64,6 +64,12 @@ export default function YourWinstoryB2C() {
     setError(newError);
     setTouched({ title: true, story: true, guideline: true });
     if (Object.keys(newError).length === 0) {
+      // Sauvegarde dans le localStorage
+      localStorage.setItem("story", JSON.stringify({
+        title,
+        startingStory: story,
+        guideline
+      }));
       // Aller à la page suivante (à adapter selon le flow)
       router.push('/creation/b2c/yourfilm');
     }
