@@ -132,18 +132,36 @@ export default function RewardsOrNotB2C() {
   const [userMaxCompletions, setUserMaxCompletions] = useState(100);
   const [noReward, setNoReward] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [preferWinstory, setPreferWinstory] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const filmData = localStorage.getItem('film');
+        if (filmData) {
+          const parsed = JSON.parse(filmData);
+          setPreferWinstory(!!parsed.aiRequested);
+        } else {
+          setPreferWinstory(false);
+        }
+      } catch (e) {
+        setPreferWinstory(false);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     if (freeReward) {
       setMaxCompletions(userMaxCompletions);
     } else if (unitValue && netProfit) {
-      let max = Math.ceil((1000 + netProfit) / (unitValue * 0.5));
+      const initialCost = preferWinstory ? 1500 : 1000;
+      let max = Math.ceil((initialCost + netProfit) / (unitValue * 0.5));
       if (max < 5) max = 5;
       setMaxCompletions(max);
     } else {
       setMaxCompletions(0);
     }
-  }, [unitValue, netProfit, freeReward, userMaxCompletions]);
+  }, [unitValue, netProfit, freeReward, userMaxCompletions, preferWinstory]);
 
   useEffect(() => {
     if (freeReward) setNoReward(false);
@@ -369,12 +387,12 @@ export default function RewardsOrNotB2C() {
             <div style={{ fontWeight: 700, color: '#FFD600', margin: '18px 0 6px 0', fontSize: 18 }}>No Reward to give? No problem.</div>
             <div style={{ marginBottom: 10 }}>
               If you don't wish to offer any reward (digital or physical), you can simply <b>check the "No Reward" box</b> when setting up your campaign.<br/><br/>
-              <span style={{ color: '#FFD600', fontWeight: 700 }}>☑️ No Reward to give? No problem — free completions<br/>+ $1000</span>
+              <span style={{ color: '#FFD600', fontWeight: 700 }}>☑️ No Reward to give ? No problem ! Unlimited and free completions<br/>+ $1000</span>
               <br/><br/>
               In this case:
               <ul style={{ margin: '8px 0 8px 18px' }}>
                 <li>You skip the reward setup entirely.</li>
-                <li>Community members can participate for free (you define the max number of completions).</li>
+                <li>Community unlimited members can participate for free during 7 days.</li>
                 <li>You pay a <b>$1000 additional fee</b> on top of your base MINT cost to cover visibility and platform infrastructure.</li>
                 <li>The best completions may still be awarded <b>$WINC tokens</b> by Winstory to encourage creativity and quality storytelling.</li>
               </ul>
