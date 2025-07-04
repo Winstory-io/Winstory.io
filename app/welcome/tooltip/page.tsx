@@ -65,7 +65,7 @@ const TooltipPage = () => {
           {/* Explorer */}
           <div>
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: 4 }}>
-              <span style={{ fontSize: 20, marginRight: 8 }} role="img" aria-label="compass">🧭</span>
+              <span style={{ fontSize: 20, marginRight: 8 }} role="img" aria-label="compass">🌐</span>
               <h2 style={{ color: '#FFD600', fontSize: 20, fontWeight: 800, marginBottom: 0 }}>Explorer</h2>
             </div>
             <h3 style={{ color: '#FFD600', fontWeight: 700, marginBottom: 4 }}>For You. Humanity. With Love <span style={{ color: '#FF2D2D' }}>❤️</span></h3>
