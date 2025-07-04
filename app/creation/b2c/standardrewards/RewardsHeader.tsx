@@ -11,8 +11,8 @@ export default function RewardsHeader() {
 
   return (
     <div className={styles.header}>
-      <span className={styles.iconLeft} role="img" aria-label="business">💼</span>
-      <h1 className={styles.title}>
+      <h1 className={styles.title} style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+        <Image src="/company.svg" alt="Company" width={80} height={80} style={{ display: 'inline-block', verticalAlign: 'middle' }} />
         Rewards
         <button className={styles.iconBulb} aria-label="info" onClick={() => setShowModal(true)}>
           <Image src="/tooltip.svg" alt="Info" width={28} height={28} />
