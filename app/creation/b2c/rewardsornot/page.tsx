@@ -194,6 +194,9 @@ export default function RewardsOrNotB2C() {
 
   const handleNext = () => {
     if ((freeReward || (!!unitValue && !!netProfit)) && !noReward) {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('maxCompletions', String(freeReward ? userMaxCompletions : maxCompletions));
+      }
       router.push("/creation/b2c/standardrewards");
     } else if (noReward) {
       router.push("/creation/b2c/recap");
@@ -286,7 +289,7 @@ export default function RewardsOrNotB2C() {
   return (
     <div style={{ minHeight: '100vh', background: '#000', color: 'white', fontFamily: 'Inter, sans-serif', padding: 40, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 60, textAlign: 'center', position: 'relative' }}>
-        <BriefcaseIcon />
+        <Image src="/company.svg" alt="Company" width={48} height={48} style={{ marginRight: 16 }} />
         <h1 style={{ fontSize: 32, fontWeight: 700, margin: 0 }}>Rewards or not ?</h1>
         <span
           style={{ fontSize: 36, marginLeft: 16, cursor: 'pointer', display: 'flex', alignItems: 'center' }}
