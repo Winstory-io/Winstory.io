@@ -127,7 +127,9 @@ const GreenArrowButton = ({ onClick, disabled }: { onClick: () => void, disabled
 export default function RewardsOrNotB2C() {
   const router = useRouter();
   const [unitValue, setUnitValue] = useState<number|null>(null);
+  const [unitValueInput, setUnitValueInput] = useState('');
   const [netProfit, setNetProfit] = useState<number|null>(null);
+  const [netProfitInput, setNetProfitInput] = useState('');
   const [freeReward, setFreeReward] = useState(false);
   const [maxCompletions, setMaxCompletions] = useState(0);
   const [userMaxCompletions, setUserMaxCompletions] = useState(100);
@@ -206,17 +208,50 @@ export default function RewardsOrNotB2C() {
   };
 
   // Encarts chiffres + $ à gauche + stepper jaune à droite
-  const renderMoneyInput = (value: number|null, setValue: (v:number)=>void, disabled: boolean, step: number, min: number, decimals: number = 2, isGreen: boolean = false) => (
+  const renderMoneyInput = (
+    value: number|null,
+    setValue: (v:number|null)=>void,
+    valueInput: string,
+    setValueInput: (v:string)=>void,
+    disabled: boolean,
+    step: number,
+    min: number,
+    decimals: number = 2,
+    isGreen: boolean = false,
+    integerOnly: boolean = false
+  ) => (
     <div style={{ display: 'flex', alignItems: 'center', width: 180, position: 'relative' }}>
       <span style={{ position: 'absolute', left: 10, color: isGreen ? '#18C964' : '#FFD600', fontWeight: 700, fontSize: 18, pointerEvents: 'none', transition: 'color 0.2s' }}>$</span>
       <input
         type="text"
-        inputMode="decimal"
-        pattern="[0-9.]*"
-        value={value === null ? '' : value.toFixed(Math.min(4, (value.toString().split('.')[1]?.length || 0)))}
+        inputMode={integerOnly ? "numeric" : "decimal"}
+        pattern={integerOnly ? "[0-9]*" : "[0-9.,]*"}
+        value={valueInput}
         onChange={e => {
-          const val = e.target.value.replace(/[^\d.]/g, '');
-          setValue(val === '' ? null : parseFloat(val));
+          let val = e.target.value;
+          if (integerOnly) {
+            // N'autoriser que des chiffres
+            val = val.replace(/\D/g, '');
+            setValueInput(val);
+            if (val === '') setValue(null);
+            else setValue(parseInt(val, 10));
+          } else {
+            // décimal, max 4 chiffres après la virgule
+            val = val.replace(/,/g, '.');
+            const parts = val.split('.');
+            if (parts.length > 2) val = parts[0] + '.' + parts.slice(1).join('');
+            if (parts[1] && parts[1].length > 4) val = parts[0] + '.' + parts[1].slice(0, 4);
+            if (/^\d*(\.?\d{0,4})?$/.test(val)) {
+              setValueInput(val);
+              if (val === '' || val === '.' || val === '0.') {
+                setValue(null);
+              } else {
+                const num = parseFloat(val);
+                if (!isNaN(num)) setValue(num);
+                else setValue(null);
+              }
+            }
+          }
         }}
         disabled={disabled}
         min={min}
@@ -239,7 +274,11 @@ export default function RewardsOrNotB2C() {
         onFocus={e => e.target.select()}
         autoComplete="off"
       />
-      {!disabled && <Stepper value={value||0} setValue={v => setValue(Number(v.toFixed(2)))} min={min} max={undefined} step={step} color={isGreen ? '#18C964' : '#FFD600'} disabled={disabled} />}
+      {!disabled && <Stepper value={value||0} setValue={v => {
+        setValue(v);
+        if (integerOnly) setValueInput(v.toString());
+        else setValueInput(v.toString().replace('.', ','));
+      }} min={min} max={undefined} step={step} color={isGreen ? '#18C964' : '#FFD600'} disabled={disabled} />}
     </div>
   );
 
@@ -289,7 +328,7 @@ export default function RewardsOrNotB2C() {
   return (
     <div style={{ minHeight: '100vh', background: '#000', color: 'white', fontFamily: 'Inter, sans-serif', padding: 40, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 60, textAlign: 'center', position: 'relative' }}>
-        <Image src="/company.svg" alt="Company" width={48} height={48} style={{ marginRight: 16 }} />
+        <Image src="/company.svg" alt="Company" width={96} height={96} style={{ marginRight: 16 }} />
         <h1 style={{ fontSize: 32, fontWeight: 700, margin: 0 }}>Rewards or not ?</h1>
         <span
           style={{ fontSize: 36, marginLeft: 16, cursor: 'pointer', display: 'flex', alignItems: 'center' }}
@@ -418,11 +457,11 @@ export default function RewardsOrNotB2C() {
               {!freeReward && <>
                 <div style={{ display: 'flex', alignItems: 'center', marginBottom: 20 }}>
                   <span style={{ color: (!!unitValue && !!netProfit) ? '#18C964' : '#FFD600', fontWeight: 600, fontSize: 18, flex: 1, transition: 'color 0.2s' }}>Unit Value of the Completion</span>
-                  {renderMoneyInput(unitValue, setUnitValue, freeReward, 0.01, 0, 4, (!!unitValue && !!netProfit))}
+                  {renderMoneyInput(unitValue, setUnitValue, unitValueInput, setUnitValueInput, freeReward, 0.01, 0, 4, (!!unitValue && !!netProfit), false)}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', marginBottom: 20 }}>
                   <span style={{ color: (!!unitValue && !!netProfit) ? '#18C964' : '#FFD600', fontWeight: 600, fontSize: 18, flex: 1, transition: 'color 0.2s' }}>Net Profits targeted</span>
-                  {renderMoneyInput(netProfit, setNetProfit, freeReward, 1, 0, 0, (!!unitValue && !!netProfit))}
+                  {renderMoneyInput(netProfit, setNetProfit, netProfitInput, setNetProfitInput, freeReward, 1, 0, 0, (!!unitValue && !!netProfit), true)}
                 </div>
               </>}
               {/* Maximum completions, texte dynamique, stepper vert, cadenas */}

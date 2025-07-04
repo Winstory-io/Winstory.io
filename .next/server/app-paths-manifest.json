@@ -1,7 +1,8 @@
 {
-  "/creation/b2c/standardrewards/page": "app/creation/b2c/standardrewards/page.js",
+  "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js",
+  "/creation/b2c/login/page": "app/creation/b2c/login/page.js",
+  "/creation/b2c/yourfilm/page": "app/creation/b2c/yourfilm/page.js",
   "/creation/b2c/rewardsornot/page": "app/creation/b2c/rewardsornot/page.js",
-  "/creation/b2c/yourwinstory/page": "app/creation/b2c/yourwinstory/page.js",
-  "/creation/b2c/premiumrewards/page": "app/creation/b2c/premiumrewards/page.js",
-  "/creation/b2c/yourfilm/page": "app/creation/b2c/yourfilm/page.js"
+  "/creation/youare/page": "app/creation/youare/page.js",
+  "/creation/b2c/yourwinstory/page": "app/creation/b2c/yourwinstory/page.js"
 }

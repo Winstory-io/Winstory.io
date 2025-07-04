@@ -9,6 +9,7 @@ import VideoMosaic from "../../components/Explorer/VideoMosaic";
 import CampaignInfoModal from "../../components/Explorer/CampaignInfoModal";
 import ExplorerIntroModal from "../../components/Explorer/ExplorerIntroModal";
 import ExplorerSearchBar from "../../components/Explorer/ExplorerSearchBar";
+import Image from "next/image";
 
 const LogoWinstory = () => (
   <button
@@ -37,9 +38,6 @@ const LogoWinstory = () => (
   </button>
 );
 
-const BulbIcon = () => (
-  <span style={{ fontSize: 32, color: '#FFD600', marginLeft: 8, cursor: 'pointer' }}>💡</span>
-);
 const SearchIcon = () => (
   <span style={{ fontSize: 28, color: '#FFD600', cursor: 'pointer' }}>🔍</span>
 );
@@ -81,8 +79,8 @@ export default function ExplorerPage() {
           <div style={{ display: 'flex', alignItems: 'center', flex: 1, justifyContent: 'center' }}>
             <h1 style={{ fontSize: '2rem', fontWeight: 700, color: '#FFD600', margin: 0, display: 'flex', alignItems: 'center' }}>
               Explorer
-              <button onClick={() => setShowIntro(true)} style={{ background: 'none', border: 'none', padding: 0, marginLeft: 8 }}>
-                <BulbIcon />
+              <button onClick={() => setShowIntro(true)} style={{ background: 'none', border: 'none', padding: 0, marginLeft: 8, display: 'flex', alignItems: 'center' }}>
+                <Image src="/tooltip.svg" alt="Info" width={32} height={32} style={{ display: 'inline-block', verticalAlign: 'middle' }} />
               </button>
             </h1>
           </div>

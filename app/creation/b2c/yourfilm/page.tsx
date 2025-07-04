@@ -162,13 +162,15 @@ export default function YourFilmPage() {
             <CloseIcon onClick={() => router.back()} />
             
             <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 60, textAlign: 'center', position: 'relative' }}>
-                <BriefcaseIcon />
+                <img src="/company.svg" alt="Company Icon" style={{ width: 96, height: 96, marginRight: 16 }} />
                 <h1 style={{ fontSize: 32, fontWeight: 700, margin: 0 }}>Your A.I. Film</h1>
-                <span
-                  style={{ fontSize: 36, marginLeft: 16, cursor: 'pointer' }}
+                <img
+                  src="/tooltip.svg"
+                  alt="Aide"
+                  style={{ width: 36, height: 36, marginLeft: 16, cursor: 'pointer' }}
                   onClick={() => setShowModal(true)}
                   aria-label="Show info"
-                >💡</span>
+                />
             </header>
 
             {/* Modal for the bulb */}

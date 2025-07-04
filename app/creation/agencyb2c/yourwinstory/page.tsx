@@ -2,14 +2,6 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-const BriefcaseIcon = () => (
-  <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginRight: 16 }}>
-    <rect x="8" y="16" width="32" height="20" rx="3" fill="#FFD600" stroke="#FFD600" strokeWidth="2"/>
-    <rect x="14" y="10" width="20" height="8" rx="2" fill="#FFD600" stroke="#FFD600" strokeWidth="2"/>
-    <rect x="8" y="16" width="32" height="20" rx="3" fill="none" stroke="#FFD600" strokeWidth="2"/>
-  </svg>
-);
-
 const GreenArrowButton = ({ onClick, disabled }: { onClick: () => void, disabled: boolean }) => (
   <button
     onClick={onClick}
@@ -32,6 +24,13 @@ const GreenArrowButton = ({ onClick, disabled }: { onClick: () => void, disabled
       <path d="M16 22L24 30L32 22" stroke="#111" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
     </svg>
   </button>
+);
+
+const CloseIcon = ({ onClick, size = 24 }: { onClick: () => void; size?: number }) => (
+  <svg onClick={onClick} width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ cursor: 'pointer', position: 'absolute', top: 32, right: 32, zIndex: 100 }}>
+    <path d="M18 6L6 18" stroke="#F31260" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M6 6L18 18" stroke="#F31260" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
 );
 
 export default function YourWinstoryAgencyB2C() {
@@ -61,6 +60,11 @@ export default function YourWinstoryAgencyB2C() {
     setError(newError);
     setTouched({ title: true, story: true, guideline: true });
     if (Object.keys(newError).length === 0) {
+      localStorage.setItem("story", JSON.stringify({
+        title,
+        startingStory: story,
+        guideline
+      }));
       router.push('/creation/agencyb2c/yourfilm');
     }
   };
@@ -74,14 +78,17 @@ export default function YourWinstoryAgencyB2C() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#000', color: '#FFD600', fontFamily: 'Inter, sans-serif', padding: 0, margin: 0 }}>
+      <CloseIcon onClick={() => router.push('/welcome')} size={32} />
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', paddingTop: 40, paddingBottom: 24, position: 'relative' }}>
-        <BriefcaseIcon />
+        <img src="/company.svg" alt="Company Icon" style={{ width: 96, height: 96, marginRight: 16 }} />
         <h1 style={{ fontSize: 32, fontWeight: 700, margin: 0, letterSpacing: 1 }}>Your winStory</h1>
-        <span
-          style={{ fontSize: 36, marginLeft: 16, cursor: 'pointer' }}
+        <img
+          src="/tooltip.svg"
+          alt="Aide"
+          style={{ width: 36, height: 36, marginLeft: 16, cursor: 'pointer' }}
           onClick={() => setShowModal(true)}
           aria-label="Show info"
-        >💡</span>
+        />
       </div>
       {showModal && (
         <div style={{
@@ -106,7 +113,7 @@ export default function YourWinstoryAgencyB2C() {
         </div>
       )}
 
-      <section style={{ maxWidth: 600, margin: '0 auto', marginTop: 48 }}>
+      <section style={{ maxWidth: 600, margin: '0 auto', marginTop: 20 }}>
         <h2 style={{
           color: showTitleError ? '#F31260' : getColor(isTitleValid, touched.title, focus.title),
           fontSize: 28,
@@ -146,7 +153,7 @@ export default function YourWinstoryAgencyB2C() {
         )}
       </section>
 
-      <section style={{ maxWidth: 700, margin: '0 auto', marginTop: 24 }}>
+      <section style={{ maxWidth: 700, margin: '0 auto', marginTop: 16 }}>
         <h2 style={{
           color: showStoryError ? '#F31260' : getColor(isStoryValid, touched.story, focus.story),
           fontSize: 28,
@@ -198,9 +205,9 @@ export default function YourWinstoryAgencyB2C() {
         <div style={{
           border: `2px solid ${showGuidelineError ? '#F31260' : getColor(isGuidelineValid, touched.guideline, focus.guideline)}`,
           borderRadius: 6,
-          padding: 18,
+          padding: 9,
           background: 'rgba(0,0,0,0.7)',
-          minHeight: 120,
+          minHeight: 60,
         }}>
           <textarea
             value={guideline}
@@ -225,8 +232,10 @@ export default function YourWinstoryAgencyB2C() {
         {showGuidelineError && (
           <div style={{ color: '#F31260', fontSize: 15, marginTop: 8, textAlign: 'center' }}>This field is required.</div>
         )}
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: 32 }}>
+          <GreenArrowButton onClick={handleNext} disabled={false} />
+        </div>
       </section>
-      <GreenArrowButton onClick={handleNext} disabled={!allValid} />
     </div>
   );
 } 
