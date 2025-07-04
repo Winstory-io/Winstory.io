@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 
 type ExplorerIntroModalProps = {
   onClose: () => void;
@@ -31,7 +32,7 @@ export default function ExplorerIntroModal({ onClose }: ExplorerIntroModalProps)
       }}>
         <button onClick={onClose} style={{ position: 'absolute', top: 18, right: 18, background: 'none', border: 'none', color: '#FF5252', fontSize: 32, cursor: 'pointer', fontWeight: 700 }} aria-label="Fermer">×</button>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-          <span style={{ fontSize: 32, color: '#FFD600' }}>💡</span>
+          <Image src="/tooltip.svg" alt="Info" width={32} height={32} style={{ display: 'inline-block', verticalAlign: 'middle' }} />
           <span style={{ fontWeight: 700, fontSize: 22, color: '#FFD600' }}>Welcome !<br/>Explorer the Winstory World ☀️</span>
         </div>
         <div style={{ fontSize: 16, lineHeight: 1.6 }}>
