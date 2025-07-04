@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import styles from './Rewards.module.css';
+import Image from "next/image";
 
 export default function RewardsHeader() {
   const router = useRouter();
@@ -13,7 +14,9 @@ export default function RewardsHeader() {
       <span className={styles.iconLeft} role="img" aria-label="business">💼</span>
       <h1 className={styles.title}>
         Rewards
-        <button className={styles.iconBulb} aria-label="info" onClick={() => setShowModal(true)}>💡</button>
+        <button className={styles.iconBulb} aria-label="info" onClick={() => setShowModal(true)}>
+          <Image src="/tooltip.svg" alt="Info" width={28} height={28} />
+        </button>
       </h1>
       <button className={styles.closeBtn} aria-label="close" onClick={() => router.push('/creation/b2c/rewardsornot')}>
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M18 6L6 18" stroke="#F31260" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M6 6L18 18" stroke="#F31260" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
