@@ -86,7 +86,9 @@ export default function RecapB2C() {
       <div style={{ display: "flex", alignItems: "center", justifyContent: 'center', marginBottom: 32, width: '100%' }}>
         <img src="/company.svg" alt="Company" style={{ width: 96, height: 96, marginRight: 16 }} />
         <h1 style={{ fontSize: 36, fontWeight: 700, margin: 0, textAlign: 'center' }}>Recap</h1>
-        <button onClick={openHelpModal} style={{ background: 'none', border: 'none', marginLeft: 16, cursor: 'pointer', fontSize: 40, color: '#FFD600', padding: 0, lineHeight: 1 }}>💡</button>
+        <button onClick={openHelpModal} style={{ background: 'none', border: 'none', marginLeft: 16, cursor: 'pointer', padding: 0, lineHeight: 1 }} aria-label="Aide">
+          <img src="/tooltip.svg" alt="Aide" style={{ width: 40, height: 40 }} />
+        </button>
       </div>
       {/* Bloc utilisateur/entreprise */}
       <div style={{ border: "2px solid #fff", borderRadius: 24, padding: 24, marginBottom: 40, maxWidth: 420, width: '100%', marginLeft: 'auto', marginRight: 'auto' }}>

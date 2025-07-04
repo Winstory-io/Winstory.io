@@ -13,8 +13,8 @@ export default function IndividualLoginPage() {
       </div> */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', maxWidth: 500, margin: '32px auto 32px auto', position: 'relative' }}>
         <span style={{ fontSize: 40, fontWeight: 700, color: '#2eea8b', letterSpacing: 1, whiteSpace: 'nowrap' }}>Creation Individual login</span>
-        <button style={{ background: 'none', border: 'none', marginLeft: 16, marginRight: 8, cursor: 'pointer', fontSize: 32 }} aria-label="Ampoule" onClick={() => { }}>
-          💡
+        <button style={{ background: 'none', border: 'none', marginLeft: 16, marginRight: 8, cursor: 'pointer', padding: 0 }} aria-label="Ampoule" onClick={() => { }}>
+          <img src="/tooltip.svg" alt="Aide" style={{ width: 32, height: 32, filter: 'drop-shadow(0 0 6px #FFD600)' }} />
         </button>
         <Link href="/creation/youare" style={{ marginLeft: 8, cursor: 'pointer', fontSize: 32, color: '#FF2D2D', display: 'flex', alignItems: 'center' }} aria-label="Close">
           ×

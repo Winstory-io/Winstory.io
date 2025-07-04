@@ -85,6 +85,16 @@
       "static/chunks/main-app.js",
       "static/css/app/creation/b2c/standardrewards/page.css",
       "static/chunks/app/creation/b2c/standardrewards/page.js"
+    ],
+    "/completion/layout": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/completion/layout.js"
+    ],
+    "/completion/login/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/completion/login/page.js"
     ]
   }
 }

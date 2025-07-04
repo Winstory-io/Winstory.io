@@ -14,8 +14,8 @@ export default function ModerationLoginPage() {
           <img src="/moderation.svg" alt="Moderation Icon" style={{ width: 192, height: 192, marginRight: 32 }} />
           <span style={{ fontSize: 32, fontWeight: 700, color: '#2eea8b', letterSpacing: 1, whiteSpace: 'nowrap', display: 'flex', alignItems: 'center' }}>
             Moderation login
-            <button style={{ background: 'none', border: 'none', marginLeft: 8, cursor: 'pointer', fontSize: 32 }} aria-label="Ampoule" onClick={() => { /* TODO: ouvrir popup */ }}>
-              💡
+            <button style={{ background: 'none', border: 'none', marginLeft: 8, cursor: 'pointer', fontSize: 32, padding: 0 }} aria-label="Ampoule" onClick={() => { /* TODO: ouvrir popup */ }}>
+              <img src="/tooltip.svg" alt="Aide" style={{ width: 32, height: 32, filter: 'drop-shadow(0 0 6px #FFD600)' }} />
             </button>
           </span>
           <Link href="/welcome" style={{ position: 'absolute', right: -196, top: '50%', transform: 'translateY(-50%)', cursor: 'pointer' }} aria-label="Close">

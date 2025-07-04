@@ -13,8 +13,8 @@ export default function CompletionLoginPage() {
           <img src="/individual.svg" alt="Individual Icon" style={{ width: 96, height: 96, marginRight: 24 }} />
           <span style={{ fontSize: 32, fontWeight: 700, color: '#2eea8b', letterSpacing: 1, whiteSpace: 'nowrap', display: 'flex', alignItems: 'center' }}>
             Completion login
-            <button style={{ background: 'none', border: 'none', marginLeft: 8, cursor: 'pointer', fontSize: 32 }} aria-label="Ampoule" onClick={() => {}}>
-              💡
+            <button style={{ background: 'none', border: 'none', marginLeft: 8, cursor: 'pointer', fontSize: 32, padding: 0 }} aria-label="Ampoule" onClick={() => {}}>
+              <img src="/tooltip.svg" alt="Aide" style={{ width: 32, height: 32, filter: 'drop-shadow(0 0 6px #FFD600)' }} />
             </button>
           </span>
           <Link href="/welcome" style={{ position: 'absolute', right: -122, top: '50%', transform: 'translateY(-50%)', cursor: 'pointer' }} aria-label="Close">

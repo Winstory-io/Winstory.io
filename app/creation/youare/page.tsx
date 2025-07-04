@@ -45,10 +45,10 @@ export default function YouAre() {
         </span>
         <button
           aria-label="Show tooltip"
-          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 36, marginLeft: 8 }}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', marginLeft: 8, padding: 0 }}
           onClick={() => setShowTooltip(true)}
         >
-          💡
+          <img src="/tooltip.svg" alt="Aide" style={{ width: 36, height: 36 }} />
         </button>
       </div>
 
@@ -68,7 +68,7 @@ export default function YouAre() {
                 ×
               </button>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, marginBottom: 12 }}>
-                <span style={{ fontSize: 40, filter: 'drop-shadow(0 0 6px #FFD600)' }}>💡</span>
+                <img src="/tooltip.svg" alt="Aide" style={{ width: 40, height: 40 }} />
                 <span style={{ fontSize: 24, fontWeight: 700, color: yellow, textShadow: '0 0 4px #FFD600' }}>
                   Who you are as Campaign Creator ?
                 </span>
