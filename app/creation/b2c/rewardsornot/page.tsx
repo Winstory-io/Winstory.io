@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 const BriefcaseIcon = () => (
   <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginRight: 16 }}>
@@ -202,9 +203,9 @@ export default function RewardsOrNotB2C() {
   };
 
   // Encarts chiffres + $ à gauche + stepper jaune à droite
-  const renderMoneyInput = (value: number|null, setValue: (v:number)=>void, disabled: boolean, step: number, min: number, decimals: number = 2) => (
+  const renderMoneyInput = (value: number|null, setValue: (v:number)=>void, disabled: boolean, step: number, min: number, decimals: number = 2, isGreen: boolean = false) => (
     <div style={{ display: 'flex', alignItems: 'center', width: 180, position: 'relative' }}>
-      <span style={{ position: 'absolute', left: 10, color: '#FFD600', fontWeight: 700, fontSize: 18, pointerEvents: 'none' }}>$</span>
+      <span style={{ position: 'absolute', left: 10, color: isGreen ? '#18C964' : '#FFD600', fontWeight: 700, fontSize: 18, pointerEvents: 'none', transition: 'color 0.2s' }}>$</span>
       <input
         type="text"
         inputMode="decimal"
@@ -219,9 +220,9 @@ export default function RewardsOrNotB2C() {
         step={step}
         style={{
           background: 'transparent',
-          border: `2px solid ${disabled ? '#888' : '#FFD600'}`,
+          border: `2px solid ${isGreen ? '#18C964' : (disabled ? '#888' : '#FFD600')}`,
           borderRadius: 8,
-          color: '#FFD600',
+          color: isGreen ? '#18C964' : '#FFD600',
           fontWeight: 700,
           fontSize: 18,
           width: '100%',
@@ -230,11 +231,12 @@ export default function RewardsOrNotB2C() {
           outline: 'none',
           opacity: disabled ? 0.5 : 1,
           appearance: 'textfield',
+          transition: 'border-color 0.2s, color 0.2s',
         }}
         onFocus={e => e.target.select()}
         autoComplete="off"
       />
-      {!disabled && <Stepper value={value||0} setValue={v => setValue(Number(v.toFixed(2)))} min={min} max={undefined} step={step} color="#FFD600" disabled={disabled} />}
+      {!disabled && <Stepper value={value||0} setValue={v => setValue(Number(v.toFixed(2)))} min={min} max={undefined} step={step} color={isGreen ? '#18C964' : '#FFD600'} disabled={disabled} />}
     </div>
   );
 
@@ -287,10 +289,12 @@ export default function RewardsOrNotB2C() {
         <BriefcaseIcon />
         <h1 style={{ fontSize: 32, fontWeight: 700, margin: 0 }}>Rewards or not ?</h1>
         <span
-          style={{ fontSize: 36, marginLeft: 16, cursor: 'pointer' }}
+          style={{ fontSize: 36, marginLeft: 16, cursor: 'pointer', display: 'flex', alignItems: 'center' }}
           onClick={() => setShowModal(true)}
           aria-label="Show info"
-        >💡</span>
+        >
+          <Image src="/tooltip.svg" alt="Info" width={36} height={36} />
+        </span>
       </header>
       {showModal && (
         <div
@@ -405,17 +409,17 @@ export default function RewardsOrNotB2C() {
         {/* Bloc Rewards */}
         {!noReward && (
           <>
-            <h2 style={{ color: freeReward ? '#18C964' : '#FFD600', fontSize: 24, fontWeight: 700, marginBottom: 8, textAlign: 'center', transition: 'color 0.2s' }}>Rewards</h2>
-            <div style={{ border: `2px solid ${freeReward ? '#18C964' : '#FFD600'}`, borderRadius: 16, padding: 32, marginBottom: 16, maxWidth: 500, width: '100%', transition: 'border-color 0.2s' }}>
+            <h2 style={{ color: (freeReward || (!!unitValue && !!netProfit)) ? '#18C964' : '#FFD600', fontSize: 24, fontWeight: 700, marginBottom: 8, textAlign: 'center', transition: 'color 0.2s' }}>Rewards</h2>
+            <div style={{ border: `2px solid ${(freeReward || (!!unitValue && !!netProfit)) ? '#18C964' : '#FFD600'}`, borderRadius: 16, padding: 32, marginBottom: 16, maxWidth: 500, width: '100%', transition: 'border-color 0.2s' }}>
               {/* Si pas freeReward, afficher les deux champs */}
               {!freeReward && <>
                 <div style={{ display: 'flex', alignItems: 'center', marginBottom: 20 }}>
-                  <span style={{ color: '#FFD600', fontWeight: 600, fontSize: 18, flex: 1 }}>Unit Value of the Completion</span>
-                  {renderMoneyInput(unitValue, setUnitValue, freeReward, 0.01, 0, 4)}
+                  <span style={{ color: (!!unitValue && !!netProfit) ? '#18C964' : '#FFD600', fontWeight: 600, fontSize: 18, flex: 1, transition: 'color 0.2s' }}>Unit Value of the Completion</span>
+                  {renderMoneyInput(unitValue, setUnitValue, freeReward, 0.01, 0, 4, (!!unitValue && !!netProfit))}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', marginBottom: 20 }}>
-                  <span style={{ color: '#FFD600', fontWeight: 600, fontSize: 18, flex: 1 }}>Net Profits targeted</span>
-                  {renderMoneyInput(netProfit, setNetProfit, freeReward, 1, 0, 0)}
+                  <span style={{ color: (!!unitValue && !!netProfit) ? '#18C964' : '#FFD600', fontWeight: 600, fontSize: 18, flex: 1, transition: 'color 0.2s' }}>Net Profits targeted</span>
+                  {renderMoneyInput(netProfit, setNetProfit, freeReward, 1, 0, 0, (!!unitValue && !!netProfit))}
                 </div>
               </>}
               {/* Maximum completions, texte dynamique, stepper vert, cadenas */}
