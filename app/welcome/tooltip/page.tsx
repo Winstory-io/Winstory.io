@@ -107,7 +107,7 @@ const TooltipPage = () => {
           {/* Complete Campaign */}
           <div>
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: 4 }}>
-              <span style={{ fontSize: 20, marginRight: 8 }} role="img" aria-label="fast forward">➡️</span>
+              <span style={{ fontSize: 20, marginRight: 8 }} role="img" aria-label="fast forward">⏩️</span>
               <h2 style={{ color: '#FFD600', fontSize: 20, fontWeight: 800, marginBottom: 0 }}>Complete Campaign</h2>
             </div>
             <h3 style={{ color: '#FFD600', fontWeight: 700, marginBottom: 4 }}>For Community Members</h3>
