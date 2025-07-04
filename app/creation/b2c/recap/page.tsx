@@ -6,12 +6,23 @@ const Modal = ({ open, onClose, children }: { open: boolean, onClose: () => void
   if (!open) return null;
   return (
     <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.7)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={onClose}>
-      <div style={{ background: '#181818', color: '#FFD600', padding: 32, borderRadius: 18, minWidth: 320, maxWidth: 420, maxHeight: '80vh', overflowY: 'auto', position: 'relative' }} onClick={e => e.stopPropagation()}>
+      <div style={{ background: '#181818', color: '#FFD600', padding: 32, borderRadius: 18, minWidth: 320, maxWidth: '90vw', maxHeight: '90vh', overflowY: 'auto', position: 'relative' }} onClick={e => e.stopPropagation()}>
         <button onClick={onClose} style={{ position: 'absolute', top: 12, right: 12, background: 'none', border: 'none', color: '#FFD600', fontSize: 28, cursor: 'pointer' }}>×</button>
         {children}
       </div>
     </div>
   );
+};
+
+// Fonction pour tronquer le texte
+const truncateText = (text: string, maxLength: number = 150) => {
+  if (text.length <= maxLength) return text;
+  return text.substring(0, maxLength) + '...';
+};
+
+// Fonction pour détecter si le texte est tronqué
+const isTextTruncated = (text: string, maxLength: number = 150) => {
+  return text.length > maxLength;
 };
 
 export default function RecapB2C() {
@@ -59,7 +70,7 @@ export default function RecapB2C() {
       ) : (
         <div style={{ color: '#FFD600', fontSize: 18, whiteSpace: 'pre-line' }}>
           <b>{label}</b>
-          <div style={{ marginTop: 16, color: '#fff', fontWeight: 400 }}>{value}</div>
+          <div style={{ marginTop: 16, color: '#fff', fontWeight: 400, lineHeight: 1.6 }}>{value}</div>
         </div>
       )
     });
@@ -112,7 +123,40 @@ export default function RecapB2C() {
           </div>
           <div>
             <span style={{ fontWeight: 600, fontSize: 18 }}>Starting Story</span>
-            <button onClick={() => openModal('Starting Story', startingStory)} style={{ border: "2px solid #FFD600", borderRadius: 12, padding: 12, color: "#FFD600", fontStyle: "italic", fontSize: 16, background: 'none', cursor: 'pointer', fontWeight: 700, marginLeft: 8, width: '100%', textAlign: 'left' }}>{startingStory}</button>
+            <button 
+              onClick={() => openModal('Starting Story', startingStory)} 
+              style={{ 
+                border: isTextTruncated(startingStory) ? "3px solid #FFD600" : "2px solid #FFD600", 
+                borderRadius: 12, 
+                padding: 12, 
+                color: "#FFD600", 
+                fontStyle: "italic", 
+                fontSize: 16, 
+                background: isTextTruncated(startingStory) ? 'rgba(255, 214, 0, 0.1)' : 'none', 
+                cursor: 'pointer', 
+                fontWeight: 700, 
+                marginLeft: 8, 
+                width: '100%', 
+                textAlign: 'left',
+                boxShadow: isTextTruncated(startingStory) ? '0 0 10px rgba(255, 214, 0, 0.3)' : 'none',
+                transition: 'all 0.3s ease'
+              }}
+            >
+              {truncateText(startingStory)}
+              {isTextTruncated(startingStory) && (
+                <span style={{ 
+                  display: 'block', 
+                  marginTop: 8, 
+                  fontSize: 14, 
+                  color: '#fff', 
+                  fontStyle: 'italic',
+                  fontWeight: 400,
+                  textDecoration: 'underline'
+                }}>
+                  Click to see your full text
+                </span>
+              )}
+            </button>
           </div>
           <div>
             <span style={{ fontWeight: 600, fontSize: 18 }}>Guideline</span>
