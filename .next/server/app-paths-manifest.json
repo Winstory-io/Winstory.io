@@ -1,7 +1,7 @@
 {
-  "/creation/b2c/yourfilm/page": "app/creation/b2c/yourfilm/page.js",
-  "/creation/b2c/login/page": "app/creation/b2c/login/page.js",
+  "/creation/agencyb2c/yourwinstory/page": "app/creation/agencyb2c/yourwinstory/page.js",
   "/creation/youare/page": "app/creation/youare/page.js",
-  "/creation/b2c/yourwinstory/page": "app/creation/b2c/yourwinstory/page.js",
-  "/moderation/login/page": "app/moderation/login/page.js"
+  "/creation/agencyb2c/login/page": "app/creation/agencyb2c/login/page.js",
+  "/moderation/login/page": "app/moderation/login/page.js",
+  "/moderation/page": "app/moderation/page.js"
 }
