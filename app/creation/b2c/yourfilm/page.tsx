@@ -19,11 +19,7 @@ const CloseIcon = ({ onClick, size = 24 }: { onClick: () => void; size?: number 
 );
 
 const VideoUploadIcon = () => (
-  <svg width="80" height="80" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M16 16l-4-4-4 4M12 12V3" stroke="#FFD600" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2v-7" stroke="#FFD600" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M3 12h0" stroke="#FFD600" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
+  <img src="/importvideo.svg" alt="Import Video" style={{ width: 160, height: 160 }} />
 );
 
 const GreenArrowButton = ({ onClick, disabled }: { onClick: () => void, disabled: boolean }) => (
@@ -197,7 +193,7 @@ export default function YourFilmPage() {
               </div>
             )}
 
-            <main style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', width: '100%' }}>
+            <main style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', width: '100%', marginTop: -222 }}>
                 {videoPreview ? (
                     <section style={{ textAlign: 'center', maxWidth: videoFormat === 'horizontal' ? 800 : 400, margin: '0 auto' }}>
                         <p style={{ color: '#18C964', fontSize: 20, marginBottom: 24 }}>
