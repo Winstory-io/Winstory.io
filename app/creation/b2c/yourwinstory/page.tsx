@@ -175,6 +175,21 @@ export default function YourWinstoryB2C() {
               A clear guideline helps contributors stay aligned and helps moderators score the most aligned completions.
               Your story, your world, your codes, define them here.
             </div>
+            
+            <div style={{ 
+              fontSize: 16, 
+              lineHeight: 1.6, 
+              color: '#18C964', 
+              fontStyle: 'italic', 
+              marginTop: 24, 
+              textAlign: 'center',
+              borderTop: '1px solid #333',
+              paddingTop: 16
+            }}>
+              All fields are required.<br />
+              No minimum number of characters, no maximum. Total freedom.<br />
+              Click on the green arrow to continue.
+            </div>
           </div>
         </div>
       )}

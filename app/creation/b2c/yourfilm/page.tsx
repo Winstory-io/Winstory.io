@@ -214,7 +214,7 @@ export default function YourFilmPage() {
                   </div>
                   
                   <div style={{ fontSize: 16, marginBottom: 24, lineHeight: 1.6, color: '#fff' }}>
-                    You have two creative paths:
+                    You have two creative paths :
                   </div>
                   
                   <div style={{ fontSize: 20, fontWeight: 700, marginBottom: 12, color: '#FFD600' }}>Upload your own film</div>
@@ -236,6 +236,20 @@ export default function YourFilmPage() {
                     By choosing this option, moderation will focus solely on the quality of your Starting Story, because the quality video is automatically accepted.
                     <br /><br />
                     Whether you upload or delegate, this is the moment your story shifts dimension. Open your eyes. Open your portal. For the community to enter, feel, and complete.
+                  </div>
+                  
+                  <div style={{ 
+                    fontSize: 16, 
+                    lineHeight: 1.6, 
+                    color: '#18C964', 
+                    fontStyle: 'italic', 
+                    marginTop: 24, 
+                    textAlign: 'center',
+                    borderTop: '1px solid #333',
+                    paddingTop: 16
+                  }}>
+                    Selecting one of the 2 options is required.<br />
+                    Click on the green arrow to continue.
                   </div>
                 </div>
               </div>
