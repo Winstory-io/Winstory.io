@@ -171,24 +171,72 @@ export default function YourFilmPage() {
 
             {/* Modal for the bulb */}
             {showModal && (
-              <div style={{
-                position: 'fixed',
-                top: 0,
-                left: 0,
-                width: '100vw',
-                height: '100vh',
-                background: 'rgba(0,0,0,0.7)',
-                zIndex: 1000,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}>
-                <div style={{ background: '#111', color: '#FFD600', padding: 32, borderRadius: 16, minWidth: 320, textAlign: 'center', position: 'relative' }}>
+              <div 
+                style={{
+                  position: 'fixed',
+                  top: 0,
+                  left: 0,
+                  width: '100vw',
+                  height: '100vh',
+                  background: 'rgba(0,0,0,0.7)',
+                  zIndex: 1000,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+                onClick={() => setShowModal(false)}
+              >
+                <div 
+                  style={{ 
+                    background: '#111', 
+                    color: '#fff', 
+                    padding: 32, 
+                    borderRadius: 16, 
+                    minWidth: 320, 
+                    maxWidth: 600, 
+                    textAlign: 'left', 
+                    position: 'relative', 
+                    maxHeight: '80vh', 
+                    overflowY: 'auto',
+                    border: '3px solid #FFD600',
+                    boxShadow: '0 4px 32px #000a'
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <button onClick={() => setShowModal(false)} style={{ position: 'absolute', top: 12, right: 12, background: 'none', border: 'none', cursor: 'pointer' }}>
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M18 6L6 18" stroke="#F31260" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M6 6L18 18" stroke="#F31260" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                   </button>
-                  <div style={{ fontSize: 20, fontWeight: 600, marginBottom: 12 }}>Info</div>
-                  <div style={{ fontSize: 16 }}>This popup will be customized later.</div>
+                  
+                  <div style={{ fontSize: 24, fontWeight: 700, marginBottom: 20, color: '#FFD600' }}>Words become World</div>
+                  
+                  <div style={{ fontSize: 16, marginBottom: 24, lineHeight: 1.6, color: '#fff' }}>
+                    From text to vision, your written narrative enters a new dimension. Visual, immersive, expansive. Now, you choose how your Starting Story comes alive on screen.
+                  </div>
+                  
+                  <div style={{ fontSize: 16, marginBottom: 24, lineHeight: 1.6, color: '#fff' }}>
+                    You have two creative paths:
+                  </div>
+                  
+                  <div style={{ fontSize: 20, fontWeight: 700, marginBottom: 12, color: '#FFD600' }}>Upload your own film</div>
+                  <div style={{ fontSize: 16, marginBottom: 24, lineHeight: 1.6, color: '#fff' }}>
+                    Your vision, your control. Horizontal or vertical (same format required for community completions), up to 100mb in MP4 format.
+                    <br /><br />
+                    A.I.-generated video is highly recommended. Minimum Post-Production and VFX/CGI if not A.I. Your film should visually reflect the Starting Story you've written, think coherence, tone, rhythm, atmosphere.
+                    <br /><br />
+                    You're not just uploading a file, you're launching a cinematic universe others will expand. You are the Big Bang. Completions will bring new post-lives.
+                    Stay evocative, stay suggestive, just enough to open the narrative, not close it.
+                  </div>
+                  
+                  <div style={{ fontSize: 20, fontWeight: 700, marginBottom: 12, color: '#FFD600' }}>Let Winstory create it for you (+$500)</div>
+                  <div style={{ fontSize: 16, lineHeight: 1.6, color: '#fff' }}>
+                    No visuals ? No problem. Our team of visual designers, specialized in A.I. generative tools, will produce a captivating film within 24h after payment. The result will fully respect your tone, tension, aesthetic, and brand narrative.
+                    <br /><br />
+                    You keep control over the essence, we handle the execution.
+                    <br /><br />
+                    By choosing this option, moderation will focus solely on the quality of your Starting Story, because the quality video is automatically accepted.
+                    <br /><br />
+                    Whether you upload or delegate, this is the moment your story shifts dimension. Open your eyes. Open your portal. For the community to enter, feel, and complete.
+                  </div>
                 </div>
               </div>
             )}
