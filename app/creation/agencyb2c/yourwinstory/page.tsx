@@ -130,43 +130,71 @@ export default function YourWinstoryAgencyB2C() {
             <button onClick={() => setShowModal(false)} style={{ position: 'absolute', top: 12, right: 12, background: 'none', border: 'none', cursor: 'pointer' }}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M18 6L6 18" stroke="#F31260" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M6 6L18 18" stroke="#F31260" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
             </button>
-            <div style={{ fontSize: 24, fontWeight: 700, marginBottom: 20, color: '#FFD600' }}>This is where your Neo-Marketing Web2.5 begins !</div>
+            <div style={{ fontSize: 22, fontWeight: 700, marginBottom: 20, color: '#FFD600' }}>This is where your client's Neo-Marketing Web2.5 begins</div>
             <div style={{ fontSize: 16, marginBottom: 24, lineHeight: 1.6 }}>
-              Your brand starts the story, your community writes the future. 
-              You're not just writing, you're activating the foundational moment where your brand hands the mic to the world !
+              You're not just launching content,<br/>
+              you're activating the foundational moment where your client's brand hands the mic to the world.
+            </div>
+            <div style={{ fontSize: 16, marginBottom: 24, lineHeight: 1.6 }}>
+              As an agency, you're shaping the narrative bridge between brand and community.<br/>
+              You're crafting the first signal, the narrative spark, that will invite the world to join, remix, and elevate the story.
             </div>
             
             <div style={{ fontSize: 20, fontWeight: 700, marginBottom: 12, color: '#FFD600' }}>Starting Title</div>
             <div style={{ fontSize: 16, marginBottom: 24, lineHeight: 1.6 }}>
-              The hook. The spark. Think of your title as the first beat of your brand's narrative : sets the rhythm, the tone, the intent.
-              Make it short, memorable, and loaded with meaning. You're not selling a product, you're launching a world. A good title triggers insatiable curiosity and emotions, in a single line.
-              Aim for clarity. Think tagline meets teaser.
+              The hook, the spark.<br/>
+              This is the first beat of your client's brand narrative, it sets the rhythm, the tone, the intent.
+            </div>
+            <div style={{ fontSize: 16, marginBottom: 24, lineHeight: 1.6 }}>
+              Make it short, memorable, and loaded with meaning.<br/>
+              You're not selling a product, you're launching a world.<br/>
+              A good title triggers insatiable curiosity or emotion in a single line.<br/>
+              Aim for clarity, think tagline meets teaser.
             </div>
             
             <div style={{ fontSize: 20, fontWeight: 700, marginBottom: 12, color: '#FFD600' }}>Starting Story</div>
             <div style={{ fontSize: 16, marginBottom: 24, lineHeight: 1.6 }}>
-              Your starting text meets your starting film, giving it a new dimension. You write the first chapter of a story your community, individually, will complete, and elevate each in their own way.
-              Describe a scene. Create tension. Think visual, immersive, suggestive. Inject your brand's value and vision subtly, through atmosphere, not slogans.
-              Set the tone, the mood, the style, and most importantly, leave it open enough to invite continuations.
-              Whether it's a plot twist, a mysterious character, a sudden silence, or an unresolved choice, etc.. infinite examples ! Leave a gap, an unresolved thread, a door left open.
-              This isn't just a script for ads, it's a narrative designed to inspire imagination and elevate your brand meaning.
+              Your written story meets the starting film, giving it narrative depth, for the eyes and for the mind.<br/>
+              You're writing the first chapter of a story that the community will complete, each in their own way.
+            </div>
+            <div style={{ fontSize: 16, marginBottom: 24, lineHeight: 1.6 }}>
+              Describe a scene, create tension, think visual, immersive, suggestive.<br/>
+              Inject your client's values and brand essence subtly, through atmosphere, not slogans.
+            </div>
+            <div style={{ fontSize: 16, marginBottom: 24, lineHeight: 1.6 }}>
+              Set the tone, the mood, the style, and most importantly, leave it open enough to invite continuations.<br/>
+              Whether it's a plot twist, a mysterious character, a sudden silence, or an unresolved choice, etc., infinite examples exist.<br/>
+              Leave a gap, an unresolved thread, a door left open.
+            </div>
+            <div style={{ fontSize: 16, marginBottom: 24, lineHeight: 1.6 }}>
+              This isn't just a script for ads, it's a narrative designed to inspire imagination and elevate brand meaning.<br/>
               You're not concluding, you're setting the scene for infinite continuations.
             </div>
             
             <div style={{ fontSize: 20, fontWeight: 700, marginBottom: 12, color: '#FFD600' }}>Guideline</div>
+            <div style={{ fontSize: 16, marginBottom: 24, lineHeight: 1.6 }}>
+              This is your narrative compass, your space to define the do's and don'ts.
+            </div>
+            <div style={{ fontSize: 16, marginBottom: 24, lineHeight: 1.6 }}>
+              It ensures your client's brand DNA remains intact while opening the door to creative excellence.
+            </div>
+            <div style={{ fontSize: 16, marginBottom: 24, lineHeight: 1.6 }}>
+              While the Starting Story sets the tone, the Guideline defines the creative boundaries.
+            </div>
+            <div style={{ fontSize: 16, marginBottom: 24, lineHeight: 1.6 }}>
+              Clarify what matters most. Here's what you can define to keep the narrative aligned:
+            </div>
+            <ul style={{ marginTop: 8, marginLeft: 20, marginBottom: 24 }}>
+              <li>Tone</li>
+              <li>Format</li>
+              <li>Brand values to respect</li>
+              <li>Elements to avoid</li>
+            </ul>
             <div style={{ fontSize: 16, lineHeight: 1.6 }}>
-              This is your narrative compass. This is the space to define the do's and don'ts.
-              It ensures your brand's DNA remains intact while opening the door to creative excellence. While your Starting Story sets the scene, the Guideline sets the rules of the game.
-              Clarify what matters most for you. 
-              Here's what you can define to keep the narrative aligned, a few examples among others :
-              <ul style={{ marginTop: 8, marginLeft: 20 }}>
-                <li>Tone</li>
-                <li>Format</li>
-                <li>Brand values to respect</li>
-                <li>Elements to avoid</li>
-              </ul>
-              A clear guideline helps contributors stay aligned and helps moderators score the most aligned completions.
-              Your story, your world, your codes, define them here.
+              A clear guideline helps contributors stay focused, and helps moderators score the most aligned completions.
+            </div>
+            <div style={{ fontSize: 16, lineHeight: 1.6 }}>
+              Your client's story, your narrative setup, your framework, define it with intention.
             </div>
           </div>
         </div>
