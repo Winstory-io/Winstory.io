@@ -105,7 +105,7 @@ export function useRealTimeBalance(
 
   // Fetch balance when dependencies change
   useEffect(() => {
-    if (!contractAddress || !blockchain || !standard) {
+    if (!contractAddress || !blockchain || !standard || !walletAddress) {
       setBalance('0');
       setError(null);
       return;
@@ -119,6 +119,7 @@ export function useRealTimeBalance(
         const newBalance = await fetchWalletBalance(contractAddress, blockchain, standard, walletAddress);
         setBalance(newBalance);
       } catch (error) {
+        console.error('Error loading balance:', error);
         setError(error instanceof Error ? error.message : 'Failed to load balance');
         setBalance('0');
       } finally {

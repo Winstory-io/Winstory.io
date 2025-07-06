@@ -128,6 +128,7 @@ export default function TokenRewardConfig({ onClose }: { onClose: () => void }) 
               <option value="Polygon">Polygon</option>
               <option value="BNB Chain">BNB Chain</option>
               <option value="Avalanche">Avalanche</option>
+              <option value="Chiliz">Chiliz</option>
               <option value="Solana">Solana</option>
               <option value="Bitcoin">Bitcoin</option>
             </select>

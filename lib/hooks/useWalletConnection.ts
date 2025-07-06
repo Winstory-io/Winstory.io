@@ -1,6 +1,12 @@
 import { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
-import { useAddress as useThirdwebAddress } from '@thirdweb-dev/react';
+
+// Extend Window interface to include ethereum
+declare global {
+  interface Window {
+    ethereum?: any;
+  }
+}
 
 export interface WalletConnectionState {
   address: string | null;
@@ -15,7 +21,7 @@ export function useWalletConnection() {
   const [state, setState] = useState<WalletConnectionState>({
     address: null,
     isConnected: false,
-    isLoading: true,
+    isLoading: false, // Start as not loading
     error: null,
     chainId: null,
     network: null
@@ -27,12 +33,31 @@ export function useWalletConnection() {
       try {
         setState(prev => ({ ...prev, isLoading: true }));
 
-        // In a real implementation, you would:
-        // 1. Check if MetaMask or other wallet is installed
-        // 2. Request account access
-        // 3. Get the connected address and network
+        // Check if MetaMask is available
+        if (typeof window !== 'undefined' && window.ethereum) {
+          try {
+            const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+            if (accounts.length > 0) {
+              const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+              const mockAddress = ethers.utils.getAddress(accounts[0]);
+              const mockChainId = parseInt(chainId, 16);
+              
+              setState({
+                address: mockAddress,
+                isConnected: true,
+                isLoading: false,
+                error: null,
+                chainId: mockChainId,
+                network: getNetworkName(mockChainId)
+              });
+              return;
+            }
+          } catch (error) {
+            console.warn('MetaMask not available or user rejected:', error);
+          }
+        }
 
-        // Mock implementation for demo
+        // Fallback to mock implementation for demo
         await new Promise(resolve => setTimeout(resolve, 1000));
         
         // Simulate connected wallet - using a valid checksum address
@@ -160,16 +185,12 @@ function getNetworkName(chainId: number): string {
 
 // Hook for getting wallet address in components
 export function useWalletAddress(): string | null {
-  const thirdwebAddress = useThirdwebAddress();
-  if (thirdwebAddress) return thirdwebAddress;
   const { address } = useWalletConnection();
   return address;
 }
 
 // Hook for checking if wallet is connected
 export function useWalletConnected(): boolean {
-  const thirdwebAddress = useThirdwebAddress();
-  if (thirdwebAddress) return true;
   const { isConnected } = useWalletConnection();
   return isConnected;
 } 

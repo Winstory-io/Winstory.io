@@ -5,7 +5,8 @@ import { BLOCKCHAIN_CONFIGS } from './config/blockchain-config';
 function toChecksum(address: string): string {
   try {
     return ethers.utils.getAddress(address);
-  } catch {
+  } catch (error) {
+    console.warn('Failed to get checksum address:', error);
     return address; // Laisse l'erreur se produire plus loin si vraiment invalide
   }
 }
@@ -55,6 +56,11 @@ const RPC_CONFIGS = {
     rpcUrl: 'https://rpc.ankr.com/avalanche',
     chainId: 43114,
     name: 'Avalanche'
+  },
+  'Chiliz': {
+    rpcUrl: 'https://rpc.ankr.com/chiliz',
+    chainId: 88888,
+    name: 'Chiliz'
   }
 };
 
@@ -91,7 +97,12 @@ function getProvider(blockchain: string): ethers.providers.JsonRpcProvider {
     throw new Error(`Blockchain non supportée: ${blockchain}`);
   }
   
-  return new ethers.providers.JsonRpcProvider(config.rpcUrl);
+  try {
+    return new ethers.providers.JsonRpcProvider(config.rpcUrl);
+  } catch (error) {
+    console.error('Failed to create provider for blockchain:', blockchain, error);
+    throw new Error(`Failed to create provider for blockchain: ${blockchain}`);
+  }
 }
 
 /**

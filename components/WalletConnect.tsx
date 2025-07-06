@@ -302,13 +302,24 @@ export default function WalletConnect(props: WalletConnectProps) {
     return <WalletConnectContent {...props} />;
 }
 
-// CSS for spinner animation
-const style = document.createElement('style');
-style.textContent = `
-  @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-  }
-`;
-document.head.appendChild(style);
+// CSS for spinner animation - moved to useEffect to avoid SSR issues
+useEffect(() => {
+    if (typeof document !== 'undefined') {
+        const style = document.createElement('style');
+        style.textContent = `
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `;
+        document.head.appendChild(style);
+        
+        // Cleanup function to remove the style when component unmounts
+        return () => {
+            if (style.parentNode) {
+                style.parentNode.removeChild(style);
+            }
+        };
+    }
+}, []);
 

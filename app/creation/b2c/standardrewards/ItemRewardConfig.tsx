@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useEffect, useState, useRef } from 'react';
 import styles from './Rewards.module.css';
 import { getAddressValidationError, getDecimalsNote } from '../../../../lib/blockchain';
@@ -246,6 +248,7 @@ export default function ItemRewardConfig({ onClose }: { onClose: () => void }) {
               <option value="Polygon">Polygon</option>
               <option value="BNB Chain">BNB Chain</option>
               <option value="Avalanche">Avalanche</option>
+              <option value="Chiliz">Chiliz</option>
               <option value="Solana">Solana</option>
               <option value="Bitcoin">Bitcoin</option>
             </select>

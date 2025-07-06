@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useEffect, useState, useRef } from 'react';
 import styles from './Rewards.module.css';
 import { getAddressValidationError, getDecimalsNote } from '../../../../lib/blockchain';
@@ -32,25 +34,29 @@ export default function TokenRewardConfig({ onClose }: { onClose: () => void }) 
 
   // Real-time balance monitoring with wallet address
   const { balance: walletBalance, isLoading: balanceLoading, error: balanceError } = useRealTimeBalance(
-    contractAddress,
-    blockchain,
-    tokenStandard,
-    walletAddress,
+    contractAddress || '',
+    blockchain || '',
+    tokenStandard || '',
+    walletAddress || '',
     false // autoRefresh
   );
 
   useEffect(() => {
-    // Try to get maxCompletions from localStorage (set by /rewardsornot)
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('maxCompletions');
-      if (stored) {
-        setMaxCompletions(Number(stored));
+    try {
+      // Try to get maxCompletions from localStorage (set by /rewardsornot)
+      if (typeof window !== 'undefined') {
+        const stored = localStorage.getItem('maxCompletions');
+        if (stored) {
+          setMaxCompletions(Number(stored));
+        }
       }
-    }
 
-    // Auto-focus on contract address input
-    if (contractAddressRef.current) {
-      contractAddressRef.current.focus();
+      // Auto-focus on contract address input
+      if (contractAddressRef.current) {
+        contractAddressRef.current.focus();
+      }
+    } catch (error) {
+      console.error('Error in TokenRewardConfig useEffect:', error);
     }
   }, []);
 
@@ -92,7 +98,9 @@ export default function TokenRewardConfig({ onClose }: { onClose: () => void }) 
       }
 
       // Use real blockchain validation
-      const { validateContract } = await import('../../../../lib/blockchain-rpc');
+      const { validateContract } = await import('../../../../lib/blockchain-rpc').catch(() => {
+        throw new Error('Failed to load blockchain validation module');
+      });
       
       const tokenInfo = await validateContract(address, blockchain, tokenStandard, walletAddress) as TokenInfo;
       
@@ -243,6 +251,7 @@ export default function TokenRewardConfig({ onClose }: { onClose: () => void }) 
               <option value="Polygon">Polygon</option>
               <option value="BNB Chain">BNB Chain</option>
               <option value="Avalanche">Avalanche</option>
+              <option value="Chiliz">Chiliz</option>
               <option value="Solana">Solana</option>
               <option value="Bitcoin">Bitcoin</option>
             </select>
