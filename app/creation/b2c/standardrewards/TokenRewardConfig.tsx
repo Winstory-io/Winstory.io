@@ -84,24 +84,24 @@ export default function TokenRewardConfig({ onClose }: { onClose: () => void }) 
         return;
       }
 
-      // Simulate contract validation - in real implementation, call blockchain API
-      // This would check if the contract exists and get token info
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Check if wallet is connected
+      if (!walletAddress) {
+        setError('Veuillez connecter votre wallet pour valider le contrat');
+        setTokenInfo(null);
+        return;
+      }
+
+      // Use real blockchain validation
+      const { validateContract } = await import('../../../../lib/blockchain-rpc');
       
-      // Mock token info - replace with actual blockchain call
-      const mockTokenInfo = {
-        name: 'Sample Token',
-        symbol: 'SMPL',
-        decimals: 18,
-        totalSupply: '1000000000000000000000000',
-        balance: '100000000000000000000'
-      };
+      const tokenInfo = await validateContract(address, blockchain, tokenStandard, walletAddress) as TokenInfo;
       
-      setTokenInfo(mockTokenInfo);
-      setTokenName(mockTokenInfo.name); // Auto-fill token name
+      setTokenInfo(tokenInfo);
+      setTokenName(tokenInfo.name); // Auto-fill token name
       setError(null);
     } catch (error) {
-      setError('Invalid contract address or network error');
+      console.error('Validation error:', error);
+      setError(error instanceof Error ? error.message : 'Invalid contract address or network error');
       setTokenInfo(null);
     } finally {
       setIsValidating(false);

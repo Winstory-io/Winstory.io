@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import styles from '../standardrewards/Rewards.module.css';
+import { useWalletAddress } from '../../../../lib/hooks/useWalletConnection';
 
 interface ItemInfo {
   name: string;
@@ -20,6 +21,9 @@ export default function ItemRewardConfig({ onClose }: { onClose: () => void }) {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [itemInfo, setItemInfo] = useState<ItemInfo | null>(null);
   const [walletBalance, setWalletBalance] = useState<string>('0');
+
+  // Wallet connection
+  const walletAddress = useWalletAddress();
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
@@ -42,21 +46,25 @@ export default function ItemRewardConfig({ onClose }: { onClose: () => void }) {
     
     setIsLoading(true);
     try {
-      // Simulate contract validation - in real implementation, call blockchain API
-      // This would check if the contract exists and get item info
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Check if wallet is connected
+      if (!walletAddress) {
+        setError('Veuillez connecter votre wallet pour valider le contrat');
+        setItemInfo(null);
+        return;
+      }
+
+      // Use real blockchain validation
+      const { validateContract } = await import('../../../../lib/blockchain-rpc');
       
-      // Mock item info - replace with actual blockchain call
-      setItemInfo({
-        name: 'Sample NFT Item',
-        symbol: 'SMPL',
-        decimals: 0,
-        totalSupply: '10000',
-        balance: '100',
-        tokenType: 'ERC1155'
-      });
+      // For ERC1155, we need a tokenId - using '0' as default
+      const tokenId = itemStandard === 'ERC1155' ? '0' : undefined;
+      const itemInfo = await validateContract(address, blockchain, itemStandard, walletAddress, tokenId) as ItemInfo;
+      
+      setItemInfo(itemInfo);
+      setError(null);
     } catch (error) {
-      setError('Invalid contract address or network error');
+      console.error('Validation error:', error);
+      setError(error instanceof Error ? error.message : 'Invalid contract address or network error');
       setItemInfo(null);
     } finally {
       setIsLoading(false);

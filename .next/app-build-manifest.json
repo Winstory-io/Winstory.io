@@ -60,26 +60,6 @@
       "static/chunks/main-app.js",
       "static/css/app/creation/b2c/standardrewards/page.css",
       "static/chunks/app/creation/b2c/standardrewards/page.js"
-    ],
-    "/creation/b2c/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/creation/b2c/page.js"
-    ],
-    "/welcome/tooltip/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/welcome/tooltip/page.js"
-    ],
-    "/moderation/layout": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/moderation/layout.js"
-    ],
-    "/moderation/login/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/moderation/login/page.js"
     ]
   }
 }

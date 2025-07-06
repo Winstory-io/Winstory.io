@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import styles from '../standardrewards/Rewards.module.css';
+import { useWalletAddress } from '../../../../lib/hooks/useWalletConnection';
 
 interface TokenInfo {
   name: string;
@@ -19,6 +20,9 @@ export default function TokenRewardConfig({ onClose }: { onClose: () => void }) 
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [tokenInfo, setTokenInfo] = useState<TokenInfo | null>(null);
   const [walletBalance, setWalletBalance] = useState<string>('0');
+
+  // Wallet connection
+  const walletAddress = useWalletAddress();
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
@@ -41,20 +45,23 @@ export default function TokenRewardConfig({ onClose }: { onClose: () => void }) 
     
     setIsLoading(true);
     try {
-      // Simulate contract validation - in real implementation, call blockchain API
-      // This would check if the contract exists and get token info
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Check if wallet is connected
+      if (!walletAddress) {
+        setError('Veuillez connecter votre wallet pour valider le contrat');
+        setTokenInfo(null);
+        return;
+      }
+
+      // Use real blockchain validation
+      const { validateContract } = await import('../../../../lib/blockchain-rpc');
       
-      // Mock token info - replace with actual blockchain call
-      setTokenInfo({
-        name: 'Sample Token',
-        symbol: 'SMPL',
-        decimals: 18,
-        totalSupply: '1000000000000000000000000',
-        balance: '100000000000000000000'
-      });
+      const tokenInfo = await validateContract(address, blockchain, tokenStandard, walletAddress) as TokenInfo;
+      
+      setTokenInfo(tokenInfo);
+      setError(null);
     } catch (error) {
-      setError('Invalid contract address or network error');
+      console.error('Validation error:', error);
+      setError(error instanceof Error ? error.message : 'Invalid contract address or network error');
       setTokenInfo(null);
     } finally {
       setIsLoading(false);

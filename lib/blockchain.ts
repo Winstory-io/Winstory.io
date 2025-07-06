@@ -189,7 +189,8 @@ export function getAddressValidationError(address: string, blockchain: string): 
 export async function validateTokenContract(
   contractAddress: string, 
   blockchain: string, 
-  standard: string
+  standard: string,
+  walletAddress?: string
 ): Promise<TokenInfo | null> {
   try {
     // First validate address format
@@ -198,25 +199,17 @@ export async function validateTokenContract(
       throw new Error(validationError);
     }
 
-    // In a real implementation, you would:
-    // 1. Connect to the blockchain RPC
-    // 2. Call the contract's name(), symbol(), decimals() methods
-    // 3. Get the total supply and user's balance
-    // 4. Verify the contract implements the correct standard
-
-    // Mock implementation for demo
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // Import the real RPC functions
+    const { validateContract } = await import('./blockchain-rpc');
     
-    return {
-      name: 'Sample Token',
-      symbol: 'SMPL',
-      decimals: 18,
-      totalSupply: '1000000000000000000000000',
-      balance: '100000000000000000000',
-      contractAddress,
-      blockchain,
-      standard
-    };
+    if (!walletAddress) {
+      throw new Error('Adresse du wallet requise pour la validation');
+    }
+
+    // Use real blockchain calls instead of mocks
+    const tokenInfo = await validateContract(contractAddress, blockchain, standard, walletAddress) as TokenInfo;
+    
+    return tokenInfo;
   } catch (error) {
     console.error('Contract validation failed:', error);
     return null;
@@ -227,7 +220,9 @@ export async function validateTokenContract(
 export async function validateItemContract(
   contractAddress: string, 
   blockchain: string, 
-  standard: string
+  standard: string,
+  walletAddress?: string,
+  tokenId?: string
 ): Promise<ItemInfo | null> {
   try {
     // First validate address format
@@ -236,26 +231,17 @@ export async function validateItemContract(
       throw new Error(validationError);
     }
 
-    // In a real implementation, you would:
-    // 1. Connect to the blockchain RPC
-    // 2. Call the contract's methods to get item info
-    // 3. Get the user's balance of this specific item
-    // 4. Verify the contract implements the correct standard
-
-    // Mock implementation for demo
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // Import the real RPC functions
+    const { validateContract } = await import('./blockchain-rpc');
     
-    return {
-      name: 'Sample NFT Item',
-      symbol: 'SMPL',
-      decimals: 0,
-      totalSupply: '10000',
-      balance: '100',
-      contractAddress,
-      blockchain,
-      standard,
-      tokenType: standard
-    };
+    if (!walletAddress) {
+      throw new Error('Adresse du wallet requise pour la validation');
+    }
+
+    // Use real blockchain calls instead of mocks
+    const itemInfo = await validateContract(contractAddress, blockchain, standard, walletAddress, tokenId) as ItemInfo;
+    
+    return itemInfo;
   } catch (error) {
     console.error('Contract validation failed:', error);
     return null;

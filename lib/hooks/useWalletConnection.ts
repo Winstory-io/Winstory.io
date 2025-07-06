@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { ethers } from 'ethers';
+import { useAddress as useThirdwebAddress } from '@thirdweb-dev/react';
 
 export interface WalletConnectionState {
   address: string | null;
@@ -33,8 +35,9 @@ export function useWalletConnection() {
         // Mock implementation for demo
         await new Promise(resolve => setTimeout(resolve, 1000));
         
-        // Simulate connected wallet
-        const mockAddress = '0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6';
+        // Simulate connected wallet - using a valid checksum address
+        const rawMockAddress = '0x742d35Cc6634C0532925a3b8D4C9dB96C4b4d8b6';
+        const mockAddress = ethers.utils.getAddress(rawMockAddress);
         const mockChainId = 1; // Ethereum mainnet
         
         setState({
@@ -72,7 +75,8 @@ export function useWalletConnection() {
       // Mock implementation
       await new Promise(resolve => setTimeout(resolve, 1500));
       
-      const mockAddress = '0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6';
+      const rawMockAddress = '0x742d35Cc6634C0532925a3b8D4C9dB96C4b4d8b6';
+      const mockAddress = ethers.utils.getAddress(rawMockAddress);
       const mockChainId = 1;
       
       setState({
@@ -156,12 +160,16 @@ function getNetworkName(chainId: number): string {
 
 // Hook for getting wallet address in components
 export function useWalletAddress(): string | null {
+  const thirdwebAddress = useThirdwebAddress();
+  if (thirdwebAddress) return thirdwebAddress;
   const { address } = useWalletConnection();
   return address;
 }
 
 // Hook for checking if wallet is connected
 export function useWalletConnected(): boolean {
+  const thirdwebAddress = useThirdwebAddress();
+  if (thirdwebAddress) return true;
   const { isConnected } = useWalletConnection();
   return isConnected;
 } 
