@@ -1,5 +1,5 @@
 {
-  "/creation/b2c/mint/page": "app/creation/b2c/mint/page.js",
-  "/creation/b2c/rewardsornot/page": "app/creation/b2c/rewardsornot/page.js",
-  "/creation/b2c/standardrewards/page": "app/creation/b2c/standardrewards/page.js"
+  "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js",
+  "/creation/b2c/login/page": "app/creation/b2c/login/page.js",
+  "/welcome/page": "app/welcome/page.js"
 }

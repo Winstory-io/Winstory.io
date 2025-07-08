@@ -5,36 +5,40 @@
       "static/chunks/main-app.js",
       "static/chunks/app/layout.js"
     ],
-    "/creation/layout": [
+    "/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/creation/layout.js"
+      "static/chunks/app/page.js"
     ],
-    "/creation/b2c/standardrewards/page": [
+    "/welcome/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/css/app/creation/b2c/standardrewards/page.css",
-      "static/chunks/app/creation/b2c/standardrewards/page.js"
+      "static/chunks/app/welcome/layout.js"
+    ],
+    "/welcome/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/welcome/page.js"
     ],
     "/api/auth/[...nextauth]/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/api/auth/[...nextauth]/route.js"
     ],
-    "/creation/b2c/yourwinstory/page": [
+    "/creation/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/creation/b2c/yourwinstory/page.js"
+      "static/chunks/app/creation/layout.js"
     ],
-    "/creation/b2c/mint/page": [
+    "/creation/youare/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/creation/b2c/mint/page.js"
+      "static/chunks/app/creation/youare/page.js"
     ],
-    "/creation/b2c/rewardsornot/page": [
+    "/creation/b2c/login/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/creation/b2c/rewardsornot/page.js"
+      "static/chunks/app/creation/b2c/login/page.js"
     ]
   }
 }

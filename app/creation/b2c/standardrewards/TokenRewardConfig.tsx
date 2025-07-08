@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useEffect, useState, useRef } from 'react';
-import styles from './Rewards.module.css';
+import { useEffect, useState, useRef, ChangeEvent } from 'react';
+import styles from './Rewards.module.css'; // Adjust the path as needed
 import { getAddressValidationError, getDecimalsNote } from '../../../../lib/blockchain';
 import { useRealTimeBalance } from '../../../../lib/hooks/useWalletBalance';
 import { useWalletAddress } from '../../../../lib/hooks/useWalletConnection';

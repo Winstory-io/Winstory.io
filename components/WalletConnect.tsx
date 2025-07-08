@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { ConnectButton } from "thirdweb/react";
 import { ThirdwebProvider } from "thirdweb/react";
@@ -285,6 +285,26 @@ export default function WalletConnect(props: WalletConnectProps) {
         setMounted(true);
     }, []);
 
+    // Ajout du useEffect pour l'animation du spinner
+    useEffect(() => {
+        if (typeof document !== 'undefined') {
+            const style = document.createElement('style');
+            style.textContent = `
+              @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+              }
+            `;
+            document.head.appendChild(style);
+            // Cleanup function to remove the style when component unmounts
+            return () => {
+                if (style.parentNode) {
+                    style.parentNode.removeChild(style);
+                }
+            };
+        }
+    }, []);
+
     if (!mounted) {
         return <div>Loading...</div>;
     }
@@ -301,25 +321,4 @@ export default function WalletConnect(props: WalletConnectProps) {
     // Sinon, utiliser directement la nouvelle architecture
     return <WalletConnectContent {...props} />;
 }
-
-// CSS for spinner animation - moved to useEffect to avoid SSR issues
-useEffect(() => {
-    if (typeof document !== 'undefined') {
-        const style = document.createElement('style');
-        style.textContent = `
-          @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-          }
-        `;
-        document.head.appendChild(style);
-        
-        // Cleanup function to remove the style when component unmounts
-        return () => {
-            if (style.parentNode) {
-                style.parentNode.removeChild(style);
-            }
-        };
-    }
-}, []);
 
