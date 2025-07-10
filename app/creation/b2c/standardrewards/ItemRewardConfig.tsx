@@ -4,7 +4,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import styles from './Rewards.module.css';
 import { getAddressValidationError, getDecimalsNote } from '../../../../lib/blockchain';
 import { useRealTimeBalance } from '../../../../lib/hooks/useWalletBalance';
-import { useWalletAddress } from '../../../../lib/hooks/useWalletConnection';
+import { useActiveAccount } from "thirdweb/react";
 
 interface ItemInfo {
   name: string;
@@ -30,7 +30,8 @@ export default function ItemRewardConfig({ onClose }: { onClose: () => void }) {
   const [isCheckingBalance, setIsCheckingBalance] = useState<boolean>(false);
 
   // Wallet connection
-  const walletAddress = useWalletAddress();
+  const account = useActiveAccount();
+  const walletAddress = account?.address;
   const contractAddressRef = useRef<HTMLInputElement>(null);
 
   // Real-time balance monitoring with wallet address

@@ -1,4 +1,28 @@
 {
+  "app/creation/b2c/standardrewards/ItemRewardConfig.tsx -> ../../../../lib/blockchain-rpc": {
+    "id": "app/creation/b2c/standardrewards/ItemRewardConfig.tsx -> ../../../../lib/blockchain-rpc",
+    "files": [
+      "static/chunks/_app-pages-browser_lib_blockchain-rpc_ts.js"
+    ]
+  },
+  "app/creation/b2c/standardrewards/TokenRewardConfig.tsx -> ../../../../lib/blockchain-rpc": {
+    "id": "app/creation/b2c/standardrewards/TokenRewardConfig.tsx -> ../../../../lib/blockchain-rpc",
+    "files": [
+      "static/chunks/_app-pages-browser_lib_blockchain-rpc_ts.js"
+    ]
+  },
+  "lib/blockchain.ts -> ./blockchain-rpc": {
+    "id": "lib/blockchain.ts -> ./blockchain-rpc",
+    "files": [
+      "static/chunks/_app-pages-browser_lib_blockchain-rpc_ts.js"
+    ]
+  },
+  "lib/hooks/useWalletBalance.ts -> ../blockchain-rpc": {
+    "id": "lib/hooks/useWalletBalance.ts -> ../blockchain-rpc",
+    "files": [
+      "static/chunks/_app-pages-browser_lib_blockchain-rpc_ts.js"
+    ]
+  },
   "node_modules/thirdweb/dist/esm/chains/constants.js -> ./utils.js": {
     "id": "node_modules/thirdweb/dist/esm/chains/constants.js -> ./utils.js",
     "files": []
@@ -31,7 +55,9 @@
   },
   "node_modules/thirdweb/dist/esm/extensions/erc20/write/approve.js -> ../read/decimals.js": {
     "id": "node_modules/thirdweb/dist/esm/extensions/erc20/write/approve.js -> ../read/decimals.js",
-    "files": []
+    "files": [
+      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_extensions_erc20_read_decimals_js.js"
+    ]
   },
   "node_modules/thirdweb/dist/esm/extensions/erc20/write/transfer.js -> ../read/decimals.js": {
     "id": "node_modules/thirdweb/dist/esm/extensions/erc20/write/transfer.js -> ../read/decimals.js",
@@ -575,7 +601,9 @@
   },
   "node_modules/thirdweb/dist/esm/storage/download.js -> ../utils/arweave.js": {
     "id": "node_modules/thirdweb/dist/esm/storage/download.js -> ../utils/arweave.js",
-    "files": []
+    "files": [
+      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_utils_arweave_js.js"
+    ]
   },
   "node_modules/thirdweb/dist/esm/storage/upload.js -> ./upload/web-node.js": {
     "id": "node_modules/thirdweb/dist/esm/storage/upload.js -> ./upload/web-node.js",
@@ -6181,7 +6209,9 @@
   },
   "node_modules/thirdweb/dist/esm/wallets/smart/smart-wallet.js -> ./index.js": {
     "id": "node_modules/thirdweb/dist/esm/wallets/smart/smart-wallet.js -> ./index.js",
-    "files": []
+    "files": [
+      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_wallets_smart_index_js-_app-pages-browser_n-5fe9a3.js"
+    ]
   },
   "node_modules/thirdweb/dist/esm/wallets/utils/getTokenBalance.js -> ../../extensions/erc20/read/getBalance.js": {
     "id": "node_modules/thirdweb/dist/esm/wallets/utils/getTokenBalance.js -> ../../extensions/erc20/read/getBalance.js",

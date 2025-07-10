@@ -57,22 +57,16 @@ export function useWalletConnection() {
           }
         }
 
-        // Fallback to mock implementation for demo
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // Simulate connected wallet - using a valid checksum address
-        const rawMockAddress = '0x742d35Cc6634C0532925a3b8D4C9dB96C4b4d8b6';
-        const mockAddress = ethers.utils.getAddress(rawMockAddress);
-        const mockChainId = 1; // Ethereum mainnet
-        
-        setState({
-          address: mockAddress,
-          isConnected: true,
+        // SUPPRESSION DU FALLBACK MOCK : ne rien faire si aucun compte trouvé
+        setState(prev => ({
+          ...prev,
           isLoading: false,
+          address: null,
+          isConnected: false,
           error: null,
-          chainId: mockChainId,
-          network: 'Ethereum'
-        });
+          chainId: null,
+          network: null
+        }));
       } catch (error) {
         setState({
           address: null,
@@ -185,8 +179,25 @@ function getNetworkName(chainId: number): string {
 
 // Hook for getting wallet address in components
 export function useWalletAddress(): string | null {
-  const { address } = useWalletConnection();
-  return address;
+  const { address, isConnected } = useWalletConnection();
+  // Si le provider thirdweb a une session active, on ne regarde jamais le localStorage
+  if (isConnected && address) return address;
+  // Sinon, fallback localStorage (pour compatibilité legacy uniquement)
+  if (typeof window !== 'undefined') {
+    const stored = localStorage.getItem('walletAddress');
+    if (stored) {
+      try {
+        if (stored.startsWith('{')) {
+          const parsed = JSON.parse(stored);
+          if (parsed && parsed.address) return parsed.address;
+        }
+        return stored;
+      } catch {
+        return stored;
+      }
+    }
+  }
+  return null;
 }
 
 // Hook for checking if wallet is connected

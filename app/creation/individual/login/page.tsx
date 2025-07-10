@@ -35,7 +35,7 @@ export default function IndividualLoginPage() {
   // Function to call after successful wallet connection
   const handleWalletLoginSuccess = (address: string) => {
     if (!address) return;
-    localStorage.setItem("walletAddress", JSON.stringify({ address }));
+    localStorage.setItem("walletAddress", address);
     setIsWalletConnected(true);
     setShowRedirectArrow(true);
     // Automatic redirect after 2 seconds

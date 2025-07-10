@@ -7,9 +7,11 @@ import ModerationIcon from '@/components/icons/ModerationIcon';
 import CompletionIcon from '@/components/icons/CompletionIcon';
 import ExplorerIcon from '@/components/icons/ExplorerIcon';
 import { useRouter } from 'next/navigation';
+import { useWalletAddress } from '@/lib/hooks/useWalletConnection';
 
 export default function Home() {
   const router = useRouter();
+  const walletAddress = useWalletAddress();
 
   return (
     <div
