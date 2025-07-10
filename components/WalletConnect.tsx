@@ -5,7 +5,7 @@ import { ThirdwebProvider } from "thirdweb/react";
 import { createThirdwebClient } from "thirdweb";
 import { ethereum } from "thirdweb/chains";
 import { inAppWallet } from "thirdweb/wallets";
-import { walletConnect } from "thirdweb/wallets";
+import { metamaskWallet, coinbaseWallet, walletConnect, phantomWallet } from "thirdweb/wallets";
 import { useEffect, useState } from "react";
 import ThirdwebEmailAuth from "./ThirdwebEmailAuth";
 
@@ -85,7 +85,7 @@ function WalletConnectContent({ isEmailLogin = false, isWalletLogin = false, isB
         return (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
                 {account && (
-                    <ConnectButton client={client} wallets={[walletConnect()]} />
+                    <ConnectButton client={client} />
                 )}
                 {emailConnected && (
                     <div style={{ color: '#fff', marginBottom: 8 }}>Connected with professional email</div>
@@ -107,7 +107,7 @@ function WalletConnectContent({ isEmailLogin = false, isWalletLogin = false, isB
 
     // Optionally, show wallet login if requested
     if (isWalletLogin) {
-        return <ConnectButton client={client} wallets={[walletConnect()]} />;
+        return <ConnectButton client={client} />;
     }
 
     return null;

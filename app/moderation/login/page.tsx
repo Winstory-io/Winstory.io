@@ -1,11 +1,45 @@
 'use client';
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import LoginHeader from '@/components/LoginHeader';
 import Link from 'next/link';
-import LoginButton from '@/components/LoginButton';
 import WalletConnect from '@/components/WalletConnect';
+import { useRouter } from 'next/navigation';
 
 export default function ModerationLoginPage() {
+  const [isWalletConnected, setIsWalletConnected] = useState(false);
+  const [showRedirect, setShowRedirect] = useState(false);
+  const router = useRouter();
+
+  // Vérifie si le wallet est déjà connecté au chargement
+  useEffect(() => {
+    const walletAddress = localStorage.getItem('walletAddress');
+    if (walletAddress) {
+      setIsWalletConnected(true);
+      setShowRedirect(true);
+      setTimeout(() => {
+        router.push('/moderation');
+      }, 1500);
+    }
+  }, [router]);
+
+  // Callback après connexion wallet
+  const handleWalletLoginSuccess = (address) => {
+    if (!address) return;
+    localStorage.setItem('walletAddress', JSON.stringify({ address }));
+    setIsWalletConnected(true);
+    setShowRedirect(true);
+    setTimeout(() => {
+      router.push('/moderation');
+    }, 1500);
+  };
+
+  // Déconnexion (optionnel)
+  const handleLogout = () => {
+    localStorage.removeItem('walletAddress');
+    setIsWalletConnected(false);
+    setShowRedirect(false);
+  };
+
   return (
     <div style={{ minHeight: '100vh', background: '#000', color: '#fff', fontFamily: 'Inter, sans-serif', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', paddingTop: 24 }}>
       <div style={{ width: '100%', maxWidth: 400, margin: '0 auto', marginTop: 32, position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
@@ -25,9 +59,32 @@ export default function ModerationLoginPage() {
             </svg>
           </Link>
         </div>
+        {showRedirect && (
+          <div style={{
+            position: 'fixed',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            zIndex: 1500,
+            background: '#181818',
+            border: '2px solid #2eea8b',
+            borderRadius: 16,
+            padding: 32,
+            textAlign: 'center',
+            color: '#fff',
+            maxWidth: 400,
+            width: '90%'
+          }}>
+            <div style={{ fontSize: 24, fontWeight: 700, color: '#2eea8b', marginBottom: 16 }}>
+              Wallet connecté !
+            </div>
+            <div style={{ fontSize: 16, marginBottom: 24 }}>
+              Redirection vers la modération...
+            </div>
+          </div>
+        )}
         <div style={{ width: '100%', maxWidth: 400, margin: '0 auto', marginTop: 32, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 24 }}>
-          {/* <WalletConnect title="With your Pro E-mail" /> */}
-          <WalletConnect isEmailLogin={true} />
+          <WalletConnect isWalletLogin={true} onLoginSuccess={handleWalletLoginSuccess} onLogout={handleLogout} />
         </div>
       </div>
     </div>
