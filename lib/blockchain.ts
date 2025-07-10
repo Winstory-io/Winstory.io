@@ -40,7 +40,7 @@ export const SUPPORTED_BLOCKCHAINS: Record<string, BlockchainConfig> = {
   'Ethereum': {
     name: 'Ethereum',
     chainId: 1,
-    rpcUrl: 'https://mainnet.infura.io/v3/YOUR_INFURA_KEY',
+    rpcUrl: process.env.NEXT_PUBLIC_ETHEREUM_RPC_URL || 'https://eth.llamarpc.com',
     explorerUrl: 'https://etherscan.io',
     nativeCurrency: {
       name: 'Ether',

@@ -104,7 +104,7 @@ export default function TokenRewardConfig({ onClose }: { onClose: () => void }) 
       });
       
       const tokenInfo = await validateContract(address, blockchain, tokenStandard, walletAddress) as TokenInfo;
-      
+      console.log('TokenInfo:', tokenInfo); // DEBUG
       setTokenInfo(tokenInfo);
       setTokenName(tokenInfo.name); // Auto-fill token name
       setError(null);

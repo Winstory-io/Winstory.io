@@ -65,16 +65,6 @@
       "static/chunks/main-app.js",
       "static/css/app/creation/b2c/standardrewards/page.css",
       "static/chunks/app/creation/b2c/standardrewards/page.js"
-    ],
-    "/moderation/layout": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/moderation/layout.js"
-    ],
-    "/moderation/login/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/moderation/login/page.js"
     ]
   }
 }
