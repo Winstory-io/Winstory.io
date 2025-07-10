@@ -1,7 +1,5 @@
 {
-  "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js",
-  "/_not-found/page": "app/_not-found/page.js",
-  "/moderation/page": "app/moderation/page.js",
+  "/welcome/page": "app/welcome/page.js",
   "/moderation/login/page": "app/moderation/login/page.js",
-  "/welcome/page": "app/welcome/page.js"
+  "/moderation/page": "app/moderation/page.js"
 }

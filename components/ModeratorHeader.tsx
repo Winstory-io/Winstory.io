@@ -1,4 +1,5 @@
 import React from 'react';
+import { useWalletAddress } from '../lib/hooks/useWalletConnection';
 
 interface ModeratorHeaderProps {
   activeTab: 'initial' | 'completion';
@@ -8,13 +9,41 @@ interface ModeratorHeaderProps {
 }
 
 const ModeratorHeader: React.FC<ModeratorHeaderProps> = ({ activeTab, onTabChange, onIconClick, onBulbClick }) => {
+  const walletAddress = useWalletAddress();
+  const formatAddress = (address: string) => address ? `${address.slice(0, 6)}...${address.slice(-4)}` : '';
   return (
     <header style={{
       display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1.5rem 1rem 1rem 1rem', background: '#000', color: '#FFD600', borderBottom: '2px solid #FFD600', position: 'relative', zIndex: 10
     }}>
-      <button onClick={onIconClick} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
-        <img src="/moderation.svg" alt="Moderation" style={{ width: 180, height: 180, borderRadius: '50%', marginTop: '20px' }} />
-      </button>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+        <button onClick={onIconClick} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+          <img src="/moderation.svg" alt="Moderation" style={{ width: 120, height: 120, borderRadius: '50%', marginTop: '20px' }} />
+        </button>
+        {walletAddress && (
+          <div style={{
+            background: 'linear-gradient(90deg, #2eea8b 60%, #1bbf5c 100%)',
+            color: '#181818',
+            fontWeight: 700,
+            fontSize: 15,
+            borderRadius: 16,
+            padding: '6px 18px',
+            marginLeft: 8,
+            boxShadow: '0 2px 8px 0 rgba(46,234,139,0.12)',
+            display: 'flex',
+            alignItems: 'center',
+            border: '2px solid #18C964',
+            letterSpacing: 0.5,
+            minWidth: 90,
+            userSelect: 'all',
+            transition: 'background 0.2s',
+          }}
+            title={walletAddress}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{ marginRight: 7, marginLeft: -3, verticalAlign: 'middle' }}><circle cx="12" cy="12" r="12" fill="#18C964"/><path d="M7 12.5L10 15.5L17 8.5" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            {formatAddress(walletAddress)}
+          </div>
+        )}
+      </div>
       <div style={{ flex: 1, textAlign: 'center', marginLeft: '-80px' }}>
         <span style={{ fontWeight: 700, fontSize: '2rem', letterSpacing: 1 }}>
           Moderate{' '}
