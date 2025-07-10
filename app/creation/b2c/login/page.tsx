@@ -10,20 +10,20 @@ export default function B2CLoginPage() {
   const [showRedirectArrow, setShowRedirectArrow] = useState(false);
   const router = useRouter();
 
-  // Vérifier si l'utilisateur est déjà connecté au chargement de la page
+  // Check if user is already connected when page loads
   useEffect(() => {
     const user = localStorage.getItem("user");
     if (user) {
       setIsConnected(true);
       setShowRedirectArrow(true);
-      // Redirection automatique après 2 secondes
+      // Automatic redirect after 2 seconds
       setTimeout(() => {
         router.push('/creation/b2c/yourwinstory');
       }, 2000);
     }
   }, [router]);
 
-  // Fonction à appeler après un login réussi
+  // Function to call after successful login
   const handleLoginSuccess = (email) => {
     if (!email) return;
     const domain = email.split('@')[1] || '';
@@ -31,13 +31,13 @@ export default function B2CLoginPage() {
     localStorage.setItem("company", JSON.stringify({ name: domain }));
     setIsConnected(true);
     setShowRedirectArrow(true);
-    // Redirection automatique après 2 secondes
+    // Automatic redirect after 2 seconds
     setTimeout(() => {
       router.push('/creation/b2c/yourinformations');
     }, 2000);
   };
 
-  // Fonction pour gérer la déconnexion
+  // Function to handle logout
   const handleLogout = () => {
     localStorage.removeItem("user");
     localStorage.removeItem("company");
@@ -49,10 +49,10 @@ export default function B2CLoginPage() {
     <div style={{ minHeight: '100vh', background: '#000', color: '#fff', fontFamily: 'Inter, sans-serif', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', paddingTop: 24 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', maxWidth: 500, margin: '32px auto 32px auto', position: 'relative' }}>
         <span style={{ fontSize: 40, fontWeight: 700, color: '#2eea8b', letterSpacing: 1, whiteSpace: 'nowrap' }}>Creation B2C login</span>
-        <button onClick={() => setShowPopup(true)} style={{ background: 'none', border: 'none', marginLeft: 16, marginRight: 8, cursor: 'pointer', padding: 0 }} aria-label="Ampoule">
-          <img src="/tooltip.svg" alt="Aide" style={{ width: 32, height: 32 }} />
+        <button onClick={() => setShowPopup(true)} style={{ background: 'none', border: 'none', marginLeft: 16, marginRight: 8, cursor: 'pointer', padding: 0 }} aria-label="Help">
+          <img src="/tooltip.svg" alt="Help" style={{ width: 32, height: 32 }} />
         </button>
-        <button style={{ background: 'none', border: 'none', marginLeft: 8, cursor: 'pointer', fontSize: 32, color: '#FF2D2D' }} aria-label="Fermer" onClick={() => { window.location.href = '/welcome'; }}>
+        <button style={{ background: 'none', border: 'none', marginLeft: 8, cursor: 'pointer', fontSize: 32, color: '#FF2D2D' }} aria-label="Close" onClick={() => { window.location.href = '/welcome'; }}>
           ×
         </button>
       </div>
@@ -60,12 +60,12 @@ export default function B2CLoginPage() {
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.7)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ background: '#181818', border: '2px solid #FFD600', borderRadius: 12, padding: 32, color: '#fff', position: 'relative' }}>
             <button onClick={() => setShowPopup(false)} style={{ position: 'absolute', top: 12, right: 12, background: 'none', border: 'none', color: '#FF5252', fontSize: 28, cursor: 'pointer' }}>×</button>
-            <div>Popup à paramétrer ultérieurement</div>
+            <div>Popup to be configured later</div>
           </div>
         </div>
       )}
 
-      {/* Message de connexion réussie avec flèche verte */}
+      {/* Successful login message with green arrow */}
       {showRedirectArrow && (
         <div style={{
           position: 'fixed',
@@ -83,13 +83,13 @@ export default function B2CLoginPage() {
           width: '90%'
         }}>
           <div style={{ fontSize: 24, fontWeight: 700, color: '#18C964', marginBottom: 16 }}>
-            Connexion réussie !
+            Login successful !
           </div>
           <div style={{ fontSize: 16, marginBottom: 24 }}>
-            Redirection vers "Your Story" dans 2 secondes...
+            Redirecting to "Your Story" in 2 seconds...
           </div>
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 12 }}>
-            <span style={{ fontSize: 18 }}>Redirection automatique</span>
+            <span style={{ fontSize: 18 }}>Automatic redirect</span>
             <svg width="32" height="32" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
               <circle cx="24" cy="24" r="18" fill="#18C964" />
               <path d="M16 22L24 30L32 22" stroke="#111" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />

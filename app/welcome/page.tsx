@@ -47,7 +47,7 @@ export default function Home() {
             display: 'flex',
             alignItems: 'center',
           }}
-          aria-label="Accueil"
+          aria-label="Home"
         >
           <img
             src="/logo.svg"

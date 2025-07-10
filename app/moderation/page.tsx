@@ -117,7 +117,7 @@ const ModerationPage = () => {
                 <span>{progressMock.stakers}/{progressMock.stakersRequired}</span>
               </div>
               <div className={styles.progressBar}>
-                <div className={styles.progressFill} style={{width: `${Math.round((progressMock.stakers/progressMock.stakersRequired)*100)}%`, background: 'var(--primary)'}}></div>
+                <div className={styles.progressFill} style={{ width: `${Math.round((progressMock.stakers / progressMock.stakersRequired) * 100)}%`, background: 'var(--primary)' }}></div>
               </div>
             </div>
             <div className={styles.progressItem}>
@@ -125,7 +125,7 @@ const ModerationPage = () => {
                 <span>Total staked amount exceeds MINT price</span>
               </div>
               <div className={styles.progressBar}>
-                <div className={styles.progressFill} style={{width: '100%', background: 'var(--secondary)'}}></div>
+                <div className={styles.progressFill} style={{ width: '100%', background: 'var(--secondary)' }}></div>
               </div>
               <div className={styles.stakingComparison}>
                 <span className={styles.stakedAmount}>{progressMock.stakedAmount} $WINC</span>
@@ -138,8 +138,8 @@ const ModerationPage = () => {
                 <span>2:1 ratio needed</span>
               </div>
               <div className={styles.voteResults}>
-                <div className={styles.voteValid} style={{width: `${progressMock.validRatio}%`}}></div>
-                <div className={styles.voteRefuse} style={{width: `${progressMock.refuseRatio}%`}}></div>
+                <div className={styles.voteValid} style={{ width: `${progressMock.validRatio}%` }}></div>
+                <div className={styles.voteRefuse} style={{ width: `${progressMock.refuseRatio}%` }}></div>
               </div>
             </div>
           </div>
@@ -170,13 +170,13 @@ const ModerationPage = () => {
       {/* Popup Valid */}
       {showValidPopup && (
         <div className={styles.popupOverlay} onClick={() => setShowValidPopup(false)}>
-          <div className={styles.textPopup} style={{border: '2px solid #37FF00'}} onClick={e => e.stopPropagation()}>
+          <div className={styles.textPopup} style={{ border: '2px solid #37FF00' }} onClick={e => e.stopPropagation()}>
             <div className={styles.popupHeader}>
               <button className={styles.closePopup} onClick={() => setShowValidPopup(false)}>&times;</button>
             </div>
             <div className={styles.textPopupContent}>
-              <b style={{color:'#37FF00'}}>Validate this Initial Story</b>, confirming that it :<br/><br/>
-              <ul style={{color:'#37FF00', fontWeight:600, fontSize:16, marginBottom:16}}>
+              <b style={{ color: '#37FF00' }}>Validate this Initial Story</b>, confirming that it :<br /><br />
+              <ul style={{ color: '#37FF00', fontWeight: 600, fontSize: 16, marginBottom: 16 }}>
                 <li>Respects Winstory's moderation standards</li>
                 <li>(clarity, coherence, creativity, and potential to inspire community completions)</li>
                 <li>Contains an initial story that is understandable and usable as a narrative starting point</li>
@@ -184,13 +184,13 @@ const ModerationPage = () => {
                 <li>For company stories: follows the brand's creative structure and purpose</li>
                 <li>For individual stories : proposes an original, engaging and AI-enhanceable narrative seed</li>
               </ul>
-              <div style={{marginBottom:8, color:'#fff', fontWeight:600}}>
-                Once validated,<br/>this content will be eligible for community completions.<br/><br/>
-                Your decision engages a proportional part of your staked WINC.<br/>
-                If the majority of stakers vote YES and you also voted YES, you earn a share of the rewards pool.<br/>
+              <div style={{ marginBottom: 8, color: '#fff', fontWeight: 600 }}>
+                Once validated,<br />this content will be eligible for community completions.<br /><br />
+                Your decision engages a proportional part of your staked WINC.<br />
+                If the majority of stakers vote YES and you also voted YES, you earn a share of the rewards pool.<br />
                 If the final vote is NO and you validated it, you lose proportional part of your stake.
               </div>
-              <button className={styles.validButton} style={{margin:'24px auto 0', display:'block', minWidth:180}} onClick={() => setShowValidPopup(false)}>Valid</button>
+              <button className={styles.validButton} style={{ margin: '24px auto 0', display: 'block', minWidth: 180 }} onClick={() => setShowValidPopup(false)}>Valid</button>
             </div>
           </div>
         </div>
@@ -198,13 +198,13 @@ const ModerationPage = () => {
       {/* Popup Refuse */}
       {showRefusePopup && (
         <div className={styles.popupOverlay} onClick={() => setShowRefusePopup(false)}>
-          <div className={styles.textPopup} style={{border: '2px solid #FF0000'}} onClick={e => e.stopPropagation()}>
+          <div className={styles.textPopup} style={{ border: '2px solid #FF0000' }} onClick={e => e.stopPropagation()}>
             <div className={styles.popupHeader}>
               <button className={styles.closePopup} onClick={() => setShowRefusePopup(false)}>&times;</button>
             </div>
             <div className={styles.textPopupContent}>
-              <b style={{color:'#FF0000'}}>Refuse this Initial Story</b><br/>if it falls under any of the following criteria :<br/><br/>
-              <ul style={{color:'#FF0000', fontWeight:600, fontSize:16, marginBottom:16}}>
+              <b style={{ color: '#FF0000' }}>Refuse this Initial Story</b><br />if it falls under any of the following criteria :<br /><br />
+              <ul style={{ color: '#FF0000', fontWeight: 600, fontSize: 16, marginBottom: 16 }}>
                 <li>The text or video is incomplete, incoherent, or lacks clear narrative direction</li>
                 <li>It cannot reasonably inspire meaningful community completions</li>
                 <li>It includes hate speech, racism, xenophobia, or apology for harassment and bullying</li>
@@ -213,13 +213,13 @@ const ModerationPage = () => {
                 <li>It contains explicit sexual content or pornography</li>
                 <li>It has clearly not been enhanced, assisted, or post-produced using generative AI or similar post-prod technologies</li>
               </ul>
-              <div style={{marginBottom:8, color:'#fff', fontWeight:600}}>
-                Refusing content is a strong decision.<br/>Make sure it clearly meets at least one of these criteria.<br/><br/>
-                Your decision engages a proportional part of your staked WINC.<br/>
-                If the majority of stakers vote Refuse, and you also voted Refuse, you win a share of the rewards pool.<br/>
+              <div style={{ marginBottom: 8, color: '#fff', fontWeight: 600 }}>
+                Refusing content is a strong decision.<br />Make sure it clearly meets at least one of these criteria.<br /><br />
+                Your decision engages a proportional part of your staked WINC.<br />
+                If the majority of stakers vote Refuse, and you also voted Refuse, you win a share of the rewards pool.<br />
                 If the final vote is Valid and you refused it, you lose proportional part of your stake.
               </div>
-              <button className={styles.refuseButton} style={{margin:'24px auto 0', display:'block', minWidth:180}} onClick={() => setShowRefusePopup(false)}>Refuse</button>
+              <button className={styles.refuseButton} style={{ margin: '24px auto 0', display: 'block', minWidth: 180 }} onClick={() => setShowRefusePopup(false)}>Refuse</button>
             </div>
           </div>
         </div>
@@ -232,7 +232,7 @@ const ModerationPage = () => {
               <button className={styles.closePopup} onClick={() => setShowBulbPopup(false)}>&times;</button>
             </div>
             <div className={styles.textPopupContent}>
-              <b>À paramétrer</b>
+              <b>To be configured</b>
             </div>
           </div>
         </div>

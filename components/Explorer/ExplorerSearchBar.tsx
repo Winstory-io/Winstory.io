@@ -63,7 +63,7 @@ export default function ExplorerSearchBar({ onClose }: ExplorerSearchBarProps) {
             cursor: 'pointer',
             fontWeight: 700,
           }}
-          aria-label="Fermer la recherche"
+          aria-label="Close search"
         >
           ×
         </button>

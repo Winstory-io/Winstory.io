@@ -14,10 +14,10 @@ export default function VerifyRequest() {
                         className="mx-auto h-12 w-auto mb-8"
                     />
                     <h2 className="text-3xl font-bold text-white mb-4">
-                        Vérifiez votre email
+                        Check your email
                     </h2>
                     <p className="text-gray-400 mb-8">
-                        Nous avons envoyé un lien de connexion à votre adresse email.
+                        We have sent a login link to your email address.
                     </p>
 
                     <div className="bg-gray-900 border border-gray-700 rounded-lg p-6 mb-8">
@@ -29,22 +29,22 @@ export default function VerifyRequest() {
                             </div>
                         </div>
                         <h3 className="text-lg font-semibold text-white mb-2">
-                            Email envoyé !
+                            Email sent!
                         </h3>
                         <p className="text-gray-400 text-sm">
-                            Cliquez sur le lien dans l'email pour vous connecter à votre compte Winstory.
+                            Click on the link in the email to connect to your Winstory account.
                         </p>
                     </div>
 
                     <div className="space-y-4">
                         <p className="text-sm text-gray-500">
-                            Vous n'avez pas reçu l'email ? Vérifiez votre dossier spam ou
+                            Didn't receive the email? Check your spam folder or
                         </p>
                         <Link
                             href="/auth/signin"
                             className="text-yellow-400 hover:text-yellow-300 text-sm font-medium"
                         >
-                            essayez avec une autre adresse email
+                            try with another email address
                         </Link>
                     </div>
                 </div>
@@ -54,7 +54,7 @@ export default function VerifyRequest() {
                         href="/"
                         className="text-yellow-400 hover:text-yellow-300 text-sm"
                     >
-                        ← Retour à l'accueil
+                        ← Back to home
                     </Link>
                 </div>
             </div>

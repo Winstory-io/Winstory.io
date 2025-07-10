@@ -21,7 +21,7 @@ export default function CampaignInfoModal({ campaign, onClose }: CampaignInfoMod
       justifyContent: 'center',
     }}>
       <div style={{ background: '#181818', borderRadius: 16, padding: 32, minWidth: 340, maxWidth: 420, color: '#fff', position: 'relative', boxShadow: '0 4px 32px #000a' }}>
-        <button onClick={onClose} style={{ position: 'absolute', top: 16, right: 16, background: 'none', border: 'none', color: '#FFD600', fontSize: 28, cursor: 'pointer' }} aria-label="Fermer">×</button>
+        <button onClick={onClose} style={{ position: 'absolute', top: 16, right: 16, background: 'none', border: 'none', color: '#FFD600', fontSize: 28, cursor: 'pointer' }} aria-label="Close">×</button>
         <div style={{ display: 'flex', alignItems: 'center', marginBottom: 16 }}>
           <span style={{ color: '#FFD600', fontWeight: 700, fontSize: 20 }}>@{company}</span>
         </div>

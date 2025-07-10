@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { useConnect, ConnectButton } from "thirdweb/react";
-import { preAuthenticate } from "thirdweb/wallets/in-app";
-import { inAppWallet } from "thirdweb/wallets";
+import { ConnectButton, useConnect } from "thirdweb/react";
 import { createThirdwebClient } from "thirdweb";
+import { inAppWallet } from "thirdweb/wallets";
+import { useState } from "react";
+import { preAuthenticate } from "thirdweb/wallets/in-app";
 
 const client = createThirdwebClient({
     clientId: "4ddc5eed2e073e550a7307845d10f348",
@@ -19,7 +19,7 @@ interface ThirdwebEmailAuthProps {
 }
 
 export default function ThirdwebEmailAuth({
-    title = "Connexion avec email professionnel",
+    title = "Login with professional email",
     onSuccess,
     onError
 }: ThirdwebEmailAuthProps) {
@@ -41,13 +41,13 @@ export default function ThirdwebEmailAuth({
         const domain = email.split('@')[1]?.toLowerCase();
 
         if (!domain) {
-            return { valid: false, message: "Format d'email invalide" };
+            return { valid: false, message: "Invalid email format" };
         }
 
         if (personalDomains.includes(domain)) {
             return {
                 valid: false,
-                message: "Veuillez utiliser une adresse email professionnelle"
+                message: "Please use a professional email address"
             };
         }
 
@@ -55,7 +55,7 @@ export default function ThirdwebEmailAuth({
     };
 
     const preLogin = async (email: string) => {
-        // Validation de l'email
+        // Email validation
         const validation = validateProfessionalEmail(email);
         if (!validation.valid) {
             setMessage(validation.message);
@@ -67,7 +67,7 @@ export default function ThirdwebEmailAuth({
         setMessage('');
 
         try {
-            // Envoyer le code de vérification
+            // Send verification code
             await preAuthenticate({
                 client,
                 strategy: "email",
@@ -75,9 +75,9 @@ export default function ThirdwebEmailAuth({
             });
 
             setIsCodeSent(true);
-            setMessage('Code de vérification envoyé ! Vérifiez votre email.');
+            setMessage('Verification code sent! Check your email.');
         } catch (error) {
-            const errorMessage = 'Erreur lors de l\'envoi du code de vérification';
+            const errorMessage = 'Error sending verification code';
             setMessage(errorMessage);
             onError?.(errorMessage);
         } finally {
@@ -87,7 +87,7 @@ export default function ThirdwebEmailAuth({
 
     const handleLogin = async (email: string, verificationCode: string) => {
         if (!verificationCode) {
-            setMessage('Veuillez saisir le code de vérification');
+            setMessage('Please enter the verification code');
             return;
         }
 
@@ -95,7 +95,7 @@ export default function ThirdwebEmailAuth({
         setMessage('');
 
         try {
-            // Vérifier le code et se connecter
+            // Verify code and connect
             await connect(async () => {
                 await wallet.connect({
                     client,
@@ -106,14 +106,14 @@ export default function ThirdwebEmailAuth({
                 return wallet;
             });
 
-            setMessage('Connexion réussie !');
+            setMessage('Login successful!');
             setEmail('');
             setVerificationCode('');
             setIsCodeSent(false);
             setIsConnected(true);
             onSuccess?.(email);
         } catch (error) {
-            const errorMessage = 'Code de vérification incorrect ou erreur de connexion';
+            const errorMessage = 'Incorrect verification code or connection error';
             setMessage(errorMessage);
             onError?.(errorMessage);
         } finally {
@@ -125,7 +125,7 @@ export default function ThirdwebEmailAuth({
         e.preventDefault();
 
         if (!email) {
-            setMessage("Veuillez saisir une adresse email");
+            setMessage("Please enter an email address");
             return;
         }
 
@@ -142,7 +142,7 @@ export default function ThirdwebEmailAuth({
         setMessage('');
     };
 
-    // Si connecté, afficher le ConnectButton thirdweb
+    // If connected, display thirdweb ConnectButton
     if (isConnected) {
         return (
             <div style={{
@@ -193,7 +193,7 @@ export default function ThirdwebEmailAuth({
                     padding: 12,
                     borderRadius: 6,
                     marginBottom: 16,
-                    background: message.includes('envoyé') || message.includes('réussie') ? '#2e7d32' : '#d32f2f',
+                    background: message.includes('sent') || message.includes('successful') ? '#2e7d32' : '#d32f2f',
                     color: '#fff',
                     textAlign: 'center'
                 }}>
@@ -203,13 +203,13 @@ export default function ThirdwebEmailAuth({
 
             <form onSubmit={handleSubmit}>
                 {!isCodeSent ? (
-                    // Étape 1 : Saisie de l'email
+                    // Step 1: Email input
                     <div>
                         <input
                             type="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            placeholder="Votre email professionnel"
+                            placeholder="Your professional email"
                             style={{
                                 width: '100%',
                                 padding: 12,
@@ -240,11 +240,11 @@ export default function ThirdwebEmailAuth({
                                 opacity: isLoading ? 0.6 : 1
                             }}
                         >
-                            {isLoading ? 'Envoi...' : 'Recevoir un code de vérification'}
+                            {isLoading ? 'Sending...' : 'Receive verification code'}
                         </button>
                     </div>
                 ) : (
-                    // Étape 2 : Saisie du code de vérification
+                    // Step 2: Verification code input
                     <div>
                         <p style={{
                             fontSize: 14,
@@ -252,14 +252,14 @@ export default function ThirdwebEmailAuth({
                             marginBottom: 16,
                             textAlign: 'center'
                         }}>
-                            Code envoyé à : <strong>{email}</strong>
+                            Code sent to: <strong>{email}</strong>
                         </p>
 
                         <input
                             type="text"
                             value={verificationCode}
                             onChange={(e) => setVerificationCode(e.target.value)}
-                            placeholder="Code de vérification"
+                            placeholder="Verification code"
                             style={{
                                 width: '100%',
                                 padding: 12,
@@ -293,7 +293,7 @@ export default function ThirdwebEmailAuth({
                                     opacity: isLoading ? 0.6 : 1
                                 }}
                             >
-                                Retour
+                                Back
                             </button>
 
                             <button
@@ -312,7 +312,7 @@ export default function ThirdwebEmailAuth({
                                     opacity: isLoading ? 0.6 : 1
                                 }}
                             >
-                                {isLoading ? 'Connexion...' : 'Se connecter'}
+                                {isLoading ? 'Connecting...' : 'Connect'}
                             </button>
                         </div>
                     </div>
@@ -331,14 +331,14 @@ export default function ThirdwebEmailAuth({
                     fontSize: 14,
                     color: '#ccc'
                 }}>
-                    <strong>Emails acceptés :</strong> theo@company.io, contact@entreprise.com, etc.
+                    <strong>Accepted emails:</strong> theo@company.io, contact@entreprise.com, etc.
                 </p>
                 <p style={{
                     margin: '8px 0 0 0',
                     fontSize: 14,
                     color: '#ccc'
                 }}>
-                    <strong>Emails refusés :</strong> theo@gmail.com, contact@yahoo.com, etc.
+                    <strong>Rejected emails:</strong> theo@gmail.com, contact@yahoo.com, etc.
                 </p>
             </div>
         </div>

@@ -40,7 +40,7 @@ const TooltipPage = () => {
         }}
         onClick={e => e.stopPropagation()}
       >
-        {/* Croix rouge pour fermer */}
+        {/* Red cross to close */}
         <button
           aria-label="Close"
           onClick={() => router.push('/welcome')}
@@ -55,11 +55,11 @@ const TooltipPage = () => {
           }}
         >
           <svg width="28" height="28" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <line x1="10" y1="10" x2="30" y2="30" stroke="#FF2D2D" strokeWidth="3" strokeLinecap="round"/>
-            <line x1="30" y1="10" x2="10" y2="30" stroke="#FF2D2D" strokeWidth="3" strokeLinecap="round"/>
+            <line x1="10" y1="10" x2="30" y2="30" stroke="#FF2D2D" strokeWidth="3" strokeLinecap="round" />
+            <line x1="30" y1="10" x2="10" y2="30" stroke="#FF2D2D" strokeWidth="3" strokeLinecap="round" />
           </svg>
         </button>
-        {/* Titre sans ampoule */}
+        {/* Title without bulb */}
         <h1 style={{ color: '#FFD600', fontSize: 28, fontWeight: 900, textAlign: 'center', marginBottom: 18, letterSpacing: 1 }}>What do you Win today?</h1>
         <div style={{ width: '100%', fontSize: 16, display: 'flex', flexDirection: 'column', gap: 18 }}>
           {/* Explorer */}

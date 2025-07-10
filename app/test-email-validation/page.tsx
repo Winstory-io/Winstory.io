@@ -34,11 +34,11 @@ export default function TestEmailValidationPage() {
                     letterSpacing: 1,
                     whiteSpace: 'nowrap'
                 }}>
-                    Test Validation Email Pro
+                    Test Professional Email Validation
                 </span>
             </div>
 
-            {/* Status de connexion */}
+            {/* Connection status */}
             <div style={{
                 background: '#181818',
                 border: '2px solid #FFD600',
@@ -48,9 +48,9 @@ export default function TestEmailValidationPage() {
                 maxWidth: 500,
                 width: '100%'
             }}>
-                <h3 style={{ color: '#FFD600', marginBottom: 16 }}>Statut de connexion :</h3>
-                <p>Status: <span style={{ color: '#FFD600' }}>Vérification en cours...</span></p>
-                <p>Regardez le panneau de debug en bas à droite pour voir les détails</p>
+                <h3 style={{ color: '#FFD600', marginBottom: 16 }}>Connection status:</h3>
+                <p>Status: <span style={{ color: '#FFD600' }}>Verification in progress...</span></p>
+                <p>Check the debug panel at the bottom right to see details</p>
             </div>
 
             {/* Instructions */}
@@ -63,16 +63,16 @@ export default function TestEmailValidationPage() {
                 maxWidth: 500,
                 width: '100%'
             }}>
-                <h3 style={{ color: '#2eea8b', marginBottom: 16 }}>Instructions de test :</h3>
+                <h3 style={{ color: '#2eea8b', marginBottom: 16 }}>Test instructions:</h3>
                 <ol style={{ lineHeight: 1.6 }}>
-                    <li>Essayez de vous connecter avec un email personnel (gmail.com, yahoo.com, etc.)</li>
-                    <li>Vous devriez voir une modal d'erreur après connexion</li>
-                    <li>Vous serez automatiquement déconnecté après 3 secondes</li>
-                    <li>Essayez ensuite avec un email professionnel (exemple@company.com)</li>
+                    <li>Try to connect with a personal email (gmail.com, yahoo.com, etc.)</li>
+                    <li>You should see an error modal after connection</li>
+                    <li>You will be automatically disconnected after 3 seconds</li>
+                    <li>Then try with a professional email (example@company.com)</li>
                 </ol>
             </div>
 
-            {/* Composant d'authentification */}
+            {/* Authentication component */}
             <div style={{
                 width: '100%',
                 maxWidth: 400,
@@ -86,7 +86,7 @@ export default function TestEmailValidationPage() {
                 <WalletConnect isEmailLogin={true} />
             </div>
 
-            {/* Retour à l'accueil */}
+            {/* Back to home */}
             <div style={{ marginTop: 32 }}>
                 <button
                     onClick={() => window.location.href = '/welcome'}
@@ -100,7 +100,7 @@ export default function TestEmailValidationPage() {
                         fontSize: 16
                     }}
                 >
-                    Retour à l'accueil
+                    Back to home
                 </button>
             </div>
         </div>

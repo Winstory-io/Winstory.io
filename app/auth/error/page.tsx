@@ -11,14 +11,14 @@ function ErrorContent() {
     const getErrorMessage = (error: string | null) => {
         switch (error) {
             case 'Configuration':
-                return 'Il y a un problème avec la configuration du serveur.';
+                return 'There is a problem with the server configuration.';
             case 'AccessDenied':
-                return 'Vous n\'avez pas l\'autorisation de vous connecter.';
+                return 'You do not have permission to connect.';
             case 'Verification':
-                return 'Le lien de vérification a expiré ou a déjà été utilisé.';
+                return 'The verification link has expired or has already been used.';
             case 'Default':
             default:
-                return 'Une erreur inattendue s\'est produite.';
+                return 'An unexpected error occurred.';
         }
     };
 
@@ -31,7 +31,7 @@ function ErrorContent() {
                     className="mx-auto h-12 w-auto mb-8"
                 />
                 <h2 className="text-3xl font-bold text-white mb-4">
-                    Erreur de connexion
+                    Connection Error
                 </h2>
 
                 <div className="bg-red-900 border border-red-700 rounded-lg p-6 mb-8">
@@ -43,7 +43,7 @@ function ErrorContent() {
                         </div>
                     </div>
                     <h3 className="text-lg font-semibold text-white mb-2">
-                        Oups ! Quelque chose s'est mal passé
+                        Oops! Something went wrong
                     </h3>
                     <p className="text-red-200 text-sm">
                         {getErrorMessage(error)}
@@ -55,14 +55,14 @@ function ErrorContent() {
                         href="/auth/signin"
                         className="block w-full px-4 py-2 bg-yellow-400 text-black rounded-lg font-semibold hover:bg-yellow-300 transition-colors"
                     >
-                        Réessayer
+                        Try Again
                     </Link>
 
                     <Link
                         href="/"
                         className="block text-yellow-400 hover:text-yellow-300 text-sm"
                     >
-                        ← Retour à l'accueil
+                        ← Back to home
                     </Link>
                 </div>
             </div>
@@ -80,7 +80,7 @@ function ErrorFallback() {
                     className="mx-auto h-12 w-auto mb-8"
                 />
                 <h2 className="text-3xl font-bold text-white mb-4">
-                    Erreur de connexion
+                    Connection Error
                 </h2>
 
                 <div className="bg-red-900 border border-red-700 rounded-lg p-6 mb-8">
@@ -92,10 +92,10 @@ function ErrorFallback() {
                         </div>
                     </div>
                     <h3 className="text-lg font-semibold text-white mb-2">
-                        Oups ! Quelque chose s'est mal passé
+                        Oops! Something went wrong
                     </h3>
                     <p className="text-red-200 text-sm">
-                        Une erreur inattendue s'est produite.
+                        An unexpected error occurred.
                     </p>
                 </div>
 
@@ -104,14 +104,14 @@ function ErrorFallback() {
                         href="/auth/signin"
                         className="block w-full px-4 py-2 bg-yellow-400 text-black rounded-lg font-semibold hover:bg-yellow-300 transition-colors"
                     >
-                        Réessayer
+                        Try Again
                     </Link>
 
                     <Link
                         href="/"
                         className="block text-yellow-400 hover:text-yellow-300 text-sm"
                     >
-                        ← Retour à l'accueil
+                        ← Back to home
                     </Link>
                 </div>
             </div>

@@ -88,13 +88,13 @@ function WalletConnectContent({ isEmailLogin = false, isWalletLogin = false, isB
                     <ConnectButton client={client} wallets={[walletConnect()]} />
                 )}
                 {emailConnected && (
-                    <div style={{ color: '#fff', marginBottom: 8 }}>Connecté avec email professionnel</div>
+                    <div style={{ color: '#fff', marginBottom: 8 }}>Connected with professional email</div>
                 )}
                 {walletConnected && !account && (
-                    <div style={{ color: '#fff', marginBottom: 8 }}>Wallet connecté</div>
+                    <div style={{ color: '#fff', marginBottom: 8 }}>Wallet connected</div>
                 )}
                 <button onClick={handleLogout} style={{ marginTop: 8, padding: '8px 16px', borderRadius: 6, border: 'none', background: '#FFD600', color: '#181818', fontWeight: 600, cursor: 'pointer' }}>
-                    Se déconnecter
+                    Disconnect
                 </button>
             </div>
         );
@@ -102,7 +102,7 @@ function WalletConnectContent({ isEmailLogin = false, isWalletLogin = false, isB
 
     // If not connected, show email login
     if (isEmailLogin || isBothLogin) {
-        return <ThirdwebEmailAuth title="Connexion avec email professionnel" onSuccess={handleEmailLogin} />;
+        return <ThirdwebEmailAuth title="Login with professional email" onSuccess={handleEmailLogin} />;
     }
 
     // Optionally, show wallet login if requested
