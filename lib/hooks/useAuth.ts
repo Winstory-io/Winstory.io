@@ -1,50 +1,105 @@
-import { useSession, signIn, signOut } from 'next-auth/react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 export function useAuth() {
-    const { data: session, status } = useSession();
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [user, setUser] = useState<any>(null);
+    const [walletAddress, setWalletAddress] = useState<string | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
     const router = useRouter();
 
-    const login = async (provider: 'google' | 'azure-ad' | 'email', email?: string) => {
-        try {
-            if (provider === 'email' && email) {
-                await signIn('email', {
-                    email,
-                    callbackUrl: '/',
-                    redirect: false
-                });
+    useEffect(() => {
+        // Vérifier l'authentification au chargement
+        const checkAuth = () => {
+            const userData = localStorage.getItem("user");
+            const walletData = localStorage.getItem("walletAddress");
+            if (userData) {
+                try {
+                    const parsedUser = JSON.parse(userData);
+                    setUser(parsedUser);
+                } catch (error) {
+                    localStorage.removeItem("user");
+                    setUser(null);
+                }
             } else {
-                await signIn(provider, { callbackUrl: '/' });
+                setUser(null);
             }
+            if (walletData) {
+                try {
+                    const parsedWallet = JSON.parse(walletData);
+                    setWalletAddress(parsedWallet.address || null);
+                } catch (error) {
+                    localStorage.removeItem("walletAddress");
+                    setWalletAddress(null);
+                }
+            } else {
+                setWalletAddress(null);
+            }
+            // Authentifié si user OU walletAddress
+            setIsAuthenticated(!!userData || !!walletData);
+            setIsLoading(false);
+        };
+
+        checkAuth();
+
+        // Écouter les changements de localStorage
+        const handleStorageChange = () => {
+            checkAuth();
+        };
+
+        window.addEventListener('storage', handleStorageChange);
+        window.addEventListener('authChange', handleStorageChange);
+
+        return () => {
+            window.removeEventListener('storage', handleStorageChange);
+            window.removeEventListener('authChange', handleStorageChange);
+        };
+    }, []);
+
+    const login = async (email: string) => {
+        try {
+            const domain = email.split('@')[1] || '';
+            const userData = { email };
+            const companyData = { name: domain };
+            localStorage.setItem("user", JSON.stringify(userData));
+            localStorage.setItem("company", JSON.stringify(companyData));
+            setUser(userData);
+            setIsAuthenticated(true);
+            window.dispatchEvent(new Event('authChange'));
+            return userData;
         } catch (error) {
-            console.error('Erreur de connexion:', error);
             throw error;
         }
     };
 
     const logout = async () => {
         try {
-            await signOut({ callbackUrl: '/' });
+            localStorage.removeItem("user");
+            localStorage.removeItem("company");
+            localStorage.removeItem("walletAddress");
+            setUser(null);
+            setWalletAddress(null);
+            setIsAuthenticated(false);
+            window.dispatchEvent(new Event('authChange'));
         } catch (error) {
-            console.error('Erreur de déconnexion:', error);
             throw error;
         }
     };
 
-    const requireAuth = (redirectTo = '/auth/signin') => {
-        if (status === 'loading') return null;
-        if (!session) {
+    const requireAuth = (redirectTo = '/creation/b2c/login') => {
+        if (isLoading) return null;
+        if (!isAuthenticated) {
             router.push(redirectTo);
             return null;
         }
-        return session;
+        return user || walletAddress;
     };
 
     return {
-        session,
-        status,
-        isAuthenticated: !!session,
-        isLoading: status === 'loading',
+        user,
+        walletAddress,
+        isAuthenticated,
+        isLoading,
         login,
         logout,
         requireAuth,

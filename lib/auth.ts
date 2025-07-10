@@ -53,6 +53,25 @@ export const authOptions: NextAuthOptions = {
             }
             return token;
         },
+        async signIn({ user, account, profile }) {
+            // Vérifier si c'est une connexion par email
+            if (account?.provider === 'email' && user.email) {
+                const personalDomains = [
+                    'gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com',
+                    'icloud.com', 'aol.com', 'protonmail.com', 'mail.com',
+                    'live.com', 'msn.com', 'me.com', 'mac.com'
+                ];
+
+                const domain = user.email.split('@')[1]?.toLowerCase();
+
+                if (!domain || personalDomains.includes(domain)) {
+                    // Retourner false pour empêcher la connexion
+                    return false;
+                }
+            }
+
+            return true;
+        },
     },
     session: {
         strategy: "jwt",
