@@ -33,7 +33,7 @@ export default function B2CLoginPage() {
     setShowRedirectArrow(true);
     // Redirection automatique après 2 secondes
     setTimeout(() => {
-      router.push('/creation/b2c/yourwinstory');
+      router.push('/creation/b2c/yourinformations');
     }, 2000);
   };
 

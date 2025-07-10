@@ -17,26 +17,31 @@ interface WalletConnectProps {
     isEmailLogin?: boolean;
     isWalletLogin?: boolean;
     isBothLogin?: boolean;
-    onLoginSuccess?: (email: string) => void;
+    onLoginSuccess?: (emailOrAddress: string) => void;
     onLogout?: () => void;
 }
 
 function WalletConnectContent({ isEmailLogin = false, isWalletLogin = false, isBothLogin = false, onLoginSuccess, onLogout }: WalletConnectProps) {
     const [mounted, setMounted] = useState(false);
     const [emailConnected, setEmailConnected] = useState(false);
+    const [walletConnected, setWalletConnected] = useState(false);
     const account = useActiveAccount();
 
-    // Check email login state
+    // Check email and wallet login state
     useEffect(() => {
         const user = localStorage.getItem("user");
+        const walletAddress = localStorage.getItem("walletAddress");
         setEmailConnected(!!user);
+        setWalletConnected(!!walletAddress);
     }, []);
 
     // Listen to storage changes (for logout in other tabs)
     useEffect(() => {
         const handler = () => {
             const user = localStorage.getItem("user");
+            const walletAddress = localStorage.getItem("walletAddress");
             setEmailConnected(!!user);
+            setWalletConnected(!!walletAddress);
         };
         window.addEventListener("storage", handler);
         return () => window.removeEventListener("storage", handler);
@@ -49,7 +54,10 @@ function WalletConnectContent({ isEmailLogin = false, isWalletLogin = false, isB
     // Handle logout (wallet or email)
     const handleLogout = () => {
         localStorage.removeItem("user");
+        localStorage.removeItem("company");
+        localStorage.removeItem("walletAddress");
         setEmailConnected(false);
+        setWalletConnected(false);
         if (onLogout) onLogout();
         // For wallet, user should disconnect via widget
     };
@@ -60,12 +68,20 @@ function WalletConnectContent({ isEmailLogin = false, isWalletLogin = false, isB
         if (onLoginSuccess) onLoginSuccess(email);
     };
 
+    // Handle wallet connection
+    useEffect(() => {
+        if (account && !walletConnected) {
+            setWalletConnected(true);
+            if (onLoginSuccess) onLoginSuccess(account.address);
+        }
+    }, [account, walletConnected, onLoginSuccess]);
+
     if (!mounted) {
         return <div>Loading...</div>;
     }
 
     // If connected (wallet or email), show disconnect UI
-    if (account || emailConnected) {
+    if (account || emailConnected || walletConnected) {
         return (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
                 {account && (
@@ -73,6 +89,9 @@ function WalletConnectContent({ isEmailLogin = false, isWalletLogin = false, isB
                 )}
                 {emailConnected && (
                     <div style={{ color: '#fff', marginBottom: 8 }}>Connecté avec email professionnel</div>
+                )}
+                {walletConnected && !account && (
+                    <div style={{ color: '#fff', marginBottom: 8 }}>Wallet connecté</div>
                 )}
                 <button onClick={handleLogout} style={{ marginTop: 8, padding: '8px 16px', borderRadius: 6, border: 'none', background: '#FFD600', color: '#181818', fontWeight: 600, cursor: 'pointer' }}>
                     Se déconnecter
