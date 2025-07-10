@@ -55,9 +55,9 @@ function WalletConnectContent({ isEmailLogin = false, isWalletLogin = false, isB
     };
 
     // Handle email login success
-    const handleEmailLogin = () => {
+    const handleEmailLogin = (email: string) => {
         setEmailConnected(true);
-        if (onLoginSuccess) onLoginSuccess(""); // email non disponible ici
+        if (onLoginSuccess) onLoginSuccess(email);
     };
 
     if (!mounted) {

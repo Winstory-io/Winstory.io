@@ -14,7 +14,7 @@ const wallet = inAppWallet();
 
 interface ThirdwebEmailAuthProps {
     title?: string;
-    onSuccess?: () => void;
+    onSuccess?: (email: string) => void;
     onError?: (error: string) => void;
 }
 
@@ -111,7 +111,7 @@ export default function ThirdwebEmailAuth({
             setVerificationCode('');
             setIsCodeSent(false);
             setIsConnected(true);
-            onSuccess?.();
+            onSuccess?.(email);
         } catch (error) {
             const errorMessage = 'Code de vérification incorrect ou erreur de connexion';
             setMessage(errorMessage);

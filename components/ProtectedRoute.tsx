@@ -45,7 +45,7 @@ export default function ProtectedRoute({ children, fallback }: ProtectedRoutePro
                     </div>
 
                     <a
-                        href="/auth/signin"
+                        href="/creation/b2c/login"
                         className="inline-block px-6 py-3 bg-yellow-400 text-black rounded-lg font-semibold hover:bg-yellow-300 transition-colors"
                     >
                         Se connecter
