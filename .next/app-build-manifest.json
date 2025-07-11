@@ -35,11 +35,6 @@
       "static/chunks/main-app.js",
       "static/chunks/app/creation/b2c/login/page.js"
     ],
-    "/creation/b2c/yourinformations/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/creation/b2c/yourinformations/page.js"
-    ],
     "/creation/b2c/yourwinstory/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
@@ -60,6 +55,27 @@
       "static/chunks/main-app.js",
       "static/css/app/creation/b2c/standardrewards/page.css",
       "static/chunks/app/creation/b2c/standardrewards/page.js"
+    ],
+    "/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/page.js"
+    ],
+    "/creation/b2c/yourinformations/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/creation/b2c/yourinformations/page.js"
+    ],
+    "/creation/b2c/premiumrewards/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/creation/b2c/premiumrewards/page.css",
+      "static/chunks/app/creation/b2c/premiumrewards/page.js"
+    ],
+    "/creation/b2c/recap/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/creation/b2c/recap/page.js"
     ]
   }
 }

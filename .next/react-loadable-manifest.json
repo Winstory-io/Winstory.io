@@ -1,26 +1,38 @@
 {
+  "app/creation/b2c/premiumrewards/ItemRewardConfig.tsx -> ../../../../lib/blockchain-rpc": {
+    "id": "app/creation/b2c/premiumrewards/ItemRewardConfig.tsx -> ../../../../lib/blockchain-rpc",
+    "files": [
+      "static/chunks/_app-pages-browser_lib_blockchain-rpc_ts-_8b9e1.js"
+    ]
+  },
+  "app/creation/b2c/premiumrewards/TokenRewardConfig.tsx -> ../../../../lib/blockchain-rpc": {
+    "id": "app/creation/b2c/premiumrewards/TokenRewardConfig.tsx -> ../../../../lib/blockchain-rpc",
+    "files": [
+      "static/chunks/_app-pages-browser_lib_blockchain-rpc_ts-_8b9e1.js"
+    ]
+  },
   "app/creation/b2c/standardrewards/ItemRewardConfig.tsx -> ../../../../lib/blockchain-rpc": {
     "id": "app/creation/b2c/standardrewards/ItemRewardConfig.tsx -> ../../../../lib/blockchain-rpc",
     "files": [
-      "static/chunks/_app-pages-browser_lib_blockchain-rpc_ts.js"
+      "static/chunks/_app-pages-browser_lib_blockchain-rpc_ts-_8b9e0.js"
     ]
   },
   "app/creation/b2c/standardrewards/TokenRewardConfig.tsx -> ../../../../lib/blockchain-rpc": {
     "id": "app/creation/b2c/standardrewards/TokenRewardConfig.tsx -> ../../../../lib/blockchain-rpc",
     "files": [
-      "static/chunks/_app-pages-browser_lib_blockchain-rpc_ts.js"
+      "static/chunks/_app-pages-browser_lib_blockchain-rpc_ts-_8b9e0.js"
     ]
   },
   "lib/blockchain.ts -> ./blockchain-rpc": {
     "id": "lib/blockchain.ts -> ./blockchain-rpc",
     "files": [
-      "static/chunks/_app-pages-browser_lib_blockchain-rpc_ts.js"
+      "static/chunks/_app-pages-browser_lib_blockchain-rpc_ts-_8b9e0.js"
     ]
   },
   "lib/hooks/useWalletBalance.ts -> ../blockchain-rpc": {
     "id": "lib/hooks/useWalletBalance.ts -> ../blockchain-rpc",
     "files": [
-      "static/chunks/_app-pages-browser_lib_blockchain-rpc_ts.js"
+      "static/chunks/_app-pages-browser_lib_blockchain-rpc_ts-_8b9e0.js"
     ]
   },
   "node_modules/thirdweb/dist/esm/chains/constants.js -> ./utils.js": {

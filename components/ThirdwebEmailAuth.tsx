@@ -1,16 +1,10 @@
 "use client";
 
 import { ConnectButton, useConnect } from "thirdweb/react";
-import { createThirdwebClient } from "thirdweb";
 import { inAppWallet } from "thirdweb/wallets";
 import { useState } from "react";
 import { preAuthenticate } from "thirdweb/wallets/in-app";
-
-const client = createThirdwebClient({
-    clientId: "4ddc5eed2e073e550a7307845d10f348",
-});
-
-const wallet = inAppWallet();
+import { client } from "@/lib/thirdwebClient";
 
 interface ThirdwebEmailAuthProps {
     title?: string;
@@ -97,6 +91,7 @@ export default function ThirdwebEmailAuth({
         try {
             // Verify code and connect
             await connect(async () => {
+                const wallet = inAppWallet();
                 await wallet.connect({
                     client,
                     strategy: "email",
@@ -142,7 +137,7 @@ export default function ThirdwebEmailAuth({
         setMessage('');
     };
 
-    // If connected, display thirdweb ConnectButton
+    // Correction de l'affichage :
     if (isConnected) {
         return (
             <div style={{
@@ -163,7 +158,19 @@ export default function ThirdwebEmailAuth({
                 }}>
                     {title}
                 </h3>
-                <ConnectButton client={client} wallets={[wallet]} />
+                <div style={{
+                    padding: 16,
+                    background: '#222',
+                    borderRadius: 8,
+                    color: '#00C46C',
+                    fontWeight: 700,
+                    marginBottom: 16,
+                    textAlign: 'center',
+                    border: '1px solid #00C46C'
+                }}>
+                    Login successful!
+                </div>
+                <ConnectButton client={client} />
             </div>
         );
     }

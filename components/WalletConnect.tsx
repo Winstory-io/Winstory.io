@@ -8,6 +8,7 @@ import { inAppWallet } from "thirdweb/wallets";
 import { metamaskWallet, coinbaseWallet, walletConnect, phantomWallet } from "thirdweb/wallets";
 import { useEffect, useState } from "react";
 import ThirdwebEmailAuth from "./ThirdwebEmailAuth";
+import { client } from "@/lib/thirdwebClient";
 
 const client = createThirdwebClient({
     clientId: "4ddc5eed2e073e550a7307845d10f348",
