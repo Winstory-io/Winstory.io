@@ -88,12 +88,6 @@ export default function B2CLoginPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#000', color: '#fff', fontFamily: 'Inter, sans-serif', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', paddingTop: 24 }}>
-      {/* DEBUG INFO */}
-      <div style={{ background: '#222', color: '#FFD600', padding: 12, marginBottom: 16, borderRadius: 8 }}>
-        <div><b>DEBUG</b></div>
-        <div>localStorage.user: {debugUser}</div>
-        <div>localStorage.walletAddress: {debugWallet}</div>
-      </div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', maxWidth: 500, margin: '32px auto 32px auto', position: 'relative' }}>
         <span style={{ fontSize: 40, fontWeight: 700, color: '#2eea8b', letterSpacing: 1, whiteSpace: 'nowrap' }}>Creation B2C login</span>
         <button onClick={() => setShowPopup(true)} style={{ background: 'none', border: 'none', marginLeft: 16, marginRight: 8, cursor: 'pointer', padding: 0 }} aria-label="Help">

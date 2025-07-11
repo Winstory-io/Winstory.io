@@ -23,13 +23,6 @@ export default function StandardRewardsPage() {
 
   return (
     <>
-      {/* DEBUG INFO */}
-      <div style={{ background: '#222', color: '#FFD600', padding: 12, marginBottom: 16, borderRadius: 8 }}>
-        <div><b>DEBUG</b></div>
-        <div>useActiveAccount: {account ? `${account.address}` : 'undefined'}</div>
-        <div>localStorage.user: {localUser || 'null'}</div>
-        <div>localStorage.walletAddress: {localWallet || 'null'}</div>
-      </div>
       <ErrorBoundary>
         <div className={styles.container}>
           <WalletConnect isBothLogin />
