@@ -76,6 +76,16 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/creation/b2c/recap/page.js"
+    ],
+    "/creation/b2c/mint/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/creation/b2c/mint/page.js"
+    ],
+    "/creation/b2c/minthackathon/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/creation/b2c/minthackathon/page.js"
     ]
   }
 }
