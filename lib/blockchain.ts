@@ -91,6 +91,17 @@ export const SUPPORTED_BLOCKCHAINS: Record<string, BlockchainConfig> = {
       symbol: 'SOL',
       decimals: 9
     }
+  },
+  'Chiliz': {
+    name: 'Chiliz',
+    chainId: 88888,
+    rpcUrl: 'https://rpc.ankr.com/chiliz',
+    explorerUrl: 'https://scan.chiliz.com',
+    nativeCurrency: {
+      name: 'Chiliz',
+      symbol: 'CHZ',
+      decimals: 18
+    }
   }
 };
 
@@ -140,6 +151,7 @@ export function isValidContractAddress(address: string, blockchain: string): boo
     case 'Polygon':
     case 'BNB Chain':
     case 'Avalanche':
+    case 'Chiliz':
       // EVM addresses: 42 characters starting with 0x, followed by 40 hex characters
       return /^0x[a-f0-9]{40}$/.test(cleanAddress);
     
