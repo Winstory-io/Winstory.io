@@ -27,13 +27,17 @@ export default function RecapB2C() {
     const company = JSON.parse(localStorage.getItem("company") || "null");
     const story = JSON.parse(localStorage.getItem("story") || "null");
     const film = JSON.parse(localStorage.getItem("film") || "null");
-    const reward = JSON.parse(localStorage.getItem("campaignReward") || "null");
-    setRecap({ user, company, story, film, reward });
+    // Récompenses
+    const standardToken = JSON.parse(localStorage.getItem("standardTokenReward") || "null");
+    const standardItem = JSON.parse(localStorage.getItem("standardItemReward") || "null");
+    const premiumToken = JSON.parse(localStorage.getItem("premiumTokenReward") || "null");
+    const premiumItem = JSON.parse(localStorage.getItem("premiumItemReward") || "null");
+    setRecap({ user, company, story, film, standardToken, standardItem, premiumToken, premiumItem });
   }, []);
 
   // Pour la maquette, fallback si pas de données
-  const email = recap.user?.email || "@adressmaillogged";
-  const companyName = recap.company?.name || "@companyname";
+  const email = recap.user?.email || '';
+  const companyName = recap.company?.name || '';
   const title = recap.story?.title || "@startingtitle";
   const startingStory = recap.story?.startingStory || "@startingstory";
   const guideline = recap.story?.guideline || "@guideline";
@@ -136,8 +140,52 @@ export default function RecapB2C() {
           </div>
         </div>
         {/* Bloc rewards */}
-        <div style={{ border: "2px solid #fff", borderRadius: 24, padding: 24, marginBottom: 40, textAlign: 'center', fontWeight: 600, fontSize: 18, maxWidth: 420, width: '100%', marginLeft: 'auto', marginRight: 'auto' }}>
-          {rewardLabel}
+        <div style={{ border: "2px solid #fff", borderRadius: 24, padding: 24, marginBottom: 40, textAlign: 'center', fontWeight: 600, fontSize: 18, maxWidth: 420, width: '100%', marginLeft: 'auto', marginRight: 'auto', background: '#181818' }}>
+          <div style={{ fontWeight: 700, fontSize: 22, color: '#FFD600', marginBottom: 12 }}>Rewards Recap</div>
+          {(!recap.standardToken && !recap.standardItem && !recap.premiumToken && !recap.premiumItem) ? (
+            <div style={{ color: '#fff', fontWeight: 400, fontSize: 16 }}>
+              No Reward to give? No Problem, free completions +$1000
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+              {/* Standard Rewards */}
+              {(recap.standardToken || recap.standardItem) && (
+                <div style={{ background: 'rgba(0,196,108,0.08)', borderRadius: 12, padding: 14, textAlign: 'left' }}>
+                  <div style={{ color: '#00C46C', fontWeight: 700, fontSize: 18, marginBottom: 6 }}>Standard Rewards</div>
+                  {recap.standardToken && (
+                    <div style={{ marginBottom: 6 }}>
+                      <span style={{ fontWeight: 600 }}>Token:</span> {recap.standardToken.name} ({recap.standardToken.amountPerUser} per user)
+                      <br /><span style={{ fontSize: 13, color: '#FFD600' }}>Contract:</span> <span style={{ fontSize: 13 }}>{recap.standardToken.contractAddress}</span>
+                    </div>
+                  )}
+                  {recap.standardItem && (
+                    <div>
+                      <span style={{ fontWeight: 600 }}>Item:</span> {recap.standardItem.name} ({recap.standardItem.amountPerUser} per user)
+                      <br /><span style={{ fontSize: 13, color: '#FFD600' }}>Contract:</span> <span style={{ fontSize: 13 }}>{recap.standardItem.contractAddress}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+              {/* Premium Rewards */}
+              {(recap.premiumToken || recap.premiumItem) && (
+                <div style={{ background: 'rgba(255,215,0,0.08)', borderRadius: 12, padding: 14, textAlign: 'left' }}>
+                  <div style={{ color: '#FFD600', fontWeight: 700, fontSize: 18, marginBottom: 6 }}>Premium Rewards</div>
+                  {recap.premiumToken && (
+                    <div style={{ marginBottom: 6 }}>
+                      <span style={{ fontWeight: 600 }}>Token:</span> {recap.premiumToken.name} ({recap.premiumToken.amountPerUser} per winner)
+                      <br /><span style={{ fontSize: 13, color: '#00C46C' }}>Contract:</span> <span style={{ fontSize: 13 }}>{recap.premiumToken.contractAddress}</span>
+                    </div>
+                  )}
+                  {recap.premiumItem && (
+                    <div>
+                      <span style={{ fontWeight: 600 }}>Item:</span> {recap.premiumItem.name} ({recap.premiumItem.amountPerUser} per winner)
+                      <br /><span style={{ fontSize: 13, color: '#00C46C' }}>Contract:</span> <span style={{ fontSize: 13 }}>{recap.premiumItem.contractAddress}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
         </div>
         {/* Bouton Confirm flottant (bulle en bas à droite, toujours un cercle) */}
         <button

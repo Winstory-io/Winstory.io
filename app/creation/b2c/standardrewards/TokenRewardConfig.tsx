@@ -5,6 +5,7 @@ import styles from './Rewards.module.css'; // Adjust the path as needed
 import { getAddressValidationError, getDecimalsNote } from '../../../../lib/blockchain';
 import { useRealTimeBalance } from '../../../../lib/hooks/useWalletBalance';
 import { useActiveAccount } from "thirdweb/react";
+import { useRouter } from 'next/navigation';
 
 interface TokenInfo {
   name: string;
@@ -41,6 +42,8 @@ export default function TokenRewardConfig({ onClose }: { onClose: () => void }) 
     walletAddress || '',
     false // autoRefresh
   );
+
+  const router = useRouter();
 
   useEffect(() => {
     try {
@@ -157,7 +160,7 @@ export default function TokenRewardConfig({ onClose }: { onClose: () => void }) 
     parseFloat(walletBalance) >= (typeof amountPerUser === 'number' ? amountPerUser * maxCompletions : 0);
 
   const canConfirm = tokenName && contractAddress && typeof amountPerUser === 'number' && 
-    amountPerUser > 0 && tokenInfo && !error && hasEnoughBalance && walletAddress;
+    amountPerUser > 0 && tokenInfo && !error && walletAddress;
 
   const handleConfirm = () => {
     if (!canConfirm) return;
@@ -180,9 +183,7 @@ export default function TokenRewardConfig({ onClose }: { onClose: () => void }) 
     setIsConfirmed(true);
     
     // Close modal after short delay
-    setTimeout(() => {
-      onClose();
-    }, 1500);
+    router.push('/creation/b2c/premiumrewards');
   };
 
   const getButtonText = () => {
@@ -337,11 +338,6 @@ export default function TokenRewardConfig({ onClose }: { onClose: () => void }) 
                   {getDecimalsNote(tokenStandard, tokenInfo.decimals)}
                 </div>
               </div>
-              {!hasEnoughBalance && (
-                <div style={{ color: '#ff6b6b', fontWeight: 600, marginTop: 8 }}>
-                  ⚠️ Insufficient balance for distribution
-                </div>
-              )}
             </div>
           )}
 

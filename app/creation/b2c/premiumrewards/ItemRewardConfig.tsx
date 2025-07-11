@@ -61,6 +61,7 @@ export default function ItemRewardConfig({ onClose }: { onClose: () => void }) {
       const itemInfo = await validateContract(address, blockchain, itemStandard, walletAddress, tokenId) as ItemInfo;
       
       setItemInfo(itemInfo);
+      setItemName(itemInfo.name); // auto-remplissage du nom
       setError(null);
     } catch (error) {
       console.error('Validation error:', error);
@@ -211,13 +212,9 @@ export default function ItemRewardConfig({ onClose }: { onClose: () => void }) {
                 <div>Name: {itemInfo.name}</div>
                 <div>Symbol: {itemInfo.symbol}</div>
                 <div>Type: {itemInfo.tokenType}</div>
-                <div>Your Balance: {walletBalance} {itemInfo.symbol}</div>
+                {/* Balance supprimée */}
               </div>
-              {!hasEnoughBalance && (
-                <div style={{ color: '#ff6b6b', fontWeight: 600, marginTop: 8 }}>
-                  ⚠️ Insufficient balance for distribution
-                </div>
-              )}
+              {/* Message de balance insuffisante supprimé */}
             </div>
           )}
 
@@ -238,6 +235,43 @@ export default function ItemRewardConfig({ onClose }: { onClose: () => void }) {
               fontSize: 16,
             }}
           />
+          {/* BOUTON VERT RECAP */}
+          <button
+            style={{
+              background: '#00C46C',
+              color: '#fff',
+              border: 'none',
+              padding: '16px 32px',
+              borderRadius: 8,
+              fontSize: 18,
+              fontWeight: 700,
+              cursor: itemInfo && itemName && contractAddress && amountPerUser && !error ? 'pointer' : 'not-allowed',
+              width: '100%',
+              marginTop: 16,
+              transition: 'all 0.3s ease',
+              opacity: itemInfo && itemName && contractAddress && amountPerUser && !error ? 1 : 0.5,
+              pointerEvents: itemInfo && itemName && contractAddress && amountPerUser && !error ? 'auto' : 'none'
+            }}
+            disabled={!(itemInfo && itemName && contractAddress && amountPerUser && !error)}
+            onClick={() => {
+              // Sauvegarde la config premium
+              const config = {
+                type: 'item',
+                name: itemName,
+                contractAddress,
+                blockchain,
+                standard: itemStandard,
+                amountPerUser,
+                totalAmount: totalItems,
+                itemInfo,
+                walletAddress
+              };
+              localStorage.setItem('premiumItemReward', JSON.stringify(config));
+              window.location.href = '/creation/b2c/recap';
+            }}
+          >
+            Go to Recap
+          </button>
         </div>
       </div>
     </div>
