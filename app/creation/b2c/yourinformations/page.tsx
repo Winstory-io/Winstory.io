@@ -38,11 +38,22 @@ export default function YourInformationsB2C() {
     const [email, setEmail] = useState<string>("");
 
     useEffect(() => {
-        const companyData = JSON.parse(localStorage.getItem("company") || 'null');
-        const userData = JSON.parse(localStorage.getItem("user") || 'null');
-        setCompany(companyData?.name || "@company");
-        setEmail(userData?.email || "adress logged");
-    }, []);
+        const readLocalStorage = () => {
+            const companyData = JSON.parse(localStorage.getItem("company") || 'null');
+            const userData = JSON.parse(localStorage.getItem("user") || 'null');
+            setCompany(companyData?.name || "@company");
+            setEmail(userData?.email || "adress logged");
+        };
+        readLocalStorage();
+        window.addEventListener('focus', readLocalStorage);
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') readLocalStorage();
+        });
+        return () => {
+            window.removeEventListener('focus', readLocalStorage);
+            document.removeEventListener('visibilitychange', readLocalStorage);
+        };
+    }, [company, email, router]);
 
     return (
         <ProtectedRoute>

@@ -10,6 +10,23 @@ export default function B2CLoginPage() {
   const [showRedirectArrow, setShowRedirectArrow] = useState(false);
   const router = useRouter();
 
+  // DEBUG affichage du localStorage
+  const [debugUser, setDebugUser] = useState('');
+  const [debugWallet, setDebugWallet] = useState('');
+  useEffect(() => {
+    const updateDebug = () => {
+      setDebugUser(localStorage.getItem('user') || 'null');
+      setDebugWallet(localStorage.getItem('walletAddress') || 'null');
+    };
+    updateDebug();
+    window.addEventListener('focus', updateDebug);
+    document.addEventListener('visibilitychange', updateDebug);
+    return () => {
+      window.removeEventListener('focus', updateDebug);
+      document.removeEventListener('visibilitychange', updateDebug);
+    };
+  }, []);
+
   // Check if user is already connected when page loads
   useEffect(() => {
     const user = localStorage.getItem("user");
@@ -23,15 +40,39 @@ export default function B2CLoginPage() {
     }
   }, [router]);
 
+  // Redirection automatique dès que l'email et le wallet sont présents dans le localStorage
+  useEffect(() => {
+    const checkAndRedirect = () => {
+      const user = JSON.parse(localStorage.getItem("user") || 'null');
+      const wallet = localStorage.getItem("walletAddress");
+      if (user?.email && wallet) {
+        setIsConnected(true);
+        setShowRedirectArrow(true);
+        setTimeout(() => {
+          router.push('/creation/b2c/yourinformations');
+        }, 1000);
+      }
+    };
+    checkAndRedirect();
+    window.addEventListener('focus', checkAndRedirect);
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') checkAndRedirect();
+    });
+    return () => {
+      window.removeEventListener('focus', checkAndRedirect);
+      document.removeEventListener('visibilitychange', checkAndRedirect);
+    };
+  }, [router]);
+
   // Function to call after successful login
-  const handleLoginSuccess = (email) => {
-    if (!email) return;
-    const domain = email.split('@')[1] || '';
-    localStorage.setItem("user", JSON.stringify({ email }));
+  const handleLoginSuccess = (data) => {
+    // data: { email, walletAddress }
+    if (!data || !data.email || !data.walletAddress) return;
+    const domain = data.email.split('@')[1] || '';
+    localStorage.setItem("user", JSON.stringify({ email: data.email }));
     localStorage.setItem("company", JSON.stringify({ name: domain }));
     setIsConnected(true);
     setShowRedirectArrow(true);
-    // Automatic redirect after 2 seconds
     setTimeout(() => {
       router.push('/creation/b2c/yourinformations');
     }, 2000);
@@ -47,6 +88,12 @@ export default function B2CLoginPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#000', color: '#fff', fontFamily: 'Inter, sans-serif', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', paddingTop: 24 }}>
+      {/* DEBUG INFO */}
+      <div style={{ background: '#222', color: '#FFD600', padding: 12, marginBottom: 16, borderRadius: 8 }}>
+        <div><b>DEBUG</b></div>
+        <div>localStorage.user: {debugUser}</div>
+        <div>localStorage.walletAddress: {debugWallet}</div>
+      </div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', maxWidth: 500, margin: '32px auto 32px auto', position: 'relative' }}>
         <span style={{ fontSize: 40, fontWeight: 700, color: '#2eea8b', letterSpacing: 1, whiteSpace: 'nowrap' }}>Creation B2C login</span>
         <button onClick={() => setShowPopup(true)} style={{ background: 'none', border: 'none', marginLeft: 16, marginRight: 8, cursor: 'pointer', padding: 0 }} aria-label="Help">

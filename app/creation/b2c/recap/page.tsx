@@ -22,17 +22,26 @@ export default function RecapB2C() {
   const [confirmed, setConfirmed] = useState(false);
 
   useEffect(() => {
-    // Récupération des données stockées (à adapter selon la structure réelle)
-    const user = JSON.parse(localStorage.getItem("user") || "null");
-    const company = JSON.parse(localStorage.getItem("company") || "null");
-    const story = JSON.parse(localStorage.getItem("story") || "null");
-    const film = JSON.parse(localStorage.getItem("film") || "null");
-    // Récompenses
-    const standardToken = JSON.parse(localStorage.getItem("standardTokenReward") || "null");
-    const standardItem = JSON.parse(localStorage.getItem("standardItemReward") || "null");
-    const premiumToken = JSON.parse(localStorage.getItem("premiumTokenReward") || "null");
-    const premiumItem = JSON.parse(localStorage.getItem("premiumItemReward") || "null");
-    setRecap({ user, company, story, film, standardToken, standardItem, premiumToken, premiumItem });
+    const readLocalStorage = () => {
+      const user = JSON.parse(localStorage.getItem("user") || "null");
+      const company = JSON.parse(localStorage.getItem("company") || "null");
+      const story = JSON.parse(localStorage.getItem("story") || "null");
+      const film = JSON.parse(localStorage.getItem("film") || "null");
+      const standardToken = JSON.parse(localStorage.getItem("standardTokenReward") || "null");
+      const standardItem = JSON.parse(localStorage.getItem("standardItemReward") || "null");
+      const premiumToken = JSON.parse(localStorage.getItem("premiumTokenReward") || "null");
+      const premiumItem = JSON.parse(localStorage.getItem("premiumItemReward") || "null");
+      setRecap({ user, company, story, film, standardToken, standardItem, premiumToken, premiumItem });
+    };
+    readLocalStorage();
+    window.addEventListener('focus', readLocalStorage);
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') readLocalStorage();
+    });
+    return () => {
+      window.removeEventListener('focus', readLocalStorage);
+      document.removeEventListener('visibilitychange', readLocalStorage);
+    };
   }, []);
 
   // Pour la maquette, fallback si pas de données

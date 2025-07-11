@@ -6,6 +6,7 @@ import { getAddressValidationError, getDecimalsNote } from '../../../../lib/bloc
 import { useRealTimeBalance } from '../../../../lib/hooks/useWalletBalance';
 import { useActiveAccount } from "thirdweb/react";
 import { useRouter } from 'next/navigation';
+import { validateContract } from '../../../../lib/blockchain-rpc';
 
 interface TokenInfo {
   name: string;
@@ -102,10 +103,6 @@ export default function TokenRewardConfig({ onClose }: { onClose: () => void }) 
       }
 
       // Use real blockchain validation
-      const { validateContract } = await import('../../../../lib/blockchain-rpc').catch(() => {
-        throw new Error('Failed to load blockchain validation module');
-      });
-      
       const tokenInfo = await validateContract(address, blockchain, tokenStandard, walletAddress) as TokenInfo;
       console.log('TokenInfo:', tokenInfo); // DEBUG
       setTokenInfo(tokenInfo);

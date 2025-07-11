@@ -18,7 +18,7 @@ interface WalletConnectProps {
     isEmailLogin?: boolean;
     isWalletLogin?: boolean;
     isBothLogin?: boolean;
-    onLoginSuccess?: (emailOrAddress: string) => void;
+    onLoginSuccess?: (data: { email: string, walletAddress: string }) => void;
     onLogout?: () => void;
 }
 
@@ -64,9 +64,12 @@ function WalletConnectContent({ isEmailLogin = false, isWalletLogin = false, isB
     };
 
     // Handle email login success
-    const handleEmailLogin = (email: string) => {
+    const [pendingEmail, setPendingEmail] = useState<string | null>(null);
+    const handleEmailLogin = (data: { email: string, walletAddress: string }) => {
         setEmailConnected(true);
-        if (onLoginSuccess) onLoginSuccess(email);
+        setPendingEmail(data.email);
+        // On attend que useActiveAccount détecte le wallet connecté avant d'appeler onLoginSuccess
+        // (la redirection/stockage ne doit se faire qu'après validation du code)
     };
 
     // Handle wallet connection
@@ -74,13 +77,19 @@ function WalletConnectContent({ isEmailLogin = false, isWalletLogin = false, isB
         if (account && !walletConnected) {
             setWalletConnected(true);
             localStorage.setItem("walletAddress", account.address); // Ajout persistance wallet
+            // Si on a un pendingEmail, on stocke aussi l'email et le nom d'entreprise
+            if (pendingEmail) {
+                const domain = pendingEmail.split('@')[1] || '';
+                localStorage.setItem("user", JSON.stringify({ email: pendingEmail }));
+                localStorage.setItem("company", JSON.stringify({ name: domain }));
+            }
             if (onLoginSuccess) onLoginSuccess(account.address);
         } else if (!account && walletConnected) {
             // Si le compte est déconnecté, on nettoie le localStorage
             localStorage.removeItem("walletAddress");
             setWalletConnected(false);
         }
-    }, [account, walletConnected, onLoginSuccess]);
+    }, [account, walletConnected, onLoginSuccess, pendingEmail]);
 
     if (!mounted) {
         return <div>Loading...</div>;

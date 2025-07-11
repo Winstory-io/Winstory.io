@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import styles from '../standardrewards/Rewards.module.css';
 import { useWalletAddress } from '../../../../lib/hooks/useWalletConnection';
+import { useRouter } from 'next/navigation';
 
 interface TokenInfo {
   name: string;
@@ -23,6 +24,7 @@ export default function TokenRewardConfig({ onClose }: { onClose: () => void }) 
 
   // Wallet connection
   const walletAddress = useWalletAddress();
+  const router = useRouter();
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
@@ -264,7 +266,7 @@ export default function TokenRewardConfig({ onClose }: { onClose: () => void }) 
                 walletAddress
               };
               localStorage.setItem('premiumTokenReward', JSON.stringify(config));
-              window.location.href = '/creation/b2c/recap';
+              router.push('/creation/b2c/recap');
             }}
           >
             Go to Recap

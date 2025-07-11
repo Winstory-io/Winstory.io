@@ -90,6 +90,7 @@ export default function ThirdwebEmailAuth({
 
         try {
             // Verify code and connect
+            let walletAddress = '';
             await connect(async () => {
                 const wallet = inAppWallet();
                 await wallet.connect({
@@ -98,6 +99,7 @@ export default function ThirdwebEmailAuth({
                     email,
                     verificationCode,
                 });
+                walletAddress = wallet.getAddress ? await wallet.getAddress() : '';
                 return wallet;
             });
 
@@ -106,7 +108,10 @@ export default function ThirdwebEmailAuth({
             setVerificationCode('');
             setIsCodeSent(false);
             setIsConnected(true);
-            onSuccess?.(email);
+            // Stockage direct dans le localStorage
+            localStorage.setItem("user", JSON.stringify({ email }));
+            localStorage.setItem("company", JSON.stringify({ name: email.split('@')[1] }));
+            if (onSuccess) onSuccess({ email, walletAddress });
         } catch (error) {
             const errorMessage = 'Incorrect verification code or connection error';
             setMessage(errorMessage);

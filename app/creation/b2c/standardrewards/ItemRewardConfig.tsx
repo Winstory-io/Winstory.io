@@ -6,6 +6,7 @@ import { getAddressValidationError, getDecimalsNote } from '../../../../lib/bloc
 import { useRealTimeBalance } from '../../../../lib/hooks/useWalletBalance';
 import { useActiveAccount } from "thirdweb/react";
 import { useRouter } from 'next/navigation';
+import { validateContract } from '../../../../lib/blockchain-rpc';
 
 interface ItemInfo {
   name: string;
@@ -99,8 +100,6 @@ export default function ItemRewardConfig({ onClose }: { onClose: () => void }) {
       }
 
       // Use real blockchain validation
-      const { validateContract } = await import('../../../../lib/blockchain-rpc');
-      
       // For ERC1155, we need a tokenId - using '0' as default
       const tokenId = itemStandard === 'ERC1155' ? '0' : undefined;
       const itemInfo = await validateContract(address, blockchain, itemStandard, walletAddress, tokenId) as ItemInfo;
