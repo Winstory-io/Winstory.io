@@ -60,7 +60,7 @@ export default function RecapB2C() {
   const handleConfirm = () => {
     setConfirmed(true);
     setTimeout(() => {
-      router.push("/creation/b2c/mint");
+      router.push("/creation/b2c/minthackathon");
     }, 1000); // 1 seconde pour laisser voir l'animation de la coche
   };
 
