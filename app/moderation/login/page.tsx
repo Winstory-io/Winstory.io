@@ -17,7 +17,7 @@ export default function ModerationLoginPage() {
       setIsWalletConnected(true);
       setShowRedirect(true);
       setTimeout(() => {
-        router.push('/moderation');
+        router.push('/moderation/hackathon');
       }, 1500);
     }
   }, [router]);
@@ -29,7 +29,7 @@ export default function ModerationLoginPage() {
     setIsWalletConnected(true);
     setShowRedirect(true);
     setTimeout(() => {
-      router.push('/moderation');
+      router.push('/moderation/hackathon');
     }, 1500);
   };
 
@@ -47,7 +47,7 @@ export default function ModerationLoginPage() {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', marginTop: 10, marginBottom: 48, marginLeft: -120 }}>
           <img src="/moderation.svg" alt="Moderation Icon" style={{ width: 192, height: 192, marginRight: 32 }} />
           <span style={{ fontSize: 32, fontWeight: 700, color: '#2eea8b', letterSpacing: 1, whiteSpace: 'nowrap', display: 'flex', alignItems: 'center' }}>
-            Moderation login
+            Hackathon Moderation login
             <button style={{ background: 'none', border: 'none', marginLeft: 8, cursor: 'pointer', fontSize: 32, padding: 0 }} aria-label="Help" onClick={() => { /* TODO: open popup */ }}>
               <img src="/tooltip.svg" alt="Help" style={{ width: 32, height: 32, filter: 'drop-shadow(0 0 6px #FFD600)' }} />
             </button>
@@ -79,7 +79,7 @@ export default function ModerationLoginPage() {
               Wallet connecté !
             </div>
             <div style={{ fontSize: 16, marginBottom: 24 }}>
-              Redirection vers la modération...
+              Redirection vers la modération hackathon...
             </div>
           </div>
         )}

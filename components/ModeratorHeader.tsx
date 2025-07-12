@@ -10,7 +10,10 @@ interface ModeratorHeaderProps {
 
 const ModeratorHeader: React.FC<ModeratorHeaderProps> = ({ activeTab, onTabChange, onIconClick, onBulbClick }) => {
   const walletAddress = useWalletAddress();
-  const formatAddress = (address: string) => address ? `${address.slice(0, 6)}...${address.slice(-4)}` : '';
+  const formatAddress = (address: any) => {
+    if (!address || typeof address !== 'string') return '';
+    return `${address.slice(0, 6)}...${address.slice(-4)}`;
+  };
   return (
     <header style={{
       display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1.5rem 1rem 1rem 1rem', background: '#000', color: '#FFD600', borderBottom: '2px solid #FFD600', position: 'relative', zIndex: 10

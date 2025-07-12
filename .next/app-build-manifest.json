@@ -20,62 +20,21 @@
       "static/chunks/main-app.js",
       "static/chunks/app/api/auth/[...nextauth]/route.js"
     ],
-    "/creation/layout": [
+    "/moderation/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/creation/layout.js"
+      "static/chunks/app/moderation/layout.js"
     ],
-    "/creation/youare/page": [
+    "/moderation/hackathon-login/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/creation/youare/page.js"
+      "static/chunks/app/moderation/hackathon-login/page.js"
     ],
-    "/creation/b2c/login/page": [
+    "/moderation/hackathon/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/creation/b2c/login/page.js"
-    ],
-    "/creation/b2c/yourinformations/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/creation/b2c/yourinformations/page.js"
-    ],
-    "/creation/b2c/yourwinstory/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/creation/b2c/yourwinstory/page.js"
-    ],
-    "/creation/b2c/yourfilm/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/creation/b2c/yourfilm/page.js"
-    ],
-    "/creation/b2c/rewardsornot/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/creation/b2c/rewardsornot/page.js"
-    ],
-    "/creation/b2c/standardrewards/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/css/app/creation/b2c/standardrewards/page.css",
-      "static/chunks/app/creation/b2c/standardrewards/page.js"
-    ],
-    "/creation/b2c/premiumrewards/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/css/app/creation/b2c/premiumrewards/page.css",
-      "static/chunks/app/creation/b2c/premiumrewards/page.js"
-    ],
-    "/creation/b2c/recap/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/creation/b2c/recap/page.js"
-    ],
-    "/creation/b2c/minthackathon/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/creation/b2c/minthackathon/page.js"
+      "static/css/app/moderation/hackathon/page.css",
+      "static/chunks/app/moderation/hackathon/page.js"
     ]
   }
 }

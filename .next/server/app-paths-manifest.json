@@ -1,8 +1,6 @@
 {
-  "/creation/b2c/premiumrewards/page": "app/creation/b2c/premiumrewards/page.js",
-  "/creation/b2c/rewardsornot/page": "app/creation/b2c/rewardsornot/page.js",
-  "/creation/b2c/recap/page": "app/creation/b2c/recap/page.js",
-  "/creation/b2c/standardrewards/page": "app/creation/b2c/standardrewards/page.js",
-  "/creation/b2c/minthackathon/page": "app/creation/b2c/minthackathon/page.js",
+  "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js",
+  "/moderation/hackathon/page": "app/moderation/hackathon/page.js",
+  "/moderation/hackathon-login/page": "app/moderation/hackathon-login/page.js",
   "/welcome/page": "app/welcome/page.js"
 }

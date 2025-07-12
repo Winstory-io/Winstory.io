@@ -120,7 +120,7 @@ export default function Home() {
             gap: 24,
             cursor: 'pointer',
           }}
-          onClick={() => router.push('/moderation/login')}
+          onClick={() => router.push('/moderation/hackathon-login')}
         >
           <span style={{ fontSize: 56 }}>
             <ModerationIcon />
