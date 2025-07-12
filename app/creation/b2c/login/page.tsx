@@ -73,9 +73,7 @@ export default function B2CLoginPage() {
     localStorage.setItem("company", JSON.stringify({ name: domain }));
     setIsConnected(true);
     setShowRedirectArrow(true);
-    setTimeout(() => {
-      router.push('/creation/b2c/yourinformations');
-    }, 2000);
+    router.push('/creation/b2c/yourinformations');
   };
 
   // Function to handle logout
