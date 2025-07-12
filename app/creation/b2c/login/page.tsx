@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import LoginButton from '@/components/LoginButton';
 import WalletConnect from '@/components/WalletConnect';
 import { useRouter } from 'next/navigation';
@@ -8,7 +8,9 @@ export default function B2CLoginPage() {
   const [showPopup, setShowPopup] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const [showRedirectArrow, setShowRedirectArrow] = useState(false);
+  const [redirectMessage, setRedirectMessage] = useState('');
   const router = useRouter();
+  const redirectTimeout = useRef<NodeJS.Timeout | null>(null);
 
   // DEBUG affichage du localStorage
   const [debugUser, setDebugUser] = useState('');
@@ -27,40 +29,42 @@ export default function B2CLoginPage() {
     };
   }, []);
 
-  // Check if user is already connected when page loads
+  // Effet unique pour la redirection après login
   useEffect(() => {
-    const user = localStorage.getItem("user");
-    if (user) {
+    // Nettoyer tout timeout précédent
+    if (redirectTimeout.current) {
+      clearTimeout(redirectTimeout.current);
+      redirectTimeout.current = null;
+    }
+    // Vérifier la présence de l'email et du wallet
+    const user = JSON.parse(localStorage.getItem('user') || 'null');
+    const wallet = localStorage.getItem('walletAddress');
+    if (user?.email && wallet) {
       setIsConnected(true);
       setShowRedirectArrow(true);
-      // Automatic redirect after 2 seconds
-      setTimeout(() => {
+      setRedirectMessage('Redirecting to "Your informations" in 1 second...');
+      redirectTimeout.current = setTimeout(() => {
+        setShowRedirectArrow(false);
+        router.push('/creation/b2c/yourinformations');
+      }, 1000);
+    } else if (user) {
+      setIsConnected(true);
+      setShowRedirectArrow(true);
+      setRedirectMessage('Redirecting to "Your Story" in 2 seconds...');
+      redirectTimeout.current = setTimeout(() => {
+        setShowRedirectArrow(false);
         router.push('/creation/b2c/yourwinstory');
       }, 2000);
+    } else {
+      setIsConnected(false);
+      setShowRedirectArrow(false);
+      setRedirectMessage('');
     }
-  }, [router]);
-
-  // Redirection automatique dès que l'email et le wallet sont présents dans le localStorage
-  useEffect(() => {
-    const checkAndRedirect = () => {
-      const user = JSON.parse(localStorage.getItem("user") || 'null');
-      const wallet = localStorage.getItem("walletAddress");
-      if (user?.email && wallet) {
-        setIsConnected(true);
-        setShowRedirectArrow(true);
-        setTimeout(() => {
-          router.push('/creation/b2c/yourinformations');
-        }, 1000);
-      }
-    };
-    checkAndRedirect();
-    window.addEventListener('focus', checkAndRedirect);
-    document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible') checkAndRedirect();
-    });
     return () => {
-      window.removeEventListener('focus', checkAndRedirect);
-      document.removeEventListener('visibilitychange', checkAndRedirect);
+      if (redirectTimeout.current) {
+        clearTimeout(redirectTimeout.current);
+        redirectTimeout.current = null;
+      }
     };
   }, [router]);
 
@@ -73,7 +77,12 @@ export default function B2CLoginPage() {
     localStorage.setItem("company", JSON.stringify({ name: domain }));
     setIsConnected(true);
     setShowRedirectArrow(true);
-    router.push('/creation/b2c/yourinformations');
+    setRedirectMessage('Redirecting to "Your informations" in 1 second...');
+    if (redirectTimeout.current) clearTimeout(redirectTimeout.current);
+    redirectTimeout.current = setTimeout(() => {
+      setShowRedirectArrow(false);
+      router.push('/creation/b2c/yourinformations');
+    }, 1000);
   };
 
   // Function to handle logout
@@ -82,6 +91,11 @@ export default function B2CLoginPage() {
     localStorage.removeItem("company");
     setIsConnected(false);
     setShowRedirectArrow(false);
+    setRedirectMessage('');
+    if (redirectTimeout.current) {
+      clearTimeout(redirectTimeout.current);
+      redirectTimeout.current = null;
+    }
   };
 
   return (
@@ -125,7 +139,7 @@ export default function B2CLoginPage() {
             Login successful !
           </div>
           <div style={{ fontSize: 16, marginBottom: 24 }}>
-            Redirecting to "Your Story" in 2 seconds...
+            {redirectMessage}
           </div>
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 12 }}>
             <span style={{ fontSize: 18 }}>Automatic redirect</span>

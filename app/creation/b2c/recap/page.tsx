@@ -31,7 +31,8 @@ export default function RecapB2C() {
       const standardItem = JSON.parse(localStorage.getItem("standardItemReward") || "null");
       const premiumToken = JSON.parse(localStorage.getItem("premiumTokenReward") || "null");
       const premiumItem = JSON.parse(localStorage.getItem("premiumItemReward") || "null");
-      setRecap({ user, company, story, film, standardToken, standardItem, premiumToken, premiumItem });
+      const roiData = JSON.parse(localStorage.getItem("roiData") || "null");
+      setRecap({ user, company, story, film, standardToken, standardItem, premiumToken, premiumItem, roiData });
     };
     readLocalStorage();
     window.addEventListener('focus', readLocalStorage);
@@ -56,6 +57,32 @@ export default function RecapB2C() {
       ? "View your film"
       : "@yourfilm";
   const rewardLabel = recap.reward?.rewardLabel || "No Rewards";
+
+  // Calcul du nombre total de récompenses à distribuer
+  const calculateTotalRewards = () => {
+    let totalStandard = 0;
+    let totalPremium = 0;
+    
+    // Calcul des récompenses standard
+    if (recap.standardToken && recap.roiData?.maxCompletions) {
+      totalStandard += recap.standardToken.amountPerUser * recap.roiData.maxCompletions;
+    }
+    if (recap.standardItem && recap.roiData?.maxCompletions) {
+      totalStandard += recap.standardItem.amountPerUser * recap.roiData.maxCompletions;
+    }
+    
+    // Calcul des récompenses premium (toujours 3 gagnants)
+    if (recap.premiumToken) {
+      totalPremium += recap.premiumToken.amountPerUser * 3;
+    }
+    if (recap.premiumItem) {
+      totalPremium += recap.premiumItem.amountPerUser * 3;
+    }
+    
+    return { totalStandard, totalPremium, total: totalStandard + totalPremium };
+  };
+
+  const rewardTotals = calculateTotalRewards();
 
   const handleConfirm = () => {
     setConfirmed(true);
@@ -193,9 +220,60 @@ export default function RecapB2C() {
                   )}
                 </div>
               )}
+              {/* Information sur le nombre total de récompenses à distribuer */}
+              {(rewardTotals.totalStandard > 0 || rewardTotals.totalPremium > 0) && (
+                <div style={{ background: 'rgba(255,215,0,0.15)', borderRadius: 12, padding: 14, textAlign: 'center', border: '1px solid #FFD600' }}>
+                  <div style={{ color: '#FFD600', fontWeight: 700, fontSize: 16, marginBottom: 8 }}>Auto-Distribution to Completers by Winstory</div>
+                  <div style={{ color: '#fff', fontSize: 14, lineHeight: 1.4 }}>
+                    {rewardTotals.totalStandard > 0 && (
+                      <div style={{ marginBottom: 4 }}>
+                        <span style={{ color: '#00C46C', fontWeight: 600 }}>Standard:</span> {rewardTotals.totalStandard.toFixed(5)}
+                      </div>
+                    )}
+                    {rewardTotals.totalPremium > 0 && (
+                      <div style={{ marginBottom: 4 }}>
+                        <span style={{ color: '#FFD600', fontWeight: 600 }}>Premium:</span> {rewardTotals.totalPremium.toFixed(5)}
+                      </div>
+                    )}
+                    <div style={{ color: '#FF2D2D', fontStyle: 'italic', fontSize: 12, marginTop: 8, borderTop: '1px solid #FFD600', paddingTop: 8 }}>
+                      Your logged-in account must have all the rewards
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
+        {/* Bloc Community & R.O.I. */}
+        {recap.roiData && (
+          <div style={{ border: "2px solid #fff", borderRadius: 24, padding: 24, marginBottom: 40, textAlign: 'center', fontWeight: 600, fontSize: 18, maxWidth: 420, width: '100%', marginLeft: 'auto', marginRight: 'auto', background: '#181818' }}>
+            <div style={{ fontWeight: 700, fontSize: 22, color: '#FFD600', marginBottom: 12 }}>Community & R.O.I.</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16, textAlign: 'left' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontWeight: 600, fontSize: 16 }}>Unit Value of the Completion:</span>
+                <span style={{ color: '#18C964', fontWeight: 700, fontSize: 18 }}>${recap.roiData.unitValue?.toFixed(2) || '0.00'}</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontWeight: 600, fontSize: 16 }}>Net Profits targeted:</span>
+                <span style={{ color: '#18C964', fontWeight: 700, fontSize: 18 }}>${recap.roiData.netProfit?.toFixed(2) || '0.00'}</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontWeight: 600, fontSize: 16 }}>Maximum Completions:</span>
+                <span style={{ color: '#18C964', fontWeight: 700, fontSize: 18 }}>{recap.roiData.maxCompletions || '0'}</span>
+              </div>
+              {recap.roiData.isFreeReward && (
+                <div style={{ background: 'rgba(24,201,100,0.1)', borderRadius: 8, padding: 12, marginTop: 8 }}>
+                  <span style={{ color: '#18C964', fontWeight: 600, fontSize: 14 }}>✓ Free rewards enabled for community</span>
+                </div>
+              )}
+              {recap.roiData.noReward && (
+                <div style={{ background: 'rgba(255,215,0,0.1)', borderRadius: 8, padding: 12, marginTop: 8 }}>
+                  <span style={{ color: '#FFD600', fontWeight: 600, fontSize: 14 }}>✓ No rewards - Free completions +$1000</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
         {/* Bouton Confirm flottant (bulle en bas à droite, toujours un cercle) */}
         <button
           onClick={handleConfirm}

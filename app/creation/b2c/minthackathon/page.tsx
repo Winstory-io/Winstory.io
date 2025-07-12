@@ -2,9 +2,7 @@
 import React from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
-
-const PINATA_API_KEY = "e84206f813ab133b6e93";
-const PINATA_API_SECRET = "791d5cafd5fd4cb46f2b007de83936eef6cd5a65b73d8e828938d6a5a9151d94";
+import { PINATA_CONFIG, validatePinataKeys } from "../../../../lib/config/pinata-config";
 
 export default function MintHackathonPage() {
   const router = useRouter();
@@ -19,7 +17,28 @@ export default function MintHackathonPage() {
     // Charger l'historique local
     const h = JSON.parse(localStorage.getItem("ipfsHistory") || "[]");
     setHistory(h);
+    
+    // Vérifier les clés API
+    if (!validatePinataKeys()) {
+      setError("⚠️ Using default Pinata API keys. Please set your own keys in .env.local for production use.");
+    }
   }, []);
+
+  // Fonction pour tester la connectivité à l'API Pinata
+  const testPinataConnection = async () => {
+    try {
+      const response = await axios.get(`${PINATA_CONFIG.BASE_URL}/data/testAuthentication`, {
+        headers: {
+          pinata_api_key: PINATA_CONFIG.API_KEY,
+          pinata_secret_api_key: PINATA_CONFIG.API_SECRET,
+        },
+      });
+      return response.status === 200;
+    } catch (error) {
+      console.error("Pinata API connection test failed:", error);
+      return false;
+    }
+  };
 
   const handleMint = async () => {
     setLoading(true);
@@ -27,7 +46,14 @@ export default function MintHackathonPage() {
     setSuccess(false);
     setCid("");
     setVideoCid("");
+    
     try {
+      // Vérifier la connectivité à Pinata
+      const isConnected = await testPinataConnection();
+      if (!isConnected) {
+        throw new Error("Cannot connect to Pinata API. Please check your API keys or network connection.");
+      }
+
       // 1. Récupérer les infos du recap
       const company = JSON.parse(localStorage.getItem("company") || "null");
       const story = JSON.parse(localStorage.getItem("story") || "null");
@@ -35,31 +61,51 @@ export default function MintHackathonPage() {
       const standardItem = JSON.parse(localStorage.getItem("standardItemReward") || "null");
       const premiumToken = JSON.parse(localStorage.getItem("premiumTokenReward") || "null");
       const premiumItem = JSON.parse(localStorage.getItem("premiumItemReward") || "null");
+      const roiData = JSON.parse(localStorage.getItem("roiData") || "null");
+      
       // 2. Récupérer la vidéo (fichier stocké dans localStorage sous 'film')
       const film = JSON.parse(localStorage.getItem("film") || "null");
-      if (!film || !film.url) throw new Error("No video found in /yourfilm");
+      if (!film || !film.url) {
+        throw new Error("No video found. Please upload a video first in the /yourfilm section.");
+      }
       
       // Convertir l'URL blob en fichier
       const response = await fetch(film.url);
+      if (!response.ok) {
+        throw new Error("Failed to fetch video file from localStorage.");
+      }
+      
       const videoBlob = await response.blob();
       const videoFile = new File([videoBlob], "video.mp4", { type: "video/mp4" });
+      
       // 3. Uploader la vidéo sur Pinata
       const formData = new FormData();
       formData.append("file", videoFile, film.name || "video.mp4");
+      
+      console.log("Uploading video to Pinata...");
       const videoRes = await axios.post(
-        "https://api.pinata.cloud/pinning/pinFileToIPFS",
+        `${PINATA_CONFIG.BASE_URL}/pinning/pinFileToIPFS`,
         formData,
         {
           maxContentLength: Infinity,
+          maxBodyLength: Infinity,
+          timeout: 60000, // 60 secondes timeout
           headers: {
             "Content-Type": "multipart/form-data",
-            pinata_api_key: PINATA_API_KEY,
-            pinata_secret_api_key: PINATA_API_SECRET,
+            pinata_api_key: PINATA_CONFIG.API_KEY,
+            pinata_secret_api_key: PINATA_CONFIG.API_SECRET,
           },
         }
       );
+      
+      if (!videoRes.data.IpfsHash) {
+        throw new Error("Failed to upload video to IPFS. No hash returned.");
+      }
+      
       const videoCID = videoRes.data.IpfsHash;
       setVideoCid(videoCID);
+      console.log("Video uploaded successfully:", videoCID);
+      
       // 4. Construire le JSON à uploader
       const data = {
         companyName: company?.name || "",
@@ -74,30 +120,70 @@ export default function MintHackathonPage() {
           premiumToken,
           premiumItem,
         },
+        communityROI: roiData || {
+          unitValue: 0,
+          netProfit: 0,
+          maxCompletions: 0,
+          isFreeReward: false,
+          noReward: false
+        },
         email: "anonymous@demo.io",
         video: `ipfs://${videoCID}`,
       };
+      
       // 5. Uploader le JSON sur Pinata
+      console.log("Uploading metadata to Pinata...");
       const jsonRes = await axios.post(
-        "https://api.pinata.cloud/pinning/pinJSONToIPFS",
+        `${PINATA_CONFIG.BASE_URL}/pinning/pinJSONToIPFS`,
         data,
         {
+          timeout: 30000, // 30 secondes timeout
           headers: {
             "Content-Type": "application/json",
-            pinata_api_key: PINATA_API_KEY,
-            pinata_secret_api_key: PINATA_API_SECRET,
+            pinata_api_key: PINATA_CONFIG.API_KEY,
+            pinata_secret_api_key: PINATA_CONFIG.API_SECRET,
           },
         }
       );
+      
+      if (!jsonRes.data.IpfsHash) {
+        throw new Error("Failed to upload metadata to IPFS. No hash returned.");
+      }
+      
       const jsonCID = jsonRes.data.IpfsHash;
       setCid(jsonCID);
       setSuccess(true);
+      console.log("Metadata uploaded successfully:", jsonCID);
+      
       // 6. Historique local
       const newHistory = [jsonCID, ...history];
       setHistory(newHistory);
       localStorage.setItem("ipfsHistory", JSON.stringify(newHistory));
+      
     } catch (e: any) {
-      setError(e.message || "Error during IPFS mint");
+      console.error("Mint error:", e);
+      let errorMessage = "An error occurred during the mint process.";
+      
+      if (e.response) {
+        // Erreur de réponse HTTP
+        if (e.response.status === 401) {
+          errorMessage = "Invalid Pinata API credentials. Please check your API keys.";
+        } else if (e.response.status === 403) {
+          errorMessage = "Access denied to Pinata API. Please check your API permissions.";
+        } else if (e.response.status === 429) {
+          errorMessage = "Rate limit exceeded. Please try again later.";
+        } else {
+          errorMessage = `API Error: ${e.response.status} - ${e.response.data?.message || e.response.statusText}`;
+        }
+      } else if (e.request) {
+        // Erreur de réseau
+        errorMessage = "Network error. Please check your internet connection and try again.";
+      } else {
+        // Erreur de code
+        errorMessage = e.message || "Unknown error occurred.";
+      }
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

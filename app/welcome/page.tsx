@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import TipBox from '@/components/icons/TipBox';
 import CreationIcon from '@/components/icons/CreationIcon';
 import ModerationIcon from '@/components/icons/ModerationIcon';
@@ -8,10 +8,19 @@ import CompletionIcon from '@/components/icons/CompletionIcon';
 import ExplorerIcon from '@/components/icons/ExplorerIcon';
 import { useRouter } from 'next/navigation';
 import { useWalletAddress } from '@/lib/hooks/useWalletConnection';
+import { clearUserCache } from '@/lib/utils';
 
 export default function Home() {
   const router = useRouter();
   const walletAddress = useWalletAddress();
+
+  // Nettoyer automatiquement le cache à chaque visite de la page welcome
+  useEffect(() => {
+    // S'assurer que nous sommes côté client
+    if (typeof window !== 'undefined') {
+      clearUserCache();
+    }
+  }, []);
 
   return (
     <div

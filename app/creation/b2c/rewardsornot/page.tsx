@@ -177,6 +177,49 @@ export default function RewardsOrNotB2C() {
     }
   }, [freeReward, userMaxCompletions]);
 
+  // Sauvegarder automatiquement les données de ROI quand elles changent
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      let roiData;
+      
+      if (noReward) {
+        roiData = {
+          unitValue: 0,
+          netProfit: 0,
+          maxCompletions: 0,
+          isFreeReward: false,
+          noReward: true
+        };
+      } else if (freeReward) {
+        roiData = {
+          unitValue: 0,
+          netProfit: 0,
+          maxCompletions: userMaxCompletions,
+          isFreeReward: true,
+          noReward: false
+        };
+      } else if (unitValue && netProfit) {
+        roiData = {
+          unitValue: unitValue,
+          netProfit: netProfit,
+          maxCompletions: maxCompletions,
+          isFreeReward: false,
+          noReward: false
+        };
+      } else {
+        roiData = {
+          unitValue: 0,
+          netProfit: 0,
+          maxCompletions: 0,
+          isFreeReward: false,
+          noReward: false
+        };
+      }
+      
+      localStorage.setItem('roiData', JSON.stringify(roiData));
+    }
+  }, [unitValue, netProfit, freeReward, userMaxCompletions, maxCompletions, noReward]);
+
   const canProceed = freeReward || noReward || (!!unitValue && !!netProfit);
 
   const handleNoRewardChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -189,16 +232,66 @@ export default function RewardsOrNotB2C() {
           rewardLabel: 'No Reward to give? No Problem, free completions +$1000',
         })
       );
+      // Sauvegarder les données de ROI pour no reward
+      const roiData = {
+        unitValue: 0,
+        netProfit: 0,
+        maxCompletions: 0,
+        isFreeReward: false,
+        noReward: true
+      };
+      localStorage.setItem('roiData', JSON.stringify(roiData));
     } else {
       localStorage.removeItem('campaignReward');
+      // Supprimer les données de ROI no reward
+      localStorage.removeItem('roiData');
     }
   };
 
   const handleNext = () => {
-    if ((freeReward || (!!unitValue && !!netProfit)) && !noReward) {
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('maxCompletions', String(freeReward ? userMaxCompletions : maxCompletions));
+    // Sauvegarder les données de ROI dans tous les cas
+    if (typeof window !== 'undefined') {
+      let roiData;
+      
+      if (noReward) {
+        roiData = {
+          unitValue: 0,
+          netProfit: 0,
+          maxCompletions: 0,
+          isFreeReward: false,
+          noReward: true
+        };
+      } else if (freeReward) {
+        roiData = {
+          unitValue: 0,
+          netProfit: 0,
+          maxCompletions: userMaxCompletions,
+          isFreeReward: true,
+          noReward: false
+        };
+      } else if (unitValue && netProfit) {
+        roiData = {
+          unitValue: unitValue,
+          netProfit: netProfit,
+          maxCompletions: maxCompletions,
+          isFreeReward: false,
+          noReward: false
+        };
+      } else {
+        roiData = {
+          unitValue: 0,
+          netProfit: 0,
+          maxCompletions: 0,
+          isFreeReward: false,
+          noReward: false
+        };
       }
+      
+      localStorage.setItem('roiData', JSON.stringify(roiData));
+      localStorage.setItem('maxCompletions', String(freeReward ? userMaxCompletions : maxCompletions));
+    }
+    
+    if ((freeReward || (!!unitValue && !!netProfit)) && !noReward) {
       router.push("/creation/b2c/standardrewards");
     } else if (noReward) {
       router.push("/creation/b2c/recap");

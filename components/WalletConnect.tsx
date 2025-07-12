@@ -64,25 +64,48 @@ function WalletConnectContent({ isEmailLogin = false, isWalletLogin = false, isB
 
     // Handle email login success
     const [pendingEmail, setPendingEmail] = useState<string | null>(null);
+    const [pendingWallet, setPendingWallet] = useState<string | null>(null);
     const handleEmailLogin = (data: { email: string; walletAddress: string }) => {
         setEmailConnected(true);
         setPendingEmail(data.email);
-        // On attend que useActiveAccount détecte le wallet connecté avant d'appeler onLoginSuccess
-        // (la redirection/stockage ne doit se faire qu'après validation du code)
+        // Si le wallet est déjà connecté, on peut déclencher la synchro immédiatement
+        if (account && data.email) {
+            localStorage.setItem("user", JSON.stringify({ email: data.email }));
+            localStorage.setItem("company", JSON.stringify({ name: data.email.split('@')[1] || '' }));
+            localStorage.setItem("walletAddress", account.address);
+            setWalletConnected(true);
+            if (onLoginSuccess) onLoginSuccess({ email: data.email, walletAddress: account.address });
+        }
     };
 
-    // Handle wallet connection
+    // Nouvelle logique de synchronisation email + wallet
+    useEffect(() => {
+        // Si on a un email ET un wallet, on déclenche la synchro
+        if (pendingEmail && account) {
+            localStorage.setItem("user", JSON.stringify({ email: pendingEmail }));
+            localStorage.setItem("company", JSON.stringify({ name: pendingEmail.split('@')[1] || '' }));
+            localStorage.setItem("walletAddress", account.address);
+            setWalletConnected(true);
+            if (onLoginSuccess) onLoginSuccess({ email: pendingEmail, walletAddress: account.address });
+            setPendingEmail(null); // On reset pour éviter les doublons
+        }
+    }, [pendingEmail, account, onLoginSuccess]);
+
+    // Handle wallet connection (uniquement pour le cas où le wallet est connecté avant l'email)
     useEffect(() => {
         if (account && !walletConnected) {
             setWalletConnected(true);
-            localStorage.setItem("walletAddress", account.address); // Ajout persistance wallet
+            localStorage.setItem("walletAddress", account.address);
             // Si on a un pendingEmail, on stocke aussi l'email et le nom d'entreprise
             if (pendingEmail) {
-                const domain = pendingEmail.split('@')[1] || '';
                 localStorage.setItem("user", JSON.stringify({ email: pendingEmail }));
-                localStorage.setItem("company", JSON.stringify({ name: domain }));
+                localStorage.setItem("company", JSON.stringify({ name: pendingEmail.split('@')[1] || '' }));
             }
-            if (onLoginSuccess) onLoginSuccess({ email: pendingEmail || '', walletAddress: account.address });
+            // Si on a un email déjà stocké, on déclenche la synchro
+            const user = JSON.parse(localStorage.getItem("user") || 'null');
+            if (user?.email && onLoginSuccess) {
+                onLoginSuccess({ email: user.email, walletAddress: account.address });
+            }
         } else if (!account && walletConnected) {
             // Si le compte est déconnecté, on nettoie le localStorage
             localStorage.removeItem("walletAddress");
