@@ -33,9 +33,9 @@ export default function IndividualLoginPage() {
   }, [router]);
 
   // Function to call after successful wallet connection
-  const handleWalletLoginSuccess = (address: string) => {
-    if (!address) return;
-    localStorage.setItem("walletAddress", address);
+  const handleWalletLoginSuccess = ({ email, walletAddress }: { email: string; walletAddress: string }) => {
+    if (!walletAddress) return;
+    localStorage.setItem("walletAddress", walletAddress);
     setIsWalletConnected(true);
     setShowRedirectArrow(true);
     // Automatic redirect after 2 seconds
@@ -146,7 +146,7 @@ export default function IndividualLoginPage() {
 
         <WalletConnect
           isWalletLogin={true}
-          onLoginSuccess={handleWalletLoginSuccess}
+          onLoginSuccess={({ email, walletAddress }) => handleWalletLoginSuccess({ email, walletAddress })}
           onLogout={handleLogout}
         />
       </div>

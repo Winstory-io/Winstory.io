@@ -4,7 +4,7 @@ import ModeratorHeader from '../../components/ModeratorHeader';
 import ModerationCard from '../../components/ModerationCard';
 import ModerationInfoModal from '../../components/ModerationInfoModal';
 import styles from '../../styles/Moderation.module.css';
-import { walletConnect, metamaskWallet, coinbaseWallet, phantomWallet } from "thirdweb/wallets";
+import { walletConnect } from "thirdweb/wallets";
 
 const mockModerationData = {
   userType: 'b2c',

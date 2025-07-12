@@ -1,4 +1,5 @@
 import { useActiveAccount } from "thirdweb/react";
+import type { RewardsSummaryProps } from 'components/RewardsSummary';
 
 export default function RewardsSummary({ 
   standard, 

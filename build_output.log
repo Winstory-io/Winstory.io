@@ -1,0 +1,23 @@
+
+> winstory.io-main@1.0.0 build
+> next build
+
+   ▲ Next.js 15.3.5
+   - Environments: .env.local
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 11.0s
+   Linting and checking validity of types ...
+Failed to compile.
+
+./app/creation/b2c/standardrewards/standardrewards/RewardsSummary.tsx:9:4
+Type error: Cannot find name 'RewardsSummaryProps'.
+
+[0m [90m  7 |[39m   onProceed[33m,[39m [0m
+[0m [90m  8 |[39m   onEdit [0m
+[0m[31m[1m>[22m[39m[90m  9 |[39m }[33m:[39m [33mRewardsSummaryProps[39m) {[0m
+[0m [90m    |[39m    [31m[1m^[22m[39m[0m
+[0m [90m 10 |[39m   [36mconst[39m account [33m=[39m useActiveAccount()[33m;[39m[0m
+[0m [90m 11 |[39m   [36mconst[39m walletAddress [33m=[39m account[33m?[39m[33m.[39maddress[33m;[39m[0m
+[0m [90m 12 |[39m   [90m// ...[39m[0m
+Next.js build worker exited with code: 1 and signal: null

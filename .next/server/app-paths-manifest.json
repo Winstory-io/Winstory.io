@@ -1,7 +1,8 @@
 {
   "/creation/b2c/premiumrewards/page": "app/creation/b2c/premiumrewards/page.js",
+  "/creation/b2c/rewardsornot/page": "app/creation/b2c/rewardsornot/page.js",
   "/creation/b2c/recap/page": "app/creation/b2c/recap/page.js",
-  "/creation/b2c/minthackathon/page": "app/creation/b2c/minthackathon/page.js",
   "/creation/b2c/standardrewards/page": "app/creation/b2c/standardrewards/page.js",
-  "/creation/b2c/mint/page": "app/creation/b2c/mint/page.js"
+  "/creation/b2c/minthackathon/page": "app/creation/b2c/minthackathon/page.js",
+  "/welcome/page": "app/welcome/page.js"
 }

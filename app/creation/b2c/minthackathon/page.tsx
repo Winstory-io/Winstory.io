@@ -3,7 +3,8 @@ import React from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 
-const PINATA_JWT = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiI4OTg1ZGQxMC03MTFkLTQ2MjktYTJlYy0yY2VlMzQ3OTYzZjUiLCJlbWFpbCI6InZyeEB3aW5zdG9yeS5pbyIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJwaW5fcG9saWN5Ijp7InJlZ2lvbnMiOlt7ImRlc2lyZWRSZXBsaWNhdGlvbkNvdW50IjoxLCJpZCI6IkZSQTEifSx7ImRlc2lyZWRSZXBsaWNhdGlvbkNvdW50IjoxLCJpZCI6Ik5ZQzEifV0sInZlcnNpb24iOjF9LCJtZmFfZW5hYmxlZCI6ZmFsc2UsInN0YXR1cyI6IkFDVElWRSJ9LCJhdXRoZW50aWNhdGlvblR5cGUiOiJzY29wZWRLZXkiLCJzY29wZWRLZXlLZXkiOiJlODQyMDZmODEzYWIxMzNiNmU5MyIsInNjb3BlZEtleVNlY3JldCI6Ijc5MWQ1Y2FmZDVmZDRjYjQ2ZjJiMDA3ZGU4MzkzNmVlZjZjZDVhNjViNzNkOGU4Mjg5MzhkNmE1YTkxNTFkOTQiLCJleHAiOjE3ODM4MDAzMDV9.HV3-u7A_So6eILFIpX19bzwZ0lsr96DZ_h2FxwhF1WQ";
+const PINATA_API_KEY = "e84206f813ab133b6e93";
+const PINATA_API_SECRET = "791d5cafd5fd4cb46f2b007de83936eef6cd5a65b73d8e828938d6a5a9151d94";
 
 export default function MintHackathonPage() {
   const router = useRouter();
@@ -11,6 +12,7 @@ export default function MintHackathonPage() {
   const [success, setSuccess] = React.useState(false);
   const [error, setError] = React.useState("");
   const [cid, setCid] = React.useState("");
+  const [videoCid, setVideoCid] = React.useState("");
   const [history, setHistory] = React.useState<string[]>([]);
 
   React.useEffect(() => {
@@ -24,6 +26,7 @@ export default function MintHackathonPage() {
     setError("");
     setSuccess(false);
     setCid("");
+    setVideoCid("");
     try {
       // 1. Récupérer les infos du recap
       const company = JSON.parse(localStorage.getItem("company") || "null");
@@ -34,16 +37,12 @@ export default function MintHackathonPage() {
       const premiumItem = JSON.parse(localStorage.getItem("premiumItemReward") || "null");
       // 2. Récupérer la vidéo (fichier stocké dans localStorage sous 'film')
       const film = JSON.parse(localStorage.getItem("film") || "null");
-      if (!film || !film.file) throw new Error("No video found in /yourfilm");
-      // Décoder le fichier base64
-      const base64 = film.file.split(",")[1];
-      const byteCharacters = atob(base64);
-      const byteNumbers = new Array(byteCharacters.length);
-      for (let i = 0; i < byteCharacters.length; i++) {
-        byteNumbers[i] = byteCharacters.charCodeAt(i);
-      }
-      const byteArray = new Uint8Array(byteNumbers);
-      const videoFile = new Blob([byteArray], { type: film.type || "video/mp4" });
+      if (!film || !film.url) throw new Error("No video found in /yourfilm");
+      
+      // Convertir l'URL blob en fichier
+      const response = await fetch(film.url);
+      const videoBlob = await response.blob();
+      const videoFile = new File([videoBlob], "video.mp4", { type: "video/mp4" });
       // 3. Uploader la vidéo sur Pinata
       const formData = new FormData();
       formData.append("file", videoFile, film.name || "video.mp4");
@@ -54,11 +53,13 @@ export default function MintHackathonPage() {
           maxContentLength: Infinity,
           headers: {
             "Content-Type": "multipart/form-data",
-            Authorization: `Bearer ${PINATA_JWT}`,
+            pinata_api_key: PINATA_API_KEY,
+            pinata_secret_api_key: PINATA_API_SECRET,
           },
         }
       );
       const videoCID = videoRes.data.IpfsHash;
+      setVideoCid(videoCID);
       // 4. Construire le JSON à uploader
       const data = {
         companyName: company?.name || "",
@@ -83,7 +84,8 @@ export default function MintHackathonPage() {
         {
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${PINATA_JWT}`,
+            pinata_api_key: PINATA_API_KEY,
+            pinata_secret_api_key: PINATA_API_SECRET,
           },
         }
       );
@@ -102,14 +104,14 @@ export default function MintHackathonPage() {
   };
 
   const handleCopy = () => {
-    if (cid) navigator.clipboard.writeText(`https://gateway.pinata.cloud/ipfs/${cid}`);
+    if (videoCid) navigator.clipboard.writeText(`https://gateway.pinata.cloud/ipfs/${videoCid}`);
   };
 
   const handleShare = () => {
-    if (cid && navigator.share) {
+    if (videoCid && navigator.share) {
       navigator.share({
-        title: "IPFS Campaign",
-        url: `https://gateway.pinata.cloud/ipfs/${cid}`,
+        title: "IPFS Campaign Video",
+        url: `https://gateway.pinata.cloud/ipfs/${videoCid}`,
       });
     } else {
       handleCopy();
@@ -144,7 +146,7 @@ export default function MintHackathonPage() {
             <span style={{ fontSize: 22 }}>🅿️</span> Paypal
           </button>
           <button disabled style={{ background: 'none', border: '2px solid #fff', color: '#fff', opacity: 0.5, borderRadius: 16, fontSize: 18, fontWeight: 700, padding: '16px 0', cursor: 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
-            <span style={{ fontSize: 22 }}>🟩</span> Google Pay
+            <span style={{ fontSize: 22 }}>��</span> Google Pay
           </button>
           <button disabled style={{ background: 'none', border: '2px solid #fff', color: '#fff', opacity: 0.5, borderRadius: 16, fontSize: 18, fontWeight: 700, padding: '16px 0', cursor: 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
             <span style={{ fontSize: 22 }}>🍏</span> Apple Pay
@@ -163,16 +165,21 @@ export default function MintHackathonPage() {
         </div>
       </div>
       {/* Résultat IPFS */}
-      {success && cid && (
+      {success && videoCid && (
         <div style={{ marginTop: 24, background: '#181818', borderRadius: 12, padding: 20, textAlign: 'center', border: '1px solid #FF2D85' }}>
           <div style={{ color: '#FF2D85', fontWeight: 700, fontSize: 18, marginBottom: 8 }}>Campaign successfully minted on IPFS!</div>
           <div style={{ color: '#FFD600', fontWeight: 600, fontSize: 16, marginBottom: 16 }}>Your winstory is now decentralized!</div>
           <div style={{ color: '#888', fontSize: 14, marginBottom: 16 }}>Your campaign is now pending moderator validation.</div>
-          <a href={`https://gateway.pinata.cloud/ipfs/${cid}`} target="_blank" rel="noopener noreferrer" style={{ color: '#FFD600', wordBreak: 'break-all', fontSize: 16 }}>{`https://gateway.pinata.cloud/ipfs/${cid}`}</a>
+          <a href={`https://gateway.pinata.cloud/ipfs/${videoCid}`} target="_blank" rel="noopener noreferrer" style={{ color: '#FFD600', wordBreak: 'break-all', fontSize: 16 }}>{`https://gateway.pinata.cloud/ipfs/${videoCid}`}</a>
           <div style={{ marginTop: 12, display: 'flex', gap: 12, justifyContent: 'center' }}>
             <button onClick={handleCopy} style={{ background: '#FF2D85', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', cursor: 'pointer' }}>Copy Link</button>
             <button onClick={handleShare} style={{ background: '#FFD600', color: '#000', border: 'none', borderRadius: 8, padding: '8px 16px', cursor: 'pointer' }}>Share</button>
           </div>
+          {cid && (
+            <div style={{ marginTop: 16, color: '#888', fontSize: 12 }}>
+              Metadata JSON: <a href={`https://gateway.pinata.cloud/ipfs/${cid}`} target="_blank" rel="noopener noreferrer" style={{ color: '#FF2D85' }}>{cid}</a>
+            </div>
+          )}
         </div>
       )}
       {error && <div style={{ color: 'red', marginTop: 16 }}>{error}</div>}

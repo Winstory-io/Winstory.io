@@ -8,7 +8,7 @@ import { client } from "@/lib/thirdwebClient";
 
 interface ThirdwebEmailAuthProps {
     title?: string;
-    onSuccess?: (email: string) => void;
+    onSuccess?: (data: { email: string; walletAddress: string }) => void;
     onError?: (error: string) => void;
 }
 
@@ -99,7 +99,9 @@ export default function ThirdwebEmailAuth({
                     email,
                     verificationCode,
                 });
-                walletAddress = wallet.getAddress ? await wallet.getAddress() : '';
+                // Get address from the connected account instead of wallet object
+                const account = await wallet.getAccount();
+                walletAddress = account?.address || '';
                 return wallet;
             });
 

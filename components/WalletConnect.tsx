@@ -5,10 +5,9 @@ import { ThirdwebProvider } from "thirdweb/react";
 import { createThirdwebClient } from "thirdweb";
 import { ethereum } from "thirdweb/chains";
 import { inAppWallet } from "thirdweb/wallets";
-import { metamaskWallet, coinbaseWallet, walletConnect, phantomWallet } from "thirdweb/wallets";
+import { walletConnect } from "thirdweb/wallets";
 import { useEffect, useState } from "react";
 import ThirdwebEmailAuth from "./ThirdwebEmailAuth";
-import { client } from "@/lib/thirdwebClient";
 
 const client = createThirdwebClient({
     clientId: "4ddc5eed2e073e550a7307845d10f348",
@@ -65,7 +64,7 @@ function WalletConnectContent({ isEmailLogin = false, isWalletLogin = false, isB
 
     // Handle email login success
     const [pendingEmail, setPendingEmail] = useState<string | null>(null);
-    const handleEmailLogin = (data: { email: string, walletAddress: string }) => {
+    const handleEmailLogin = (data: { email: string; walletAddress: string }) => {
         setEmailConnected(true);
         setPendingEmail(data.email);
         // On attend que useActiveAccount détecte le wallet connecté avant d'appeler onLoginSuccess
@@ -83,7 +82,7 @@ function WalletConnectContent({ isEmailLogin = false, isWalletLogin = false, isB
                 localStorage.setItem("user", JSON.stringify({ email: pendingEmail }));
                 localStorage.setItem("company", JSON.stringify({ name: domain }));
             }
-            if (onLoginSuccess) onLoginSuccess(account.address);
+            if (onLoginSuccess) onLoginSuccess({ email: pendingEmail || '', walletAddress: account.address });
         } else if (!account && walletConnected) {
             // Si le compte est déconnecté, on nettoie le localStorage
             localStorage.removeItem("walletAddress");

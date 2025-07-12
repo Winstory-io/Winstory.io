@@ -3,7 +3,7 @@ import { RewardConfig } from '../lib/hooks/useRewards';
 import { getContractExplorerUrl, formatAmount } from '../lib/blockchain';
 import { useWalletAddress } from '../lib/hooks/useWalletConnection';
 
-interface RewardsSummaryProps {
+export interface RewardsSummaryProps {
   standard: RewardConfig | null;
   premium: RewardConfig | null;
   maxCompletions: number;
