@@ -110,10 +110,72 @@ export default function B2CLoginPage() {
         </button>
       </div>
       {showPopup && (
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.7)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ background: '#181818', border: '2px solid #FFD600', borderRadius: 12, padding: 32, color: '#fff', position: 'relative' }}>
-            <button onClick={() => setShowPopup(false)} style={{ position: 'absolute', top: 12, right: 12, background: 'none', border: 'none', color: '#FF5252', fontSize: 28, cursor: 'pointer' }}>×</button>
-            <div>Popup to be configured later</div>
+        <div
+          style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.7)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          onClick={() => setShowPopup(false)}
+        >
+          <div
+            style={{
+              position: 'relative',
+              maxWidth: 600,
+              width: '90vw',
+              background: '#000',
+              border: '4px solid #FFD600',
+              borderRadius: 24,
+              padding: '32px 24px 28px 24px',
+              boxShadow: '0 0 32px #000',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              color: '#FFD600',
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setShowPopup(false)}
+              style={{
+                position: 'absolute',
+                top: 18,
+                right: 18,
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                zIndex: 10,
+              }}
+              aria-label="Close"
+            >
+              <svg width="28" height="28" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <line x1="10" y1="10" x2="30" y2="30" stroke="#FF2D2D" strokeWidth="3" strokeLinecap="round" />
+                <line x1="30" y1="10" x2="10" y2="30" stroke="#FF2D2D" strokeWidth="3" strokeLinecap="round" />
+              </svg>
+            </button>
+            <h2 style={{ color: '#FFD600', fontSize: 24, fontWeight: 900, textAlign: 'center', marginBottom: 18, letterSpacing: 1 }}>Secure access for verified companies only</h2>
+            <div style={{ color: '#fff', fontSize: 16, fontWeight: 400, marginBottom: 18, textAlign: 'center' }}>
+              To create or manage a campaign on Winstory as a B2C brand, you must log in using a professional email address.<br /><br />
+              This verification step helps ensure the authenticity of brand representatives and prevents identity spoofing.
+            </div>
+            <div style={{ width: '100%', marginBottom: 18 }}>
+              <div style={{ color: '#FFD600', fontWeight: 700, fontSize: 17, marginBottom: 6 }}>✅ How it works:</div>
+              <ul style={{ color: '#fff', fontSize: 15, fontWeight: 500, marginLeft: 22, marginBottom: 0 }}>
+                <li>Enter your professional email (e.g. name@yourcompany.com)</li>
+                <li>Receive a one-time verification code by email</li>
+                <li>Validate your code within 15 minutes</li>
+                <li>A secure wallet will automatically be created and linked to your verified email address (via account abstraction).</li>
+                <li>If your company already has its own wallet, you’ll be able to connect it later.</li>
+                <li>Once your professional account is verified, you’ll be automatically redirected to continue your campaign setup</li>
+              </ul>
+            </div>
+            <div style={{ width: '100%', marginBottom: 18 }}>
+              <div style={{ color: '#FFD600', fontWeight: 700, fontSize: 17, marginBottom: 6 }}>❗️Important:</div>
+              <ul style={{ color: '#fff', fontSize: 15, fontWeight: 500, marginLeft: 22, marginBottom: 0 }}>
+                <li><span style={{ color: '#18C964', fontWeight: 700 }}>Accepted:</span> Professional addresses only → @company.com, contact@brand.fr, etc.</li>
+                <li><span style={{ color: '#FF2D2D', fontWeight: 700 }}>Rejected:</span> Personal emails → @gmail.com, @yahoo.com, @outlook.com, etc.</li>
+              </ul>
+            </div>
+            <div style={{ color: '#FFD600', fontWeight: 700, fontSize: 17, marginBottom: 6, width: '100%' }}>🛡️ Your email is your key.</div>
+            <div style={{ color: '#fff', fontSize: 15, fontWeight: 500, textAlign: 'center', width: '100%' }}>
+              By verifying it, you prove your legitimacy to launch official brand campaigns on Winstory.
+            </div>
           </div>
         </div>
       )}
