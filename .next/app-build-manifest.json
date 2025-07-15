@@ -5,40 +5,20 @@
       "static/chunks/main-app.js",
       "static/chunks/app/layout.js"
     ],
-    "/welcome/layout": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/welcome/layout.js"
-    ],
-    "/welcome/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/welcome/page.js"
-    ],
-    "/api/auth/[...nextauth]/route": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/api/auth/[...nextauth]/route.js"
-    ],
     "/creation/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/creation/layout.js"
     ],
-    "/creation/youare/page": [
+    "/creation/b2c/rewardsornot/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/creation/youare/page.js"
+      "static/chunks/app/creation/b2c/rewardsornot/page.js"
     ],
-    "/creation/b2c/login/page": [
+    "/api/auth/[...nextauth]/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/creation/b2c/login/page.js"
-    ],
-    "/creation/b2c/yourinformations/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/creation/b2c/yourinformations/page.js"
+      "static/chunks/app/api/auth/[...nextauth]/route.js"
     ]
   }
 }

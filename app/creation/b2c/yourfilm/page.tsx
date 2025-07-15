@@ -36,12 +36,11 @@ const GreenArrowButton = ({ onClick, disabled }: { onClick: () => void, disabled
       cursor: disabled ? 'not-allowed' : 'pointer',
       padding: 0,
       outline: 'none',
-      opacity: disabled ? 0.3 : 1,
       zIndex: 10,
     }}
   >
     <svg width="56" height="56" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="24" cy="24" r="22" fill="#18C964" />
+      <circle cx="24" cy="24" r="22" fill={disabled ? '#FF2D2D' : '#18C964'} />
       <path d="M16 22L24 30L32 22" stroke="#000" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   </button>

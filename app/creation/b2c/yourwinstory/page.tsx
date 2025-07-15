@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import ProtectedRoute from '@/components/ProtectedRoute';
 
-// Flèche verte dans un rond
+// Flèche colorée dans un rond
 const GreenArrowButton = ({ onClick, disabled }: { onClick: () => void, disabled: boolean }) => (
   <button
     onClick={onClick}
@@ -18,12 +18,11 @@ const GreenArrowButton = ({ onClick, disabled }: { onClick: () => void, disabled
       cursor: disabled ? 'not-allowed' : 'pointer',
       padding: 0,
       outline: 'none',
-      opacity: disabled ? 0.3 : 1,
       transition: 'opacity 0.2s',
     }}
   >
     <svg width="56" height="56" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="24" cy="24" r="18" fill="#18C964" />
+      <circle cx="24" cy="24" r="18" fill={disabled ? '#FF2D2D' : '#18C964'} />
       <path d="M16 22L24 30L32 22" stroke="#111" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   </button>
@@ -115,13 +114,52 @@ export default function YourWinstoryB2C() {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-          }}>
-            <div style={{ background: '#111', color: '#FFD600', padding: 32, borderRadius: 16, minWidth: 320, textAlign: 'center', position: 'relative' }}>
-              <button onClick={() => setShowModal(false)} style={{ position: 'absolute', top: 12, right: 12, background: 'none', border: 'none', cursor: 'pointer' }}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M18 6L6 18" stroke="#F31260" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /><path d="M6 6L18 18" stroke="#F31260" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+          }} onClick={() => setShowModal(false)}>
+            <div style={{ background: '#000', color: '#FFD600', padding: 32, borderRadius: 24, minWidth: 340, maxWidth: 600, textAlign: 'left', position: 'relative', border: '4px solid #FFD600', boxShadow: '0 0 32px #000' }} onClick={e => e.stopPropagation()}>
+              <button onClick={() => setShowModal(false)} style={{ position: 'absolute', top: 18, right: 18, background: 'none', border: 'none', cursor: 'pointer', zIndex: 10 }}>
+                <svg width="28" height="28" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg"><line x1="10" y1="10" x2="30" y2="30" stroke="#FF2D2D" strokeWidth="3" strokeLinecap="round" /><line x1="30" y1="10" x2="10" y2="30" stroke="#FF2D2D" strokeWidth="3" strokeLinecap="round" /></svg>
               </button>
-              <div style={{ fontSize: 20, fontWeight: 600, marginBottom: 12 }}>Info</div>
-              <div style={{ fontSize: 16 }}>This popup will be customized later.</div>
+              <h2 style={{ color: '#FFD600', fontSize: 22, fontWeight: 900, textAlign: 'center', marginBottom: 18, letterSpacing: 1 }}>This is where your Neo-Marketing Web2.5 begins !</h2>
+              <div style={{ color: '#fff', fontSize: 16, fontWeight: 400, marginBottom: 18, textAlign: 'center' }}>
+                Your brand starts the story, your community writes the future.<br />
+                You're not just writing, you're activating the foundational moment where your brand hands the mic to the world !<br />
+              </div>
+              <div style={{ marginBottom: 18 }}>
+                <div style={{ color: '#FFD600', fontWeight: 700, fontSize: 17, marginBottom: 6 }}>Starting Title</div>
+                <div style={{ color: '#fff', fontSize: 15, fontWeight: 500 }}>
+                  The hook. The spark. Think of your title as the first beat of your brand's narrative :<br />
+                  sets the rhythm, the tone, the intent.<br />
+                  Make it short, memorable, and loaded with meaning.<br />
+                  You're not selling a product, you're launching a world.<br />
+                  A good title triggers insatiable curiosity and emotions, in a single line. Aim for clarity. Think tagline meets teaser.
+                </div>
+              </div>
+              <div style={{ marginBottom: 18 }}>
+                <div style={{ color: '#FFD600', fontWeight: 700, fontSize: 17, marginBottom: 6 }}>Starting Story</div>
+                <div style={{ color: '#fff', fontSize: 15, fontWeight: 500 }}>
+                  Your starting text meets your starting film, giving it a new dimension. You write the first chapter of a story your community, individually, will complete, and elevate each in their own way.<br />
+                  Describe a scene.<br />
+                  Create tension. Think visual, immersive, suggestive. Inject your brand's value and vision subtly, through atmosphere, not slogans. Set the tone, the mood, the style, and most importantly, leave it open enough to invite continuations. Whether it's a plot twist, a mysterious character, a sudden silence, or an unresolved choice, etc.. infinite examples !<br />
+                  Leave a gap, an unresolved thread, a door left open.<br />
+                  This isn't just a script for ads, it's a narrative designed to inspire imagination and elevate your brand meaning. You're not concluding, you're setting the scene for infinite continuations.
+                </div>
+              </div>
+              <div style={{ marginBottom: 0 }}>
+                <div style={{ color: '#FFD600', fontWeight: 700, fontSize: 17, marginBottom: 6 }}>Guideline</div>
+                <div style={{ color: '#fff', fontSize: 15, fontWeight: 500 }}>
+                  This is your narrative compass. This is the space to define the do's and don'ts. It ensures your brand's DNA remains intact while opening the door to creative excellence. While your Starting Story sets the scene, the Guideline sets the rules of the game. Clarify what matters most for you. Here's what you can define to keep the narrative aligned, a few examples among others :<br />
+                  <ul style={{ margin: '8px 0 0 18px', color: '#fff', fontWeight: 600, fontSize: 15 }}>
+                    <li>Tone</li>
+                    <li>Format</li>
+                    <li>Brand values to respect</li>
+                    <li>Elements to avoid</li>
+                  </ul>
+                  <br />
+                  <span style={{ color: '#fff', fontWeight: 500 }}>
+                    A clear guideline helps contributors stay aligned and helps moderators score the most aligned completions. Your story, your world, your codes, define them here.
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -249,7 +287,7 @@ export default function YourWinstoryB2C() {
             <div style={{ color: '#F31260', fontSize: 15, marginTop: 8, textAlign: 'center' }}>This field is required.</div>
           )}
           <div style={{ display: 'flex', justifyContent: 'center', marginTop: 32 }}>
-            <GreenArrowButton onClick={handleNext} disabled={false} />
+            <GreenArrowButton onClick={handleNext} disabled={!allValid} />
           </div>
         </section>
       </div>
