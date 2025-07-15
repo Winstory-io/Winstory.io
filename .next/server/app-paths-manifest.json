@@ -1,4 +1,8 @@
 {
   "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js",
-  "/creation/b2c/rewardsornot/page": "app/creation/b2c/rewardsornot/page.js"
+  "/creation/b2c/rewardsornot/page": "app/creation/b2c/rewardsornot/page.js",
+  "/creation/b2c/recap/page": "app/creation/b2c/recap/page.js",
+  "/creation/b2c/premiumrewards/page": "app/creation/b2c/premiumrewards/page.js",
+  "/creation/b2c/mint/page": "app/creation/b2c/mint/page.js",
+  "/creation/b2c/standardrewards/page": "app/creation/b2c/standardrewards/page.js"
 }

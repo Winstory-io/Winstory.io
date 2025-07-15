@@ -168,7 +168,9 @@ export default function RecapB2C() {
           <div style={{ display: "flex", alignItems: "center" }}>
             <span style={{ fontWeight: 600, fontSize: 18, width: 120 }}>Film</span>
             {recap.film?.aiRequested ? (
-              <button disabled style={{ flex: 1, border: "2px solid #FFD600", borderRadius: 12, padding: 12, color: "#FFD600", fontStyle: "italic", fontSize: 16, background: 'none', fontWeight: 700, marginLeft: 8, opacity: 0.7 }}>{filmLabel}</button>
+              <div style={{ background: 'rgba(255,215,0,0.15)', border: '1px solid #FFD600', borderRadius: 8, padding: 12, marginLeft: 8, color: '#FFD600', fontWeight: 600, fontSize: 15, textAlign: 'center', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                Winstory creates the Film. Delivered within 24h after payment. +$500
+              </div>
             ) : recap.film?.url ? (
               <button onClick={() => openModal('Your film', filmLabel, true)} style={{ flex: 1, border: "2px solid #FFD600", borderRadius: 12, padding: 12, color: "#FFD600", fontStyle: "italic", fontSize: 16, background: 'none', cursor: 'pointer', fontWeight: 700, marginLeft: 8 }}>{filmLabel}</button>
             ) : (
@@ -178,12 +180,13 @@ export default function RecapB2C() {
         </div>
         {/* Bloc rewards */}
         <div style={{ border: "2px solid #fff", borderRadius: 24, padding: 24, marginBottom: 40, textAlign: 'center', fontWeight: 600, fontSize: 18, maxWidth: 420, width: '100%', marginLeft: 'auto', marginRight: 'auto', background: '#181818' }}>
-          <div style={{ fontWeight: 700, fontSize: 22, color: '#FFD600', marginBottom: 12 }}>Rewards Recap</div>
-          {(!recap.standardToken && !recap.standardItem && !recap.premiumToken && !recap.premiumItem) ? (
-            <div style={{ color: '#fff', fontWeight: 400, fontSize: 16 }}>
-              No Reward to give? No Problem, free completions +$1000
+          <div style={{ fontWeight: 700, fontSize: 22, color: '#FFD600', marginBottom: 12 }}>Rewards</div>
+          {recap.roiData?.noReward && (
+            <div style={{ background: 'rgba(255,215,0,0.15)', border: '1px solid #FFD600', borderRadius: 8, padding: 12, marginBottom: 0, color: '#FFD600', fontWeight: 600, fontSize: 15, textAlign: 'center', display: 'inline-block' }}>
+              ✓ No rewards - Free completions +$1000
             </div>
-          ) : (
+          )}
+          {(!recap.standardToken && !recap.standardItem && !recap.premiumToken && !recap.premiumItem) ? null : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
               {/* Standard Rewards */}
               {(recap.standardToken || recap.standardItem) && (
@@ -246,31 +249,42 @@ export default function RecapB2C() {
           )}
         </div>
         {/* Bloc Community & R.O.I. */}
-        {recap.roiData && (
+        {recap.roiData && !recap.roiData.noReward && (
           <div style={{ border: "2px solid #fff", borderRadius: 24, padding: 24, marginBottom: 40, textAlign: 'center', fontWeight: 600, fontSize: 18, maxWidth: 420, width: '100%', marginLeft: 'auto', marginRight: 'auto', background: '#181818' }}>
-            <div style={{ fontWeight: 700, fontSize: 22, color: '#FFD600', marginBottom: 12 }}>Community & R.O.I.</div>
+            <div style={{ fontWeight: 700, fontSize: 22, color: '#FFD600', marginBottom: 12 }}>
+              {recap.roiData.isFreeReward ? 'Community' : 'Community & R.O.I.'}
+            </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16, textAlign: 'left' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ fontWeight: 600, fontSize: 16 }}>Unit Value of the Completion:</span>
-                <span style={{ color: '#18C964', fontWeight: 700, fontSize: 18 }}>${recap.roiData.unitValue?.toFixed(2) || '0.00'}</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ fontWeight: 600, fontSize: 16 }}>Net Profits targeted:</span>
-                <span style={{ color: '#18C964', fontWeight: 700, fontSize: 18 }}>${recap.roiData.netProfit?.toFixed(2) || '0.00'}</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ fontWeight: 600, fontSize: 16 }}>Maximum Completions:</span>
-                <span style={{ color: '#18C964', fontWeight: 700, fontSize: 18 }}>{recap.roiData.maxCompletions || '0'}</span>
-              </div>
-              {recap.roiData.isFreeReward && (
-                <div style={{ background: 'rgba(24,201,100,0.1)', borderRadius: 8, padding: 12, marginTop: 8 }}>
-                  <span style={{ color: '#18C964', fontWeight: 600, fontSize: 14 }}>✓ Free rewards enabled for community</span>
-                </div>
-              )}
-              {recap.roiData.noReward && (
-                <div style={{ background: 'rgba(255,215,0,0.1)', borderRadius: 8, padding: 12, marginTop: 8 }}>
-                  <span style={{ color: '#FFD600', fontWeight: 600, fontSize: 14 }}>✓ No rewards - Free completions +$1000</span>
-                </div>
+              {recap.roiData.isFreeReward ? (
+                <>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span style={{ fontWeight: 600, fontSize: 16 }}>Maximum Completions:</span>
+                    <span style={{ color: '#18C964', fontWeight: 700, fontSize: 18 }}>{recap.roiData.maxCompletions || '0'}</span>
+                  </div>
+                  <div style={{ background: 'rgba(24,201,100,0.1)', borderRadius: 8, padding: 12, marginTop: 8 }}>
+                    <span style={{ color: '#18C964', fontWeight: 600, fontSize: 14 }}>✓ Free rewards enabled for community</span>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span style={{ fontWeight: 600, fontSize: 16 }}>Unit Value of the Completion:</span>
+                    <span style={{ color: '#18C964', fontWeight: 700, fontSize: 18 }}>${recap.roiData.unitValue?.toFixed(2) || '0.00'}</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span style={{ fontWeight: 600, fontSize: 16 }}>Net Profits targeted:</span>
+                    <span style={{ color: '#18C964', fontWeight: 700, fontSize: 18 }}>${recap.roiData.netProfit?.toFixed(2) || '0.00'}</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span style={{ fontWeight: 600, fontSize: 16 }}>Maximum Completions:</span>
+                    <span style={{ color: '#18C964', fontWeight: 700, fontSize: 18 }}>{recap.roiData.maxCompletions || '0'}</span>
+                  </div>
+                  {recap.roiData.isFreeReward && (
+                    <div style={{ background: 'rgba(24,201,100,0.1)', borderRadius: 8, padding: 12, marginTop: 8 }}>
+                      <span style={{ color: '#18C964', fontWeight: 600, fontSize: 14 }}>✓ Free rewards enabled for community</span>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </div>
