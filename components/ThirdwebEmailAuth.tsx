@@ -338,22 +338,34 @@ export default function ThirdwebEmailAuth({
                 padding: 16,
                 borderRadius: 8,
                 marginTop: 16,
-                border: '1px solid #444'
+                border: '1px solid #444',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 8
             }}>
-                <p style={{
-                    margin: 0,
+                <div style={{
+                    background: '#173c2a',
+                    border: '1px solid #18C964',
+                    borderRadius: 6,
+                    padding: '10px 14px',
+                    color: '#18C964',
                     fontSize: 14,
-                    color: '#ccc'
+                    fontWeight: 600,
+                    marginBottom: 4
                 }}>
-                    <strong>Accepted emails:</strong> theo@company.io, contact@entreprise.com, etc.
-                </p>
-                <p style={{
-                    margin: '8px 0 0 0',
+                    Accepted only pro emails: <span style={{ color: '#fff', fontWeight: 400 }}>@company, contact@company.com, etc.</span>
+                </div>
+                <div style={{
+                    background: '#3c1717',
+                    border: '1px solid #FF2D2D',
+                    borderRadius: 6,
+                    padding: '10px 14px',
+                    color: '#FF2D2D',
                     fontSize: 14,
-                    color: '#ccc'
+                    fontWeight: 600
                 }}>
-                    <strong>Rejected emails:</strong> theo@gmail.com, contact@yahoo.com, etc.
-                </p>
+                    Rejected perso emails: <span style={{ color: '#fff', fontWeight: 400 }}>@gmail.com, @outlook.com, contact@yahoo.com, etc.</span>
+                </div>
             </div>
         </div>
     );
