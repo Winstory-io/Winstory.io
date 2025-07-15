@@ -129,7 +129,8 @@ export default function Home() {
             gap: 24,
             cursor: 'pointer',
           }}
-          onClick={() => router.push('/moderation/hackathon-login')}
+          // TODO: restreindre l'accès à /moderation à la possession d'un token spécifique dans le wallet
+          onClick={() => router.push('/moderation')}
         >
           <span style={{ fontSize: 56 }}>
             <ModerationIcon />

@@ -1,3 +1,4 @@
+// TODO: Améliorer la configuration IPFS globale pour le MINT (à faire ultérieurement)
 "use client";
 import React from "react";
 import { useRouter } from "next/navigation";
