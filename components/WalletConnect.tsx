@@ -153,6 +153,13 @@ function WalletConnectContent({ isEmailLogin = false, isWalletLogin = false, isB
         return <ThirdwebEmailAuth title="Login with professional email" onSuccess={handleEmailLogin} />;
     }
 
+    // Appeler onLoginSuccess dès qu'un wallet est connecté en mode isWalletLogin
+    useEffect(() => {
+        if (isWalletLogin && account && onLoginSuccess) {
+            onLoginSuccess({ email: '', walletAddress: account.address });
+        }
+    }, [isWalletLogin, account, onLoginSuccess]);
+
     // Si isWalletLogin uniquement
     if (isWalletLogin) {
         return <ConnectButton client={client} />;

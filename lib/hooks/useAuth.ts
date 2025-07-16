@@ -25,13 +25,17 @@ export function useAuth() {
                 setUser(null);
             }
             if (walletData) {
+                // On accepte une string simple (adresse) ou un objet JSON
+                let address = null;
                 try {
+                    // Si c'est un objet JSON, on tente de parser
                     const parsedWallet = JSON.parse(walletData);
-                    setWalletAddress(parsedWallet.address || null);
+                    address = parsedWallet.address || null;
                 } catch (error) {
-                    localStorage.removeItem("walletAddress");
-                    setWalletAddress(null);
+                    // Sinon, c'est une string simple (adresse)
+                    address = walletData;
                 }
+                setWalletAddress(address);
             } else {
                 setWalletAddress(null);
             }

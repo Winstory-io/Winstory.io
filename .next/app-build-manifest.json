@@ -5,36 +5,6 @@
       "static/chunks/main-app.js",
       "static/chunks/app/layout.js"
     ],
-    "/creation/layout": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/creation/layout.js"
-    ],
-    "/creation/b2c/rewardsornot/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/creation/b2c/rewardsornot/page.js"
-    ],
-    "/api/auth/[...nextauth]/route": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/api/auth/[...nextauth]/route.js"
-    ],
-    "/creation/b2c/recap/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/creation/b2c/recap/page.js"
-    ],
-    "/creation/b2c/mint/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/creation/b2c/mint/page.js"
-    ],
-    "/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/page.js"
-    ],
     "/welcome/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
@@ -45,10 +15,31 @@
       "static/chunks/main-app.js",
       "static/chunks/app/welcome/page.js"
     ],
+    "/api/auth/[...nextauth]/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/auth/[...nextauth]/route.js"
+    ],
+    "/creation/layout": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/creation/layout.js"
+    ],
     "/creation/youare/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/creation/youare/page.js"
+    ],
+    "/moderation/layout": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/moderation/layout.js"
+    ],
+    "/moderation/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/moderation/page.css",
+      "static/chunks/app/moderation/page.js"
     ],
     "/creation/b2c/login/page": [
       "static/chunks/webpack.js",
@@ -70,17 +61,35 @@
       "static/chunks/main-app.js",
       "static/chunks/app/creation/b2c/yourfilm/page.js"
     ],
-    "/creation/b2c/standardrewards/page": [
+    "/creation/b2c/rewardsornot/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/css/app/creation/b2c/standardrewards/page.css",
-      "static/chunks/app/creation/b2c/standardrewards/page.js"
+      "static/chunks/app/creation/b2c/rewardsornot/page.js"
     ],
-    "/creation/b2c/premiumrewards/page": [
+    "/creation/b2c/recap/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/css/app/creation/b2c/premiumrewards/page.css",
-      "static/chunks/app/creation/b2c/premiumrewards/page.js"
+      "static/chunks/app/creation/b2c/recap/page.js"
+    ],
+    "/creation/b2c/mint/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/creation/b2c/mint/page.js"
+    ],
+    "/creation/individual/login/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/creation/individual/login/page.js"
+    ],
+    "/creation/individual/yourwinstory/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/creation/individual/yourwinstory/page.js"
+    ],
+    "/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/page.js"
     ]
   }
 }

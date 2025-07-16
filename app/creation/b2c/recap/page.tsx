@@ -20,6 +20,7 @@ export default function RecapB2C() {
   const [recap, setRecap] = useState<any>({});
   const [modal, setModal] = useState<{ open: boolean, content: React.ReactNode }>({ open: false, content: null });
   const [confirmed, setConfirmed] = useState(false);
+  const [showLeaveModal, setShowLeaveModal] = useState(false);
 
   useEffect(() => {
     const readLocalStorage = () => {
@@ -124,7 +125,30 @@ export default function RecapB2C() {
 
   return (
     <ProtectedRoute>
-      <div style={{ minHeight: "100vh", background: "#000", color: "#fff", padding: 24, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      {/* Croix rouge en haut à droite */}
+      <button
+        onClick={() => setShowLeaveModal(true)}
+        aria-label="Quitter la création"
+        style={{
+          position: 'fixed',
+          top: 24,
+          right: 24,
+          zIndex: 1200,
+          background: 'none',
+          border: 'none',
+          cursor: 'pointer',
+          padding: 0,
+        }}
+      >
+        {/* Croix SVG rouge */}
+        <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="18" cy="18" r="18" fill="#181818"/>
+          <path d="M12 12L24 24" stroke="#FF2D2D" strokeWidth="3" strokeLinecap="round"/>
+          <path d="M24 12L12 24" stroke="#FF2D2D" strokeWidth="3" strokeLinecap="round"/>
+        </svg>
+      </button>
+      {/* Overlay Recap transparent si modale leave ouverte */}
+      <div style={{ minHeight: "100vh", background: "#000", color: "#fff", padding: 24, display: 'flex', flexDirection: 'column', alignItems: 'center', opacity: showLeaveModal ? 0.3 : 1, transition: 'opacity 0.2s' }}>
         {/* Titre centré avec ampoule cliquable */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: 'center', marginBottom: 32, width: '100%' }}>
           <img src="/company.svg" alt="Company" style={{ width: 96, height: 96, marginRight: 16 }} />
@@ -324,6 +348,66 @@ export default function RecapB2C() {
           {modal.content}
         </Modal>
       </div>
+      {/* Pop-up centrale rouge/noir pour quitter */}
+      {showLeaveModal && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+            background: 'rgba(0,0,0,0.7)',
+            zIndex: 2000,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+          onClick={() => setShowLeaveModal(false)}
+        >
+          <div
+            style={{
+              background: '#181818',
+              border: '3px solid #FF2D2D',
+              color: '#FF2D2D',
+              padding: 40,
+              borderRadius: 20,
+              minWidth: 340,
+              maxWidth: '90vw',
+              boxShadow: '0 0 32px #FF2D2D55',
+              textAlign: 'center',
+              position: 'relative',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 24,
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{ fontWeight: 700, fontSize: 28, color: '#FF2D2D', marginBottom: 8 }}>Back to home ?</div>
+            <div style={{ color: '#FF2D2D', background: '#000', border: '2px solid #FF2D2D', borderRadius: 12, padding: 18, fontSize: 18, fontWeight: 500, marginBottom: 12 }}>
+              You’re about to leave this campaign creation process.<br/>Your current progress won’t be saved
+            </div>
+            <button
+              onClick={() => router.push('/welcome')}
+              style={{
+                background: '#FF2D2D',
+                color: '#fff',
+                border: 'none',
+                borderRadius: 12,
+                padding: '14px 32px',
+                fontWeight: 700,
+                fontSize: 18,
+                cursor: 'pointer',
+                marginTop: 8,
+                boxShadow: '0 2px 12px #FF2D2D55',
+                transition: 'background 0.2s',
+              }}
+            >
+              Confirm & leave
+            </button>
+          </div>
+        </div>
+      )}
     </ProtectedRoute>
   );
 } 
