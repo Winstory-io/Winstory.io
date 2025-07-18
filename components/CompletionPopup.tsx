@@ -13,6 +13,17 @@ const CompletionPopup: React.FC<CompletionPopupProps> = ({ open, onClose }) => {
   const [file, setFile] = React.useState<File | null>(null);
   const [story, setStory] = React.useState('');
   const [storyFocused, setStoryFocused] = React.useState(false);
+  const [videoUrl, setVideoUrl] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (file) {
+      const url = URL.createObjectURL(file);
+      setVideoUrl(url);
+      return () => URL.revokeObjectURL(url);
+    } else {
+      setVideoUrl(null);
+    }
+  }, [file]);
 
   if (!open) return null;
 
@@ -30,7 +41,7 @@ const CompletionPopup: React.FC<CompletionPopupProps> = ({ open, onClose }) => {
         left: 0,
         width: '100vw',
         height: '100vh',
-        background: 'rgba(0,0,0,0.7)',
+        background: '#000', // overlay noir opaque
         zIndex: 1000,
         display: 'flex',
         alignItems: 'flex-start',
@@ -39,17 +50,36 @@ const CompletionPopup: React.FC<CompletionPopupProps> = ({ open, onClose }) => {
       }}
       onClick={handleOverlayClick}
     >
+      {/* Croix rouge globale en haut à droite de l'écran */}
+      <button
+        onClick={onClose}
+        style={{
+          position: 'fixed',
+          top: 24,
+          right: 36,
+          background: 'none',
+          border: 'none',
+          fontSize: 32,
+          color: '#FF2D55',
+          cursor: 'pointer',
+          fontWeight: 700,
+          zIndex: 2000,
+        }}
+        aria-label="Fermer le pop-up"
+      >
+        ×
+      </button>
       <div
         className="completion-popup"
         style={{
-          width: '70vw',
-          maxWidth: 950,
-          height: '90vh',
+          width: '65vw',
+          maxWidth: 900,
+          height: '85vh',
           background: '#111',
           borderRadius: 16,
           display: 'flex',
           flexDirection: 'column',
-          overflow: 'hidden',
+          overflow: 'visible',
           position: 'relative',
           boxShadow: '0 0 32px #000',
         }}
@@ -94,76 +124,96 @@ const CompletionPopup: React.FC<CompletionPopupProps> = ({ open, onClose }) => {
           </div>
           <div style={{ fontSize: 12, marginBottom: 0, color: '#fff' }}>Completions MINT / Completions available</div>
         </div>
+        {/* Espace entre Creation et Completion */}
+        <div style={{ height: 24 }} />
         {/* Partie basse (complétion utilisateur) */}
         <div
           className="completion-bottom"
           style={{
             flex: '0 0 52%',
-            background: '#222',
+            background: '#000',
             border: `3px solid ${YELLOW}`,
             borderRadius: '0 0 16px 16px',
-            padding: '12px 24px 12px 24px',
+            padding: '12px 24px 24px 24px',
             position: 'relative',
             display: 'flex',
             flexDirection: 'column',
-            justifyContent: 'center',
+            justifyContent: 'flex-start',
             minHeight: 0,
+            boxSizing: 'border-box',
+            overflow: 'visible',
           }}
         >
-          {/* Croix de fermeture */}
-          <button
-            onClick={onClose}
-            style={{
-              position: 'absolute',
-              top: 12,
-              right: 16,
-              background: 'none',
-              border: 'none',
-              fontSize: 32,
-              color: '#FF2D55',
-              cursor: 'pointer',
-              fontWeight: 700,
-              zIndex: 2,
-            }}
-            aria-label="Fermer"
-          >
-            ×
-          </button>
-          <div style={{ color: YELLOW, fontSize: 24, fontWeight: 700, textAlign: 'center', marginBottom: 8 }}>Completion</div>
-          <textarea
-            style={{ width: '100%', minHeight: 70, borderRadius: 8, border: `2px solid ${YELLOW}`, padding: 12, fontSize: 15, marginBottom: 12, background: '#222', color: '#fff', fontWeight: 500 }}
-            placeholder={storyFocused ? '' : 'Write your Completion Story according to the Creation and Guideline’s Company. Creativity, magical, sophistication ! (minimum 100 characters)'}
-            value={story}
-            onChange={e => setStory(e.target.value)}
-            onFocus={() => setStoryFocused(true)}
-            onBlur={() => setStoryFocused(false)}
-          />
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 10 }}>
-            <label htmlFor="mp4-upload" style={{
-              background: 'none',
-              border: `2px solid ${YELLOW}`,
-              borderRadius: 12,
-              padding: '12px 24px',
-              color: YELLOW,
-              fontWeight: 700,
-              textAlign: 'center',
-              cursor: 'pointer',
-              fontSize: 15,
-              boxShadow: '0 2px 8px #0008',
-              transition: 'background 0.2s',
-            }}>
-              {file ? file.name : 'Upload MP4 film according to your Completion Text (max.100MB)'}
-              <input
-                id="mp4-upload"
-                type="file"
-                accept="video/mp4"
-                style={{ display: 'none' }}
-                onChange={e => {
-                  if (e.target.files && e.target.files[0]) setFile(e.target.files[0]);
-                }}
-              />
-            </label>
+          {/* Mot Completion en haut */}
+          <div style={{ color: YELLOW, fontSize: 24, fontWeight: 700, textAlign: 'center', marginBottom: 12, marginTop: 0 }}>Completion</div>
+          {/* Ligne flex row pour zone texte et import vidéo */}
+          <div style={{ display: 'flex', flex: 1, flexDirection: 'row', gap: 24, alignItems: 'stretch', justifyContent: 'space-between', width: '100%' }}>
+            {/* Zone de texte à gauche (50%) */}
+            <textarea
+              style={{ flex: 1, minHeight: 80, maxHeight: 140, borderRadius: 8, border: `2px solid ${YELLOW}`, padding: 12, fontSize: 15, background: '#000', color: '#fff', fontWeight: 500, resize: 'none', width: '50%' }}
+              placeholder={storyFocused ? '' : 'Write your Completion Story according to the Creation and Guideline’s Company. Creativity, magical, sophistication ! (minimum 100 characters)'}
+              value={story}
+              onChange={e => setStory(e.target.value)}
+              onFocus={() => setStoryFocused(true)}
+              onBlur={() => setStoryFocused(false)}
+            />
+            {/* Import vidéo à droite (50%) */}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', minWidth: 0, width: '50%', maxWidth: '50%', position: 'relative' }}>
+              <label htmlFor="mp4-upload" style={{
+                background: 'none',
+                border: `2px solid ${YELLOW}`,
+                borderRadius: 12,
+                padding: '12px 24px',
+                color: YELLOW,
+                fontWeight: 700,
+                textAlign: 'center',
+                cursor: 'pointer',
+                fontSize: 15,
+                boxShadow: '0 2px 8px #0008',
+                transition: 'background 0.2s',
+                marginBottom: 12,
+                width: '100%',
+                display: 'block',
+              }}>
+                {file ? file.name : 'Upload MP4 film according to your Completion Text (max.100MB)'}
+                <input
+                  id="mp4-upload"
+                  type="file"
+                  accept="video/mp4"
+                  style={{ display: 'none' }}
+                  onChange={e => {
+                    if (e.target.files && e.target.files[0]) setFile(e.target.files[0]);
+                  }}
+                />
+              </label>
+              {/* Preview vidéo si fichier importé */}
+              {videoUrl && (
+                <div style={{ position: 'relative', width: '100%', maxWidth: 320, height: 180, marginTop: 8 }}>
+                  <video src={videoUrl} controls style={{ width: '100%', height: 180, borderRadius: 8, background: '#111' }} />
+                  {/* Petite croix rouge pour supprimer la vidéo */}
+                  <button
+                    onClick={() => { setFile(null); setVideoUrl(null); }}
+                    style={{
+                      position: 'absolute',
+                      top: 4,
+                      right: 8,
+                      background: 'none',
+                      border: 'none',
+                      fontSize: 20,
+                      color: '#FF2D55',
+                      cursor: 'pointer',
+                      fontWeight: 700,
+                      zIndex: 2,
+                    }}
+                    aria-label="Supprimer la vidéo importée"
+                  >
+                    ×
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
+          {/* Bouton Confirm sous la ligne flex */}
           <button
             style={{
               width: 180,
@@ -177,7 +227,7 @@ const CompletionPopup: React.FC<CompletionPopupProps> = ({ open, onClose }) => {
               fontWeight: 700,
               cursor: 'pointer',
               boxShadow: '0 2px 8px #0008',
-              marginTop: 2,
+              marginTop: 18,
             }}
           >
             Confirm
