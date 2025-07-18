@@ -1,10 +1,26 @@
 'use client';
-import React from 'react';
+import React, { useEffect } from 'react';
 import LoginHeader from '@/components/LoginHeader';
 import LoginButton from '@/components/LoginButton';
 import Link from 'next/link';
+import WalletConnect from '@/components/WalletConnect';
+import { useRouter } from 'next/navigation';
 
 export default function CompletionLoginPage() {
+  const router = useRouter();
+  const handleLoginSuccess = () => {
+    router.push('/completion');
+  };
+
+  useEffect(() => {
+    // Vérifie si l'utilisateur est déjà connecté (wallet ou email)
+    const walletAddress = localStorage.getItem('walletAddress');
+    const user = localStorage.getItem('user');
+    if (walletAddress || user) {
+      router.push('/completion');
+    }
+  }, [router]);
+
   return (
     <div style={{ minHeight: '100vh', background: '#000', color: '#fff', fontFamily: 'Inter, sans-serif', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', paddingTop: 24 }}>
       <div style={{ width: '100%', maxWidth: 400, margin: '0 auto', marginTop: 32, position: 'relative' }}>
@@ -24,17 +40,10 @@ export default function CompletionLoginPage() {
             </svg>
           </Link>
         </div>
-        <LoginButton
-          icon={<span role="img" aria-label="email">📧</span>}
-          text="With your Email"
-          color="#FFD600"
-        />
-        <div style={{ textAlign: 'center', color: '#FFD600', fontWeight: 700, fontSize: 18, margin: '8px 0' }}>OR</div>
-        <LoginButton
-          icon={<span role="img" aria-label="wallet">💳</span>}
-          text="With your Web.3 Wallet"
-          color="#FFD600"
-        />
+        {/* Remplacement des deux boutons par WalletConnect */}
+        <div style={{ width: '100%', maxWidth: 400, margin: '0 auto' }}>
+          <WalletConnect isBothLogin={true} onLoginSuccess={handleLoginSuccess} />
+        </div>
       </div>
     </div>
   );

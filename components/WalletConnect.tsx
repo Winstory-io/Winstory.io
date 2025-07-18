@@ -138,11 +138,9 @@ function WalletConnectContent({ isEmailLogin = false, isWalletLogin = false, isB
                 </div>
             );
         }
-        // Sinon, proposer le choix
+        // Sinon, afficher uniquement le bouton Connect (Thirdweb)
         return (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16, alignItems: 'center' }}>
-                <ThirdwebEmailAuth title="Login with professional email (Account Abstraction)" onSuccess={handleEmailLogin} />
-                <div style={{ color: '#FFD600', fontWeight: 600, margin: 8 }}>or</div>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                 <ConnectButton client={client} />
             </div>
         );
