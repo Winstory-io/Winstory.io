@@ -214,7 +214,7 @@ const CompletionPopup: React.FC<CompletionPopupProps> = ({ open, onClose }) => {
           {/* Mot Completion en haut */}
           <div style={{ color: YELLOW, fontSize: 28, fontWeight: 700, textAlign: 'center', marginBottom: 10, marginTop: 0 }}>Completion</div>
           {/* Zone de texte dans un seul encart, descendue */}
-          <div style={{ width: '100%', display: 'flex', justifyContent: 'center', marginBottom: 20, marginTop: 24, flexDirection: 'column', alignItems: 'center' }}>
+          <div style={{ width: '100%', display: 'flex', justifyContent: 'center', marginBottom: 20, marginTop: 8, flexDirection: 'column', alignItems: 'center' }}>
             <textarea
               style={{ width: '95%', minHeight: 110, maxHeight: 160, borderRadius: 12, border: `2px solid ${YELLOW}`, padding: 16, fontSize: 17, background: '#111', color: '#fff', fontWeight: 500, resize: 'none', outline: 'none' }}
               placeholder={storyFocused ? '' : 'Write your Completion Story according to the Creation and Guideline’s Company. Creativity, magical, sophistication ! (minimum 100 characters)'}
@@ -225,7 +225,7 @@ const CompletionPopup: React.FC<CompletionPopupProps> = ({ open, onClose }) => {
             />
             {/* Import vidéo centré horizontalement, seulement si pas de vidéo */}
             {!videoUrl && (
-              <div style={{ display: 'flex', justifyContent: 'center', width: '100%', marginBottom: 18, marginTop: 18 }}>
+              <div style={{ display: 'flex', justifyContent: 'center', width: '100%', marginBottom: 18, marginTop: 12 }}>
                 <label htmlFor="mp4-upload" style={{
                   background: 'none',
                   border: `2px solid ${YELLOW}`,
@@ -256,7 +256,7 @@ const CompletionPopup: React.FC<CompletionPopupProps> = ({ open, onClose }) => {
             )}
             {/* Preview vidéo large, centrée, adaptée, reste dans l'encart */}
             {videoUrl && (
-              <div style={{ position: 'relative', width: '95%', maxWidth: 480, margin: '18px auto 10px auto', display: 'flex', justifyContent: 'center' }}>
+              <div style={{ position: 'relative', width: '95%', maxWidth: 480, margin: '10px auto 10px auto', display: 'flex', justifyContent: 'center' }}>
                 <video src={videoUrl} controls style={{ width: '100%', maxWidth: 480, maxHeight: 400, borderRadius: 10, background: '#111', objectFit: 'contain' }} />
                 {/* Petite croix rouge pour supprimer la vidéo, à l'extérieur du cadre vidéo */}
                 <button

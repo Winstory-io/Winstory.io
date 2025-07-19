@@ -5,20 +5,40 @@
       "static/chunks/main-app.js",
       "static/chunks/app/layout.js"
     ],
-    "/completion/layout": [
+    "/welcome/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/completion/layout.js"
+      "static/chunks/app/welcome/layout.js"
     ],
-    "/completion/page": [
+    "/welcome/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/completion/page.js"
+      "static/chunks/app/welcome/page.js"
+    ],
+    "/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/page.js"
     ],
     "/api/auth/[...nextauth]/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/api/auth/[...nextauth]/route.js"
+    ],
+    "/completion/layout": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/completion/layout.js"
+    ],
+    "/completion/login/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/completion/login/page.js"
+    ],
+    "/completion/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/completion/page.js"
     ]
   }
 }

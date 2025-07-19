@@ -113,6 +113,14 @@ function WalletConnectContent({ isEmailLogin = false, isWalletLogin = false, isB
         }
     }, [account, walletConnected, onLoginSuccess, pendingEmail]);
 
+    // Appeler onLoginSuccess dès qu'un wallet est connecté en mode isBothLogin
+    useEffect(() => {
+        if (isBothLogin && account && onLoginSuccess) {
+            const user = JSON.parse(localStorage.getItem("user") || 'null');
+            onLoginSuccess({ email: user?.email || '', walletAddress: account.address });
+        }
+    }, [isBothLogin, account, onLoginSuccess]);
+
     if (!mounted) {
         return <div>Loading...</div>;
     }
