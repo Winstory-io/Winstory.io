@@ -16,6 +16,8 @@ const CompletionPopup: React.FC<CompletionPopupProps> = ({ open, onClose }) => {
   const [storyFocused, setStoryFocused] = React.useState(false);
   const [videoUrl, setVideoUrl] = React.useState<string | null>(null);
   const [hoveredBubble, setHoveredBubble] = React.useState<string | null>(null);
+  // Ajout pour pop-up spécifique à la bulle
+  const [openedBubble, setOpenedBubble] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     if (file) {
@@ -32,6 +34,8 @@ const CompletionPopup: React.FC<CompletionPopupProps> = ({ open, onClose }) => {
   // Gestion fermeture par clic overlay
   const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget) onClose();
+    // Fermer le pop-up spécifique si ouvert
+    if (openedBubble) setOpenedBubble(null);
   };
 
   // Style bulle verte inspiré de .cornerBubble, version cercle
@@ -97,6 +101,9 @@ const CompletionPopup: React.FC<CompletionPopupProps> = ({ open, onClose }) => {
           justifyContent: 'center',
           overflow: 'hidden',
           marginTop: '6vh',
+          position: 'relative',
+          opacity: openedBubble ? 0.18 : 1,
+          transition: 'opacity 0.2s',
         }}
         onClick={e => e.stopPropagation()}
       >
@@ -116,6 +123,9 @@ const CompletionPopup: React.FC<CompletionPopupProps> = ({ open, onClose }) => {
             height: '80%',
             boxSizing: 'border-box',
             justifyContent: 'flex-start',
+            transition: 'opacity 0.2s',
+            opacity: openedBubble ? 0.18 : 1,
+            position: 'relative',
           }}
         >
           <div style={{ color: GREEN, fontSize: 28, fontWeight: 700, textAlign: 'center', marginBottom: 8 }}>Creation</div>
@@ -136,16 +146,74 @@ const CompletionPopup: React.FC<CompletionPopupProps> = ({ open, onClose }) => {
                   style={hoveredBubble === bulle.key ? { ...circleStyle, ...circleHoverStyle } : circleStyle}
                   onMouseEnter={() => setHoveredBubble(bulle.key)}
                   onMouseLeave={() => setHoveredBubble(null)}
+                  onClick={() => setOpenedBubble(bulle.key)}
                 >
                   {bulle.label}
                 </div>
               ))}
             </div>
             {/* Vidéo centrée verticalement et horizontalement */}
-            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 320, minWidth: 0 }}>
+            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 320, minWidth: 0, position: 'relative' }}>
               <div style={{ width: '90%', maxWidth: 480, maxHeight: 360, aspectRatio: '16/9', background: '#222', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 24 }}>
                 Vidéo initiale
               </div>
+              {/* Pop-up rectangulaire centré dans l'encart Creation */}
+              {openedBubble && (
+                <div style={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  background: '#181818', // fond noir parfaitement opaque
+                  border: '3px solid #00ffb0',
+                  borderRadius: 20,
+                  boxShadow: '0 12px 64px 0 #00ffb0cc, 0 2px 24px 0 #000a',
+                  padding: '54px 38px 44px 38px',
+                  minWidth: 360,
+                  minHeight: 240,
+                  maxWidth: 480,
+                  width: '96%',
+                  zIndex: 2000,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  opacity: 1, // aucune transparence
+                }}
+                onClick={e => e.stopPropagation()} // Pour ne pas fermer en cliquant dans le pop-up
+                >
+                  <button
+                    onClick={() => setOpenedBubble(null)}
+                    style={{
+                      position: 'absolute',
+                      top: 18,
+                      right: 22,
+                      background: 'none',
+                      border: 'none',
+                      color: '#00ffb0',
+                      fontSize: 34,
+                      cursor: 'pointer',
+                      fontWeight: 900,
+                      zIndex: 2,
+                    }}
+                    aria-label="Fermer le pop-up spécifique"
+                  >
+                    ×
+                  </button>
+                  <div style={{ color: '#00ffb0', fontWeight: 800, fontSize: 30, marginBottom: 18, textAlign: 'center', letterSpacing: 1, textShadow: '0 2px 12px #000a' }}>
+                    {openedBubble === 'starting' && 'Starting Text'}
+                    {openedBubble === 'guideline' && 'Guideline'}
+                    {openedBubble === 'standard' && 'Standard Rewards'}
+                    {openedBubble === 'premium' && 'Premium Rewards'}
+                  </div>
+                  <div style={{ color: '#fff', fontSize: 20, textAlign: 'center', marginTop: 10, fontWeight: 500, textShadow: '0 2px 8px #000a' }}>
+                    {/* Placeholder textuel, à remplacer par la dynamique plus tard */}
+                    {openedBubble === 'starting' && 'Texte de démarrage de la campagne (à paramétrer)'}
+                    {openedBubble === 'guideline' && 'Consigne créative de la campagne (à paramétrer)'}
+                    {openedBubble === 'standard' && 'Description des Standard Rewards (à paramétrer)'}
+                    {openedBubble === 'premium' && 'Description des Premium Rewards (à paramétrer)'}
+                  </div>
+                </div>
+              )}
             </div>
             {/* Bulles droite */}
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center', gap: 18, height: '100%', marginLeft: 18 }}>
@@ -158,6 +226,7 @@ const CompletionPopup: React.FC<CompletionPopupProps> = ({ open, onClose }) => {
                   style={hoveredBubble === bulle.key ? { ...circleStyle, ...circleHoverStyle } : circleStyle}
                   onMouseEnter={() => setHoveredBubble(bulle.key)}
                   onMouseLeave={() => setHoveredBubble(null)}
+                  onClick={() => setOpenedBubble(bulle.key)}
                 >
                   {bulle.label}
                 </div>
@@ -190,6 +259,8 @@ const CompletionPopup: React.FC<CompletionPopupProps> = ({ open, onClose }) => {
             overflow: 'visible',
             justifyContent: 'flex-start',
             alignItems: 'center',
+            transition: 'opacity 0.2s',
+            opacity: openedBubble ? 0.18 : 1,
           }}
         >
           {/* Croix rouge de fermeture à l'intérieur en haut à droite */}
@@ -290,6 +361,9 @@ const CompletionPopup: React.FC<CompletionPopupProps> = ({ open, onClose }) => {
         justifyContent: 'center',
         margin: '0 0 0 auto',
         marginRight: '40px',
+        transition: 'opacity 0.2s',
+        opacity: openedBubble ? 0.01 : 1,
+        pointerEvents: openedBubble ? 'none' : 'auto',
       }}>
         <button
           style={{
@@ -313,6 +387,78 @@ const CompletionPopup: React.FC<CompletionPopupProps> = ({ open, onClose }) => {
           Confirm
         </button>
       </div>
+      {/* Pop-up rectangulaire centré sur l'écran, parfaitement visible */}
+      {openedBubble && (
+        <>
+          {/* Overlay pour fermer le pop-up en cliquant à l'extérieur */}
+          <div
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              width: '100vw',
+              height: '100vh',
+              background: 'rgba(0,0,0,0.01)', // quasi invisible, juste pour capter le clic
+              zIndex: 2000,
+            }}
+            onClick={() => setOpenedBubble(null)}
+          />
+          <div style={{
+            position: 'fixed',
+            top: '50%',
+            left: 32, // positionné à gauche de l'écran
+            transform: 'translateY(-50%)',
+            background: '#181818',
+            border: '3px solid #00ffb0',
+            borderRadius: 20,
+            boxShadow: '0 12px 64px 0 #00ffb0cc, 0 2px 24px 0 #000a',
+            padding: '54px 38px 44px 38px',
+            minWidth: 360,
+            minHeight: 240,
+            maxWidth: 480,
+            width: '96%',
+            zIndex: 2001,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            opacity: 1,
+          }}
+          onClick={e => e.stopPropagation()} // Pour ne pas fermer en cliquant dans le pop-up
+          >
+            <button
+              onClick={() => setOpenedBubble(null)}
+              style={{
+                position: 'absolute',
+                top: 18,
+                right: 22,
+                background: 'none',
+                border: 'none',
+                color: '#00ffb0',
+                fontSize: 34,
+                cursor: 'pointer',
+                fontWeight: 900,
+                zIndex: 2,
+              }}
+              aria-label="Fermer le pop-up spécifique"
+            >
+              ×
+            </button>
+            <div style={{ color: '#00ffb0', fontWeight: 800, fontSize: 30, marginBottom: 18, textAlign: 'center', letterSpacing: 1, textShadow: '0 2px 12px #000a' }}>
+              {openedBubble === 'starting' && 'Starting Text'}
+              {openedBubble === 'guideline' && 'Guideline'}
+              {openedBubble === 'standard' && 'Standard Rewards'}
+              {openedBubble === 'premium' && 'Premium Rewards'}
+            </div>
+            <div style={{ color: '#fff', fontSize: 20, textAlign: 'center', marginTop: 10, fontWeight: 500, textShadow: '0 2px 8px #000a' }}>
+              {/* Placeholder textuel, à remplacer par la dynamique plus tard */}
+              {openedBubble === 'starting' && 'Texte de démarrage de la campagne (à paramétrer)'}
+              {openedBubble === 'guideline' && 'Consigne créative de la campagne (à paramétrer)'}
+              {openedBubble === 'standard' && 'Description des Standard Rewards (à paramétrer)'}
+              {openedBubble === 'premium' && 'Description des Premium Rewards (à paramétrer)'}
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 };
