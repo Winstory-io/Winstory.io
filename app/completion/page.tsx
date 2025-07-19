@@ -72,18 +72,18 @@ const CompletionPage = () => {
       </div>
 
       {/* Identité + info */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 24, marginTop: 32 }}>
-        <div style={{ background: '#FFD600', color: '#222', borderRadius: 12, padding: '12px 28px', fontWeight: 700, fontSize: 20 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, marginTop: 20 }}>
+        <div style={{ background: '#FFD600', color: '#222', borderRadius: 12, padding: '8px 18px', fontWeight: 700, fontSize: 16 }}>
           {activeTab === 'b2c' ? companyIdentity : individualIdentity}
         </div>
         <button onClick={() => setShowInfo(true)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
-          <div style={{ background: '#FFD600', borderRadius: '50%', width: 56, height: 56, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <span style={{ color: '#111', fontWeight: 700, fontSize: 38, fontFamily: 'serif' }}>i</span>
+          <div style={{ background: '#FFD600', borderRadius: '50%', width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ color: '#111', fontWeight: 700, fontSize: 24, fontFamily: 'serif' }}>i</span>
           </div>
         </button>
       </div>
       {/* Titre de campagne (placeholder) */}
-      <div style={{ textAlign: 'center', marginTop: 8, fontStyle: 'italic', color: '#FFD600', fontSize: 18 }}>Title</div>
+      <div style={{ textAlign: 'center', marginTop: 4, fontStyle: 'italic', color: '#FFD600', fontSize: 14 }}>Title</div>
 
       {/* Vidéo (placeholder responsive) */}
       <div style={{ display: 'flex', justifyContent: 'center', marginTop: 32 }}>
@@ -93,7 +93,7 @@ const CompletionPage = () => {
       </div>
 
       {/* Bouton Complete */}
-      <div style={{ display: 'flex', justifyContent: 'center', marginTop: 40 }}>
+      <div style={{ display: 'flex', justifyContent: 'center', marginTop: 20 }}>
         <button
           onClick={() => setShowComplete(true)}
           style={{ background: '#4ECB71', color: '#111', fontWeight: 700, fontSize: 26, border: 'none', borderRadius: 16, padding: '16px 48px', cursor: 'pointer', boxShadow: '0 2px 8px #0008' }}
