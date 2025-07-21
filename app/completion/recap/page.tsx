@@ -90,7 +90,31 @@ export default function RecapCompletion() {
   return (
     <ProtectedRoute>
       <div style={{ minHeight: "100vh", background: "#000", color: "#fff", padding: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ width: '100%', maxWidth: 480, height: '90vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'stretch', gap: 24 }}>
+        {/* Croix rouge en haut à droite */}
+        {(!modal.open) && (
+          <button
+            onClick={() => setShowLeaveModal(true)}
+            aria-label="Quitter le recap"
+            style={{
+              position: 'fixed',
+              top: 24,
+              right: 24,
+              zIndex: 1200,
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              padding: 0,
+            }}
+          >
+            <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="18" cy="18" r="18" fill="#181818"/>
+              <path d="M12 12L24 24" stroke="#FF2D2D" strokeWidth="3" strokeLinecap="round"/>
+              <path d="M24 12L12 24" stroke="#FF2D2D" strokeWidth="3" strokeLinecap="round"/>
+            </svg>
+          </button>
+        )}
+        {/* Overlay Recap transparent si modale leave ouverte */}
+        <div style={{ width: '100%', maxWidth: 480, height: '90vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'stretch', gap: 24, opacity: showLeaveModal ? 0.3 : 1, transition: 'opacity 0.2s' }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: 'center', margin: 0, width: '100%' }}>
             <h1 style={{ fontSize: 26, fontWeight: 700, margin: 0, textAlign: 'center' }}>Completion Recap</h1>
           </div>
@@ -99,7 +123,7 @@ export default function RecapCompletion() {
             {/* Completion Film */}
             <div style={{ border: "2px solid #fff", borderRadius: 12, padding: 10, maxWidth: '100%' }}>
               <span style={{ fontWeight: 600, fontSize: 15 }}>Completion Film</span>
-              <button onClick={() => openModal('Completion Film', recap.completionFilm, true)} style={{ marginTop: 12, display: 'flex', alignItems: 'center', border: "2px solid #FFD600", borderRadius: 8, padding: 8, color: "#FFD600", fontStyle: "italic", fontSize: 14, background: 'none', cursor: 'pointer', fontWeight: 700, marginLeft: 6, width: '100%', textAlign: 'left' }}>
+              <button onClick={() => openModal('Completion Film', recap.completionFilm, true)} style={{ marginTop: 12, display: 'flex', alignItems: 'center', border: "2px solid #FFD600", borderRadius: 8, padding: '8px 12px', color: "#FFD600", fontStyle: "italic", fontSize: 14, background: 'none', cursor: 'pointer', fontWeight: 700, marginLeft: 0, marginRight: 0, textAlign: 'left', width: 'auto', minWidth: 100, maxWidth: '70%' }}>
                 {recap.completionFilm ? (
                   <>
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{ marginRight: 6 }}><path d="M4 4H20V20H4V4Z" stroke="#FFD600" strokeWidth="2"/><path d="M9 9L15 12L9 15V9Z" fill="#FFD600"/></svg>
@@ -111,7 +135,7 @@ export default function RecapCompletion() {
             {/* Completion Text */}
             <div style={{ border: "2px solid #fff", borderRadius: 12, padding: 10, maxWidth: '100%' }}>
               <span style={{ fontWeight: 600, fontSize: 15 }}>Completion Text</span>
-              <button onClick={() => openModal('Completion Text', recap.completionText)} style={{ marginTop: 12, border: "2px solid #FFD600", borderRadius: 8, padding: 8, color: "#FFD600", fontStyle: "italic", fontSize: 14, background: 'none', cursor: 'pointer', fontWeight: 700, marginLeft: 6, width: '100%', textAlign: 'left' }}>
+              <button onClick={() => openModal('Completion Text', recap.completionText)} style={{ marginTop: 12, marginLeft: 32, border: "2px solid #FFD600", borderRadius: 8, padding: '8px 12px', color: "#FFD600", fontStyle: "italic", fontSize: 14, background: 'none', cursor: 'pointer', fontWeight: 700, textAlign: 'left', width: 'auto', minWidth: 100, maxWidth: '70%' }}>
                 {recap.completionText ? (recap.completionText.length > 120 ? 'Click to access the full text' : recap.completionText) : "No text submitted"}
               </button>
             </div>
@@ -180,6 +204,66 @@ export default function RecapCompletion() {
             {confirmed ? '✓' : 'MINT'}
           </button>
         </div>
+        {/* Pop-up centrale rouge/noir pour quitter */}
+        {showLeaveModal && (
+          <div
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              width: '100vw',
+              height: '100vh',
+              background: 'rgba(0,0,0,0.7)',
+              zIndex: 2000,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+            onClick={() => setShowLeaveModal(false)}
+          >
+            <div
+              style={{
+                background: '#181818',
+                border: '3px solid #FF2D2D',
+                color: '#FF2D2D',
+                padding: 40,
+                borderRadius: 20,
+                minWidth: 340,
+                maxWidth: '90vw',
+                boxShadow: '0 0 32px #FF2D2D55',
+                textAlign: 'center',
+                position: 'relative',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 24,
+              }}
+              onClick={e => e.stopPropagation()}
+            >
+              <div style={{ fontWeight: 700, fontSize: 28, color: '#FF2D2D', marginBottom: 8 }}>Back to home ?</div>
+              <div style={{ color: '#FF2D2D', background: '#000', border: '2px solid #FF2D2D', borderRadius: 12, padding: 18, fontSize: 18, fontWeight: 500, marginBottom: 12 }}>
+                You’re about to leave this completion recap.<br/>Your current progress won’t be saved
+              </div>
+              <button
+                onClick={() => router.push('/welcome')}
+                style={{
+                  background: '#FF2D2D',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: 12,
+                  padding: '14px 32px',
+                  fontWeight: 700,
+                  fontSize: 18,
+                  cursor: 'pointer',
+                  marginTop: 8,
+                  boxShadow: '0 2px 12px #FF2D2D55',
+                  transition: 'background 0.2s',
+                }}
+              >
+                Confirm & leave
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </ProtectedRoute>
   );
