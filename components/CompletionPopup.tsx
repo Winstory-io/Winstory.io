@@ -92,14 +92,13 @@ const CompletionPopup: React.FC<CompletionPopupProps> = ({ open, onClose, active
 
   const handleConfirm = () => {
     if (isConfirmEnabled) {
+      window.__completionVideo = file || null;
       localStorage.setItem("completionText", story);
-      localStorage.setItem("completionFilmUrl", videoUrl || "");
+      localStorage.setItem("completionFilmUrl", ""); // On ne stocke plus la vidéo ici
       localStorage.setItem("completionType", activeTab);
-      // Mock data for rewards and mint price for recap page
       localStorage.setItem("standardTokenReward", JSON.stringify({ name: "Standard Token", amountPerUser: 10, contractAddress: "0xabc...def" }));
       localStorage.setItem("premiumTokenReward", JSON.stringify({ name: "Premium Token", amountPerUser: 100, contractAddress: "0x123...456" }));
       localStorage.setItem("completionMintPrice", "0.05 ETH");
-      
       router.push('/completion/recap');
     }
   };
