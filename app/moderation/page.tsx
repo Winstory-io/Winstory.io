@@ -49,8 +49,8 @@ const ModerationPage = () => {
   const [videoHeight, setVideoHeight] = useState(0);
 
   // Taille et espacement des bulles
-  const bubbleSize = 135;
-  const bubbleGap = 32;
+  const bubbleSize = 100;
+  const bubbleGap = 24;
 
   useEffect(() => {
     if (videoRef.current) {
@@ -71,19 +71,12 @@ const ModerationPage = () => {
         onIconClick={() => window.location.href = '/moderator/dashboard'}
         onBulbClick={() => setShowBulbPopup(true)}
       />
-      <div className={styles.moderationContainer} style={{ position: 'relative', overflow: 'visible' }}>
-        {/* Colonne bulles à gauche, position fixed sur desktop pour ne pas être masquée */}
+      <div className={styles.moderationContainer}>
+        {/* Colonne bulles à gauche */}
         <div
+          className={styles.bubbleContainer}
           style={{
-            position: 'fixed',
-            left: 32,
-            top: 'calc(50% + 60px)',
-            transform: 'translateY(-50%)',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
             gap: bubbleGap,
-            zIndex: 20,
             width: bubbleSize,
           }}
         >
@@ -96,7 +89,7 @@ const ModerationPage = () => {
             <div
               key={bulle.label}
               className={styles.cornerBubble}
-              style={{ width: bubbleSize, height: bubbleSize, fontSize: 20 }}
+              style={{ width: bubbleSize, height: bubbleSize, fontSize: 16 }}
               onClick={bulle.onClick}
             >
               {bulle.label}

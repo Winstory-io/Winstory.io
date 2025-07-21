@@ -59,6 +59,17 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/explorer/page.js"
+    ],
+    "/moderation/layout": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/moderation/layout.js"
+    ],
+    "/moderation/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/moderation/page.css",
+      "static/chunks/app/moderation/page.js"
     ]
   }
 }
