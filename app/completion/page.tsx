@@ -114,7 +114,12 @@ const CompletionPage = () => {
         </div>
       )}
       {showComplete && (
-        <CompletionPopup open={showComplete} onClose={() => setShowComplete(false)} />
+        <CompletionPopup
+          open={showComplete}
+          onClose={() => setShowComplete(false)}
+          activeTab={activeTab}
+          identity={activeTab === 'b2c' ? companyIdentity : individualIdentity}
+        />
       )}
     </div>
   );

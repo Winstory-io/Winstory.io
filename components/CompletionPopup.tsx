@@ -4,13 +4,14 @@ import styles from '../styles/Moderation.module.css';
 interface CompletionPopupProps {
   open: boolean;
   onClose: () => void;
-  // Ajoute d'autres props si besoin (infos campagne, callbacks, etc.)
+  activeTab: 'b2c' | 'individual';
+  identity: string;
 }
 
 const GREEN = '#4ECB71';
 const YELLOW = '#FFD600';
 
-const CompletionPopup: React.FC<CompletionPopupProps> = ({ open, onClose }) => {
+const CompletionPopup: React.FC<CompletionPopupProps> = ({ open, onClose, activeTab, identity }) => {
   const [file, setFile] = React.useState<File | null>(null);
   const [story, setStory] = React.useState('');
   const [storyFocused, setStoryFocused] = React.useState(false);
@@ -148,7 +149,7 @@ const CompletionPopup: React.FC<CompletionPopupProps> = ({ open, onClose }) => {
           <div style={{ color: GREEN, fontSize: 28, fontWeight: 700, textAlign: 'center', marginBottom: 8 }}>Creation</div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
             <div style={{ fontStyle: 'italic', fontSize: 18, color: '#fff' }}>Title</div>
-            <div style={{ fontWeight: 700, fontSize: 18, color: '#fff' }}>@Company</div>
+            <div style={{ fontWeight: 700, fontSize: 18, color: '#fff' }}>{identity}</div>
           </div>
           {/* Ligne flex pour bulles et vidéo */}
           <div style={{ display: 'flex', flex: 1, alignItems: 'center', justifyContent: 'center', width: '100%', gap: 0, position: 'relative' }}>
@@ -156,7 +157,7 @@ const CompletionPopup: React.FC<CompletionPopupProps> = ({ open, onClose }) => {
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', justifyContent: 'center', gap: 18, height: '100%', marginRight: 18 }}>
               {[
                 { key: 'starting', label: 'Starting Text' },
-                { key: 'guideline', label: 'Guideline' },
+                ...(activeTab === 'b2c' ? [{ key: 'guideline', label: 'Guideline' }] : []),
               ].map(bulle => (
                 <div
                   key={bulle.key}
@@ -235,8 +236,12 @@ const CompletionPopup: React.FC<CompletionPopupProps> = ({ open, onClose }) => {
             {/* Bulles droite */}
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center', gap: 18, height: '100%', marginLeft: 18 }}>
               {[
-                { key: 'standard', label: 'Standard Rewards' },
-                { key: 'premium', label: 'Premium Rewards' },
+                ...(activeTab === 'b2c'
+                  ? [
+                      { key: 'standard', label: 'Standard Rewards' },
+                      { key: 'premium', label: 'Premium Rewards' },
+                    ]
+                  : [{ key: 'guideline', label: 'Guideline' }]),
               ].map(bulle => (
                 <div
                   key={bulle.key}
@@ -305,7 +310,13 @@ const CompletionPopup: React.FC<CompletionPopupProps> = ({ open, onClose }) => {
           <div style={{ width: '100%', display: 'flex', justifyContent: 'center', marginBottom: 20, marginTop: 8, flexDirection: 'column', alignItems: 'center' }}>
             <textarea
               style={{ width: '95%', minHeight: 110, maxHeight: 160, borderRadius: 12, border: `2px solid ${activeColor}`, padding: 16, fontSize: 17, background: '#111', color: '#fff', fontWeight: 500, resize: 'none', outline: 'none' }}
-              placeholder={storyFocused ? '' : 'Write your Completion Story according to the Starting Text and Guideline’s Company. Creativity, magical, sophistication !'}
+              placeholder={
+                storyFocused
+                  ? ''
+                  : activeTab === 'b2c'
+                  ? 'Write your Completion Story according to the Starting Text and Guideline’s Company. Creativity, magical, sophistication !'
+                  : 'Write your Completion Story according to the Starting Text and Guideline’s Individual Member. Creativity, magical, sophistication !'
+              }
               value={story}
               onChange={e => setStory(e.target.value)}
               onFocus={() => setStoryFocused(true)}

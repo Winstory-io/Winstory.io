@@ -49,6 +49,16 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/completion/page.js"
+    ],
+    "/explorer/layout": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/explorer/layout.js"
+    ],
+    "/explorer/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/explorer/page.js"
     ]
   }
 }
