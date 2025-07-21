@@ -1,5 +1,6 @@
 import React from 'react';
 import styles from '../styles/Moderation.module.css';
+import { useRouter } from 'next/navigation';
 
 interface CompletionPopupProps {
   open: boolean;
@@ -12,6 +13,7 @@ const GREEN = '#4ECB71';
 const YELLOW = '#FFD600';
 
 const CompletionPopup: React.FC<CompletionPopupProps> = ({ open, onClose, activeTab, identity }) => {
+  const router = useRouter();
   const [file, setFile] = React.useState<File | null>(null);
   const [story, setStory] = React.useState('');
   const [storyFocused, setStoryFocused] = React.useState(false);
@@ -88,6 +90,20 @@ const CompletionPopup: React.FC<CompletionPopupProps> = ({ open, onClose, active
   const isConfirmEnabled = story.trim().length > 0 && !!videoUrl;
   const activeColor = isConfirmEnabled ? GREEN : YELLOW;
 
+  const handleConfirm = () => {
+    if (isConfirmEnabled) {
+      localStorage.setItem("completionText", story);
+      localStorage.setItem("completionFilmUrl", videoUrl || "");
+      localStorage.setItem("completionType", activeTab);
+      // Mock data for rewards and mint price for recap page
+      localStorage.setItem("standardTokenReward", JSON.stringify({ name: "Standard Token", amountPerUser: 10, contractAddress: "0xabc...def" }));
+      localStorage.setItem("premiumTokenReward", JSON.stringify({ name: "Premium Token", amountPerUser: 100, contractAddress: "0x123...456" }));
+      localStorage.setItem("completionMintPrice", "0.05 ETH");
+      
+      router.push('/completion/recap');
+    }
+  };
+
   return (
     <div
       className="completion-overlay"
@@ -103,7 +119,7 @@ const CompletionPopup: React.FC<CompletionPopupProps> = ({ open, onClose, active
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        overflow: 'hidden',
+        // overflow: 'hidden', // This was causing the button to be clipped
       }}
       onClick={handleOverlayClick}
     >
@@ -120,7 +136,7 @@ const CompletionPopup: React.FC<CompletionPopupProps> = ({ open, onClose, active
           gap: 32,
           alignItems: 'center',
           justifyContent: 'center',
-          overflow: 'hidden',
+          // overflow: 'hidden', // This was also causing clipping
           marginTop: '6vh',
           position: 'relative',
           opacity: openedBubble ? 0.18 : 1,
@@ -282,13 +298,13 @@ const CompletionPopup: React.FC<CompletionPopupProps> = ({ open, onClose, active
             height: '80%',
             boxSizing: 'border-box',
             overflow: 'visible',
-            justifyContent: 'flex-start',
+            justifyContent: 'flex-start', // Reverted from space-between
             alignItems: 'center',
             transition: 'opacity 0.2s',
             opacity: openedBubble ? 0.18 : 1,
           }}
         >
-          {/* Croix rouge de fermeture à l'intérieur en haut à droite */}
+          {/* The entire content of the completion panel, without extra wrappers */}
           <button
             onClick={handleCloseClick}
             style={{
@@ -307,9 +323,7 @@ const CompletionPopup: React.FC<CompletionPopupProps> = ({ open, onClose, active
           >
             ×
           </button>
-          {/* Mot Completion en haut */}
           <div style={{ color: activeColor, fontSize: 28, fontWeight: 700, textAlign: 'center', marginBottom: 10, marginTop: 0 }}>Completion</div>
-          {/* Zone de texte dans un seul encart, descendue */}
           <div style={{ width: '100%', display: 'flex', justifyContent: 'center', marginBottom: 20, marginTop: 8, flexDirection: 'column', alignItems: 'center' }}>
             <textarea
               style={{ width: '95%', minHeight: 110, maxHeight: 160, borderRadius: 12, border: `2px solid ${activeColor}`, padding: 16, fontSize: 17, background: '#111', color: '#fff', fontWeight: 500, resize: 'none', outline: 'none' }}
@@ -325,7 +339,6 @@ const CompletionPopup: React.FC<CompletionPopupProps> = ({ open, onClose, active
               onFocus={() => setStoryFocused(true)}
               onBlur={() => setStoryFocused(false)}
             />
-            {/* Import vidéo centré horizontalement, seulement si pas de vidéo */}
             {!videoUrl && (
               <div style={{ display: 'flex', justifyContent: 'center', width: '100%', marginBottom: 18, marginTop: 12 }}>
                 <label htmlFor="mp4-upload" style={{
@@ -356,7 +369,6 @@ const CompletionPopup: React.FC<CompletionPopupProps> = ({ open, onClose, active
                 </label>
               </div>
             )}
-            {/* Preview vidéo large, centrée, adaptée, reste dans l'encart */}
             {videoUrl && (
               <div style={{ position: 'relative', width: '95%', maxWidth: 480, margin: '18px auto 18px auto', display: 'flex', justifyContent: 'center', padding: '8px 0 20px 0', marginTop: 0 }}>
                 <video
@@ -372,11 +384,10 @@ const CompletionPopup: React.FC<CompletionPopupProps> = ({ open, onClose, active
                     objectFit: 'contain',
                     boxShadow: '0 2px 12px #000a',
                     ...(videoAspectRatio && videoAspectRatio < 1
-                      ? { height: '260px', width: 'auto' } // Vertical
-                      : { width: '100%', height: 'auto', maxHeight: '300px' }), // Horizontal ou avant chargement
+                      ? { height: '260px', width: 'auto' }
+                      : { width: '100%', height: 'auto', maxHeight: '300px' }),
                   }}
                 />
-                {/* Petite croix rouge pour supprimer la vidéo, dans le coin supérieur droit du conteneur vidéo */}
                 <button
                   onClick={() => { setFile(null); }}
                   style={{
@@ -398,41 +409,33 @@ const CompletionPopup: React.FC<CompletionPopupProps> = ({ open, onClose, active
               </div>
             )}
           </div>
+          <div style={{
+            position: 'absolute',
+            bottom: '-70px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+          }}>
+            <button
+              onClick={handleConfirm}
+              style={{
+                width: 220,
+                background: isConfirmEnabled ? '#4ECB71' : '#FFD600',
+                color: isConfirmEnabled ? '#111' : '#222',
+                border: 'none',
+                borderRadius: 12,
+                padding: '18px 0',
+                fontSize: 22,
+                fontWeight: 700,
+                cursor: isConfirmEnabled ? 'pointer' : 'not-allowed',
+                boxShadow: '0 2px 8px #0008',
+                transition: 'background 0.2s, color 0.2s',
+              }}
+              disabled={!isConfirmEnabled}
+            >
+              Confirm
+            </button>
+          </div>
         </div>
-      </div>
-      {/* Bouton Confirm parfaitement centré sous l'encart Completion */}
-      <div style={{
-        width: 'calc(49vw - 32px)',
-        minWidth: 340,
-        display: 'flex',
-        justifyContent: 'center',
-        margin: '0 0 0 auto',
-        marginRight: '40px',
-        transition: 'opacity 0.2s',
-        opacity: openedBubble ? 0.01 : 1,
-        pointerEvents: openedBubble ? 'none' : 'auto',
-      }}>
-        <button
-          style={{
-            width: 220,
-            margin: '-44px auto 0 auto', // marginTop négatif pour coller encore plus
-            background: isConfirmEnabled ? '#4ECB71' : '#FFD600',
-            color: isConfirmEnabled ? '#111' : '#222',
-            border: 'none',
-            borderRadius: 12,
-            padding: '18px 0',
-            fontSize: 22,
-            fontWeight: 700,
-            cursor: isConfirmEnabled ? 'pointer' : 'not-allowed',
-            boxShadow: '0 2px 8px #0008',
-            display: 'block',
-            transition: 'background 0.2s, color 0.2s',
-            alignSelf: 'center',
-          }}
-          disabled={!isConfirmEnabled}
-        >
-          Confirm
-        </button>
       </div>
       {/* Pop-up rectangulaire centré sur l'écran, parfaitement visible */}
       {openedBubble && (
