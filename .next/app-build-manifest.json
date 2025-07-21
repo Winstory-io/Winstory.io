@@ -25,6 +25,16 @@
       "static/chunks/main-app.js",
       "static/chunks/app/api/auth/[...nextauth]/route.js"
     ],
+    "/creation/layout": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/creation/layout.js"
+    ],
+    "/creation/youare/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/creation/youare/page.js"
+    ],
     "/completion/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
@@ -39,11 +49,6 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/completion/page.js"
-    ],
-    "/welcome/tooltip/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/welcome/tooltip/page.js"
     ]
   }
 }

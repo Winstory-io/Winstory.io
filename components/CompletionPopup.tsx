@@ -18,6 +18,7 @@ const CompletionPopup: React.FC<CompletionPopupProps> = ({ open, onClose }) => {
   const [hoveredBubble, setHoveredBubble] = React.useState<string | null>(null);
   // Ajout pour pop-up spécifique à la bulle
   const [openedBubble, setOpenedBubble] = React.useState<string | null>(null);
+  const [showLeaveConfirmModal, setShowLeaveConfirmModal] = React.useState(false);
 
   React.useEffect(() => {
     if (file) {
@@ -31,9 +32,24 @@ const CompletionPopup: React.FC<CompletionPopupProps> = ({ open, onClose }) => {
 
   if (!open) return null;
 
+  const hasProgress = story.trim().length > 0 || !!file;
+
+  const handleCloseClick = () => {
+    if (hasProgress) {
+      setShowLeaveConfirmModal(true);
+    } else {
+      onClose();
+    }
+  };
+
   // Gestion fermeture par clic overlay
   const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (e.target === e.currentTarget) onClose();
+    if (e.target === e.currentTarget) {
+      if (hasProgress) {
+        return;
+      }
+      onClose();
+    }
     // Fermer le pop-up spécifique si ouvert
     if (openedBubble) setOpenedBubble(null);
   };
@@ -66,6 +82,7 @@ const CompletionPopup: React.FC<CompletionPopupProps> = ({ open, onClose }) => {
 
   // Condition pour activer le bouton Confirm (texte + vidéo)
   const isConfirmEnabled = story.trim().length > 0 && !!videoUrl;
+  const activeColor = isConfirmEnabled ? GREEN : YELLOW;
 
   return (
     <div
@@ -246,7 +263,7 @@ const CompletionPopup: React.FC<CompletionPopupProps> = ({ open, onClose }) => {
           style={{
             flex: 1,
             background: '#000',
-            border: `3px solid ${YELLOW}`,
+            border: `3px solid ${activeColor}`,
             borderRadius: '18px',
             padding: '8px 32px 10px 32px',
             position: 'relative',
@@ -265,7 +282,7 @@ const CompletionPopup: React.FC<CompletionPopupProps> = ({ open, onClose }) => {
         >
           {/* Croix rouge de fermeture à l'intérieur en haut à droite */}
           <button
-            onClick={onClose}
+            onClick={handleCloseClick}
             style={{
               position: 'absolute',
               top: 8,
@@ -283,12 +300,12 @@ const CompletionPopup: React.FC<CompletionPopupProps> = ({ open, onClose }) => {
             ×
           </button>
           {/* Mot Completion en haut */}
-          <div style={{ color: YELLOW, fontSize: 28, fontWeight: 700, textAlign: 'center', marginBottom: 10, marginTop: 0 }}>Completion</div>
+          <div style={{ color: activeColor, fontSize: 28, fontWeight: 700, textAlign: 'center', marginBottom: 10, marginTop: 0 }}>Completion</div>
           {/* Zone de texte dans un seul encart, descendue */}
           <div style={{ width: '100%', display: 'flex', justifyContent: 'center', marginBottom: 20, marginTop: 8, flexDirection: 'column', alignItems: 'center' }}>
             <textarea
-              style={{ width: '95%', minHeight: 110, maxHeight: 160, borderRadius: 12, border: `2px solid ${YELLOW}`, padding: 16, fontSize: 17, background: '#111', color: '#fff', fontWeight: 500, resize: 'none', outline: 'none' }}
-              placeholder={storyFocused ? '' : 'Write your Completion Story according to the Creation and Guideline’s Company. Creativity, magical, sophistication ! (minimum 100 characters)'}
+              style={{ width: '95%', minHeight: 110, maxHeight: 160, borderRadius: 12, border: `2px solid ${activeColor}`, padding: 16, fontSize: 17, background: '#111', color: '#fff', fontWeight: 500, resize: 'none', outline: 'none' }}
+              placeholder={storyFocused ? '' : 'Write your Completion Story according to the Starting Text and Guideline’s Company. Creativity, magical, sophistication !'}
               value={story}
               onChange={e => setStory(e.target.value)}
               onFocus={() => setStoryFocused(true)}
@@ -458,6 +475,85 @@ const CompletionPopup: React.FC<CompletionPopupProps> = ({ open, onClose }) => {
             </div>
           </div>
         </>
+      )}
+      {showLeaveConfirmModal && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+            background: 'rgba(0,0,0,0.7)',
+            zIndex: 3000,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+          onClick={() => setShowLeaveConfirmModal(false)}
+        >
+          <div
+            style={{
+              background: '#181818',
+              border: '3px solid #FF2D2D',
+              color: '#FF2D2D',
+              padding: 40,
+              borderRadius: 20,
+              minWidth: 340,
+              maxWidth: '90vw',
+              boxShadow: '0 0 32px #FF2D2D55',
+              textAlign: 'center',
+              position: 'relative',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 24,
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{ fontWeight: 700, fontSize: 28, color: '#FF2D2D', marginBottom: 8 }}>Leave Completion ?</div>
+            <div style={{ color: '#FF2D2D', background: '#000', border: '2px solid #FF2D2D', borderRadius: 12, padding: 18, fontSize: 18, fontWeight: 500, marginBottom: 12 }}>
+              You’re about to leave this completion process.<br/>Your current progress won’t be saved.
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: 16 }}>
+                <button
+                  onClick={() => setShowLeaveConfirmModal(false)}
+                  style={{
+                    background: '#444',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: 12,
+                    padding: '14px 32px',
+                    fontWeight: 700,
+                    fontSize: 18,
+                    cursor: 'pointer',
+                    transition: 'background 0.2s',
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    onClose();
+                    setShowLeaveConfirmModal(false);
+                  }}
+                  style={{
+                    background: '#FF2D2D',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: 12,
+                    padding: '14px 32px',
+                    fontWeight: 700,
+                    fontSize: 18,
+                    cursor: 'pointer',
+                    boxShadow: '0 2px 12px #FF2D2D55',
+                    transition: 'background 0.2s',
+                  }}
+                >
+                  Confirm & leave
+                </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

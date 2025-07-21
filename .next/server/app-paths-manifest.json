@@ -1,5 +1,5 @@
 {
-  "/completion/page": "app/completion/page.js",
   "/completion/login/page": "app/completion/login/page.js",
-  "/welcome/page": "app/welcome/page.js"
+  "/welcome/page": "app/welcome/page.js",
+  "/completion/page": "app/completion/page.js"
 }
