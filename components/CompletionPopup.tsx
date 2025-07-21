@@ -16,6 +16,7 @@ const CompletionPopup: React.FC<CompletionPopupProps> = ({ open, onClose, active
   const [story, setStory] = React.useState('');
   const [storyFocused, setStoryFocused] = React.useState(false);
   const [videoUrl, setVideoUrl] = React.useState<string | null>(null);
+  const [videoAspectRatio, setVideoAspectRatio] = React.useState<number | null>(null);
   const [hoveredBubble, setHoveredBubble] = React.useState<string | null>(null);
   // Ajout pour pop-up spécifique à la bulle
   const [openedBubble, setOpenedBubble] = React.useState<string | null>(null);
@@ -25,9 +26,11 @@ const CompletionPopup: React.FC<CompletionPopupProps> = ({ open, onClose, active
     if (file) {
       const url = URL.createObjectURL(file);
       setVideoUrl(url);
+      setVideoAspectRatio(null); // Reset aspect ratio on new file
       return () => URL.revokeObjectURL(url);
     } else {
       setVideoUrl(null);
+      setVideoAspectRatio(null);
     }
   }, [file]);
 
@@ -355,15 +358,31 @@ const CompletionPopup: React.FC<CompletionPopupProps> = ({ open, onClose, active
             )}
             {/* Preview vidéo large, centrée, adaptée, reste dans l'encart */}
             {videoUrl && (
-              <div style={{ position: 'relative', width: '95%', maxWidth: 480, margin: '10px auto 10px auto', display: 'flex', justifyContent: 'center' }}>
-                <video src={videoUrl} controls style={{ width: '100%', maxWidth: 480, maxHeight: 400, borderRadius: 10, background: '#111', objectFit: 'contain' }} />
-                {/* Petite croix rouge pour supprimer la vidéo, à l'extérieur du cadre vidéo */}
+              <div style={{ position: 'relative', width: '95%', maxWidth: 480, margin: '18px auto 18px auto', display: 'flex', justifyContent: 'center', padding: '8px 0 20px 0', marginTop: 0 }}>
+                <video
+                  src={videoUrl}
+                  controls
+                  onLoadedMetadata={e => {
+                    const video = e.currentTarget;
+                    setVideoAspectRatio(video.videoWidth / video.videoHeight);
+                  }}
+                  style={{
+                    borderRadius: 10,
+                    background: '#111',
+                    objectFit: 'contain',
+                    boxShadow: '0 2px 12px #000a',
+                    ...(videoAspectRatio && videoAspectRatio < 1
+                      ? { height: '260px', width: 'auto' } // Vertical
+                      : { width: '100%', height: 'auto', maxHeight: '300px' }), // Horizontal ou avant chargement
+                  }}
+                />
+                {/* Petite croix rouge pour supprimer la vidéo, dans le coin supérieur droit du conteneur vidéo */}
                 <button
-                  onClick={() => { setFile(null); setVideoUrl(null); }}
+                  onClick={() => { setFile(null); }}
                   style={{
                     position: 'absolute',
-                    top: -18,
-                    right: -18,
+                    top: 12,
+                    right: -28,
                     background: 'none',
                     border: 'none',
                     fontSize: 24,
