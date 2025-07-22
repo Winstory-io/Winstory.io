@@ -49,13 +49,35 @@ export default function RecapCompletion() {
         completionFilm,
         standardToken,
         standardItem,
-        premiumToken,
         premiumItem,
+        premiumToken,
         mintPrice
       });
     };
     readLocalStorage();
-  }, []);
+
+    // Gestion de la flèche de gauche du navigateur (page précédente)
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      // Permettre la navigation vers l'arrière
+      return;
+    };
+
+    const handlePopState = () => {
+      // Quand l'utilisateur clique sur la flèche de gauche, revenir au popup de completion
+      // Marquer qu'on vient du recap et qu'on doit ouvrir le popup
+      localStorage.setItem('fromRecap', 'true');
+      localStorage.setItem('openCompletionPopup', 'true');
+      router.push('/completion');
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [router]);
 
   const handleMint = () => {
     setConfirmed(true);
@@ -241,7 +263,7 @@ export default function RecapCompletion() {
             >
               <div style={{ fontWeight: 700, fontSize: 28, color: '#FF2D2D', marginBottom: 8 }}>Back to home ?</div>
               <div style={{ color: '#FF2D2D', background: '#000', border: '2px solid #FF2D2D', borderRadius: 12, padding: 18, fontSize: 18, fontWeight: 500, marginBottom: 12 }}>
-                You’re about to leave this completion recap.<br/>Your current progress won’t be saved
+                You're about to leave this completion recap.<br/>Your current progress won't be saved
               </div>
               <button
                 onClick={() => router.push('/welcome')}

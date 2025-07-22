@@ -24,6 +24,22 @@ const CompletionPopup: React.FC<CompletionPopupProps> = ({ open, onClose, active
   const [openedBubble, setOpenedBubble] = React.useState<string | null>(null);
   const [showLeaveConfirmModal, setShowLeaveConfirmModal] = React.useState(false);
 
+  // Charger les données sauvegardées quand le popup s'ouvre
+  React.useEffect(() => {
+    if (open) {
+      const savedText = localStorage.getItem("completionText");
+      const savedVideo = window.__completionVideo;
+      
+      if (savedText) {
+        setStory(savedText);
+      }
+      
+      if (savedVideo) {
+        setFile(savedVideo);
+      }
+    }
+  }, [open]);
+
   React.useEffect(() => {
     if (file) {
       const url = URL.createObjectURL(file);
@@ -41,6 +57,7 @@ const CompletionPopup: React.FC<CompletionPopupProps> = ({ open, onClose, active
   const hasProgress = story.trim().length > 0 || !!file;
 
   const handleCloseClick = () => {
+    // Toujours afficher le modal de confirmation si il y a du progrès
     if (hasProgress) {
       setShowLeaveConfirmModal(true);
     } else {
@@ -544,7 +561,7 @@ const CompletionPopup: React.FC<CompletionPopupProps> = ({ open, onClose, active
           >
             <div style={{ fontWeight: 700, fontSize: 28, color: '#FF2D2D', marginBottom: 8 }}>Leave Completion ?</div>
             <div style={{ color: '#FF2D2D', background: '#000', border: '2px solid #FF2D2D', borderRadius: 12, padding: 18, fontSize: 18, fontWeight: 500, marginBottom: 12 }}>
-              You’re about to leave this completion process.<br/>Your current progress won’t be saved.
+              You're about to leave this completion process.<br/>Your current progress won't be saved.
             </div>
             <div style={{ display: 'flex', justifyContent: 'center', gap: 16 }}>
                 <button
@@ -561,10 +578,18 @@ const CompletionPopup: React.FC<CompletionPopupProps> = ({ open, onClose, active
                     transition: 'background 0.2s',
                   }}
                 >
-                  Cancel
+                  Stay here
                 </button>
                 <button
                   onClick={() => {
+                    // Nettoyer les données sauvegardées
+                    localStorage.removeItem('completionText');
+                    localStorage.removeItem('completionType');
+                    localStorage.removeItem('openCompletionPopup');
+                    if (typeof window !== 'undefined') {
+                      window.__completionVideo = null;
+                    }
+                    // Fermer le popup et revenir à la page de completion
                     onClose();
                     setShowLeaveConfirmModal(false);
                   }}

@@ -12,6 +12,41 @@ const CompletionPage = () => {
   const [showComplete, setShowComplete] = useState(false);
   const router = useRouter();
 
+  // Nettoyer le localStorage au chargement de la page principale de completion
+  React.useEffect(() => {
+    // Vérifier si on vient de la page recap (via la flèche de gauche)
+    const isFromRecap = localStorage.getItem('fromRecap') === 'true';
+    const shouldOpenPopup = localStorage.getItem('openCompletionPopup') === 'true';
+    
+    if (isFromRecap && shouldOpenPopup) {
+      // Si on vient du recap, charger les données sauvegardées
+      const savedText = localStorage.getItem("completionText");
+      const savedVideo = window.__completionVideo;
+      const savedType = localStorage.getItem("completionType") as 'b2c' | 'individual';
+      
+      if (savedText || savedVideo) {
+        setActiveTab(savedType || 'b2c');
+        setShowComplete(true);
+      }
+      
+      // Nettoyer les flags
+      localStorage.removeItem('fromRecap');
+      localStorage.removeItem('openCompletionPopup');
+    } else {
+      // Si on arrive directement sur la page principale, nettoyer le localStorage
+      localStorage.removeItem('completionText');
+      localStorage.removeItem('completionType');
+      if (typeof window !== 'undefined') {
+        window.__completionVideo = null;
+      }
+    }
+  }, []);
+
+  // Mettre à jour le localStorage quand on change d'onglet
+  React.useEffect(() => {
+    localStorage.setItem("completionType", activeTab);
+  }, [activeTab]);
+
   // Placeholder identity
   const companyIdentity = '@Company';
   const individualIdentity = '@0x12...89AB';
