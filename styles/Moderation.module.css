@@ -228,6 +228,102 @@
   color: #fff;
   margin-top: 8px;
 }
+
+/* Nouveaux styles pour les boutons des popups */
+.popupValidButton {
+  background: linear-gradient(135deg, #37FF00 0%, #2ECC71 100%);
+  color: #111;
+  font-weight: 800;
+  font-size: 18px;
+  border: none;
+  border-radius: 50px;
+  padding: 16px 40px;
+  cursor: pointer;
+  min-width: 200px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 8px 25px rgba(55, 255, 0, 0.3);
+  position: relative;
+  overflow: hidden;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin: 24px auto 0;
+  display: block;
+}
+
+.popupValidButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 35px rgba(55, 255, 0, 0.4);
+  background: linear-gradient(135deg, #2ECC71 0%, #37FF00 100%);
+}
+
+.popupValidButton:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 15px rgba(55, 255, 0, 0.3);
+}
+
+.popupRefuseButton {
+  background: linear-gradient(135deg, #FF0000 0%, #E74C3C 100%);
+  color: #fff;
+  font-weight: 800;
+  font-size: 18px;
+  border: none;
+  border-radius: 50px;
+  padding: 16px 40px;
+  cursor: pointer;
+  min-width: 200px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 8px 25px rgba(255, 0, 0, 0.3);
+  position: relative;
+  overflow: hidden;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin: 24px auto 0;
+  display: block;
+}
+
+.popupRefuseButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 35px rgba(255, 0, 0, 0.4);
+  background: linear-gradient(135deg, #E74C3C 0%, #FF0000 100%);
+}
+
+.popupRefuseButton:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 15px rgba(255, 0, 0, 0.3);
+}
+
+/* Animation de pulsation pour les boutons */
+@keyframes pulse {
+  0% {
+    box-shadow: 0 8px 25px rgba(55, 255, 0, 0.3);
+  }
+  50% {
+    box-shadow: 0 8px 25px rgba(55, 255, 0, 0.6);
+  }
+  100% {
+    box-shadow: 0 8px 25px rgba(55, 255, 0, 0.3);
+  }
+}
+
+@keyframes pulseRed {
+  0% {
+    box-shadow: 0 8px 25px rgba(255, 0, 0, 0.3);
+  }
+  50% {
+    box-shadow: 0 8px 25px rgba(255, 0, 0, 0.6);
+  }
+  100% {
+    box-shadow: 0 8px 25px rgba(255, 0, 0, 0.3);
+  }
+}
+
+.popupValidButton {
+  animation: pulse 2s infinite;
+}
+
+.popupRefuseButton {
+  animation: pulseRed 2s infinite;
+}
 @media (max-width: 992px) {
   .moderationContainer {
     flex-direction: column;

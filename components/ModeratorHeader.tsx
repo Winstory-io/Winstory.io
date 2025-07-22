@@ -50,7 +50,18 @@ const ModeratorHeader: React.FC<ModeratorHeaderProps> = ({ activeTab, onTabChang
       <div style={{ flex: 1, textAlign: 'center', marginLeft: '-80px' }}>
         <span style={{ fontWeight: 700, fontSize: '2rem', letterSpacing: 1 }}>
           Moderate{' '}
-          <span role="img" aria-label="bulb" style={{ cursor: 'pointer' }} onClick={onBulbClick}>💡</span>
+          <img 
+            src="/tooltip.svg" 
+            alt="tooltip" 
+            style={{ 
+              cursor: 'pointer', 
+              width: '24px', 
+              height: '24px', 
+              verticalAlign: 'middle',
+              marginLeft: '8px'
+            }} 
+            onClick={onBulbClick}
+          />
         </span>
         <div style={{ marginTop: 8, display: 'flex', justifyContent: 'center', gap: 32 }}>
           <span

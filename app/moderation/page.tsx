@@ -184,7 +184,7 @@ const ModerationPage = () => {
                 If the majority of stakers vote YES and you also voted YES, you earn a share of the rewards pool.<br />
                 If the final vote is NO and you validated it, you lose proportional part of your stake.
               </div>
-              <button className={styles.validButton} style={{ margin: '24px auto 0', display: 'block', minWidth: 180 }} onClick={() => setShowValidPopup(false)}>Valid</button>
+              <button className={styles.popupValidButton} onClick={() => setShowValidPopup(false)}>Valid</button>
             </div>
           </div>
         </div>
@@ -192,13 +192,13 @@ const ModerationPage = () => {
       {/* Popup Refuse */}
       {showRefusePopup && (
         <div className={styles.popupOverlay} onClick={() => setShowRefusePopup(false)}>
-          <div className={styles.textPopup} style={{ border: '2px solid #FF0000' }} onClick={e => e.stopPropagation()}>
+          <div className={styles.textPopup} style={{ border: '2px solid #FF0000', padding: '20px 24px', maxWidth: '380px' }} onClick={e => e.stopPropagation()}>
             <div className={styles.popupHeader}>
               <button className={styles.closePopup} onClick={() => setShowRefusePopup(false)}>&times;</button>
             </div>
             <div className={styles.textPopupContent}>
               <b style={{ color: '#FF0000' }}>Refuse this Initial Story</b><br />if it falls under any of the following criteria :<br /><br />
-              <ul style={{ color: '#FF0000', fontWeight: 600, fontSize: 16, marginBottom: 16 }}>
+              <ul style={{ color: '#FF0000', fontWeight: 600, fontSize: 14, marginBottom: 12, lineHeight: '1.4' }}>
                 <li>The text or video is incomplete, incoherent, or lacks clear narrative direction</li>
                 <li>It cannot reasonably inspire meaningful community completions</li>
                 <li>It includes hate speech, racism, xenophobia, or apology for harassment and bullying</li>
@@ -207,13 +207,13 @@ const ModerationPage = () => {
                 <li>It contains explicit sexual content or pornography</li>
                 <li>It has clearly not been enhanced, assisted, or post-produced using generative AI or similar post-prod technologies</li>
               </ul>
-              <div style={{ marginBottom: 8, color: '#fff', fontWeight: 600 }}>
+              <div style={{ marginBottom: 8, color: '#fff', fontWeight: 600, fontSize: 14, lineHeight: '1.4' }}>
                 Refusing content is a strong decision.<br />Make sure it clearly meets at least one of these criteria.<br /><br />
                 Your decision engages a proportional part of your staked WINC.<br />
                 If the majority of stakers vote Refuse, and you also voted Refuse, you win a share of the rewards pool.<br />
                 If the final vote is Valid and you refused it, you lose proportional part of your stake.
               </div>
-              <button className={styles.refuseButton} style={{ margin: '24px auto 0', display: 'block', minWidth: 180 }} onClick={() => setShowRefusePopup(false)}>Refuse</button>
+              <button className={styles.popupRefuseButton} onClick={() => setShowRefusePopup(false)}>Refuse</button>
             </div>
           </div>
         </div>
