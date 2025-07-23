@@ -211,10 +211,10 @@ export default function IndividualRecapPage() {
                       style={{ 
                         width: '100%', 
                         maxWidth: '400px', 
-                        height: '225px', 
+                        maxHeight: '300px',
                         borderRadius: 8, 
                         background: '#000',
-                        objectFit: 'cover'
+                        objectFit: 'contain'
                       }}
                     />
                   </div>
