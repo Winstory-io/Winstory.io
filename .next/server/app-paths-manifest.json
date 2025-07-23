@@ -1,5 +1,8 @@
 {
-  "/completion/login/page": "app/completion/login/page.js",
-  "/moderation/page": "app/moderation/page.js",
-  "/welcome/page": "app/welcome/page.js"
+  "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js",
+  "/creation/individual/login/page": "app/creation/individual/login/page.js",
+  "/creation/youare/page": "app/creation/youare/page.js",
+  "/creation/individual/yourfilm/page": "app/creation/individual/yourfilm/page.js",
+  "/creation/individual/yourwinstory/page": "app/creation/individual/yourwinstory/page.js",
+  "/creation/b2c/yourfilm/page": "app/creation/b2c/yourfilm/page.js"
 }

@@ -70,7 +70,7 @@ export default function YourWinstoryIndividual() {
                 guideline
             }));
             // Aller à la page suivante (à adapter selon le flow)
-            router.push('/creation/b2c/yourfilm');
+            router.push('/creation/individual/yourfilm');
         }
     };
 
