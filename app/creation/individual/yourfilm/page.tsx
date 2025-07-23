@@ -138,7 +138,7 @@ export default function YourFilmPage() {
       url: videoPreview // null si pas de vidéo
     }));
     // Redirige vers la page suivante pour les individus
-    router.push('/creation/individual/yourinformations');
+    router.push('/creation/individual/yourcompletions');
   };
 
   const handleUploadClick = () => {
