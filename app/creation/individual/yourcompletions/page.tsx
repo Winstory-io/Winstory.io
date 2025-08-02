@@ -154,6 +154,19 @@ const EconomicDetails = ({ data, isVisible, isInline = false }: { data: any, isV
             ⚠️ Unprofitable Campaign - Values Disabled
           </div>
         )}
+        {data.isThirdPlaceDeficit && (
+          <div style={{ 
+            fontSize: 12, 
+            color: '#FF2D2D', 
+            background: 'rgba(255, 45, 45, 0.1)', 
+            padding: '6px 10px', 
+            borderRadius: '4px',
+            marginTop: '6px',
+            fontWeight: 600
+          }}>
+            ⚠️ Winners Would Lose Money - Rewards Disabled
+          </div>
+        )}
       </div>
 
       <div style={{ display: 'grid', gap: 8, marginBottom: 12 }}>
@@ -180,57 +193,57 @@ const EconomicDetails = ({ data, isVisible, isInline = false }: { data: any, isV
         {/* Top 3 Rewards */}
         <div style={{
           background: 'transparent',
-          border: '2px solid #FFD700',
+          border: `2px solid ${data.isThirdPlaceDeficit ? '#FF2D2D' : '#FFD700'}`,
           borderRadius: 8,
           padding: 6,
           textAlign: 'center',
           opacity: data.isCreatorProfitable ? 1 : 0.6,
           transition: 'opacity 0.3s ease'
         }}>
-          <div style={{ fontSize: 10, fontWeight: 600, color: '#FFD700', marginBottom: 2 }}>
+          <div style={{ fontSize: 10, fontWeight: 600, color: data.isThirdPlaceDeficit ? '#FF2D2D' : '#FFD700', marginBottom: 2 }}>
             1st Place
           </div>
-          <div style={{ fontSize: 14, fontWeight: 900, color: '#FFD700' }}>
+          <div style={{ fontSize: 14, fontWeight: 900, color: data.isThirdPlaceDeficit ? '#FF2D2D' : '#FFD700' }}>
             {data.top1} $WINC
           </div>
         </div>
 
         <div style={{
           background: 'transparent',
-          border: '2px solid #C0C0C0',
+          border: `2px solid ${data.isThirdPlaceDeficit ? '#FF2D2D' : '#C0C0C0'}`,
           borderRadius: 8,
           padding: 6,
           textAlign: 'center',
           opacity: data.isCreatorProfitable ? 1 : 0.6,
           transition: 'opacity 0.3s ease'
         }}>
-          <div style={{ fontSize: 10, fontWeight: 600, color: '#C0C0C0', marginBottom: 2 }}>
+          <div style={{ fontSize: 10, fontWeight: 600, color: data.isThirdPlaceDeficit ? '#FF2D2D' : '#C0C0C0', marginBottom: 2 }}>
             2nd Place
           </div>
-          <div style={{ fontSize: 14, fontWeight: 900, color: '#C0C0C0' }}>
+          <div style={{ fontSize: 14, fontWeight: 900, color: data.isThirdPlaceDeficit ? '#FF2D2D' : '#C0C0C0' }}>
             {data.top2} $WINC
           </div>
         </div>
 
         <div style={{
           background: 'transparent',
-          border: '2px solid #CD7F32',
+          border: `2px solid ${data.isThirdPlaceDeficit ? '#FF2D2D' : '#CD7F32'}`,
           borderRadius: 8,
           padding: 6,
           textAlign: 'center',
           opacity: data.isCreatorProfitable ? 1 : 0.6,
           transition: 'opacity 0.3s ease'
         }}>
-          <div style={{ fontSize: 10, fontWeight: 600, color: '#CD7F32', marginBottom: 2 }}>
+          <div style={{ fontSize: 10, fontWeight: 600, color: data.isThirdPlaceDeficit ? '#FF2D2D' : '#CD7F32', marginBottom: 2 }}>
             3rd Place
           </div>
-          <div style={{ fontSize: 14, fontWeight: 900, color: '#CD7F32' }}>
+          <div style={{ fontSize: 14, fontWeight: 900, color: data.isThirdPlaceDeficit ? '#FF2D2D' : '#CD7F32' }}>
             {data.top3} $WINC
           </div>
         </div>
 
         <div style={{
-          background: '#000',
+          background: 'linear-gradient(135deg, #FFD600, #FFA500)',
           border: '2px solid #FFD600',
           borderRadius: 8,
           padding: 6,
@@ -238,10 +251,10 @@ const EconomicDetails = ({ data, isVisible, isInline = false }: { data: any, isV
           opacity: data.isCreatorProfitable ? 1 : 0.6,
           transition: 'opacity 0.3s ease'
         }}>
-          <div style={{ fontSize: 10, fontWeight: 600, color: '#FFD600', marginBottom: 2 }}>
+          <div style={{ fontSize: 10, fontWeight: 600, color: '#000', marginBottom: 2 }}>
             Platform
           </div>
-          <div style={{ fontSize: 14, fontWeight: 900, color: '#FFD600' }}>
+          <div style={{ fontSize: 14, fontWeight: 900, color: '#000' }}>
             {data.platform} $WINC
           </div>
         </div>
@@ -262,9 +275,6 @@ const EconomicDetails = ({ data, isVisible, isInline = false }: { data: any, isV
         </div>
         <div style={{ fontSize: 24, fontWeight: 900, color: '#000', marginBottom: 4 }}>
           {data.creatorGain} $WINC
-        </div>
-        <div style={{ fontSize: 12, color: '#000', opacity: 0.8, marginBottom: 2 }}>
-          + {data.creatorXP} XP (x{data.multiplicateurXP})
         </div>
         {!data.isCreatorProfitable && (
           <div style={{ 
@@ -348,7 +358,9 @@ export default function YourCompletionsPage() {
       const N = parseInt(maxCompletions);
       if (P >= 1 && N >= 5 && !isNaN(P)) {
         const data = simulateCampaign(P, N);
-        setEconomicData(data);
+        // Vérifier si la 3ème place est inférieure au Unit Value
+        const isThirdPlaceDeficit = data.top3 < P;
+        setEconomicData({ ...data, isThirdPlaceDeficit });
       }
     }
   }, [wincValue, maxCompletions]);
@@ -379,7 +391,7 @@ export default function YourCompletionsPage() {
                       const normalizedWincValue = wincValue.replace(',', '.');
                       const P = parseFloat(normalizedWincValue);
                       const N = parseInt(maxCompletions);
-                      return P >= 1 && N >= 5 && !isNaN(P) && economicData && economicData.isCreatorProfitable;
+                      return P >= 1 && N >= 5 && !isNaN(P) && economicData && economicData.isCreatorProfitable && !economicData.isThirdPlaceDeficit;
                     })();
 
   const handleNext = () => {
@@ -596,6 +608,35 @@ export default function YourCompletionsPage() {
                   </div>
                   <div style={{ fontSize: 14, color: '#fff', fontWeight: 600, background: 'rgba(255,255,255,0.1)', padding: '8px 12px', borderRadius: '6px' }}>
                     💡 Increase Unit Value or Max Completions to make it profitable
+                  </div>
+                </div>
+              )}
+
+              {/* Message d'erreur pour la 3ème place déficitaire */}
+              {economicData && economicData.isThirdPlaceDeficit && (
+                <div style={{
+                  background: 'linear-gradient(135deg, #FF2D2D, #FF1744)',
+                  borderRadius: 12,
+                  padding: 20,
+                  textAlign: 'center',
+                  marginBottom: 24,
+                  border: '2px solid #FF2D2D',
+                  boxShadow: '0 0 20px rgba(255, 45, 45, 0.3)'
+                }}>
+                  <div style={{ fontSize: 18, fontWeight: 700, color: '#fff', marginBottom: 12 }}>
+                    ⚠️ WARNING: Winners Would Lose Money
+                  </div>
+                  <div style={{ fontSize: 16, color: '#fff', marginBottom: 12, lineHeight: 1.4 }}>
+                    The winners would receive less than what they paid!
+                  </div>
+                  <div style={{ fontSize: 14, color: '#fff', marginBottom: 8, opacity: 0.9 }}>
+                    Unit Value: <strong>{wincValue} $WINC</strong>
+                  </div>
+                  <div style={{ fontSize: 14, color: '#fff', marginBottom: 12, opacity: 0.9 }}>
+                    3rd Place Reward: <strong>{economicData.top3} $WINC</strong>
+                  </div>
+                  <div style={{ fontSize: 14, color: '#fff', fontWeight: 600, background: 'rgba(255,255,255,0.1)', padding: '8px 12px', borderRadius: '6px' }}>
+                    💡 Increase Unit Value or Max Completions to make rewards profitable
                   </div>
                 </div>
               )}
