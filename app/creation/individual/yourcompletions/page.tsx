@@ -562,6 +562,9 @@ export default function YourCompletionsPage() {
                   <div style={{ fontSize: 28, fontWeight: 900, color: '#000', marginBottom: 4 }}>
                     {economicData.mint} $WINC
                   </div>
+                  <div style={{ fontSize: 12, fontStyle: 'italic', color: '#000', opacity: 0.8 }}>
+                    Make sure you have enough $WINC in your wallet
+                  </div>
                   {!isDesktop && (
                     <button
                       onClick={() => setShowEconomicDetails(true)}
