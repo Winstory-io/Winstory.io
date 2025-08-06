@@ -32,6 +32,8 @@ export default function IndividualRecapPage() {
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
+  const [showFullStartingStory, setShowFullStartingStory] = useState(false);
+  const [showFullGuideline, setShowFullGuideline] = useState(false);
 
   useEffect(() => {
     // Charger les données depuis le localStorage
@@ -100,6 +102,19 @@ export default function IndividualRecapPage() {
       console.log("Redirecting to minting process...");
       // router.push("/creation/individual/mint");
     }, 1000);
+  };
+
+  const handleStartingStoryClick = () => {
+    setShowFullStartingStory(!showFullStartingStory);
+  };
+
+  const handleGuidelineClick = () => {
+    setShowFullGuideline(!showFullGuideline);
+  };
+
+  const truncateText = (text: string, maxLength: number = 200) => {
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength) + '...';
   };
 
   const canProceed = recap.story && recap.film && recap.completions;
@@ -178,18 +193,92 @@ export default function IndividualRecapPage() {
               <div style={{ color: '#FFD600', fontWeight: 700, fontSize: 24, marginBottom: 16, textAlign: 'center' }}>
                 Your WinStory
               </div>
-              <div style={{ background: '#000', border: '2px solid #FFD600', borderRadius: 12, padding: 20 }}>
+              <div style={{ background: '#000', border: '2px solid #FFD600', borderRadius: 12, padding: 28 }}>
                 <div style={{ marginBottom: 16 }}>
                   <div style={{ color: '#FFD600', fontWeight: 600, fontSize: 16, marginBottom: 8 }}>Title:</div>
                   <div style={{ color: '#fff', fontSize: 18 }}>{recap.story.title}</div>
                 </div>
                 <div style={{ marginBottom: 16 }}>
                   <div style={{ color: '#FFD600', fontWeight: 600, fontSize: 16, marginBottom: 8 }}>Starting Story:</div>
-                  <div style={{ color: '#fff', fontSize: 16, lineHeight: 1.6, whiteSpace: 'pre-line' }}>{recap.story.startingStory}</div>
+                  <div 
+                    onClick={handleStartingStoryClick}
+                    style={{ 
+                      color: '#fff', 
+                      fontSize: 16, 
+                      lineHeight: 1.6, 
+                      whiteSpace: 'pre-line',
+                      cursor: 'pointer',
+                      padding: '8px',
+                      borderRadius: '6px',
+                      transition: 'background-color 0.2s',
+                      maxHeight: showFullStartingStory ? 'none' : '120px',
+                      overflow: showFullStartingStory ? 'visible' : 'hidden',
+                      position: 'relative'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = 'rgba(255, 215, 0, 0.1)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                    }}
+                  >
+                    {showFullStartingStory 
+                      ? recap.story.startingStory 
+                      : truncateText(recap.story.startingStory, 200)
+                    }
+                    {!showFullStartingStory && recap.story.startingStory && (
+                      <div style={{ 
+                        color: '#FFD600', 
+                        fontSize: '14px', 
+                        fontWeight: 600, 
+                        marginTop: '8px',
+                        textAlign: 'center'
+                      }}>
+                        Click to see full Story
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <div>
+                <div style={{ marginBottom: 16 }}>
                   <div style={{ color: '#FFD600', fontWeight: 600, fontSize: 16, marginBottom: 8 }}>Guideline:</div>
-                  <div style={{ color: '#fff', fontSize: 16, lineHeight: 1.6, whiteSpace: 'pre-line' }}>{recap.story.guideline}</div>
+                  <div 
+                    onClick={handleGuidelineClick}
+                    style={{ 
+                      color: '#fff', 
+                      fontSize: 16, 
+                      lineHeight: 1.6, 
+                      whiteSpace: 'pre-line',
+                      cursor: 'pointer',
+                      padding: '8px',
+                      borderRadius: '6px',
+                      transition: 'background-color 0.2s',
+                      maxHeight: showFullGuideline ? 'none' : '120px',
+                      overflow: showFullGuideline ? 'visible' : 'hidden',
+                      position: 'relative'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = 'rgba(255, 215, 0, 0.1)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                    }}
+                  >
+                    {showFullGuideline 
+                      ? recap.story.guideline 
+                      : truncateText(recap.story.guideline, 200)
+                    }
+                  </div>
+                  {!showFullGuideline && (
+                    <div style={{ 
+                      color: '#FFD600', 
+                      fontSize: '14px', 
+                      fontWeight: 600, 
+                      marginTop: '8px',
+                      textAlign: 'center'
+                    }}>
+                      Click to see full Guideline
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

@@ -82,6 +82,11 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/creation/individual/yourcompletions/page.js"
+    ],
+    "/creation/individual/recap/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/creation/individual/recap/page.js"
     ]
   }
 }
