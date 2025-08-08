@@ -122,7 +122,7 @@ export default function YourFilmAgencyPage() {
     };
 
     const handleNext = () => {
-        router.push('/'); 
+        router.push('/creation/agencyb2c/rewardsornot'); 
     };
 
     const handleUploadClick = () => {

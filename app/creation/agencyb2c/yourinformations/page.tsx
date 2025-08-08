@@ -3,31 +3,6 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 
-const GreenArrowButton = ({ onClick, disabled }: { onClick: () => void, disabled: boolean }) => (
-    <button
-        onClick={onClick}
-        disabled={disabled}
-        aria-label="Next"
-        style={{
-            position: 'fixed',
-            bottom: '20px',
-            right: '20px',
-            background: 'none',
-            border: 'none',
-            cursor: disabled ? 'not-allowed' : 'pointer',
-            padding: 0,
-            outline: 'none',
-            opacity: disabled ? 0.6 : 1,
-            transform: 'rotate(270deg)'
-        }}
-    >
-        <svg width="56" height="56" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="24" cy="24" r="18" fill="#18C964"/>
-            <path d="M16 22L24 30L32 22" stroke="#111" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
-        </svg>
-    </button>
-);
-
 const CloseIcon = ({ onClick }: { onClick: () => void }) => (
     <svg onClick={onClick} width={32} height={32} viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ cursor: 'pointer', position: 'absolute', top: 24, right: 24, zIndex: 100 }}>
         <line x1="10" y1="10" x2="22" y2="22" stroke="#FF2D2D" strokeWidth="3" strokeLinecap="round" />
@@ -46,6 +21,7 @@ export default function AgencyB2CYourInformations() {
     const [isVerifying, setIsVerifying] = useState(false);
     const [message, setMessage] = useState("");
     const [showTooltip, setShowTooltip] = useState(false);
+    const [isRedirecting, setIsRedirecting] = useState(false);
 
     useEffect(() => {
         // Récupérer les informations de l'agence depuis le localStorage
@@ -63,6 +39,16 @@ export default function AgencyB2CYourInformations() {
             setAgencyName(`@${companyData.name}`);
         }
     }, []);
+
+    // Redirection automatique après vérification réussie
+    useEffect(() => {
+        if (message.includes("successful") && !isRedirecting) {
+            setIsRedirecting(true);
+            setTimeout(() => {
+                router.push('/creation/agencyb2c/yourwinstory');
+            }, 2000); // 2 secondes de délai pour laisser voir le message de succès
+        }
+    }, [message, router, isRedirecting]);
 
     const validateProfessionalEmail = (email: string): { valid: boolean; message: string } => {
         const personalDomains = [
@@ -118,7 +104,7 @@ export default function AgencyB2CYourInformations() {
 
             if (data.success) {
                 setIsCodeSent(true);
-                setMessage("Verification code sent! Check the B2C client's email.");
+                setMessage("Verification code sent successfully!");
             } else {
                 setMessage(data.message || "Error sending verification code");
             }
@@ -171,17 +157,6 @@ export default function AgencyB2CYourInformations() {
         }
     };
 
-    const handleNext = () => {
-        if (b2cCompanyName && b2cContactEmail && isCodeSent && message.includes("successful")) {
-            router.push('/creation/agencyb2c/yourwinstory');
-        }
-    };
-
-    const isFormValid = b2cCompanyName.trim() !== '' && 
-                       b2cContactEmail.trim() !== '' && 
-                       isCodeSent && 
-                       message.includes("successful");
-
     return (
         <div style={{ 
             minHeight: '100vh', 
@@ -233,113 +208,70 @@ export default function AgencyB2CYourInformations() {
                     onClick={() => setShowTooltip(false)}
                 >
                     <div
-                        style={{
+                        style={{ 
+                            background: '#181818', 
+                            color: '#fff', 
+                            padding: 32, 
+                            borderRadius: 16, 
+                            maxWidth: 500, 
+                            maxHeight: '80vh', 
+                            overflowY: 'auto', 
                             position: 'relative',
-                            maxWidth: 600,
-                            width: '90vw',
-                            background: '#000',
-                            border: '4px solid #FFD600',
-                            borderRadius: 24,
-                            padding: '32px 24px 28px 24px',
-                            boxShadow: '0 0 32px #000',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            alignItems: 'center',
-                            color: '#FFD600',
+                            border: '2px solid #FFD600'
                         }}
-                        onClick={e => e.stopPropagation()}
+                        onClick={(e) => e.stopPropagation()}
                     >
-                        <button
-                            onClick={() => setShowTooltip(false)}
-                            style={{
-                                position: 'absolute',
-                                top: 18,
-                                right: 18,
-                                background: 'none',
-                                border: 'none',
-                                cursor: 'pointer',
-                                zIndex: 10,
-                            }}
-                            aria-label="Close"
-                        >
-                            <svg width="28" height="28" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <line x1="10" y1="10" x2="30" y2="30" stroke="#FF2D2D" strokeWidth="3" strokeLinecap="round" />
-                                <line x1="30" y1="10" x2="10" y2="30" stroke="#FF2D2D" strokeWidth="3" strokeLinecap="round" />
-                            </svg>
-                        </button>
-                        <h2 style={{ color: '#FFD600', fontSize: 24, fontWeight: 900, textAlign: 'center', marginBottom: 18, letterSpacing: 1 }}>
-                            Agency B2C Client Information
-                        </h2>
-                        <div style={{ color: '#fff', fontSize: 16, fontWeight: 400, marginBottom: 18, textAlign: 'center' }}>
-                            Enter your B2C client company information. The main contact will receive a verification code by email to validate the process.
+                        <CloseIcon onClick={() => setShowTooltip(false)} />
+                        <h2 style={{ color: '#FFD600', fontWeight: 700, fontSize: 24, marginBottom: 16 }}>B2C Client Verification</h2>
+                        <div style={{ fontSize: 16, lineHeight: 1.6 }}>
+                            <p style={{ marginBottom: 12 }}>
+                                <strong>Purpose:</strong> Verify that you have permission to create campaigns on behalf of your B2C client.
+                            </p>
+                            <p style={{ marginBottom: 12 }}>
+                                <strong>Process:</strong>
+                            </p>
+                            <ul style={{ marginLeft: 20, marginBottom: 16 }}>
+                                <li>Enter the B2C client's company name</li>
+                                <li>Provide the client's professional email address</li>
+                                <li>Send verification code to the client</li>
+                                <li>Client enters the code to confirm authorization</li>
+                            </ul>
+                            <p style={{ marginBottom: 12 }}>
+                                <strong>Requirements:</strong>
+                            </p>
+                            <ul style={{ marginLeft: 20 }}>
+                                <li>Professional email address (no personal domains like Gmail)</li>
+                                <li>Client must have access to the email address</li>
+                                <li>Client must enter the verification code within the time limit</li>
+                            </ul>
                         </div>
                     </div>
                 </div>
             )}
 
-            {/* Agency Information Section (Non-modifiable) */}
+            {/* Main Content */}
             <div style={{ 
-                position: 'relative', 
-                background: '#000', 
-                borderRadius: 24, 
-                boxShadow: '0 0 24px #000', 
-                padding: '32px 24px 32px 24px', 
-                width: 400, 
-                maxWidth: '90vw', 
-                border: '2px solid #fff', 
-                marginBottom: 24 
+                maxWidth: 500, 
+                width: '90vw', 
+                background: '#181818', 
+                borderRadius: 16, 
+                padding: 32, 
+                border: '2px solid #FFD600',
+                marginBottom: 24
             }}>
-                <CloseIcon onClick={() => router.push('/welcome')} />
-                <div style={{ marginBottom: 24 }}>
-                    <div style={{ color: '#FFD600', fontWeight: 700, fontSize: 20, marginBottom: 8 }}>Your Agency Name</div>
-                    <div style={{ 
-                        border: '2px solid #FFD600', 
-                        borderRadius: 6, 
-                        padding: '12px 0', 
-                        textAlign: 'center', 
-                        fontStyle: 'italic', 
-                        fontSize: 18, 
-                        color: '#fff', 
-                        background: 'none', 
-                        marginBottom: 24 
-                    }}>
-                        {agencyName}
-                    </div>
-                    <div style={{ color: '#FFD600', fontWeight: 700, fontSize: 20, marginBottom: 8 }}>Your Contact Email</div>
-                    <div style={{ 
-                        border: '2px solid #00C46C', 
-                        borderRadius: 6, 
-                        padding: '12px 0', 
-                        textAlign: 'center', 
-                        fontStyle: 'italic', 
-                        fontSize: 18, 
-                        color: '#fff', 
-                        background: 'none' 
-                    }}>
-                        {agencyEmail}
-                    </div>
-                </div>
-            </div>
+                <h2 style={{ color: '#FFD600', fontWeight: 700, fontSize: 24, marginBottom: 24, textAlign: 'center' }}>
+                    B2C Client Information
+                </h2>
 
-            {/* B2C Client Information Section (Modifiable) */}
-            <div style={{ 
-                position: 'relative', 
-                background: '#000', 
-                borderRadius: 24, 
-                boxShadow: '0 0 24px #000', 
-                padding: '32px 24px 32px 24px', 
-                width: 400, 
-                maxWidth: '90vw', 
-                border: '2px solid #fff', 
-                marginBottom: 24 
-            }}>
                 <div style={{ marginBottom: 24 }}>
-                    <div style={{ color: '#FFD600', fontWeight: 700, fontSize: 20, marginBottom: 8 }}>Your B2C Company Client</div>
+                    <label style={{ display: 'block', color: '#FFD600', fontWeight: 600, marginBottom: 8 }}>
+                        Agency: {agencyName}
+                    </label>
                     <input
                         type="text"
                         value={b2cCompanyName}
                         onChange={(e) => setB2cCompanyName(e.target.value)}
-                        placeholder="@companyname"
+                        placeholder="B2C client company name"
                         style={{
                             width: '100%',
                             padding: '12px',
@@ -347,19 +279,21 @@ export default function AgencyB2CYourInformations() {
                             border: '2px solid #FFD600',
                             background: 'none',
                             color: '#FFD600',
-                            fontSize: 18,
-                            marginBottom: 24,
-                            boxSizing: 'border-box',
-                            textAlign: 'center',
-                            fontStyle: 'italic'
+                            fontSize: 16,
+                            boxSizing: 'border-box'
                         }}
                     />
-                    <div style={{ color: '#FFD600', fontWeight: 700, fontSize: 20, marginBottom: 8 }}>Main Contact B2C Client</div>
+                </div>
+
+                <div style={{ marginBottom: 24 }}>
+                    <label style={{ display: 'block', color: '#FFD600', fontWeight: 600, marginBottom: 8 }}>
+                        B2C Client Contact Email
+                    </label>
                     <input
                         type="email"
                         value={b2cContactEmail}
                         onChange={(e) => setB2cContactEmail(e.target.value)}
-                        placeholder="@proemailcompanyname"
+                        placeholder="client@company.com"
                         style={{
                             width: '100%',
                             padding: '12px',
@@ -367,101 +301,98 @@ export default function AgencyB2CYourInformations() {
                             border: '2px solid #FFD600',
                             background: 'none',
                             color: '#FFD600',
-                            fontSize: 18,
-                            marginBottom: 24,
-                            boxSizing: 'border-box',
-                            textAlign: 'center',
-                            fontStyle: 'italic'
+                            fontSize: 16,
+                            boxSizing: 'border-box'
                         }}
                     />
-                    
-                    {!isCodeSent ? (
-                        <button
-                            onClick={sendVerificationCode}
-                            disabled={isVerifying || !b2cContactEmail}
+                </div>
+
+                {!isCodeSent ? (
+                    <button
+                        onClick={sendVerificationCode}
+                        disabled={isVerifying || !b2cContactEmail}
+                        style={{
+                            width: '100%',
+                            padding: '12px',
+                            background: '#FFD600',
+                            color: '#000',
+                            border: 'none',
+                            borderRadius: 6,
+                            fontSize: 16,
+                            fontWeight: 'bold',
+                            cursor: isVerifying || !b2cContactEmail ? 'not-allowed' : 'pointer',
+                            opacity: isVerifying || !b2cContactEmail ? 0.6 : 1
+                        }}
+                    >
+                        {isVerifying ? 'Sending...' : 'Send Verification Code'}
+                    </button>
+                ) : (
+                    <div>
+                        <div style={{ color: '#00C46C', fontWeight: 600, fontSize: 14, marginBottom: 16, textAlign: 'center' }}>
+                            Code sent to: {b2cContactEmail}
+                        </div>
+                        <input
+                            type="text"
+                            value={verificationCode}
+                            onChange={(e) => setVerificationCode(e.target.value)}
+                            placeholder="Verification code"
                             style={{
                                 width: '100%',
                                 padding: '12px',
-                                background: '#FFD600',
-                                color: '#000',
-                                border: 'none',
                                 borderRadius: 6,
-                                fontSize: 16,
-                                fontWeight: 'bold',
-                                cursor: isVerifying || !b2cContactEmail ? 'not-allowed' : 'pointer',
-                                opacity: isVerifying || !b2cContactEmail ? 0.6 : 1
+                                border: '2px solid #FFD600',
+                                background: 'none',
+                                color: '#FFD600',
+                                fontSize: 18,
+                                marginBottom: 16,
+                                boxSizing: 'border-box',
+                                textAlign: 'center',
+                                letterSpacing: 2
                             }}
-                        >
-                            {isVerifying ? 'Sending...' : 'Send Verification Code'}
-                        </button>
-                    ) : (
-                        <div>
-                            <div style={{ color: '#00C46C', fontWeight: 600, fontSize: 14, marginBottom: 16, textAlign: 'center' }}>
-                                Code sent to: {b2cContactEmail}
-                            </div>
-                            <input
-                                type="text"
-                                value={verificationCode}
-                                onChange={(e) => setVerificationCode(e.target.value)}
-                                placeholder="Verification code"
+                        />
+                        <div style={{ display: 'flex', gap: 12 }}>
+                            <button
+                                onClick={() => {
+                                    setIsCodeSent(false);
+                                    setVerificationCode('');
+                                    setMessage('');
+                                }}
+                                disabled={isVerifying}
                                 style={{
-                                    width: '100%',
+                                    flex: 1,
                                     padding: '12px',
-                                    borderRadius: 6,
-                                    border: '2px solid #FFD600',
                                     background: 'none',
                                     color: '#FFD600',
-                                    fontSize: 18,
-                                    marginBottom: 16,
-                                    boxSizing: 'border-box',
-                                    textAlign: 'center',
-                                    letterSpacing: 2
+                                    border: '2px solid #FFD600',
+                                    borderRadius: 6,
+                                    fontSize: 16,
+                                    cursor: isVerifying ? 'not-allowed' : 'pointer',
+                                    opacity: isVerifying ? 0.6 : 1
                                 }}
-                            />
-                            <div style={{ display: 'flex', gap: 12 }}>
-                                <button
-                                    onClick={() => {
-                                        setIsCodeSent(false);
-                                        setVerificationCode('');
-                                        setMessage('');
-                                    }}
-                                    disabled={isVerifying}
-                                    style={{
-                                        flex: 1,
-                                        padding: '12px',
-                                        background: 'none',
-                                        color: '#FFD600',
-                                        border: '2px solid #FFD600',
-                                        borderRadius: 6,
-                                        fontSize: 16,
-                                        cursor: isVerifying ? 'not-allowed' : 'pointer',
-                                        opacity: isVerifying ? 0.6 : 1
-                                    }}
-                                >
-                                    Back
-                                </button>
-                                <button
-                                    onClick={verifyCode}
-                                    disabled={isVerifying || !verificationCode}
-                                    style={{
-                                        flex: 1,
-                                        padding: '12px',
-                                        background: '#FFD600',
-                                        color: '#000',
-                                        border: 'none',
-                                        borderRadius: 6,
-                                        fontSize: 16,
-                                        fontWeight: 'bold',
-                                        cursor: isVerifying || !verificationCode ? 'not-allowed' : 'pointer',
-                                        opacity: isVerifying || !verificationCode ? 0.6 : 1
-                                    }}
-                                >
-                                    {isVerifying ? 'Verifying...' : 'Verify Code'}
-                                </button>
-                            </div>
+                            >
+                                Back
+                            </button>
+                            <button
+                                onClick={verifyCode}
+                                disabled={isVerifying || !verificationCode}
+                                style={{
+                                    flex: 1,
+                                    padding: '12px',
+                                    background: '#FFD600',
+                                    color: '#000',
+                                    border: 'none',
+                                    borderRadius: 6,
+                                    fontSize: 16,
+                                    fontWeight: 'bold',
+                                    cursor: isVerifying || !verificationCode ? 'not-allowed' : 'pointer',
+                                    opacity: isVerifying || !verificationCode ? 0.6 : 1
+                                }}
+                            >
+                                {isVerifying ? 'Verifying...' : 'Verify Code'}
+                            </button>
                         </div>
-                    )}
-                </div>
+                    </div>
+                )}
             </div>
 
             {/* Message Display */}
@@ -477,10 +408,13 @@ export default function AgencyB2CYourInformations() {
                     width: '90vw'
                 }}>
                     {message}
+                    {message.includes('successful') && (
+                        <div style={{ marginTop: 8, fontSize: 14, opacity: 0.9 }}>
+                            Redirecting to next step...
+                        </div>
+                    )}
                 </div>
             )}
-
-            <GreenArrowButton onClick={handleNext} disabled={!isFormValid} />
         </div>
     );
 } 
