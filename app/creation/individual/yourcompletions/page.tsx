@@ -2,15 +2,17 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import CompletionRateModal from '@/components/CompletionRateModal';
 
 // Constantes du modèle économique WINC
 const ECONOMIC_CONSTANTS = {
-  BASE_FEE: 3,
-  SCALING_FACTOR: 0.20,
-  RISK_ADJUSTMENT: 0.12,
-  POOL_TOP3_PERCENTAGE: 0.55,
-  POOL_CREATOR_PERCENTAGE: 0.30,
-  POOL_PLATFORM_PERCENTAGE: 0.15,
+  BASE_FEE: 2,           // Réduit de 3 à 2 (baisse de 33%)
+  SCALING_FACTOR: 0.15,  // Réduit de 0.20 à 0.15 (baisse de 25%)
+  RISK_ADJUSTMENT: 0.09, // Réduit de 0.12 à 0.09 (baisse de 25%)
+  POOL_TOP3_PERCENTAGE: 0.50, // 50% pour les 3 gagnants
+  POOL_CREATOR_PERCENTAGE: 0.30, // 30% pour le créateur (sera réduit de 15%)
+  POOL_PLATFORM_PERCENTAGE: 0.10, // 10% pour la plateforme
+  POOL_MODERATORS_PERCENTAGE: 0.40, // 40% pour les modérateurs
   POOL_REWARD_PERCENTAGE: 0.75,
   POOL_MINT_PERCENTAGE: 0.25
 };
@@ -22,88 +24,121 @@ function simulateCampaign(P: number, N: number, CR: number = N) {
                (P * N * ECONOMIC_CONSTANTS.SCALING_FACTOR) + 
                (sqrtPN * ECONOMIC_CONSTANTS.RISK_ADJUSTMENT);
   
-  const poolTotal = (P * N * ECONOMIC_CONSTANTS.POOL_REWARD_PERCENTAGE) + 
-                    (mint * ECONOMIC_CONSTANTS.POOL_MINT_PERCENTAGE);
+  // Calcul du pool total basé sur l'équation cohérente
+  const totalValue = (P * CR) + mint; // Unit Value × Actual Completions + MINT initial
   
-  const poolTop3 = poolTotal * ECONOMIC_CONSTANTS.POOL_TOP3_PERCENTAGE;
-  const poolCreator = poolTotal * ECONOMIC_CONSTANTS.POOL_CREATOR_PERCENTAGE;
-  const platform = poolTotal * ECONOMIC_CONSTANTS.POOL_PLATFORM_PERCENTAGE;
+  const poolTop3 = totalValue * ECONOMIC_CONSTANTS.POOL_TOP3_PERCENTAGE;
+  const poolCreator = totalValue * ECONOMIC_CONSTANTS.POOL_CREATOR_PERCENTAGE;
+  const platform = totalValue * ECONOMIC_CONSTANTS.POOL_PLATFORM_PERCENTAGE;
+  const moderators = totalValue * ECONOMIC_CONSTANTS.POOL_MODERATORS_PERCENTAGE;
 
   const tauxCompletion = CR / N;
   let multiplicateurGain = 0;
   let multiplicateurXP = 1;
+  let creatorGain = 0;
+  let creatorNetGain = 0;
+  let isCreatorProfitable = false;
+  let isMinimumCompletionsReached = CR >= 5;
 
   // Système de multiplicateurs basé directement sur le pourcentage exact
   const completionPercentage = tauxCompletion * 100;
   
-  // Calcul du multiplicateur basé sur le pourcentage exact (formule continue)
-  // Formule : multiplicateur = (completionPercentage / 100) * 2.0
-  // Cela donne un multiplicateur unique pour chaque pourcentage de 0% à 100%
-  
-  // Multiplicateur unique pour chaque pourcentage (0.00 à 2.00)
-  multiplicateurGain = (completionPercentage / 100) * 2.0;
-  
-  // XP basé sur des paliers pour simplifier
-  if (completionPercentage >= 100) {
-    multiplicateurXP = 6;
-  } else if (completionPercentage >= 95) {
-    multiplicateurXP = 5;
-  } else if (completionPercentage >= 90) {
-    multiplicateurXP = 4;
-  } else if (completionPercentage >= 80) {
-    multiplicateurXP = 3;
-  } else if (completionPercentage >= 60) {
-    multiplicateurXP = 2;
+  // Vérifier si le minimum de 5 completions est atteint
+  if (isMinimumCompletionsReached) {
+    // Calcul du multiplicateur basé sur le pourcentage exact (formule continue)
+    // Formule : multiplicateur = (completionPercentage / 100) * 2.0
+    // Cela donne un multiplicateur unique pour chaque pourcentage de 0% à 100%
+    
+    // Multiplicateur unique pour chaque pourcentage (0.00 à 2.00)
+    multiplicateurGain = (completionPercentage / 100) * 2.0;
+    
+    // XP basé sur des paliers pour simplifier
+    if (completionPercentage >= 100) {
+      multiplicateurXP = 6;
+    } else if (completionPercentage >= 95) {
+      multiplicateurXP = 5;
+    } else if (completionPercentage >= 90) {
+      multiplicateurXP = 4;
+    } else if (completionPercentage >= 80) {
+      multiplicateurXP = 3;
+    } else if (completionPercentage >= 60) {
+      multiplicateurXP = 2;
+    } else {
+      multiplicateurXP = 1;
+    }
+
+    // Calcul du creator gain avec plafond à 2.5x le MINT initial
+    const creatorGainWithMultiplier = poolCreator * multiplicateurGain;
+    
+    // Plafond maximum : 2.5x le MINT initial
+    const maxCreatorGain = mint * 2.5;
+    
+    // Calcul du plafond progressif basé sur le taux de completion
+    let creatorGainCap;
+    
+    if (completionPercentage <= 60) {
+      // En dessous de 60% : plafonné à 1.5x le MINT
+      creatorGainCap = mint * 1.5;
+    } else if (completionPercentage >= 100) {
+      // À 100% : plafonné à 2.5x le MINT
+      creatorGainCap = mint * 2.5;
+    } else {
+      // Entre 60% et 100% : progression linéaire de 1.5x à 2.5x le MINT
+      const progressionRatio = (completionPercentage - 60) / 40; // 0 à 1 entre 60% et 100%
+      const capRange = 2.5 - 1.5; // Différence entre 2.5x et 1.5x
+      const currentCap = 1.5 + (progressionRatio * capRange);
+      creatorGainCap = mint * currentCap;
+    }
+    
+    creatorGain = Math.min(creatorGainWithMultiplier, creatorGainCap);
+    creatorNetGain = creatorGain - mint; // Gain net (gain brut - MINT initial)
+    isCreatorProfitable = creatorGain >= mint;
   } else {
+    // Si moins de 5 completions : le créateur perd sa mise, les completers sont remboursés
+    creatorGain = 0;
+    creatorNetGain = -mint; // Perte de la mise initiale
+    isCreatorProfitable = false;
+    multiplicateurGain = 0;
     multiplicateurXP = 1;
   }
 
-  const creatorGain = poolCreator * multiplicateurGain;
-  const creatorNetGain = creatorGain - mint; // Gain net (gain brut - MINT initial)
-  const isCreatorProfitable = creatorGain >= mint;
-
-  // Répartition Platform/Moderators (70% modérateurs, 30% plateforme)
-  const platformShare = platform * 0.3;
-  const moderatorsShare = platform * 0.7;
+  // Calcul du surplus du creator gain à redistribuer aux 3 premiers
+  const creatorGainSurplus = poolCreator * multiplicateurGain - creatorGain; // Différence entre gain calculé et gain plafonné
+  
+  // Réduction des gains modérateurs et plateforme
+  const moderatorsReduction = moderators * 0.20; // 20% de réduction
+  const platformReduction = platform * 0.30; // 30% de réduction
+  const moderatorsAdjusted = moderators - moderatorsReduction;
+  const platformAdjusted = platform - platformReduction;
+  
+  // Total des réductions à redistribuer aux 3 premiers
+  const totalReductionForTop3 = creatorGainSurplus + moderatorsReduction + platformReduction;
+  
+  // Répartition du total des réductions entre les 3 premiers (50% + 30% + 20%)
+  const top1Bonus = totalReductionForTop3 * 0.5; // 50% du total des réductions
+  const top2Bonus = totalReductionForTop3 * 0.3; // 30% du total des réductions
+  const top3BonusFinal = totalReductionForTop3 * 0.2; // 20% du total des réductions
 
   // Ajuster la répartition pour maintenir l'économie circulaire
   let adjustedTop1, adjustedTop2, adjustedTop3, adjustedPlatform, adjustedModerators;
   
-  // Vérification : s'assurer qu'aucun argent n'est créé ex nihilo
-  const totalPool = poolTop3 + platform;
-  const creatorShare = poolCreator * multiplicateurGain;
+  // CORRECTION : Les gains des 3 premiers doivent être proportionnels au taux de completion
+  // Base pool pour les 3 premiers (proportionnel au taux de completion)
+  const baseTop3Pool = poolTop3 * tauxCompletion;
   
-  if (multiplicateurGain > 1.0) {
-    // Le créateur reçoit plus que sa part normale, réduire les autres
-    const bonusCreator = poolCreator * (multiplicateurGain - 1.0);
-    const totalToReduce = bonusCreator;
-    
-    // Réduire proportionnellement Top3 et Platform
-    const reductionRatio = totalToReduce / totalPool;
-    
-    // S'assurer que la réduction ne dépasse pas 100%
-    const safeReductionRatio = Math.min(reductionRatio, 0.99);
-    
-    adjustedTop1 = poolTop3 * 0.5 * (1 - safeReductionRatio);
-    adjustedTop2 = poolTop3 * 0.3 * (1 - safeReductionRatio);
-    adjustedTop3 = poolTop3 * 0.2 * (1 - safeReductionRatio);
-    adjustedPlatform = platformShare * (1 - safeReductionRatio);
-    adjustedModerators = moderatorsShare * (1 - safeReductionRatio);
-  } else {
-    // Répartition normale
-    adjustedTop1 = poolTop3 * 0.5;
-    adjustedTop2 = poolTop3 * 0.3;
-    adjustedTop3 = poolTop3 * 0.2;
-    adjustedPlatform = platformShare;
-    adjustedModerators = moderatorsShare;
-  }
+  // Répartition normale avec redistribution (proportionnelle au taux de completion)
+  adjustedTop1 = (baseTop3Pool * 0.5) + (top1Bonus * tauxCompletion);
+  adjustedTop2 = (baseTop3Pool * 0.3) + (top2Bonus * tauxCompletion);
+  adjustedTop3 = (baseTop3Pool * 0.2) + (top3BonusFinal * tauxCompletion);
+  adjustedPlatform = platformAdjusted;
+  adjustedModerators = moderatorsAdjusted;
   
-  // Vérification finale : s'assurer que le total distribué = poolTotal
-  const totalDistributed = creatorShare + adjustedTop1 + adjustedTop2 + adjustedTop3 + adjustedPlatform + adjustedModerators;
+  // Vérification finale : s'assurer que le total distribué = totalValue
+  const totalDistributed = creatorGain + adjustedTop1 + adjustedTop2 + adjustedTop3 + adjustedPlatform + adjustedModerators;
   
   // Si il y a une différence, ajuster proportionnellement
-  if (Math.abs(totalDistributed - poolTotal) > 0.01) {
-    const adjustmentRatio = poolTotal / totalDistributed;
+  if (Math.abs(totalDistributed - totalValue) > 0.01) {
+    const adjustmentRatio = totalValue / totalDistributed;
     adjustedTop1 *= adjustmentRatio;
     adjustedTop2 *= adjustmentRatio;
     adjustedTop3 *= adjustmentRatio;
@@ -113,10 +148,11 @@ function simulateCampaign(P: number, N: number, CR: number = N) {
 
       return {
       mint: Math.round(mint * 100) / 100,
-      poolTotal: Math.round(poolTotal * 100) / 100,
+      poolTotal: Math.round(totalValue * 100) / 100,
       creatorGain: Math.round(creatorGain * 100) / 100,
       creatorNetGain: Math.round(creatorNetGain * 100) / 100,
       isCreatorProfitable,
+      isMinimumCompletionsReached,
       creatorXP: 200 * multiplicateurXP,
       top1: Math.round(adjustedTop1 * 100) / 100,
       top2: Math.round(adjustedTop2 * 100) / 100,
@@ -162,7 +198,7 @@ const CloseIcon = ({ onClick }: { onClick: () => void }) => (
 );
 
 // Composant pour afficher les détails économiques en temps réel
-const EconomicDetails = ({ data, isVisible, isInline = false, onCreatorGainClick }: { data: any, isVisible: boolean, isInline?: boolean, onCreatorGainClick?: () => void }) => {
+const EconomicDetails = ({ data, isVisible, isInline = false, onCreatorGainClick, onTop3Click }: { data: any, isVisible: boolean, isInline?: boolean, onCreatorGainClick?: () => void, onTop3Click?: () => void }) => {
   if (!isVisible || !data) return null;
 
   const containerStyle: React.CSSProperties = isInline ? {
@@ -174,7 +210,7 @@ const EconomicDetails = ({ data, isVisible, isInline = false, onCreatorGainClick
     maxWidth: 400,
     boxShadow: '0 0 24px #000',
     color: '#fff',
-    opacity: data.isCreatorProfitable ? 1 : 0.5,
+    opacity: 1,
     transition: 'opacity 0.3s ease'
   } : {
     position: 'fixed',
@@ -190,7 +226,7 @@ const EconomicDetails = ({ data, isVisible, isInline = false, onCreatorGainClick
     zIndex: 2000,
     boxShadow: '0 0 32px rgba(255, 214, 0, 0.3)',
     color: '#fff',
-    opacity: data.isCreatorProfitable ? 1 : 0.5,
+    opacity: 1,
     transition: 'opacity 0.3s ease'
   };
 
@@ -236,7 +272,7 @@ const EconomicDetails = ({ data, isVisible, isInline = false, onCreatorGainClick
           borderRadius: 10,
           padding: 8,
           textAlign: 'center',
-          opacity: data.isCreatorProfitable ? 1 : 0.6,
+          opacity: 1,
           transition: 'opacity 0.3s ease'
         }}>
           <div style={{ fontSize: 12, fontWeight: 600, color: '#18C964', marginBottom: 2 }}>
@@ -250,54 +286,138 @@ const EconomicDetails = ({ data, isVisible, isInline = false, onCreatorGainClick
 
       <div style={{ display: 'grid', gap: 8, marginBottom: 12 }}>
         {/* Top 3 Rewards - Disposition verticale hiérarchique */}
-        <div style={{
-          background: 'transparent',
-          border: `2px solid ${data.isThirdPlaceDeficit ? '#FF2D2D' : '#FFD700'}`,
-          borderRadius: 8,
-          padding: 8,
-          textAlign: 'center',
-          opacity: data.isCreatorProfitable ? 1 : 0.6,
-          transition: 'opacity 0.3s ease'
-        }}>
+        <div 
+          onClick={onTop3Click || (() => {})}
+          style={{
+            background: 'transparent',
+            border: `2px solid ${data.isThirdPlaceDeficit ? '#FF2D2D' : '#FFD700'}`,
+            borderRadius: 8,
+            padding: 8,
+            textAlign: 'center',
+            opacity: 1,
+            transition: 'opacity 0.3s ease',
+            cursor: 'pointer',
+            position: 'relative',
+            overflow: 'hidden'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'scale(1.02)';
+            e.currentTarget.style.boxShadow = '0 0 15px rgba(255, 215, 0, 0.3)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'scale(1)';
+            e.currentTarget.style.boxShadow = 'none';
+          }}
+        >
+          {/* Effet de brillance */}
+          <div style={{
+            position: 'absolute',
+            top: 0,
+            left: '-100%',
+            width: '100%',
+            height: '100%',
+            background: 'linear-gradient(90deg, transparent, rgba(255,215,0,0.2), transparent)',
+            transition: 'left 0.5s ease',
+            pointerEvents: 'none'
+          }} />
           <div style={{ fontSize: 12, fontWeight: 600, color: data.isThirdPlaceDeficit ? '#FF2D2D' : '#FFD700', marginBottom: 4 }}>
-            1st Place
+            1st Place 🥇
           </div>
           <div style={{ fontSize: 16, fontWeight: 900, color: data.isThirdPlaceDeficit ? '#FF2D2D' : '#FFD700' }}>
             {data.top1} $WINC
           </div>
+          <div style={{ fontSize: 10, color: data.isThirdPlaceDeficit ? '#FF2D2D' : '#FFD700', opacity: 0.7, marginTop: 4 }}>
+            Click to simulate
+          </div>
         </div>
 
-        <div style={{
-          background: 'transparent',
-          border: `2px solid ${data.isThirdPlaceDeficit ? '#FF2D2D' : '#C0C0C0'}`,
-          borderRadius: 8,
-          padding: 8,
-          textAlign: 'center',
-          opacity: data.isCreatorProfitable ? 1 : 0.6,
-          transition: 'opacity 0.3s ease'
-        }}>
+        <div 
+          onClick={onTop3Click || (() => {})}
+          style={{
+            background: 'transparent',
+            border: `2px solid ${data.isThirdPlaceDeficit ? '#FF2D2D' : '#C0C0C0'}`,
+            borderRadius: 8,
+            padding: 8,
+            textAlign: 'center',
+            opacity: 1,
+            transition: 'opacity 0.3s ease',
+            cursor: 'pointer',
+            position: 'relative',
+            overflow: 'hidden'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'scale(1.02)';
+            e.currentTarget.style.boxShadow = '0 0 15px rgba(192, 192, 192, 0.3)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'scale(1)';
+            e.currentTarget.style.boxShadow = 'none';
+          }}
+        >
+          {/* Effet de brillance */}
+          <div style={{
+            position: 'absolute',
+            top: 0,
+            left: '-100%',
+            width: '100%',
+            height: '100%',
+            background: 'linear-gradient(90deg, transparent, rgba(192,192,192,0.2), transparent)',
+            transition: 'left 0.5s ease',
+            pointerEvents: 'none'
+          }} />
           <div style={{ fontSize: 12, fontWeight: 600, color: data.isThirdPlaceDeficit ? '#FF2D2D' : '#C0C0C0', marginBottom: 4 }}>
-            2nd Place
+            2nd Place 🥈
           </div>
           <div style={{ fontSize: 16, fontWeight: 900, color: data.isThirdPlaceDeficit ? '#FF2D2D' : '#C0C0C0' }}>
             {data.top2} $WINC
           </div>
+          <div style={{ fontSize: 10, color: data.isThirdPlaceDeficit ? '#FF2D2D' : '#C0C0C0', opacity: 0.7, marginTop: 4 }}>
+            Click to simulate
+          </div>
         </div>
 
-        <div style={{
-          background: 'transparent',
-          border: `2px solid ${data.isThirdPlaceDeficit ? '#FF2D2D' : '#CD7F32'}`,
-          borderRadius: 8,
-          padding: 8,
-          textAlign: 'center',
-          opacity: data.isCreatorProfitable ? 1 : 0.6,
-          transition: 'opacity 0.3s ease'
-        }}>
+        <div 
+          onClick={onTop3Click || (() => {})}
+          style={{
+            background: 'transparent',
+            border: `2px solid ${data.isThirdPlaceDeficit ? '#FF2D2D' : '#CD7F32'}`,
+            borderRadius: 8,
+            padding: 8,
+            textAlign: 'center',
+            opacity: 1,
+            transition: 'opacity 0.3s ease',
+            cursor: 'pointer',
+            position: 'relative',
+            overflow: 'hidden'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'scale(1.02)';
+            e.currentTarget.style.boxShadow = '0 0 15px rgba(205, 127, 50, 0.3)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'scale(1)';
+            e.currentTarget.style.boxShadow = 'none';
+          }}
+        >
+          {/* Effet de brillance */}
+          <div style={{
+            position: 'absolute',
+            top: 0,
+            left: '-100%',
+            width: '100%',
+            height: '100%',
+            background: 'linear-gradient(90deg, transparent, rgba(205,127,50,0.2), transparent)',
+            transition: 'left 0.5s ease',
+            pointerEvents: 'none'
+          }} />
           <div style={{ fontSize: 12, fontWeight: 600, color: data.isThirdPlaceDeficit ? '#FF2D2D' : '#CD7F32', marginBottom: 4 }}>
-            3rd Place
+            3rd Place 🥉
           </div>
           <div style={{ fontSize: 16, fontWeight: 900, color: data.isThirdPlaceDeficit ? '#FF2D2D' : '#CD7F32' }}>
             {data.top3} $WINC
+          </div>
+          <div style={{ fontSize: 10, color: data.isThirdPlaceDeficit ? '#FF2D2D' : '#CD7F32', opacity: 0.7, marginTop: 4 }}>
+            Click to simulate
           </div>
         </div>
 
@@ -309,7 +429,7 @@ const EconomicDetails = ({ data, isVisible, isInline = false, onCreatorGainClick
             borderRadius: 8,
             padding: 8,
             textAlign: 'center',
-            opacity: data.isCreatorProfitable ? 1 : 0.6,
+            opacity: 1,
             transition: 'opacity 0.3s ease'
           }}>
             <div style={{ fontSize: 12, fontWeight: 600, color: '#000', marginBottom: 4 }}>
@@ -326,7 +446,7 @@ const EconomicDetails = ({ data, isVisible, isInline = false, onCreatorGainClick
             borderRadius: 8,
             padding: 8,
             textAlign: 'center',
-            opacity: data.isCreatorProfitable ? 1 : 0.6,
+            opacity: 1,
             transition: 'opacity 0.3s ease'
           }}>
             <div style={{ fontSize: 12, fontWeight: 600, color: '#fff', marginBottom: 4 }}>
@@ -345,28 +465,31 @@ const EconomicDetails = ({ data, isVisible, isInline = false, onCreatorGainClick
         style={{
           background: data.isCreatorProfitable 
             ? 'linear-gradient(135deg, #18C964, #00B894)' 
-            : 'linear-gradient(135deg, #FF2D2D, #FF1744)',
+            : 'linear-gradient(135deg, #FFD600, #FFA500)',
           borderRadius: 12,
           padding: 16,
           textAlign: 'center',
-          boxShadow: data.isCreatorProfitable ? '0 0 20px rgba(24, 201, 100, 0.3)' : '0 0 20px rgba(255, 45, 45, 0.3)',
+          boxShadow: data.isCreatorProfitable 
+            ? '0 0 20px rgba(24, 201, 100, 0.3)' 
+            : '0 0 20px rgba(255, 214, 0, 0.5)',
           cursor: 'pointer',
           transition: 'all 0.3s ease',
           transform: 'scale(1)',
           position: 'relative',
-          overflow: 'hidden'
+          overflow: 'hidden',
+          opacity: 1
         }}
         onMouseEnter={(e) => {
           e.currentTarget.style.transform = 'scale(1.02)';
           e.currentTarget.style.boxShadow = data.isCreatorProfitable 
             ? '0 0 30px rgba(24, 201, 100, 0.5)' 
-            : '0 0 30px rgba(255, 45, 45, 0.5)';
+            : '0 0 30px rgba(255, 214, 0, 0.7)';
         }}
         onMouseLeave={(e) => {
           e.currentTarget.style.transform = 'scale(1)';
           e.currentTarget.style.boxShadow = data.isCreatorProfitable 
             ? '0 0 20px rgba(24, 201, 100, 0.3)' 
-            : '0 0 20px rgba(255, 45, 45, 0.3)';
+            : '0 0 20px rgba(255, 214, 0, 0.5)';
         }}
       >
         {/* Effet de brillance */}
@@ -567,6 +690,25 @@ const CreatorGainModal = ({
               </div>
             </div>
           </div>
+          
+          {/* Warning si moins de 5 completions */}
+          {!dynamicData.isMinimumCompletionsReached && (
+            <div style={{ 
+              background: 'rgba(255, 45, 45, 0.1)', 
+              border: '1px solid #FF2D2D', 
+              borderRadius: 8, 
+              padding: 12, 
+              marginTop: 16, 
+              textAlign: 'center' 
+            }}>
+              <div style={{ fontSize: 14, fontWeight: 600, color: '#FF2D2D', marginBottom: 4 }}>
+                ⚠️ Minimum 5 Completions Required
+              </div>
+              <div style={{ fontSize: 12, color: '#FF2D2D' }}>
+                If less than 5 completions: You lose your MINT, completers get refunded
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Multiplier Info */}
@@ -574,17 +716,34 @@ const CreatorGainModal = ({
           background: 'rgba(255, 255, 255, 0.05)', 
           borderRadius: 8, 
           padding: 12, 
-          textAlign: 'center' 
+          textAlign: 'center',
+          marginBottom: 16
         }}>
           <div style={{ fontSize: 12, color: '#888', marginBottom: 4 }}>
-            Gain Multiplier
+            Pool Total
           </div>
           <div style={{ 
             fontSize: 16, 
             fontWeight: 700, 
-            color: '#18C964' 
+            color: '#FFD600' 
           }}>
-            {dynamicData.multiplicateurGain.toFixed(4)}x
+            {dynamicData.poolTotal} $WINC
+          </div>
+        </div>
+
+        {/* Campaign Duration Info */}
+        <div style={{ 
+          background: 'rgba(255, 214, 0, 0.1)', 
+          border: '1px solid #FFD600', 
+          borderRadius: 8, 
+          padding: 12, 
+          textAlign: 'center' 
+        }}>
+          <div style={{ fontSize: 14, fontWeight: 600, color: '#FFD600', marginBottom: 4 }}>
+            ⏰ Campaign Duration
+          </div>
+          <div style={{ fontSize: 12, color: '#FFD600' }}>
+            Campaigns are accessible for maximum 7 days if completions are still available
           </div>
         </div>
       </div>
@@ -603,6 +762,7 @@ export default function YourCompletionsPage() {
   const [isDesktop, setIsDesktop] = useState(false);
   const [showCreatorGainModal, setShowCreatorGainModal] = useState(false);
   const [completionRate, setCompletionRate] = useState(100);
+  const [showCompletionRateModal, setShowCompletionRateModal] = useState(false);
 
   // Réinitialiser le taux de completion quand le modal s'ouvre
   useEffect(() => {
@@ -854,14 +1014,19 @@ export default function YourCompletionsPage() {
               {/* Affichage dynamique du MINT */}
               {economicData && (
                 <div style={{
-                  background: 'linear-gradient(135deg, #FFD600, #FFA500)',
+                  background: economicData && !economicData.isCreatorProfitable 
+                    ? 'linear-gradient(135deg, #FFD600, #FFA500)' 
+                    : 'linear-gradient(135deg, #FFD600, #FFA500)',
                   borderRadius: 12,
                   padding: 16,
                   textAlign: 'center',
                   marginBottom: 24,
                   border: '2px solid #FFD600',
-                  opacity: economicData && !economicData.isCreatorProfitable ? 0.5 : 1,
-                  transition: 'opacity 0.3s ease'
+                  opacity: 1,
+                  transition: 'all 0.3s ease',
+                  boxShadow: economicData && !economicData.isCreatorProfitable 
+                    ? '0 0 20px rgba(255, 214, 0, 0.5)' 
+                    : 'none'
                 }}>
                   <div style={{ fontSize: 14, fontWeight: 600, color: '#000', marginBottom: 4 }}>
                     Your initial MINT
@@ -873,22 +1038,40 @@ export default function YourCompletionsPage() {
                     Make sure you have enough $WINC in your wallet
                   </div>
                   {!isDesktop && (
-                    <button
-                      onClick={() => setShowEconomicDetails(true)}
-                      style={{
-                        background: 'rgba(0,0,0,0.3)',
-                        border: '1px solid #000',
-                        borderRadius: 6,
-                        padding: '8px 16px',
-                        color: '#000',
-                        fontSize: 12,
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                        marginTop: 8
-                      }}
-                    >
-                      📊 View Economic Details
-                    </button>
+                    <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                      <button
+                        onClick={() => setShowEconomicDetails(true)}
+                        style={{
+                          background: 'rgba(0,0,0,0.3)',
+                          border: '1px solid #000',
+                          borderRadius: 6,
+                          padding: '8px 16px',
+                          color: '#000',
+                          fontSize: 12,
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          flex: 1
+                        }}
+                      >
+                        📊 Economic Details
+                      </button>
+                      <button
+                        onClick={() => setShowCompletionRateModal(true)}
+                        style={{
+                          background: 'rgba(255, 215, 0, 0.2)',
+                          border: '1px solid #000',
+                          borderRadius: 6,
+                          padding: '8px 16px',
+                          color: '#000',
+                          fontSize: 12,
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          flex: 1
+                        }}
+                      >
+                        🏆 Simulate Rewards
+                      </button>
+                    </div>
                   )}
                 </div>
               )}
@@ -910,6 +1093,11 @@ export default function YourCompletionsPage() {
                   <div style={{ fontSize: 16, color: '#fff', marginBottom: 12, lineHeight: 1.4 }}>
                     As an individual creator, you would lose money with these values!
                   </div>
+                  {!economicData.isMinimumCompletionsReached && (
+                    <div style={{ fontSize: 14, color: '#fff', marginBottom: 8, background: 'rgba(255,255,255,0.1)', padding: '8px 12px', borderRadius: '6px' }}>
+                      ⚠️ Minimum 5 completions required for ROI. Below 5: You lose MINT, completers get refunded.
+                    </div>
+                  )}
                   <div style={{ fontSize: 14, color: '#fff', marginBottom: 8, opacity: 0.9 }}>
                     Your Creator Gain: <strong>{economicData.creatorGain} $WINC</strong>
                   </div>
@@ -959,7 +1147,13 @@ export default function YourCompletionsPage() {
               alignItems: 'center',
               width: 400
             }}>
-              <EconomicDetails data={economicData} isVisible={true} isInline={true} onCreatorGainClick={() => setShowCreatorGainModal(true)} />
+              <EconomicDetails 
+                data={economicData} 
+                isVisible={true} 
+                isInline={true} 
+                onCreatorGainClick={() => setShowCreatorGainModal(true)}
+                onTop3Click={() => setShowCompletionRateModal(true)}
+              />
             </div>
           )}
         </div>
@@ -975,6 +1169,13 @@ export default function YourCompletionsPage() {
           economicData={{ ...economicData, wincValue, maxCompletions }}
         />
 
+        {/* Pop-up Completion Rate Modal */}
+        <CompletionRateModal 
+          isVisible={showCompletionRateModal}
+          onClose={() => setShowCompletionRateModal(false)}
+          economicData={{ ...economicData, wincValue, maxCompletions }}
+        />
+
         {/* Pop-up tooltip */}
         {showTooltip && (
           <div
@@ -986,6 +1187,8 @@ export default function YourCompletionsPage() {
                 position: 'relative',
                 maxWidth: 600,
                 width: '90vw',
+                maxHeight: '90vh',
+                height: '90vh',
                 background: '#000',
                 border: '4px solid #FFD600',
                 borderRadius: 24,
@@ -995,6 +1198,8 @@ export default function YourCompletionsPage() {
                 flexDirection: 'column',
                 alignItems: 'center',
                 color: '#FFD600',
+                overflowY: 'auto',
+                overflowX: 'hidden'
               }}
               onClick={e => e.stopPropagation()}
             >
@@ -1018,40 +1223,68 @@ export default function YourCompletionsPage() {
               </button>
               <h2 style={{ color: '#FFD600', fontSize: 24, fontWeight: 900, textAlign: 'center', marginBottom: 18, letterSpacing: 1 }}>Your Completions</h2>
               
-              <div style={{ color: '#fff', fontSize: 16, fontWeight: 400, marginBottom: 24, textAlign: 'left' }}>
+              <div style={{ color: '#fff', fontSize: 16, fontWeight: 400, marginBottom: 24, textAlign: 'left', flex: 1, overflowY: 'auto' }}>
                 <div style={{ marginBottom: 16 }}>
                   <strong style={{ color: '#FFD600' }}>🎯 Campaign Configuration</strong><br />
                   Configure the completion parameters for your campaign. Set the unit value in $WINC tokens and the maximum number of completions allowed for your community.
                 </div>
 
                 <div style={{ marginBottom: 16 }}>
-                  <strong style={{ color: '#FFD600' }}>💰 Dynamic MINT Calculation</strong><br />
-                  The MINT cost is calculated automatically using our advanced economic model:<br />
+                  <strong style={{ color: '#FFD600' }}>💰 Economic Equation</strong><br />
+                  The system ensures perfect balance with this equation:<br />
                   <code style={{ background: '#333', padding: '4px 8px', borderRadius: 4, fontSize: 12 }}>
-                    MINT = 3 + (P×N×0.20) + (√(P×N)×0.12)
-                  </code>
+                    (Unit Value × Max Completions) + MINT = Total Pool
+                  </code><br />
+                  Where Total Pool = 1st + 2nd + 3rd + Platform + Moderators + Creator Gain
                 </div>
 
                 <div style={{ marginBottom: 16 }}>
                   <strong style={{ color: '#FFD600' }}>🏆 Reward Distribution</strong><br />
-                  • <strong>Top 3 Winners:</strong> 55% of total pool<br />
-                  • <strong>Creator:</strong> 30% of total pool<br />
-                  • <strong>Platform:</strong> 15% of total pool
+                  • <strong>Top 3 Winners:</strong> 50% of total pool + creator surplus + reductions<br />
+                  • <strong>Creator:</strong> Capped at 1.5x MINT (≤60%) to 2.5x MINT (100%)<br />
+                  • <strong>Platform:</strong> 7% of total pool (10% - 30% reduction)<br />
+                  • <strong>Moderators:</strong> 32% of total pool (40% - 20% reduction)
                 </div>
 
                 <div style={{ marginBottom: 16 }}>
                   <strong style={{ color: '#FFD600' }}>⚡ Performance Multipliers</strong><br />
                   Your rewards increase based on completion rate:<br />
-                  • 20-40% completion: 0.25x multiplier<br />
-                  • 40-60% completion: 0.50x multiplier<br />
-                  • 60-80% completion: 0.75x multiplier<br />
-                  • 80-95% completion: 1.00x multiplier<br />
-                  • 95%+ completion: 1.50x bonus multiplier
+                  • <strong>0-20%:</strong> 0.00x multiplier (no bonus)<br />
+                  • <strong>20-40%:</strong> 0.40x multiplier<br />
+                  • <strong>40-60%:</strong> 0.80x multiplier<br />
+                  • <strong>60-80%:</strong> 1.20x multiplier<br />
+                  • <strong>80-95%:</strong> 1.60x multiplier<br />
+                  • <strong>95%+:</strong> 2.00x bonus multiplier
                 </div>
 
                 <div style={{ marginBottom: 16 }}>
                   <strong style={{ color: '#FFD600' }}>🎮 XP System</strong><br />
-                  Earn XP multipliers based on campaign success, unlocking new features and benefits as you level up.
+                  Earn XP multipliers based on campaign success:<br />
+                  • <strong>60%+ completion:</strong> 2x XP<br />
+                  • <strong>80%+ completion:</strong> 3x XP<br />
+                  • <strong>90%+ completion:</strong> 4x XP<br />
+                  • <strong>95%+ completion:</strong> 5x XP<br />
+                  • <strong>100% completion:</strong> 6x XP
+                </div>
+
+                <div style={{ marginBottom: 16 }}>
+                  <strong style={{ color: '#FFD600' }}>💡 Economic Balance</strong><br />
+                  The system automatically adjusts reward distribution to maintain economic balance. When you receive bonus multipliers, the excess is proportionally reduced from other participants to prevent inflation.
+                </div>
+
+                <div style={{ marginBottom: 16 }}>
+                  <strong style={{ color: '#FFD600' }}>🎯 Minimum Completions Rule</strong><br />
+                  ROI is only available from 5 completed validations. If your campaign has less than 5 completions, you lose your MINT and completers get refunded. This ensures competitive hierarchy for the top 3 positions.
+                </div>
+
+                <div style={{ marginBottom: 16 }}>
+                  <strong style={{ color: '#FFD600' }}>⏰ Campaign Duration</strong><br />
+                  Campaigns are accessible for maximum 7 days if completions are still available. This ensures active participation and prevents campaigns from becoming stale.
+                </div>
+
+                <div style={{ marginBottom: 16 }}>
+                  <strong style={{ color: '#FFD600' }}>🔍 Real-time Analytics</strong><br />
+                  Monitor your campaign performance with live economic data. Desktop users can see detailed breakdowns of all calculations and projections.
                 </div>
 
                 <div style={{ background: '#FFD600', color: '#000', padding: 12, borderRadius: 8, fontSize: 14, fontWeight: 600, textAlign: 'center' }}>
@@ -1079,7 +1312,11 @@ export default function YourCompletionsPage() {
             }}
             onClick={() => setShowEconomicDetails(false)}
           >
-            <EconomicDetails data={economicData} isVisible={showEconomicDetails} />
+            <EconomicDetails 
+              data={economicData} 
+              isVisible={showEconomicDetails} 
+              onTop3Click={() => setShowCompletionRateModal(true)}
+            />
           </div>
         )}
 
