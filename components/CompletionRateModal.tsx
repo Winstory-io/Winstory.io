@@ -341,13 +341,49 @@ const CompletionRateModal: React.FC<CompletionRateModalProps> = ({
             <span style={{ fontSize: 16, color: '#fff', fontWeight: 600 }}>
               {isLargeMaxCompletions ? 'Completion Count' : 'Completion Rate'}
             </span>
-            <span style={{ 
-              fontSize: 24, 
-              fontWeight: 900, 
-              color: '#FFD600' 
-            }}>
-              {isLargeMaxCompletions ? `${actualCompletions} / ${N}` : `${completionRate}%`}
-            </span>
+            {isLargeMaxCompletions ? (
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: 8,
+                fontSize: 24, 
+                fontWeight: 900, 
+                color: '#FFD600' 
+              }}>
+                <input
+                  type="number"
+                  min={0}
+                  max={N}
+                  value={absoluteCompletions}
+                  onChange={(e) => {
+                    const value = parseInt(e.target.value) || 0;
+                    const clampedValue = Math.min(Math.max(value, 0), N);
+                    setAbsoluteCompletions(clampedValue);
+                  }}
+                  style={{
+                    background: '#333',
+                    border: '2px solid #FFD600',
+                    borderRadius: 8,
+                    color: '#FFD600',
+                    fontSize: 20,
+                    fontWeight: 900,
+                    padding: '8px 12px',
+                    width: 120,
+                    textAlign: 'center',
+                    outline: 'none'
+                  }}
+                />
+                <span>/ {N}</span>
+              </div>
+            ) : (
+              <span style={{ 
+                fontSize: 24, 
+                fontWeight: 900, 
+                color: '#FFD600' 
+              }}>
+                {completionRate}%
+              </span>
+            )}
           </div>
           
           {/* Slider principal */}
