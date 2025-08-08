@@ -3,10 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 const BriefcaseIcon = () => (
-    <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginRight: 16 }}>
-      <rect x="8" y="16" width="32" height="20" rx="3" stroke="#888" strokeWidth="2"/>
-      <rect x="14" y="10" width="20" height="8" rx="2" stroke="#888" strokeWidth="2"/>
-    </svg>
+    <img src="/company.svg" alt="Company Icon" style={{ width: 96, height: 96, marginRight: 16 }} />
 );
 
 const CloseIcon = ({ onClick, size = 24 }: { onClick: () => void; size?: number }) => (
@@ -17,11 +14,7 @@ const CloseIcon = ({ onClick, size = 24 }: { onClick: () => void; size?: number 
 );
 
 const VideoUploadIcon = () => (
-  <svg width="80" height="80" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M16 16l-4-4-4 4M12 12V3" stroke="#FFD600" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2v-7" stroke="#FFD600" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M3 12h0" stroke="#FFD600" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
+  <img src="/importvideo.svg" alt="Import Video" style={{ width: 160, height: 160 }} />
 );
 
 const GreenArrowButton = ({ onClick, disabled }: { onClick: () => void, disabled: boolean }) => (
@@ -38,13 +31,12 @@ const GreenArrowButton = ({ onClick, disabled }: { onClick: () => void, disabled
       cursor: disabled ? 'not-allowed' : 'pointer',
       padding: 0,
       outline: 'none',
-      opacity: disabled ? 0.3 : 1,
       zIndex: 10,
     }}
   >
     <svg width="56" height="56" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="24" cy="24" r="22" fill="#18C964"/>
-      <path d="M16 22L24 30L32 22" stroke="#000" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+      <circle cx="24" cy="24" r="22" fill={disabled ? '#FF2D2D' : '#18C964'} />
+      <path d="M16 22L24 30L32 22" stroke="#000" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   </button>
 );
@@ -55,6 +47,7 @@ export default function YourFilmAgencyPage() {
     const [videoPreview, setVideoPreview] = useState<string | null>(null);
     const [videoFormat, setVideoFormat] = useState<'horizontal' | 'vertical' | null>(null);
     const [videoPoster, setVideoPoster] = useState<string | null>(null);
+    const [showModal, setShowModal] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -145,10 +138,92 @@ export default function YourFilmAgencyPage() {
             <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 60, textAlign: 'center', position: 'relative' }}>
                 <BriefcaseIcon />
                 <h1 style={{ fontSize: 32, fontWeight: 700, margin: 0 }}>Your A.I. Film</h1>
-                 <span style={{ fontSize: 36, marginLeft: 16 }}>💡</span>
+                <img
+                  src="/tooltip.svg"
+                  alt="Help"
+                  style={{ width: 36, height: 36, marginLeft: 16, cursor: 'pointer' }}
+                  onClick={() => setShowModal(true)}
+                  aria-label="Show info"
+                />
             </header>
 
-            <main style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', width: '100%' }}>
+            {/* Modal for the bulb */}
+            {showModal && (
+                <div
+                    style={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        width: '100vw',
+                        height: '100vh',
+                        background: 'rgba(0,0,0,0.7)',
+                        zIndex: 1000,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                    }}
+                    onClick={() => setShowModal(false)}
+                >
+                    <div
+                        style={{
+                            background: '#111',
+                            color: '#fff',
+                            padding: 32,
+                            borderRadius: 16,
+                            minWidth: 320,
+                            maxWidth: 600,
+                            textAlign: 'left',
+                            position: 'relative',
+                            maxHeight: '80vh',
+                            overflowY: 'auto',
+                            border: '3px solid #FFD600',
+                            boxShadow: '0 4px 32px #000a'
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <button onClick={() => setShowModal(false)} style={{ position: 'absolute', top: 12, right: 12, background: 'none', border: 'none', cursor: 'pointer' }}>
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M18 6L6 18" stroke="#F31260" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /><path d="M6 6L18 18" stroke="#F31260" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                        </button>
+
+                        <div style={{ fontSize: 24, fontWeight: 700, marginBottom: 20, color: '#FFD600' }}>Agency B2C Film Creation</div>
+
+                        <div style={{ fontSize: 16, marginBottom: 24, lineHeight: 1.6, color: '#fff' }}>
+                            Upload your A.I. film based on the Starting Story for your B2C client. This film will serve as the foundation for community completions.
+                        </div>
+
+                        <div style={{ fontSize: 16, marginBottom: 24, lineHeight: 1.6, color: '#fff' }}>
+                            Requirements for your film:
+                        </div>
+
+                        <div style={{ fontSize: 16, marginBottom: 24, lineHeight: 1.6, color: '#fff' }}>
+                            • Format: Horizontal or vertical (MP4, max 100MB)<br />
+                            • Content: Based on your Starting Story<br />
+                            • Quality: A.I.-generated video recommended<br />
+                            • Purpose: Starting point for community completions<br />
+                            • Style: Evocative and suggestive, not definitive
+                        </div>
+
+                        <div style={{ fontSize: 16, lineHeight: 1.6, color: '#fff' }}>
+                            Your film should visually reflect the Starting Story you've written for your B2C client. Think coherence, tone, rhythm, and atmosphere. You're creating the foundation that others will expand upon.
+                        </div>
+
+                        <div style={{
+                            fontSize: 16,
+                            lineHeight: 1.6,
+                            color: '#18C964',
+                            fontStyle: 'italic',
+                            marginTop: 24,
+                            textAlign: 'center',
+                            borderTop: '1px solid #333',
+                            paddingTop: 16
+                        }}>
+                            Upload your film to continue to the next step.
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            <main style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', width: '100%', marginTop: -100 }}>
                 {videoPreview ? (
                     <section style={{ textAlign: 'center', maxWidth: videoFormat === 'horizontal' ? 800 : 400, margin: '0 auto' }}>
                         <p style={{ color: '#18C964', fontSize: 20, marginBottom: 24 }}>
@@ -190,7 +265,9 @@ export default function YourFilmAgencyPage() {
                         <p style={{ margin: 0, fontSize: 20, fontWeight: 'bold', color: '#FFD600' }}>
                             Upload your horizontal or vertical
                             <br/>
-                            A.I. film based on the Starting Story for your B2C Client
+                            A.I. film based on the Starting Story
+                            <br/>
+                            for your B2C Client
                         </p>
                         <div style={{ margin: '20px 0' }}>
                             <VideoUploadIcon />

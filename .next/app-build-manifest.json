@@ -87,6 +87,33 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/creation/individual/recap/page.js"
+    ],
+    "/creation/agencyb2c/login/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/thirdweb.js",
+      "static/chunks/app/creation/agencyb2c/login/page.js"
+    ],
+    "/creation/agencyb2c/yourinformations/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/creation/agencyb2c/yourinformations/page.js"
+    ],
+    "/api/auth/b2c-verification/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/thirdweb.js",
+      "static/chunks/app/api/auth/b2c-verification/route.js"
+    ],
+    "/creation/agencyb2c/yourwinstory/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/creation/agencyb2c/yourwinstory/page.js"
+    ],
+    "/creation/agencyb2c/yourfilm/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/creation/agencyb2c/yourfilm/page.js"
     ]
   }
 }

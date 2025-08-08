@@ -40,7 +40,13 @@ export default function AgencyB2CLoginPage() {
       </div> */}
       <div style={{ width: '100%', maxWidth: 400, margin: '0 auto', marginTop: 32, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 24 }}>
         {/* <WalletConnect title="With your Pro E-mail" /> */}
-        <WalletConnect isEmailLogin={true} />
+        <WalletConnect 
+          isEmailLogin={true} 
+          onLoginSuccess={(data) => {
+            // Rediriger vers la page Your Informations après connexion réussie
+            window.location.href = '/creation/agencyb2c/yourinformations';
+          }}
+        />
       </div>
     </div>
   );

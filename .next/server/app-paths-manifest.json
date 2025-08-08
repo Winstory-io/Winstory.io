@@ -1,7 +1,9 @@
 {
-  "/creation/individual/yourcompletions/page": "app/creation/individual/yourcompletions/page.js",
-  "/creation/individual/recap/page": "app/creation/individual/recap/page.js",
-  "/creation/individual/yourfilm/page": "app/creation/individual/yourfilm/page.js",
-  "/creation/individual/yourwinstory/page": "app/creation/individual/yourwinstory/page.js",
-  "/creation/individual/login/page": "app/creation/individual/login/page.js"
+  "/page": "app/page.js",
+  "/welcome/page": "app/welcome/page.js",
+  "/creation/agencyb2c/yourinformations/page": "app/creation/agencyb2c/yourinformations/page.js",
+  "/creation/youare/page": "app/creation/youare/page.js",
+  "/creation/agencyb2c/yourwinstory/page": "app/creation/agencyb2c/yourwinstory/page.js",
+  "/creation/agencyb2c/yourfilm/page": "app/creation/agencyb2c/yourfilm/page.js",
+  "/creation/agencyb2c/login/page": "app/creation/agencyb2c/login/page.js"
 }

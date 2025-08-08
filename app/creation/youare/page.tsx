@@ -108,7 +108,7 @@ export default function YouAre() {
                   <li>✅ Start a campaign using only $WINC</li>
                   <li>✅ Contributors also pay and interact in $WINC</li>
                   <li>✅ No external payment options</li>
-                  <li>✅ No financial ROI — only possible $WINC returns if 100% of completions are validated</li>
+                  <li>✅ ROI in $WINC according to rate of completions</li>
                   <li>✅ Build your own universe, one frame at a time</li>
                 </ul>
                 <div style={{ color: '#2eea8b', fontWeight: 700, fontSize: 16, margin: '10px 0 0 0', textAlign: 'center' }}>
