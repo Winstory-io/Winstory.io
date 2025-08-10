@@ -4,16 +4,16 @@ import { useRouter } from 'next/navigation';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import CompletionRateModal from '@/components/CompletionRateModal';
 
-// Constantes du modèle économique WINC
+// Constantes du modèle économique WINC (MINT réduit de ~15% pour rentabilité créateur)
 const ECONOMIC_CONSTANTS = {
-  BASE_FEE: 2,           // Réduit de 3 à 2 (baisse de 33%)
-  SCALING_FACTOR: 0.15,  // Réduit de 0.20 à 0.15 (baisse de 25%)
-  RISK_ADJUSTMENT: 0.09, // Réduit de 0.12 à 0.09 (baisse de 25%)
-  POOL_TOP3_PERCENTAGE: 0.50, // 50% pour les 3 gagnants
-  POOL_CREATOR_PERCENTAGE: 0.30, // 30% pour le créateur (sera réduit de 15%)
-  POOL_PLATFORM_PERCENTAGE: 0.10, // 10% pour la plateforme
-  POOL_MODERATORS_PERCENTAGE: 0.40, // 40% pour les modérateurs
-  POOL_REWARD_PERCENTAGE: 0.75,
+  BASE_FEE: 1.53,        // Réduit de 1.8 à 1.53 (baisse de 15%)
+  SCALING_FACTOR: 0.115, // Réduit de 0.135 à 0.115 (baisse de ~15%)
+  RISK_ADJUSTMENT: 0.069, // Réduit de 0.081 à 0.069 (baisse de ~15%)
+  POOL_TOP3_PERCENTAGE: 0.617, // Maintenu
+  POOL_CREATOR_PERCENTAGE: 0.23, // Maintenu
+  POOL_PLATFORM_PERCENTAGE: 0.10, // Maintenu
+  POOL_MODERATORS_PERCENTAGE: 0.32, // Maintenu
+
   POOL_MINT_PERCENTAGE: 0.25
 };
 
@@ -197,8 +197,373 @@ const CloseIcon = ({ onClick }: { onClick: () => void }) => (
   </svg>
 );
 
+// Composant pour le diagramme circulaire de répartition du pool
+const PoolDistributionChart = ({ data, isVisible, onClose }: { data: any, isVisible: boolean, onClose: () => void }) => {
+  const [completionRate, setCompletionRate] = useState(100);
+  
+  if (!isVisible || !data) return null;
+
+  // Calculer les données selon le taux de completion
+  const calculateDataForCompletionRate = (rate: number) => {
+    const P = data.wincValue || 1;
+    const N = data.maxCompletions || 5;
+    const CR = Math.max(5, Math.floor((rate / 100) * N));
+    
+    // Utiliser la fonction simulateCampaign avec le taux de completion ajusté
+    const campaignData = simulateCampaign(P, N, CR);
+    return campaignData;
+  };
+
+  // Obtenir les données dynamiques
+  const dynamicData = calculateDataForCompletionRate(completionRate);
+  const total = dynamicData.poolTotal;
+
+  // Calculer les pourcentages pour le diagramme
+  const top1Percentage = ((dynamicData.top1 / total) * 100).toFixed(1);
+  const top2Percentage = ((dynamicData.top2 / total) * 100).toFixed(1);
+  const top3Percentage = ((dynamicData.top3 / total) * 100).toFixed(1);
+  const creatorPercentage = ((dynamicData.creatorGain / total) * 100).toFixed(1);
+  const platformPercentage = ((dynamicData.platform / total) * 100).toFixed(1);
+  const moderatorsPercentage = ((dynamicData.moderators / total) * 100).toFixed(1);
+
+  // Couleurs du diagramme (utilisant les mêmes que l'interface existante)
+  const colors = {
+    top1: '#FFD700',      // Or pour 1ère place
+    top2: '#C0C0C0',      // Argent pour 2ème place
+    top3: '#CD7F32',      // Bronze pour 3ème place
+    creator: '#18C964',   // Vert pour le créateur
+    platform: '#FFFFFF',  // Blanc pour la plateforme (différencié de la 1ère place)
+    moderators: '#4A90E2' // Bleu pour les modérateurs
+  };
+
+  // Données pour le diagramme
+  const chartData = [
+    { label: '1st Place', value: dynamicData.top1, percentage: top1Percentage, color: colors.top1, icon: '🥇' },
+    { label: '2nd Place', value: dynamicData.top2, percentage: top2Percentage, color: colors.top2, icon: '🥈' },
+    { label: '3rd Place', value: dynamicData.top3, percentage: top3Percentage, color: colors.top3, icon: '🥉' },
+    { label: 'Creator', value: dynamicData.creatorGain, percentage: creatorPercentage, color: colors.creator, icon: '👑' },
+    { label: 'Platform', value: dynamicData.platform, percentage: platformPercentage, color: colors.platform, icon: '🏢' },
+    { label: 'Moderators', value: dynamicData.moderators, percentage: moderatorsPercentage, color: colors.moderators, icon: '🛡️' }
+  ];
+
+  return (
+    <>
+      {/* Styles CSS personnalisés pour la slide bar */}
+      <style jsx>{`
+        input[type="range"]::-webkit-slider-thumb {
+          -webkit-appearance: none;
+          appearance: none;
+          width: 20px;
+          height: 20px;
+          border-radius: 50%;
+          background: #18C964;
+          cursor: pointer;
+          border: 2px solid #fff;
+          box-shadow: 0 0 10px rgba(24, 201, 100, 0.5);
+        }
+        
+        input[type="range"]::-moz-range-thumb {
+          width: 20px;
+          height: 20px;
+          border-radius: 50%;
+          background: #18C964;
+          cursor: pointer;
+          border: 2px solid #fff;
+          box-shadow: 0 0 10px rgba(24, 201, 100, 0.5);
+        }
+      `}</style>
+      
+      <div 
+        onClick={onClose}
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0, 0, 0, 0.9)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 2500,
+          padding: '20px',
+          cursor: 'pointer'
+        }}
+      >
+        <div
+          onClick={(e) => e.stopPropagation()}
+          style={{
+            background: '#000',
+            border: '3px solid #18C964',
+            borderRadius: 28,
+            padding: '24px',
+            maxWidth: 600,
+            width: '100%',
+            position: 'relative',
+            boxShadow: '0 25px 50px rgba(24, 201, 100, 0.3)',
+            cursor: 'default',
+            overflow: 'hidden'
+          }}
+        >
+          <CloseIcon onClick={onClose} />
+          
+          {/* Header avec titre et total */}
+          <div style={{ textAlign: 'center', marginBottom: 20 }}>
+            <h2 style={{ 
+              fontSize: 28, 
+              fontWeight: 900, 
+              color: '#18C964', 
+              margin: '0 0 10px 0',
+              textShadow: '0 0 20px rgba(24, 201, 100, 0.5)'
+            }}>
+              🎯 Pool Distribution Chart
+            </h2>
+            <div style={{ 
+              fontSize: 16, 
+              color: '#888', 
+              marginBottom: 20 
+            }}>
+              Visual breakdown of your $WINC reward pool
+            </div>
+            
+            {/* Total du pool en évidence */}
+            <div style={{
+              background: 'linear-gradient(135deg, #18C964, #00B894)',
+              borderRadius: 18,
+              padding: '20px 28px',
+              display: 'inline-block',
+              boxShadow: '0 0 30px rgba(24, 201, 100, 0.4)'
+            }}>
+              <div style={{ fontSize: 14, color: '#000', fontWeight: 600, marginBottom: 6 }}>
+                Total Pool Value
+              </div>
+              <div style={{ fontSize: 32, fontWeight: 900, color: '#000' }}>
+                {dynamicData.poolTotal} $WINC
+              </div>
+            </div>
+          </div>
+
+          {/* Contenu principal avec diagramme et légende */}
+          <div style={{ 
+            display: 'grid', 
+            gridTemplateColumns: '1fr auto', 
+            gap: 32,
+            alignItems: 'center'
+          }}>
+            
+            {/* Diagramme circulaire */}
+            <div style={{ textAlign: 'center' }}>
+              <div style={{
+                position: 'relative',
+                width: 320,
+                height: 320,
+                margin: '0 auto',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                {/* Cercle de fond avec effet de lueur */}
+                <div style={{
+                  position: 'absolute',
+                  width: '100%',
+                  height: '100%',
+                  borderRadius: '50%',
+                  background: 'conic-gradient(from 0deg, #18C964 0deg, #18C964 360deg)',
+                  filter: 'blur(20px)',
+                  opacity: 0.3,
+                  zIndex: 1
+                }} />
+
+                {/* Diagramme circulaire principal */}
+                <div style={{
+                  position: 'relative',
+                  width: '100%',
+                  height: '100%',
+                  borderRadius: '50%',
+                  background: `conic-gradient(
+                    from 0deg,
+                    ${colors.top1} 0deg,
+                    ${colors.top1} ${(parseFloat(top1Percentage) / 100) * 360}deg,
+                    ${colors.top2} ${(parseFloat(top1Percentage) / 100) * 360}deg,
+                    ${colors.top2} ${((parseFloat(top1Percentage) + parseFloat(top2Percentage)) / 100) * 360}deg,
+                    ${colors.top3} ${((parseFloat(top1Percentage) + parseFloat(top2Percentage)) / 100) * 360}deg,
+                    ${colors.top3} ${((parseFloat(top1Percentage) + parseFloat(top2Percentage) + parseFloat(top3Percentage)) / 100) * 360}deg,
+                    ${colors.creator} ${((parseFloat(top1Percentage) + parseFloat(top2Percentage) + parseFloat(top3Percentage)) / 100) * 360}deg,
+                    ${colors.creator} ${((parseFloat(top1Percentage) + parseFloat(top2Percentage) + parseFloat(top3Percentage) + parseFloat(creatorPercentage)) / 100) * 360}deg,
+                    ${colors.platform} ${((parseFloat(top1Percentage) + parseFloat(top2Percentage) + parseFloat(top3Percentage) + parseFloat(creatorPercentage)) / 100) * 360}deg,
+                    ${colors.platform} ${((parseFloat(top1Percentage) + parseFloat(top2Percentage) + parseFloat(top3Percentage) + parseFloat(creatorPercentage) + parseFloat(platformPercentage)) / 100) * 360}deg,
+                    ${colors.moderators} ${((parseFloat(top1Percentage) + parseFloat(top2Percentage) + parseFloat(top3Percentage) + parseFloat(creatorPercentage) + parseFloat(platformPercentage)) / 100) * 360}deg,
+                    ${colors.moderators} 360deg
+                  )`,
+                  zIndex: 2,
+                  boxShadow: 'inset 0 0 20px rgba(0, 0, 0, 0.3)'
+                }} />
+                
+                {/* Cercle central avec effet 3D */}
+                <div style={{
+                  position: 'absolute',
+                  width: '60%',
+                  height: '60%',
+                  borderRadius: '50%',
+                  background: 'radial-gradient(circle at 30% 30%, #333, #000)',
+                  border: '3px solid #000',
+                  zIndex: 3,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: 'inset 0 0 20px rgba(0, 0, 0, 0.5)'
+                }}>
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: 14, color: '#18C964', fontWeight: 600 }}>
+                      Total
+                    </div>
+                    <div style={{ fontSize: 20, color: '#fff', fontWeight: 900 }}>
+                      {dynamicData.poolTotal}
+                    </div>
+                    <div style={{ fontSize: 12, color: '#18C964' }}>
+                      $WINC
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Légende simplifiée et compacte */}
+            <div style={{ 
+              display: 'flex', 
+              flexDirection: 'column', 
+              gap: 6,
+              minWidth: 200
+            }}>
+              {chartData.map((item, index) => (
+                <div 
+                  key={index}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    padding: '6px 8px',
+                    borderRadius: 8,
+                    background: 'rgba(255, 255, 255, 0.03)',
+                    border: `1px solid ${item.color}`,
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  {/* Icône */}
+                  <div style={{ 
+                    fontSize: 14, 
+                    marginRight: 8,
+                    filter: 'drop-shadow(0 0 4px rgba(255, 255, 255, 0.2))'
+                  }}>
+                    {item.icon}
+                  </div>
+                  
+                  {/* Informations compactes */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ 
+                      fontSize: 11, 
+                      fontWeight: 600, 
+                      color: item.color,
+                      marginBottom: 1,
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis'
+                    }}>
+                      {item.label}
+                    </div>
+                    <div style={{ 
+                      fontSize: 10, 
+                      color: '#fff',
+                      marginBottom: 1
+                    }}>
+                      {item.value} $WINC
+                    </div>
+                    <div style={{ 
+                      fontSize: 9, 
+                      color: '#666',
+                      fontWeight: 500
+                    }}>
+                      {item.percentage}%
+                    </div>
+                  </div>
+                  
+                  {/* Indicateur de couleur compact */}
+                  <div style={{
+                    width: 12,
+                    height: 12,
+                    borderRadius: '50%',
+                    background: item.color,
+                    border: '1px solid #333',
+                    flexShrink: 0
+                  }} />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Section de contrôle du taux de completion */}
+          <div style={{ 
+            marginTop: 20, 
+            padding: '16px 20px', 
+            background: 'rgba(24, 201, 100, 0.08)', 
+            borderRadius: 16,
+            border: '1px solid rgba(24, 201, 100, 0.2)',
+            textAlign: 'center'
+          }}>
+            <div style={{ fontSize: 13, color: '#18C964', fontWeight: 600, marginBottom: 10 }}>
+              🎯 Completion Rate Control
+            </div>
+            
+            {/* Slide bar simplifiée */}
+            <div style={{ marginBottom: 12 }}>
+              <div style={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center',
+                marginBottom: 6,
+                fontSize: 11
+              }}>
+                <span style={{ color: '#666' }}>5</span>
+                <span style={{ color: '#18C964', fontWeight: 600 }}>
+                  {Math.max(5, Math.floor((completionRate / 100) * (data.maxCompletions || 5)))} / {data.maxCompletions || 5}
+                </span>
+                <span style={{ color: '#666' }}>{data.maxCompletions || 5}</span>
+              </div>
+              
+              <input
+                type="range"
+                min="5"
+                max={data.maxCompletions || 5}
+                value={Math.max(5, Math.floor((completionRate / 100) * (data.maxCompletions || 5)))}
+                onChange={(e) => {
+                  const value = parseInt(e.target.value);
+                  const rate = Math.round((value / (data.maxCompletions || 5)) * 100);
+                  setCompletionRate(rate);
+                }}
+                style={{
+                  width: '100%',
+                  height: 6,
+                  borderRadius: 3,
+                  background: 'linear-gradient(90deg, #18C964, #00B894)',
+                  outline: 'none',
+                  cursor: 'pointer',
+                  WebkitAppearance: 'none',
+                  appearance: 'none'
+                }}
+              />
+            </div>
+            
+            <div style={{ fontSize: 11, color: '#666', lineHeight: 1.4 }}>
+              Adjust completion rate to see real-time distribution changes
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+};
+
 // Composant pour afficher les détails économiques en temps réel
-const EconomicDetails = ({ data, isVisible, isInline = false, onCreatorGainClick, onTop3Click }: { data: any, isVisible: boolean, isInline?: boolean, onCreatorGainClick?: () => void, onTop3Click?: () => void }) => {
+const EconomicDetails = ({ data, isVisible, isInline = false, onCreatorGainClick, onTop3Click, onPoolClick }: { data: any, isVisible: boolean, isInline?: boolean, onCreatorGainClick?: () => void, onTop3Click?: () => void, onPoolClick?: () => void }) => {
   if (!isVisible || !data) return null;
 
   const containerStyle: React.CSSProperties = isInline ? {
@@ -265,21 +630,52 @@ const EconomicDetails = ({ data, isVisible, isInline = false, onCreatorGainClick
       </div>
 
       <div style={{ display: 'grid', gap: 8, marginBottom: 12 }}>
-        {/* Pool Total */}
-        <div style={{
-          background: '#000',
-          border: '2px solid #18C964',
-          borderRadius: 10,
-          padding: 8,
-          textAlign: 'center',
-          opacity: 1,
-          transition: 'opacity 0.3s ease'
-        }}>
+        {/* Pool Total - Maintenant cliquable */}
+        <div 
+          onClick={onPoolClick || (() => {})}
+          style={{
+            background: '#000',
+            border: '2px solid #18C964',
+            borderRadius: 10,
+            padding: 8,
+            textAlign: 'center',
+            opacity: 1,
+            transition: 'all 0.3s ease',
+            cursor: 'pointer',
+            position: 'relative',
+            overflow: 'hidden'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'scale(1.02)';
+            e.currentTarget.style.boxShadow = '0 0 20px rgba(24, 201, 100, 0.4)';
+            e.currentTarget.style.borderColor = '#00B894';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'scale(1)';
+            e.currentTarget.style.boxShadow = 'none';
+            e.currentTarget.style.borderColor = '#18C964';
+          }}
+        >
+          {/* Effet de brillance */}
+          <div style={{
+            position: 'absolute',
+            top: 0,
+            left: '-100%',
+            width: '100%',
+            height: '100%',
+            background: 'linear-gradient(90deg, transparent, rgba(24, 201, 100, 0.2), transparent)',
+            transition: 'left 0.5s ease',
+            pointerEvents: 'none'
+          }} />
+          
           <div style={{ fontSize: 12, fontWeight: 600, color: '#18C964', marginBottom: 2 }}>
             Total Reward $WINC Pool
           </div>
           <div style={{ fontSize: 20, fontWeight: 900, color: '#18C964' }}>
             {data.poolTotal} $WINC
+          </div>
+          <div style={{ fontSize: 10, color: '#18C964', opacity: 0.7, marginTop: 4 }}>
+            Click to view distribution chart
           </div>
         </div>
       </div>
@@ -763,6 +1159,7 @@ export default function YourCompletionsPage() {
   const [showCreatorGainModal, setShowCreatorGainModal] = useState(false);
   const [completionRate, setCompletionRate] = useState(100);
   const [showCompletionRateModal, setShowCompletionRateModal] = useState(false);
+  const [showPoolDistributionChart, setShowPoolDistributionChart] = useState(false);
 
   // Réinitialiser le taux de completion quand le modal s'ouvre
   useEffect(() => {
@@ -784,36 +1181,13 @@ export default function YourCompletionsPage() {
   }, []);
 
   useEffect(() => {
-    // Vérifier si on vient de la page recap
-    const isFromRecap = localStorage.getItem('fromRecap') === 'true';
+    // Réinitialiser les champs à vide pour une nouvelle saisie
+    // Les champs afficheront "Minimum" comme placeholder
+    setWincValue('');
+    setMaxCompletions('');
     
-    if (isFromRecap) {
-      // Restaurer les données sauvegardées
-      const completionsData = localStorage.getItem("completions");
-      if (completionsData) {
-        try {
-          const data = JSON.parse(completionsData);
-          setWincValue(data.wincValue?.toString() || '');
-          setMaxCompletions(data.maxCompletions?.toString() || '');
-        } catch (e) {
-          console.error("Error parsing completions data:", e);
-        }
-      }
-      // Nettoyer le flag
-      localStorage.removeItem('fromRecap');
-    } else {
-      // Charger les données existantes si disponibles
-      const completionsData = localStorage.getItem("completions");
-      if (completionsData) {
-        try {
-          const data = JSON.parse(completionsData);
-          setWincValue(data.wincValue?.toString() || '');
-          setMaxCompletions(data.maxCompletions?.toString() || '');
-        } catch (e) {
-          console.error("Error parsing completions data:", e);
-        }
-      }
-    }
+    // Nettoyer les données économiques
+    setEconomicData(null);
   }, []);
 
   // Calculer les données économiques quand les valeurs changent
@@ -952,7 +1326,7 @@ export default function YourCompletionsPage() {
                     type="text"
                     value={wincValue}
                     onChange={handleWincChange}
-                    placeholder="Minimum 1 $WINC"
+                    placeholder="Minimum"
                     style={{
                       background: 'none',
                       border: 'none',
@@ -995,7 +1369,7 @@ export default function YourCompletionsPage() {
                     type="text"
                     value={maxCompletions}
                     onChange={handleCompletionsChange}
-                    placeholder="Minimum 5 Completions"
+                    placeholder="Minimum"
                     style={{
                       background: 'none',
                       border: 'none',
@@ -1153,6 +1527,7 @@ export default function YourCompletionsPage() {
                 isInline={true} 
                 onCreatorGainClick={() => setShowCreatorGainModal(true)}
                 onTop3Click={() => setShowCompletionRateModal(true)}
+                onPoolClick={() => setShowPoolDistributionChart(true)}
               />
             </div>
           )}
@@ -1175,6 +1550,15 @@ export default function YourCompletionsPage() {
           onClose={() => setShowCompletionRateModal(false)}
           economicData={{ ...economicData, wincValue, maxCompletions }}
         />
+
+        {/* Pop-up Pool Distribution Chart */}
+        {economicData && (
+          <PoolDistributionChart 
+            isVisible={showPoolDistributionChart}
+            onClose={() => setShowPoolDistributionChart(false)}
+            data={{ ...economicData, wincValue, maxCompletions }}
+          />
+        )}
 
         {/* Pop-up tooltip */}
         {showTooltip && (
@@ -1316,6 +1700,7 @@ export default function YourCompletionsPage() {
               data={economicData} 
               isVisible={showEconomicDetails} 
               onTop3Click={() => setShowCompletionRateModal(true)}
+              onPoolClick={() => setShowPoolDistributionChart(true)}
             />
           </div>
         )}

@@ -1,16 +1,16 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 
-// Constantes du modèle économique WINC
+// Constantes du modèle économique WINC (MINT réduit de ~15% pour rentabilité créateur)
 const ECONOMIC_CONSTANTS = {
-  BASE_FEE: 2,           // Réduit de 3 à 2 (baisse de 33%)
-  SCALING_FACTOR: 0.15,  // Réduit de 0.20 à 0.15 (baisse de 25%)
-  RISK_ADJUSTMENT: 0.09, // Réduit de 0.12 à 0.09 (baisse de 25%)
-  POOL_TOP3_PERCENTAGE: 0.50, // 50% pour les 3 gagnants
-  POOL_CREATOR_PERCENTAGE: 0.30, // 30% pour le créateur (sera réduit de 15%)
-  POOL_PLATFORM_PERCENTAGE: 0.10, // 10% pour la plateforme
-  POOL_MODERATORS_PERCENTAGE: 0.40, // 40% pour les modérateurs
-  POOL_REWARD_PERCENTAGE: 0.75,
+  BASE_FEE: 1.53,        // Réduit de 1.8 à 1.53 (baisse de 15%)
+  SCALING_FACTOR: 0.115, // Réduit de 0.135 à 0.115 (baisse de ~15%)
+  RISK_ADJUSTMENT: 0.069, // Réduit de 0.081 à 0.069 (baisse de ~15%)
+  POOL_TOP3_PERCENTAGE: 0.617, // Maintenu
+  POOL_CREATOR_PERCENTAGE: 0.23, // Maintenu
+  POOL_PLATFORM_PERCENTAGE: 0.10, // Maintenu
+  POOL_MODERATORS_PERCENTAGE: 0.32, // Maintenu
+
   POOL_MINT_PERCENTAGE: 0.25
 };
 
@@ -239,7 +239,32 @@ const CompletionRateModal: React.FC<CompletionRateModalProps> = ({
       }
       
       const data = simulateCampaign(P, N, CR);
-      setDynamicData(data);
+      
+      // Logique de refund basée sur la comparaison gain vs prix unitaire
+      // SEULS les gagnants peuvent avoir un refund, PAS le créateur
+      const isRefundTop1 = data.top1 < P;
+      const isRefundTop2 = data.top2 < P;
+      const isRefundTop3 = data.top3 < P;
+      
+      // Ajouter ces informations aux données
+      const enhancedData = {
+        ...data,
+        isRefundTop1,
+        isRefundTop2,
+        isRefundTop3,
+        unitPrice: P
+      };
+      
+      setDynamicData(enhancedData);
+      
+      // Sauvegarder les données de simulation pour persistance
+      const simulationData = {
+        completionRate: isLargeMaxCompletions ? Math.round((absoluteCompletions / N) * 100) : completionRate,
+        absoluteCompletions: isLargeMaxCompletions ? absoluteCompletions : Math.round((completionRate / 100) * N),
+        economicResults: enhancedData,
+        timestamp: Date.now()
+      };
+      localStorage.setItem('completionSimulationData', JSON.stringify(simulationData));
     }
   }, [completionRate, absoluteCompletions, economicData, isVisible]);
 
@@ -437,7 +462,7 @@ const CompletionRateModal: React.FC<CompletionRateModalProps> = ({
             <div style={{ fontSize: 20, fontWeight: 900, color: '#fff' }}>
               {actualCompletions} / {N}
             </div>
-            {!dynamicData?.isMinimumCompletionsReached && (
+            {(dynamicData?.isRefundTop1 || dynamicData?.isRefundTop2 || dynamicData?.isRefundTop3) && (
               <div style={{ 
                 fontSize: 12, 
                 color: '#FF2D2D', 
@@ -446,7 +471,7 @@ const CompletionRateModal: React.FC<CompletionRateModalProps> = ({
                 padding: '8px',
                 borderRadius: '6px'
               }}>
-                ⚠️ Minimum 5 completions required for rewards
+                ⚠️ Some winners' gains are below unit completion price ({dynamicData?.unitPrice} $WINC)
               </div>
             )}
           </div>
@@ -478,9 +503,9 @@ const CompletionRateModal: React.FC<CompletionRateModalProps> = ({
               <span style={{ 
                 fontSize: 18, 
                 fontWeight: 900, 
-                color: !dynamicData?.isMinimumCompletionsReached ? '#FF2D2D' : '#FFD700' 
+                color: dynamicData?.isRefundTop1 ? '#FF2D2D' : '#FFD700' 
               }}>
-                {!dynamicData?.isMinimumCompletionsReached ? 'REFUND' : `${dynamicData?.top1 || 0} $WINC`}
+                {dynamicData?.isRefundTop1 ? 'REFUND' : `${dynamicData?.top1 || 0} $WINC`}
               </span>
             </div>
             
@@ -520,9 +545,9 @@ const CompletionRateModal: React.FC<CompletionRateModalProps> = ({
               <span style={{ 
                 fontSize: 18, 
                 fontWeight: 900, 
-                color: !dynamicData?.isMinimumCompletionsReached ? '#FF2D2D' : '#C0C0C0' 
+                color: dynamicData?.isRefundTop2 ? '#FF2D2D' : '#C0C0C0' 
               }}>
-                {!dynamicData?.isMinimumCompletionsReached ? 'REFUND' : `${dynamicData?.top2 || 0} $WINC`}
+                {dynamicData?.isRefundTop2 ? 'REFUND' : `${dynamicData?.top2 || 0} $WINC`}
               </span>
             </div>
             
@@ -562,9 +587,9 @@ const CompletionRateModal: React.FC<CompletionRateModalProps> = ({
               <span style={{ 
                 fontSize: 18, 
                 fontWeight: 900, 
-                color: !dynamicData?.isMinimumCompletionsReached ? '#FF2D2D' : '#CD7F32' 
+                color: dynamicData?.isRefundTop3 ? '#FF2D2D' : '#CD7F32' 
               }}>
-                {!dynamicData?.isMinimumCompletionsReached ? 'REFUND' : `${dynamicData?.top3 || 0} $WINC`}
+                {dynamicData?.isRefundTop3 ? 'REFUND' : `${dynamicData?.top3 || 0} $WINC`}
               </span>
             </div>
             
@@ -623,16 +648,16 @@ const CompletionRateModal: React.FC<CompletionRateModalProps> = ({
               <div style={{ 
                 fontSize: 16, 
                 fontWeight: 700, 
-                color: !dynamicData?.isMinimumCompletionsReached ? '#FF2D2D' : (dynamicData?.isCreatorProfitable ? '#18C964' : '#FF2D2D')
+                color: dynamicData?.isCreatorProfitable ? '#18C964' : '#FF2D2D'
               }}>
-                {!dynamicData?.isMinimumCompletionsReached ? 'REFUND' : `${dynamicData?.creatorGain || 0} $WINC`}
+                {dynamicData?.creatorGain || 0} $WINC
               </div>
             </div>
           </div>
         </div>
 
-        {/* Avertissement pour les taux faibles */}
-        {!dynamicData?.isMinimumCompletionsReached && (
+        {/* Avertissement pour les gains insuffisants - SEULS LES GAGNANTS */}
+        {(dynamicData?.isRefundTop1 || dynamicData?.isRefundTop2 || dynamicData?.isRefundTop3) && (
           <div style={{ 
             background: 'rgba(255, 45, 45, 0.1)', 
             border: '1px solid #FF2D2D', 
@@ -642,29 +667,11 @@ const CompletionRateModal: React.FC<CompletionRateModalProps> = ({
             marginBottom: 16
           }}>
             <div style={{ fontSize: 14, fontWeight: 600, color: '#FF2D2D', marginBottom: 4 }}>
-              ⚠️ Minimum 5 Completions Required
+              ⚠️ Economic Refund Warning
             </div>
             <div style={{ fontSize: 12, color: '#FF2D2D' }}>
-              Below 5 completions: You lose MINT, completers get REFUNDED
-            </div>
-          </div>
-        )}
-
-        {/* Avertissement pour les taux faibles (60% et moins) */}
-        {dynamicData?.isMinimumCompletionsReached && completionRate < 60 && (
-          <div style={{ 
-            background: 'rgba(255, 45, 45, 0.1)', 
-            border: '1px solid #FF2D2D', 
-            borderRadius: 8, 
-            padding: 12, 
-            textAlign: 'center',
-            marginBottom: 16
-          }}>
-            <div style={{ fontSize: 14, fontWeight: 600, color: '#FF2D2D', marginBottom: 4 }}>
-              ⚠️ Low Completion Rate
-            </div>
-            <div style={{ fontSize: 12, color: '#FF2D2D' }}>
-              Below 60% completion: Creator gains are capped at 1.5x MINT
+              Some winners' gains are below their unit completion cost ({dynamicData?.unitPrice} $WINC). 
+              These winners will receive a full refund instead.
             </div>
           </div>
         )}
@@ -675,13 +682,13 @@ const CompletionRateModal: React.FC<CompletionRateModalProps> = ({
           border: '1px solid #FFD600', 
           borderRadius: 8, 
           padding: 12, 
-          textAlign: 'center' 
+          textAlign: 'center'
         }}>
-          <div style={{ fontSize: 14, fontWeight: 600, color: '#FFD600', marginBottom: 4 }}>
-            ⏰ Campaign Duration
+          <div style={{ fontSize: 12, color: '#FFD600', marginBottom: 4 }}>
+            💡 Campaign Duration
           </div>
-          <div style={{ fontSize: 12, color: '#FFD600' }}>
-            Campaigns are accessible for maximum 7 days if completions are still available
+          <div style={{ fontSize: 14, fontWeight: 600, color: '#fff' }}>
+            30 days to complete the challenge
           </div>
         </div>
       </div>
