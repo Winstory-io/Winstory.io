@@ -14,11 +14,18 @@ const ECONOMIC_CONSTANTS = {
   POOL_MINT_PERCENTAGE: 0.25
 };
 
-// Fonction de simulation du modèle économique WINC - VERSION HARMONISÉE
+// Fonction de simulation du modèle économique WINC - VERSION CORRIGÉE
 function simulateCampaign(P: number, N: number, CR: number = N) {
-  // Réglage de durée de campagne (à brancher ensuite sur l'UI si besoin)
-  const CAMPAIGN_DURATION_DAYS = 7; // 7 ou 30
-  const DURATION_DISCOUNT = CAMPAIGN_DURATION_DAYS === 7 ? 0.88 : 1.0; // 7j: MINT ~12% moins cher
+  // Calcul dynamique de la durée de campagne basé sur P×N
+  // Plus P×N est élevé, plus la campagne est longue (plus complexe)
+  const baseDuration = 7; // Durée de base
+  const complexityFactor = Math.log10(Math.max(1, P * N / 100)); // Facteur de complexité
+  const CAMPAIGN_DURATION_DAYS = Math.min(30, Math.max(7, Math.round(baseDuration + complexityFactor * 7)));
+  
+  // Discount basé sur la durée : plus court = moins cher
+  const DURATION_DISCOUNT = CAMPAIGN_DURATION_DAYS <= 7 ? 0.88 : 
+                           CAMPAIGN_DURATION_DAYS <= 14 ? 0.94 : 
+                           CAMPAIGN_DURATION_DAYS <= 21 ? 0.97 : 1.0;
 
   const sqrtPN = Math.sqrt(P * N);
   const mintRaw = (ECONOMIC_CONSTANTS.BASE_FEE * DURATION_DISCOUNT) +
@@ -63,7 +70,7 @@ function simulateCampaign(P: number, N: number, CR: number = N) {
   let multiplicateurXP = 1;
 
   const isMinimumCompletionsReached = CR >= 5;
-
+  
   if (isMinimumCompletionsReached) {
     if (completionPercentage >= 100) multiplicateurXP = 6;
     else if (completionPercentage >= 95) multiplicateurXP = 5;
@@ -108,11 +115,12 @@ function simulateCampaign(P: number, N: number, CR: number = N) {
   let top2 = rawTop3Pool * 0.3;
   let top3 = rawTop3Pool * 0.2;
 
-  // GARANTIR des planchers gagnants si CR >= 5
+  // CORRECTION : Planchers bénéficiaires pour Top3 (pas juste égal au prix du mint)
   if (isMinimumCompletionsReached) {
-    const floor1 = 2 * P;
-    const floor2 = 1.5 * P;
-    const floor3 = 1.0 * P;
+    // 1er ≥ 2.5×P (bénéfice de 150%), 2ème ≥ 2×P (bénéfice de 100%), 3ème ≥ 1.5×P (bénéfice de 50%)
+    const floor1 = 2.5 * P; // Bénéfice de 150% au lieu de 100%
+    const floor2 = 2.0 * P; // Bénéfice de 100% au lieu de 50%
+    const floor3 = 1.5 * P; // Bénéfice de 50% au lieu de 0%
 
     const need1 = Math.max(0, floor1 - top1);
     const need2 = Math.max(0, floor2 - top2);
@@ -149,6 +157,62 @@ function simulateCampaign(P: number, N: number, CR: number = N) {
     }
   }
 
+  // CORRECTION : Remboursement des completeurs si CR < 5
+  let top1Final = top1;
+  let top2Final = top2;
+  let top3Final = top3;
+  let isRefundTop1 = false;
+  let isRefundTop2 = false;
+  let isRefundTop3 = false;
+
+  if (!isMinimumCompletionsReached) {
+    // Sous 5 completions : tous les completeurs sont remboursés
+    top1Final = P; // Remboursement complet
+    top2Final = P; // Remboursement complet
+    top3Final = P; // Remboursement complet
+    isRefundTop1 = true;
+    isRefundTop2 = true;
+    isRefundTop3 = true;
+    
+    // Le créateur perd sa mise, les completers sont remboursés
+    creatorGain = 0;
+    creatorNetGain = -mint;
+    
+    // IMPORTANT : Le MINT initial doit être redistribué vers Winstory et modérateurs
+    // même sous 5 complétions, car le créateur ne peut pas être remboursé
+    const totalRefunds = top1Final + top2Final + top3Final; // 3 × P
+    const mintToRedistribute = mint; // Le MINT initial à redistribuer
+    
+    // Répartition du MINT initial : Winstory + Modérateurs + Ajustement Top3
+    const platformFromMint = Math.round(mintToRedistribute * 0.10 * 100) / 100; // 10% du MINT (réduit)
+    const moderatorsFromMint = Math.round(mintToRedistribute * 0.20 * 100) / 100; // 20% du MINT (réduit)
+    const remainingForTop3 = Math.round(mintToRedistribute * 0.70 * 100) / 100; // 70% du MINT pour Top3 (augmenté)
+    
+    // Ajuster les gains Top3 avec le surplus du MINT
+    const top3Needs = totalRefunds; // 3 × P
+    const top3FromPool = (P * CR); // Valeur des complétions actuelles
+    const top3Deficit = Math.max(0, top3Needs - top3FromPool);
+    
+    if (top3Deficit > 0) {
+      // Utiliser le MINT restant pour combler le déficit Top3
+      const top3Bonus = Math.min(remainingForTop3, top3Deficit);
+      const top3BonusPerWinner = Math.round(top3Bonus / 3 * 100) / 100;
+      
+      top1Final = P + top3BonusPerWinner;
+      top2Final = P + top3BonusPerWinner;
+      top3Final = P + top3BonusPerWinner;
+      
+      // Ajuster platform et moderators avec le reste
+      const remainingMint = mintToRedistribute - top3Bonus;
+      platform = platformFromMint + Math.round(remainingMint * 0.375 * 100) / 100; // 15% + 37.5% du reste
+      moderators = moderatorsFromMint + Math.round(remainingMint * 0.625 * 100) / 100; // 25% + 62.5% du reste
+    } else {
+      // Pas de déficit, Top3 peut être remboursé entièrement
+      platform = platformFromMint;
+      moderators = moderatorsFromMint;
+    }
+  }
+
   // Arrondis finaux
   const result = {
     mint: Math.round(mint * 100) / 100,
@@ -158,15 +222,21 @@ function simulateCampaign(P: number, N: number, CR: number = N) {
     isCreatorProfitable: creatorGain >= mint,
     isMinimumCompletionsReached,
     creatorXP: 200 * multiplicateurXP,
-    top1: Math.round(top1 * 100) / 100,
-    top2: Math.round(top2 * 100) / 100,
-    top3: Math.round(top3 * 100) / 100,
+    top1: Math.round(top1Final * 100) / 100,
+    top2: Math.round(top2Final * 100) / 100,
+    top3: Math.round(top3Final * 100) / 100,
     platform: Math.round(platform * 100) / 100,
     moderators: Math.round(moderators * 100) / 100,
     platformTotal: Math.round((totalValue * platformShare) * 100) / 100, // info brute
     tauxCompletion: Math.round(tauxCompletion * 100) / 100,
     multiplicateurGain,
-    multiplicateurXP
+    multiplicateurXP,
+    // Nouvelles propriétés pour le remboursement
+    isRefundTop1,
+    isRefundTop2,
+    isRefundTop3,
+    unitPrice: P, // Prix unitaire pour les avertissements
+    campaignDuration: CAMPAIGN_DURATION_DAYS // Durée calculée dynamiquement
   };
 
   // Vérification finale: s'assurer que le total distribué ≈ totalValue (tolérance 0.01)
@@ -261,18 +331,37 @@ const CompletionRateModal: React.FC<CompletionRateModalProps> = ({
       
       const data = simulateCampaign(P, N, CR);
       
-      // Logique de refund basée sur la comparaison gain vs prix unitaire
-      // SEULS les gagnants peuvent avoir un refund, PAS le créateur
-      const isRefundTop1 = data.top1 < P;
-      const isRefundTop2 = data.top2 < P;
-      const isRefundTop3 = data.top3 < P;
+      // PROTECTION : S'assurer que Platform et Moderators ne soient jamais à 0
+      if (data.platform <= 0 || data.moderators <= 0) {
+        console.warn("⚠️ Platform ou Moderators = 0 détecté, correction automatique appliquée");
+        
+        // Calculer un minimum basé sur le MINT
+        const minPlatform = Math.max(0.1, data.mint * 0.05); // 5% du MINT minimum
+        const minModerators = Math.max(0.2, data.mint * 0.10); // 10% du MINT minimum
+        
+        data.platform = Math.max(data.platform, minPlatform);
+        data.moderators = Math.max(data.moderators, minModerators);
+        
+        // Recalculer le total si nécessaire
+        const totalDistributed = data.top1 + data.top2 + data.top3 + 
+                                data.creatorGain + data.platform + data.moderators;
+        
+        if (Math.abs(totalDistributed - data.poolTotal) > 0.01) {
+          // Normaliser pour maintenir l'équilibre
+          const adjustmentFactor = data.poolTotal / totalDistributed;
+          data.top1 = Math.round(data.top1 * adjustmentFactor * 100) / 100;
+          data.top2 = Math.round(data.top2 * adjustmentFactor * 100) / 100;
+          data.top3 = Math.round(data.top3 * adjustmentFactor * 100) / 100;
+          data.creatorGain = Math.round(data.creatorGain * adjustmentFactor * 100) / 100;
+          data.platform = Math.round(data.platform * adjustmentFactor * 100) / 100;
+          data.moderators = Math.round(data.moderators * adjustmentFactor * 100) / 100;
+        }
+      }
       
-      // Ajouter ces informations aux données
+      // La fonction simulateCampaign gère déjà la logique de remboursement
+      // Pas besoin de recalculer ici, utiliser directement les données
       const enhancedData = {
         ...data,
-        isRefundTop1,
-        isRefundTop2,
-        isRefundTop3,
         unitPrice: P
       };
       
@@ -486,13 +575,13 @@ const CompletionRateModal: React.FC<CompletionRateModalProps> = ({
             {(dynamicData?.isRefundTop1 || dynamicData?.isRefundTop2 || dynamicData?.isRefundTop3) && (
               <div style={{ 
                 fontSize: 12, 
-                color: '#FF2D2D', 
+                color: '#18C964', 
                 marginTop: 8,
-                background: 'rgba(255, 45, 45, 0.1)',
+                background: 'rgba(24, 201, 100, 0.1)',
                 padding: '8px',
                 borderRadius: '6px'
               }}>
-                ⚠️ Some winners' gains are below unit completion price ({dynamicData?.unitPrice} $WINC)
+                ✅ Under 5 completions: All participants receive full refund ({dynamicData?.unitPrice} $WINC each)
               </div>
             )}
           </div>
@@ -524,9 +613,9 @@ const CompletionRateModal: React.FC<CompletionRateModalProps> = ({
               <span style={{ 
                 fontSize: 18, 
                 fontWeight: 900, 
-                color: dynamicData?.isRefundTop1 ? '#FF2D2D' : '#FFD700' 
+                color: dynamicData?.isRefundTop1 ? '#18C964' : '#FFD700' 
               }}>
-                {dynamicData?.isRefundTop1 ? 'REFUND' : `${dynamicData?.top1 || 0} $WINC`}
+                {dynamicData?.isRefundTop1 ? `REFUND (${dynamicData?.unitPrice || 0} $WINC)` : `${dynamicData?.top1 || 0} $WINC`}
               </span>
             </div>
             
@@ -566,9 +655,9 @@ const CompletionRateModal: React.FC<CompletionRateModalProps> = ({
               <span style={{ 
                 fontSize: 18, 
                 fontWeight: 900, 
-                color: dynamicData?.isRefundTop2 ? '#FF2D2D' : '#C0C0C0' 
+                color: dynamicData?.isRefundTop2 ? '#18C964' : '#C0C0C0' 
               }}>
-                {dynamicData?.isRefundTop2 ? 'REFUND' : `${dynamicData?.top2 || 0} $WINC`}
+                {dynamicData?.isRefundTop2 ? `REFUND (${dynamicData?.unitPrice || 0} $WINC)` : `${dynamicData?.top2 || 0} $WINC`}
               </span>
             </div>
             
@@ -608,9 +697,9 @@ const CompletionRateModal: React.FC<CompletionRateModalProps> = ({
               <span style={{ 
                 fontSize: 18, 
                 fontWeight: 900, 
-                color: dynamicData?.isRefundTop3 ? '#FF2D2D' : '#CD7F32' 
+                color: dynamicData?.isRefundTop3 ? '#18C964' : '#CD7F32' 
               }}>
-                {dynamicData?.isRefundTop3 ? 'REFUND' : `${dynamicData?.top3 || 0} $WINC`}
+                {dynamicData?.isRefundTop3 ? `REFUND (${dynamicData?.unitPrice || 0} $WINC)` : `${dynamicData?.top3 || 0} $WINC`}
               </span>
             </div>
             
@@ -677,27 +766,48 @@ const CompletionRateModal: React.FC<CompletionRateModalProps> = ({
           </div>
         </div>
 
-        {/* Avertissement pour les gains insuffisants - SEULS LES GAGNANTS */}
+        {/* Information sur le remboursement sous 5 complétions */}
         {(dynamicData?.isRefundTop1 || dynamicData?.isRefundTop2 || dynamicData?.isRefundTop3) && (
           <div style={{ 
-            background: 'rgba(255, 45, 45, 0.1)', 
-            border: '1px solid #FF2D2D', 
+            background: 'rgba(24, 201, 100, 0.1)', 
+            border: '1px solid #18C964', 
             borderRadius: 8, 
             padding: 12, 
             textAlign: 'center',
             marginBottom: 16
           }}>
-            <div style={{ fontSize: 14, fontWeight: 600, color: '#FF2D2D', marginBottom: 4 }}>
-              ⚠️ Economic Refund Warning
+            <div style={{ fontSize: 14, fontWeight: 600, color: '#18C964', marginBottom: 4 }}>
+              ✅ Full Refund Protection
             </div>
-            <div style={{ fontSize: 12, color: '#FF2D2D' }}>
-              Some winners' gains are below their unit completion cost ({dynamicData?.unitPrice} $WINC). 
-              These winners will receive a full refund instead.
+            <div style={{ fontSize: 12, color: '#18C964' }}>
+              Campaign has less than 5 completions. All participants receive a full refund of {dynamicData?.unitPrice} $WINC each.
             </div>
           </div>
         )}
 
-        {/* Info sur la durée de campagne */}
+        {/* Info sur le comportement économique sous 5 complétions */}
+        {!dynamicData?.isMinimumCompletionsReached && (
+          <div style={{ 
+            background: 'rgba(24, 201, 100, 0.1)', 
+            border: '1px solid #18C964', 
+            borderRadius: 8, 
+            padding: 12, 
+            textAlign: 'center',
+            marginBottom: 16
+          }}>
+            <div style={{ fontSize: 12, color: '#18C964', marginBottom: 4 }}>
+              🛡️ Economic Protection
+            </div>
+            <div style={{ fontSize: 14, fontWeight: 600, color: '#fff' }}>
+              Creator loses MINT, participants get full refund
+            </div>
+            <div style={{ fontSize: 11, color: '#18C964', marginTop: 4, fontStyle: 'italic' }}>
+              Campaign needs minimum 5 completions to activate rewards
+            </div>
+          </div>
+        )}
+
+        {/* Info sur la durée de campagne dynamique */}
         <div style={{ 
           background: 'rgba(255, 214, 0, 0.1)', 
           border: '1px solid #FFD600', 
@@ -709,7 +819,10 @@ const CompletionRateModal: React.FC<CompletionRateModalProps> = ({
             💡 Campaign Duration
           </div>
           <div style={{ fontSize: 14, fontWeight: 600, color: '#fff' }}>
-            30 days to complete the challenge
+            {dynamicData?.campaignDuration || 7} days to complete the challenge
+          </div>
+          <div style={{ fontSize: 11, color: '#FFD600', marginTop: 4, fontStyle: 'italic' }}>
+            Duration calculated based on campaign complexity
           </div>
         </div>
       </div>
