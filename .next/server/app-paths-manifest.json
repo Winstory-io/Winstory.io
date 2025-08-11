@@ -1,7 +1,7 @@
 {
+  "/creation/individual/yourfilm/page": "app/creation/individual/yourfilm/page.js",
+  "/creation/individual/recap/page": "app/creation/individual/recap/page.js",
   "/creation/individual/login/page": "app/creation/individual/login/page.js",
   "/creation/individual/yourwinstory/page": "app/creation/individual/yourwinstory/page.js",
-  "/creation/individual/recap/page": "app/creation/individual/recap/page.js",
-  "/creation/individual/yourfilm/page": "app/creation/individual/yourfilm/page.js",
   "/creation/individual/yourcompletions/page": "app/creation/individual/yourcompletions/page.js"
 }

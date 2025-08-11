@@ -26,6 +26,97 @@ interface RecapData {
   };
 }
 
+// Constantes du modèle économique WINC pour calculer le MINT et le ROI
+const ECONOMIC_CONSTANTS = {
+  BASE_FEE: 1.53,
+  SCALING_FACTOR: 0.115,
+  RISK_ADJUSTMENT: 0.069,
+  POOL_TOP3_PERCENTAGE: 0.617,
+  POOL_CREATOR_PERCENTAGE: 0.23,
+  POOL_PLATFORM_PERCENTAGE: 0.10,
+  POOL_MODERATORS_PERCENTAGE: 0.32,
+  POOL_MINT_PERCENTAGE: 0.25
+};
+
+// Fonction de simulation du modèle économique WINC
+function simulateCampaign(P: number, N: number, CR: number = N) {
+  const sqrtPN = Math.sqrt(P * N);
+  const mint = ECONOMIC_CONSTANTS.BASE_FEE + 
+               (P * N * ECONOMIC_CONSTANTS.SCALING_FACTOR) + 
+               (sqrtPN * ECONOMIC_CONSTANTS.RISK_ADJUSTMENT);
+  
+  const totalValue = (P * CR) + mint;
+  
+  const poolTop3 = totalValue * ECONOMIC_CONSTANTS.POOL_TOP3_PERCENTAGE;
+  const poolCreator = totalValue * ECONOMIC_CONSTANTS.POOL_CREATOR_PERCENTAGE;
+  const platform = totalValue * ECONOMIC_CONSTANTS.POOL_PLATFORM_PERCENTAGE;
+  const moderators = totalValue * ECONOMIC_CONSTANTS.POOL_MODERATORS_PERCENTAGE;
+
+  const tauxCompletion = CR / N;
+  let multiplicateurGain = 0;
+  let multiplicateurXP = 1;
+  let creatorGain = 0;
+  let creatorNetGain = 0;
+  let isCreatorProfitable = false;
+  let isMinimumCompletionsReached = CR >= 5;
+
+  if (isMinimumCompletionsReached) {
+    const completionPercentage = tauxCompletion * 100;
+    multiplicateurGain = (completionPercentage / 100) * 2.0;
+    
+    if (completionPercentage >= 100) {
+      multiplicateurXP = 6;
+    } else if (completionPercentage >= 95) {
+      multiplicateurXP = 5;
+    } else if (completionPercentage >= 90) {
+      multiplicateurXP = 4;
+    } else if (completionPercentage >= 80) {
+      multiplicateurXP = 3;
+    } else if (completionPercentage >= 60) {
+      multiplicateurXP = 2;
+    } else {
+      multiplicateurXP = 1;
+    }
+
+    const creatorGainWithMultiplier = poolCreator * multiplicateurGain;
+    let creatorGainCap;
+    
+    if (completionPercentage <= 60) {
+      creatorGainCap = mint * 1.5;
+    } else if (completionPercentage >= 100) {
+      creatorGainCap = mint * 2.5;
+    } else {
+      const progressionRatio = (completionPercentage - 60) / 40;
+      const capRange = 2.5 - 1.5;
+      const currentCap = 1.5 + (progressionRatio * capRange);
+      creatorGainCap = mint * currentCap;
+    }
+    
+    creatorGain = Math.min(creatorGainWithMultiplier, creatorGainCap);
+    creatorNetGain = creatorGain - mint;
+    isCreatorProfitable = creatorGain >= mint;
+  } else {
+    creatorGain = 0;
+    creatorNetGain = -mint;
+    isCreatorProfitable = false;
+    multiplicateurGain = 0;
+    multiplicateurXP = 1;
+  }
+
+  return {
+    mint: Math.round(mint * 100) / 100,
+    poolTotal: Math.round(totalValue * 100) / 100,
+    creatorGain: Math.round(creatorGain * 100) / 100,
+    creatorNetGain: Math.round(creatorNetGain * 100) / 100,
+    isCreatorProfitable,
+    isMinimumCompletionsReached,
+    creatorXP: 200 * multiplicateurXP,
+    tauxCompletion: Math.round(tauxCompletion * 100) / 100,
+    multiplicateurGain,
+    multiplicateurXP
+  };
+}
+
 export default function IndividualRecapPage() {
   const router = useRouter();
   const [recap, setRecap] = useState<RecapData>({});
@@ -34,6 +125,7 @@ export default function IndividualRecapPage() {
   const [confirmed, setConfirmed] = useState(false);
   const [showFullStartingStory, setShowFullStartingStory] = useState(false);
   const [showFullGuideline, setShowFullGuideline] = useState(false);
+  const [economicData, setEconomicData] = useState<any>(null);
 
   useEffect(() => {
     // Charger les données depuis le localStorage
@@ -69,15 +161,22 @@ export default function IndividualRecapPage() {
 
     setRecap(recapData);
 
+    // Calculer les données économiques si on a les informations de completion
+    if (recapData.completions) {
+      const P = recapData.completions.wincValue;
+      const N = recapData.completions.maxCompletions;
+      if (P >= 1 && N >= 5) {
+        const data = simulateCampaign(P, N);
+        setEconomicData(data);
+      }
+    }
+
     // Gestion de la navigation retour
     const handleBeforeUnload = () => {
-      // Sauvegarder l'état actuel avant de quitter
       localStorage.setItem('fromRecap', 'true');
     };
 
     const handlePopState = () => {
-      // Quand l'utilisateur clique sur la flèche de gauche, revenir à la page précédente
-      // Marquer qu'on vient du recap et qu'on doit restaurer les données
       localStorage.setItem('fromRecap', 'true');
       router.push('/creation/individual/yourcompletions');
     };
@@ -90,6 +189,18 @@ export default function IndividualRecapPage() {
       window.removeEventListener('popstate', handlePopState);
     };
   }, [router]);
+
+  // Recalculer les données économiques quand les données de completion changent
+  useEffect(() => {
+    if (recap.completions) {
+      const P = recap.completions.wincValue;
+      const N = recap.completions.maxCompletions;
+      if (P >= 1 && N >= 5) {
+        const data = simulateCampaign(P, N);
+        setEconomicData(data);
+      }
+    }
+  }, [recap.completions]);
 
   const handleCloseClick = () => {
     setShowLeaveModal(true);
@@ -305,10 +416,43 @@ export default function IndividualRecapPage() {
                         background: '#000',
                         objectFit: 'contain'
                       }}
+                      onError={(e) => {
+                        console.error("Video loading error:", e);
+                        // Si la vidéo ne peut pas être chargée, afficher un message d'erreur
+                        const videoElement = e.currentTarget;
+                        videoElement.style.display = 'none';
+                        const errorDiv = document.createElement('div');
+                        errorDiv.style.color = '#FF2D2D';
+                        errorDiv.style.fontSize = '16';
+                        errorDiv.style.fontStyle = 'italic';
+                        errorDiv.style.textAlign = 'center';
+                        errorDiv.style.padding = '20px';
+                        errorDiv.textContent = 'Video file could not be loaded. Please check your video file.';
+                        videoElement.parentNode?.appendChild(errorDiv);
+                      }}
                     />
+                    {/* Informations supplémentaires sur la vidéo si disponibles */}
+                    {(recap.film as any).fileName && (
+                      <div style={{ marginTop: 12, padding: '8px 12px', background: 'rgba(255, 215, 0, 0.1)', borderRadius: '6px', border: '1px solid #FFD600' }}>
+                        <div style={{ color: '#FFD600', fontSize: 12, fontWeight: 600, marginBottom: 4 }}>File Information:</div>
+                        <div style={{ color: '#fff', fontSize: 14 }}>
+                          <strong>Name:</strong> {(recap.film as any).fileName}
+                        </div>
+                        {(recap.film as any).fileSize && (
+                          <div style={{ color: '#fff', fontSize: 14 }}>
+                            <strong>Size:</strong> {Math.round((recap.film as any).fileSize / (1024 * 1024) * 100) / 100} MB
+                          </div>
+                        )}
+                        {(recap.film as any).format && (
+                          <div style={{ color: '#fff', fontSize: 14 }}>
+                            <strong>Format:</strong> {(recap.film as any).format}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 ) : (
-                  <div style={{ color: '#fff', fontSize: 16, fontStyle: 'italic' }}>
+                  <div style={{ color: '#fff', fontSize: 16, fontStyle: 'italic', textAlign: 'center', padding: '20px' }}>
                     No video uploaded
                   </div>
                 )}
@@ -316,21 +460,57 @@ export default function IndividualRecapPage() {
             </div>
           )}
 
-          {/* Section Completions */}
+          {/* Section Completions - Renommée en "Your Completions" */}
           {recap.completions && (
             <div style={{ marginBottom: 32 }}>
               <div style={{ color: '#FFD600', fontWeight: 700, fontSize: 24, marginBottom: 16, textAlign: 'center' }}>
-                Completion Settings
+                Your Completions
               </div>
               <div style={{ background: '#000', border: '2px solid #FFD600', borderRadius: 12, padding: 20 }}>
                 <div style={{ marginBottom: 16 }}>
                   <div style={{ color: '#FFD600', fontWeight: 600, fontSize: 16, marginBottom: 8 }}>Unit Value:</div>
                   <div style={{ color: '#fff', fontSize: 18 }}>{recap.completions.wincValue} $WINC</div>
                 </div>
-                <div>
+                <div style={{ marginBottom: 16 }}>
                   <div style={{ color: '#FFD600', fontWeight: 600, fontSize: 16, marginBottom: 8 }}>Max Completions:</div>
                   <div style={{ color: '#fff', fontSize: 18 }}>{recap.completions.maxCompletions}</div>
                 </div>
+                
+                {/* Informations économiques ajoutées */}
+                {economicData && (
+                  <>
+                    <div style={{ marginBottom: 16, padding: '16px', background: 'rgba(255, 215, 0, 0.1)', borderRadius: '8px', border: '1px solid #FFD600' }}>
+                      <div style={{ color: '#FFD600', fontWeight: 600, fontSize: 16, marginBottom: 8 }}>💰 Initial MINT Cost:</div>
+                      <div style={{ color: '#fff', fontSize: 18, fontWeight: 'bold' }}>{economicData.mint} $WINC</div>
+                      <div style={{ color: '#FFD600', fontSize: 12, fontStyle: 'italic' }}>
+                        This is what you need to pay to launch your campaign
+                      </div>
+                    </div>
+                    
+                    <div style={{ marginBottom: 16, padding: '16px', background: 'rgba(24, 201, 100, 0.1)', borderRadius: '8px', border: '1px solid #18C964' }}>
+                      <div style={{ color: '#18C964', fontWeight: 600, fontSize: 16, marginBottom: 8 }}>🏆 Your Creator Gain (100% completion):</div>
+                      <div style={{ color: '#fff', fontSize: 18, fontWeight: 'bold' }}>{economicData.creatorGain} $WINC</div>
+                      <div style={{ color: '#18C964', fontSize: 12, fontStyle: 'italic' }}>
+                        Maximum potential reward if all completions are successful
+                      </div>
+                    </div>
+                    
+                    <div style={{ padding: '16px', background: 'rgba(255, 214, 0, 0.1)', borderRadius: '8px', border: '1px solid #FFD600' }}>
+                      <div style={{ color: '#FFD600', fontWeight: 600, fontSize: 16, marginBottom: 8 }}>📈 Your ROI if 100% completed:</div>
+                      <div style={{ color: '#fff', fontSize: 18, fontWeight: 'bold' }}>
+                        {economicData.isCreatorProfitable ? '+' : ''}{economicData.creatorNetGain} $WINC
+                      </div>
+                      <div style={{ color: '#FFD600', fontSize: 12, fontStyle: 'italic' }}>
+                        Net profit: {economicData.creatorGain} - {economicData.mint} = {economicData.creatorNetGain} $WINC
+                      </div>
+                      {economicData.isCreatorProfitable && (
+                        <div style={{ color: '#18C964', fontSize: 14, fontWeight: '600', marginTop: '8px' }}>
+                          🎯 ROI: {((economicData.creatorNetGain / economicData.mint) * 100).toFixed(1)}%
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           )}

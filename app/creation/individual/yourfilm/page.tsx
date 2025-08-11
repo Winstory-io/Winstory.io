@@ -135,7 +135,10 @@ export default function YourFilmPage() {
     // Sauvegarde dans le localStorage
     localStorage.setItem("film", JSON.stringify({
       aiRequested: false, // Pour les individus, pas d'option AI
-      url: videoPreview // null si pas de vidéo
+      url: videoPreview, // null si pas de vidéo
+      fileName: video?.name || null, // Ajouter le nom du fichier
+      fileSize: video?.size || null, // Ajouter la taille du fichier
+      format: videoFormat || null // Ajouter le format de la vidéo
     }));
     // Redirige vers la page suivante pour les individus
     router.push('/creation/individual/yourcompletions');
