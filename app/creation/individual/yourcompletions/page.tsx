@@ -205,8 +205,28 @@ const PoolDistributionChart = ({ data, isVisible, onClose }: { data: any, isVisi
 
   // Calculer les données selon le taux de completion
   const calculateDataForCompletionRate = (rate: number) => {
-    const P = data.wincValue || 1;
-    const N = data.maxCompletions || 5;
+    // Validation et conversion des données d'entrée
+    const wincValueStr = data.wincValue || '0';
+    const maxCompletionsStr = data.maxCompletions || '0';
+    
+    // Convertir en nombres avec validation
+    const P = parseFloat(wincValueStr.toString().replace(',', '.'));
+    const N = parseInt(maxCompletionsStr.toString());
+    
+    // Vérifier que les valeurs sont valides
+    if (isNaN(P) || isNaN(N) || P < 1 || N < 5) {
+      // Retourner des données par défaut si invalides
+      return {
+        poolTotal: 0,
+        top1: 0,
+        top2: 0,
+        top3: 0,
+        creatorGain: 0,
+        platform: 0,
+        moderators: 0
+      };
+    }
+    
     const CR = Math.max(5, Math.floor((rate / 100) * N));
     
     // Utiliser la fonction simulateCampaign avec le taux de completion ajusté
@@ -216,15 +236,78 @@ const PoolDistributionChart = ({ data, isVisible, onClose }: { data: any, isVisi
 
   // Obtenir les données dynamiques
   const dynamicData = calculateDataForCompletionRate(completionRate);
-  const total = dynamicData.poolTotal;
+  const total = dynamicData.poolTotal || 0;
 
-  // Calculer les pourcentages pour le diagramme
-  const top1Percentage = ((dynamicData.top1 / total) * 100).toFixed(1);
-  const top2Percentage = ((dynamicData.top2 / total) * 100).toFixed(1);
-  const top3Percentage = ((dynamicData.top3 / total) * 100).toFixed(1);
-  const creatorPercentage = ((dynamicData.creatorGain / total) * 100).toFixed(1);
-  const platformPercentage = ((dynamicData.platform / total) * 100).toFixed(1);
-  const moderatorsPercentage = ((dynamicData.moderators / total) * 100).toFixed(1);
+  // Vérifier que le total est valide avant de calculer les pourcentages
+  if (total <= 0) {
+    return (
+      <div 
+        onClick={onClose}
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0, 0, 0, 0.9)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 2500,
+          padding: '20px',
+          cursor: 'pointer'
+        }}
+      >
+        <div
+          onClick={(e) => e.stopPropagation()}
+          style={{
+            background: '#000',
+            border: '3px solid #FF2D2D',
+            borderRadius: 28,
+            padding: '24px',
+            maxWidth: 600,
+            width: '100%',
+            position: 'relative',
+            boxShadow: '0 25px 50px rgba(255, 45, 45, 0.3)',
+            cursor: 'default',
+            overflow: 'hidden',
+            textAlign: 'center'
+          }}
+        >
+          <CloseIcon onClick={onClose} />
+          <h2 style={{ color: '#FF2D2D', fontSize: 24, fontWeight: 900, marginBottom: 16 }}>
+            ⚠️ Invalid Data
+          </h2>
+          <p style={{ color: '#fff', fontSize: 16, marginBottom: 20 }}>
+            Please enter valid values for Unit Value (≥1 $WINC) and Max Completions (≥5) to view the distribution chart.
+          </p>
+          <button
+            onClick={onClose}
+            style={{
+              background: '#FF2D2D',
+              color: '#fff',
+              border: 'none',
+              borderRadius: 12,
+              padding: '12px 24px',
+              fontSize: 16,
+              fontWeight: 600,
+              cursor: 'pointer'
+            }}
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Calculer les pourcentages pour le diagramme avec validation
+  const top1Percentage = total > 0 ? ((dynamicData.top1 / total) * 100).toFixed(1) : '0.0';
+  const top2Percentage = total > 0 ? ((dynamicData.top2 / total) * 100).toFixed(1) : '0.0';
+  const top3Percentage = total > 0 ? ((dynamicData.top3 / total) * 100).toFixed(1) : '0.0';
+  const creatorPercentage = total > 0 ? ((dynamicData.creatorGain / total) * 100).toFixed(1) : '0.0';
+  const platformPercentage = total > 0 ? ((dynamicData.platform / total) * 100).toFixed(1) : '0.0';
+  const moderatorsPercentage = total > 0 ? ((dynamicData.moderators / total) * 100).toFixed(1) : '0.0';
 
   // Couleurs du diagramme (utilisant les mêmes que l'interface existante)
   const colors = {
@@ -238,12 +321,12 @@ const PoolDistributionChart = ({ data, isVisible, onClose }: { data: any, isVisi
 
   // Données pour le diagramme
   const chartData = [
-    { label: '1st Place', value: dynamicData.top1, percentage: top1Percentage, color: colors.top1, icon: '🥇' },
-    { label: '2nd Place', value: dynamicData.top2, percentage: top2Percentage, color: colors.top2, icon: '🥈' },
-    { label: '3rd Place', value: dynamicData.top3, percentage: top3Percentage, color: colors.top3, icon: '🥉' },
-    { label: 'Creator', value: dynamicData.creatorGain, percentage: creatorPercentage, color: colors.creator, icon: '👑' },
-    { label: 'Platform', value: dynamicData.platform, percentage: platformPercentage, color: colors.platform, icon: '🏢' },
-    { label: 'Moderators', value: dynamicData.moderators, percentage: moderatorsPercentage, color: colors.moderators, icon: '🛡️' }
+    { label: '1st Place', value: dynamicData.top1 || 0, percentage: top1Percentage, color: colors.top1, icon: '🥇' },
+    { label: '2nd Place', value: dynamicData.top2 || 0, percentage: top2Percentage, color: colors.top2, icon: '🥈' },
+    { label: '3rd Place', value: dynamicData.top3 || 0, percentage: top3Percentage, color: colors.top3, icon: '🥉' },
+    { label: 'Creator', value: dynamicData.creatorGain || 0, percentage: creatorPercentage, color: colors.creator, icon: '👑' },
+    { label: 'Platform', value: dynamicData.platform || 0, percentage: platformPercentage, color: colors.platform, icon: '🏢' },
+    { label: 'Moderators', value: dynamicData.moderators || 0, percentage: moderatorsPercentage, color: colors.moderators, icon: '🛡️' }
   ];
 
   return (
