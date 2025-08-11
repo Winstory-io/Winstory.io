@@ -1326,7 +1326,7 @@ export default function YourCompletionsPage() {
                     type="text"
                     value={wincValue}
                     onChange={handleWincChange}
-                    placeholder="Minimum"
+                    placeholder="Minimum 1 $WINC"
                     style={{
                       background: 'none',
                       border: 'none',
@@ -1369,7 +1369,7 @@ export default function YourCompletionsPage() {
                     type="text"
                     value={maxCompletions}
                     onChange={handleCompletionsChange}
-                    placeholder="Minimum"
+                    placeholder="Minimum 5 Completions"
                     style={{
                       background: 'none',
                       border: 'none',
@@ -1609,8 +1609,15 @@ export default function YourCompletionsPage() {
               
               <div style={{ color: '#fff', fontSize: 16, fontWeight: 400, marginBottom: 24, textAlign: 'left', flex: 1, overflowY: 'auto' }}>
                 <div style={{ marginBottom: 16 }}>
-                  <strong style={{ color: '#FFD600' }}>🎯 Campaign Configuration</strong><br />
-                  Configure the completion parameters for your campaign. Set the unit value in $WINC tokens and the maximum number of completions allowed for your community.
+                  <strong style={{ color: '#FFD600' }}>📝 Quick Guide</strong><br />
+                  • <strong>Unit Value in $WINC:</strong> amount paid per completer. Minimum 1 $WINC.<br />
+                  • <strong>Max. Completions:</strong> maximum number of validations. Minimum 5. Caps your campaign budget and defines reward supply.<br />
+                  Both fields must meet the minima to continue. The pool scales linearly: <code style={{ background: '#333', padding: '2px 6px', borderRadius: 4, fontSize: 12 }}>(Unit Value × Max Completions) + MINT = Total Pool</code>.
+                </div>
+
+                <div style={{ marginBottom: 16 }}>
+                  <strong style={{ color: '#FFD600' }}>🏅 Winner Selection</strong><br />
+                  <strong>Decentralized moderators</strong> score each completion from 0/100 to 100/100 based on quality and alignment with your original creation. Each moderator can only use a score once per campaign, ensuring unique ranking. The <strong>top 3 winners</strong> are determined by the <strong>average scores</strong> across all moderators - the completions most preferred by the moderation community.
                 </div>
 
                 <div style={{ marginBottom: 16 }}>
