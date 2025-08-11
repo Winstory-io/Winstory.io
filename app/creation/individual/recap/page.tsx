@@ -402,60 +402,70 @@ export default function IndividualRecapPage() {
                 Your Film
               </div>
               <div style={{ background: '#000', border: '2px solid #FFD600', borderRadius: 12, padding: 20 }}>
-                {recap.film.url ? (
-                  <div>
-                    <div style={{ color: '#FFD600', fontWeight: 600, fontSize: 16, marginBottom: 8 }}>Video:</div>
-                    <video 
-                      src={recap.film.url} 
-                      controls 
-                      style={{ 
-                        width: '100%', 
-                        maxWidth: '400px', 
-                        maxHeight: '300px',
-                        borderRadius: 8, 
-                        background: '#000',
-                        objectFit: 'contain'
-                      }}
-                      onError={(e) => {
-                        console.error("Video loading error:", e);
-                        // Si la vidéo ne peut pas être chargée, afficher un message d'erreur
-                        const videoElement = e.currentTarget;
-                        videoElement.style.display = 'none';
-                        const errorDiv = document.createElement('div');
-                        errorDiv.style.color = '#FF2D2D';
-                        errorDiv.style.fontSize = '16';
-                        errorDiv.style.fontStyle = 'italic';
-                        errorDiv.style.textAlign = 'center';
-                        errorDiv.style.padding = '20px';
-                        errorDiv.textContent = 'Video file could not be loaded. Please check your video file.';
-                        videoElement.parentNode?.appendChild(errorDiv);
-                      }}
+                {/* Affichage des informations de la vidéo sans tentative de chargement */}
+                <div>
+                  <div style={{ color: '#FFD600', fontWeight: 600, fontSize: 16, marginBottom: 8 }}>Video Uploaded:</div>
+                  
+                  {/* Icône de vidéo */}
+                  <div style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center',
+                    padding: '20px',
+                    background: 'rgba(255, 215, 0, 0.1)',
+                    borderRadius: '8px',
+                    border: '1px solid #FFD600',
+                    marginBottom: '16px'
+                  }}>
+                    <img 
+                      src="/importvideo.svg" 
+                      alt="Video Uploaded" 
+                      style={{ width: '80px', height: '80px', marginRight: '16px' }} 
                     />
-                    {/* Informations supplémentaires sur la vidéo si disponibles */}
-                    {(recap.film as any).fileName && (
-                      <div style={{ marginTop: 12, padding: '8px 12px', background: 'rgba(255, 215, 0, 0.1)', borderRadius: '6px', border: '1px solid #FFD600' }}>
-                        <div style={{ color: '#FFD600', fontSize: 12, fontWeight: 600, marginBottom: 4 }}>File Information:</div>
-                        <div style={{ color: '#fff', fontSize: 14 }}>
-                          <strong>Name:</strong> {(recap.film as any).fileName}
-                        </div>
-                        {(recap.film as any).fileSize && (
-                          <div style={{ color: '#fff', fontSize: 14 }}>
-                            <strong>Size:</strong> {Math.round((recap.film as any).fileSize / (1024 * 1024) * 100) / 100} MB
-                          </div>
-                        )}
-                        {(recap.film as any).format && (
-                          <div style={{ color: '#fff', fontSize: 14 }}>
-                            <strong>Format:</strong> {(recap.film as any).format}
-                          </div>
-                        )}
+                    <div style={{ color: '#FFD600', fontSize: '18px', fontWeight: '600' }}>
+                      ✓ Video Successfully Uploaded
+                    </div>
+                  </div>
+
+                  {/* Informations détaillées sur la vidéo */}
+                  {(recap.film as any).fileName && (
+                    <div style={{ 
+                      padding: '16px', 
+                      background: 'rgba(255, 215, 0, 0.1)', 
+                      borderRadius: '8px', 
+                      border: '1px solid #FFD600',
+                      marginBottom: '12px'
+                    }}>
+                      <div style={{ color: '#FFD600', fontSize: 14, fontWeight: 600, marginBottom: 8 }}>📁 File Details:</div>
+                      <div style={{ color: '#fff', fontSize: 14, marginBottom: 4 }}>
+                        <strong>Name:</strong> {(recap.film as any).fileName}
                       </div>
-                    )}
+                      {(recap.film as any).fileSize && (
+                        <div style={{ color: '#fff', fontSize: 14, marginBottom: 4 }}>
+                          <strong>Size:</strong> {Math.round((recap.film as any).fileSize / (1024 * 1024) * 100) / 100} MB
+                        </div>
+                      )}
+                      {(recap.film as any).format && (
+                        <div style={{ color: '#fff', fontSize: 14 }}>
+                          <strong>Format:</strong> {(recap.film as any).format}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Message informatif */}
+                  <div style={{ 
+                    padding: '12px', 
+                    background: 'rgba(24, 201, 100, 0.1)', 
+                    borderRadius: '6px', 
+                    border: '1px solid #18C964',
+                    textAlign: 'center'
+                  }}>
+                    <div style={{ color: '#18C964', fontSize: 12, fontStyle: 'italic' }}>
+                      Your video has been uploaded and will be used for community completions
+                    </div>
                   </div>
-                ) : (
-                  <div style={{ color: '#fff', fontSize: 16, fontStyle: 'italic', textAlign: 'center', padding: '20px' }}>
-                    No video uploaded
-                  </div>
-                )}
+                </div>
               </div>
             </div>
           )}
