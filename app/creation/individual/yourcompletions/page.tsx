@@ -169,6 +169,29 @@ function simulateCampaign(P: number, N: number, CR: number = N) {
         top3 += recovered * ratio3;
       }
     }
+  } else {
+    // CORRECTION : Mode normal (CR >= 5) - Transition fluide pour les modérateurs
+    // Calculer d'abord les gains de base selon les parts normales
+    const baseModerators = Math.round(totalValue * moderatorsShare * 100) / 100;
+    
+    // Créer une transition fluide depuis le mode remboursement
+    // À CR=5, les modérateurs doivent avoir au moins le gain qu'ils auraient eu à CR=4 + une croissance minimale
+    const transitionFactor = Math.min(1, Math.max(0, (CR - 5) / 5)); // 0 à CR=5, 1 à CR=10+
+    
+    // Gain minimum garanti basé sur le mode remboursement (extrapolé) + croissance minimale
+    const refundModeModerators = mint * Math.min(0.6, Math.max(0.35, 0.35 + 0.20 * 0.8)); // CR=4 equivalent
+    
+    // GARANTIR la croissance : au minimum le gain CR=4 + 1% de croissance
+    const guaranteedMinGain = refundModeModerators * 1.01; // +1% minimum
+    const minModeratorsGain = Math.max(baseModerators, guaranteedMinGain);
+    
+    // Transition progressive : de minModeratorsGain vers baseModerators
+    moderators = Math.round((minModeratorsGain + (baseModerators - minModeratorsGain) * transitionFactor) * 100) / 100;
+    
+    // Ajuster la plateforme pour maintenir l'équilibre
+    const totalDistributed = creatorGain + top1 + top2 + top3 + moderators;
+    const remainingForPlatform = Math.max(0, totalValue - totalDistributed);
+    platform = Math.round(remainingForPlatform * 100) / 100;
   }
 
   // CORRECTION : Remboursement des completeurs si CR < 5
@@ -201,7 +224,9 @@ function simulateCampaign(P: number, N: number, CR: number = N) {
     creatorGain = 0;
     creatorNetGain = -mint;
 
-    // Incentive modérateurs: part croissante avec CR (0 -> ~35%, 4 -> ~55%) sur le MINT
+    // CORRECTION : Incentive modérateurs avec transition fluide vers le mode normal
+    // Part croissante avec CR (0 -> ~35%, 4 -> ~55%) sur le MINT
+    // Mais on prépare la transition pour éviter la discontinuité à CR=5
     const linearFactor = Math.min(1, Math.max(0, CR / 5)); // 0.. <1 sous 5
     const moderatorsRate = Math.min(0.6, Math.max(0.35, 0.35 + 0.20 * linearFactor));
     const platformRate = 1 - moderatorsRate; // reste pour plateforme
@@ -768,7 +793,7 @@ const PoolDistributionChart = ({ data, isVisible, onClose }: { data: any, isVisi
                       marginBottom: 1
                     }}>
                       {item.isRefund 
-                        ? `${item.refundAmount} $WINC each` 
+                        ? `${item.value} $WINC total` 
                         : `${item.value} $WINC`
                       }
                     </div>
