@@ -49,13 +49,15 @@ function simulateCampaign(P: number, N: number, CR: number = N) {
   const BASE_PLATFORM = 0.07;      // peut descendre dynamiquement jusqu'à 0.03
   const BASE_MODERATORS = 0.18;    // peut descendre dynamiquement jusqu'à 0.10
 
-  // Boost des Top3 quand la complétion est faible, pris sur mods/platform en priorité
-  const boostForWinners = 0.15 * (1 - tauxCompletion); // +15% vers Top3 à 0%, 0 à 100%
+  // CORRECTION : Logique améliorée pour éviter les baisses contre-intuitives des gains modérateurs
+  // Boost des Top3 quand la complétion est faible, mais avec protection des modérateurs
+  const boostForWinners = Math.min(0.15, 0.10 * (1 - tauxCompletion)); // Réduit de 15% à 10% max
   let top3Share = BASE_TOP3 + boostForWinners;
 
-  // Réductions dynamiques mods/platform si CR bas
-  let platformShare = Math.max(0.03, BASE_PLATFORM - 0.02 * (1 - tauxCompletion));
-  let moderatorsShare = Math.max(0.10, BASE_MODERATORS - 0.08 * (1 - tauxCompletion));
+  // CORRECTION : Protection des modérateurs - gains toujours croissants
+  // Au lieu de réduire drastiquement, on ajuste plus progressivement
+  let platformShare = Math.max(0.05, BASE_PLATFORM - 0.01 * (1 - tauxCompletion)); // Réduction plus douce
+  let moderatorsShare = Math.max(0.15, BASE_MODERATORS - 0.02 * (1 - tauxCompletion)); // Réduction plus douce
 
   // Reste pour le créateur (plancher 12%)
   let creatorShare = 1 - (top3Share + platformShare + moderatorsShare);
@@ -118,12 +120,12 @@ function simulateCampaign(P: number, N: number, CR: number = N) {
   let top2 = rawTop3Pool * 0.3;
   let top3 = rawTop3Pool * 0.2;
 
-  // CORRECTION : Planchers bénéficiaires pour Top3 (pas juste égal au prix du mint)
+  // Winners floors (only when minimum completions reached)
   if (isMinimumCompletionsReached) {
-    // 1er ≥ 2.5×P (bénéfice de 150%), 2ème ≥ 2×P (bénéfice de 100%), 3ème ≥ 1.5×P (bénéfice de 50%)
-    const floor1 = 2.5 * P; // Bénéfice de 150% au lieu de 100%
-    const floor2 = 2.0 * P; // Bénéfice de 100% au lieu de 50%
-    const floor3 = 1.5 * P; // Bénéfice de 50% au lieu de 0%
+    // Minimum floors to ensure winners are profitable
+    const floor1 = 2.5 * P; // 150% profit
+    const floor2 = 2.0 * P; // 100% profit
+    const floor3 = 1.5 * P; // 50% profit
 
     const need1 = Math.max(0, floor1 - top1);
     const need2 = Math.max(0, floor2 - top2);
@@ -131,24 +133,33 @@ function simulateCampaign(P: number, N: number, CR: number = N) {
     const totalNeeds = need1 + need2 + need3;
 
     if (totalNeeds > 0) {
-      // D'abord puiser chez Modérateurs puis Plateforme, puis dans le SURPLUS créateur (au-delà du cap)
-      const poolAvailable = moderators + platform;
+      // Priority: 1) Creator surplus above cap, 2) Platform, 3) Moderators (capped)
       const creatorSurplus = Math.max(0, creatorGainWithMultiplier - creatorGain);
-      const available = poolAvailable + creatorSurplus;
+      let remainingNeeds = totalNeeds;
+      let recovered = 0;
 
-      if (available > 0) {
-        const takeRatio = Math.min(1, totalNeeds / available);
-        const takeFromModerators = Math.round(moderators * takeRatio * 100) / 100;
-        const takeFromPlatform = Math.round(platform * takeRatio * 100) / 100;
-        const takeFromCreatorSurplus = Math.round(creatorSurplus * takeRatio * 100) / 100;
+      if (creatorSurplus > 0) {
+        const takeFromCreatorSurplus = Math.min(creatorSurplus, remainingNeeds);
+        recovered += takeFromCreatorSurplus;
+        remainingNeeds -= takeFromCreatorSurplus;
+      }
 
-        // Appliquer retraits
-        moderators = Math.max(0, Math.round((moderators - takeFromModerators) * 100) / 100);
+      if (remainingNeeds > 0 && platform > 0) {
+        const takeFromPlatform = Math.min(platform * 0.5, remainingNeeds); // up to 50% of platform
         platform = Math.max(0, Math.round((platform - takeFromPlatform) * 100) / 100);
-        // Note: le gain créateur RESTE identique (on utilise le surplus au-dessus du cap)
+        recovered += takeFromPlatform;
+        remainingNeeds -= takeFromPlatform;
+      }
 
-        // Redispatch du budget récupéré vers les planchers
-        const recovered = takeFromModerators + takeFromPlatform + takeFromCreatorSurplus;
+      if (remainingNeeds > 0 && moderators > 0) {
+        const maxTakeFromModerators = moderators * 0.3; // up to 30% of moderators
+        const takeFromModerators = Math.min(maxTakeFromModerators, remainingNeeds);
+        moderators = Math.max(0, Math.round((moderators - takeFromModerators) * 100) / 100);
+        recovered += takeFromModerators;
+        remainingNeeds -= takeFromModerators;
+      }
+
+      if (recovered > 0) {
         const ratio1 = totalNeeds > 0 ? (need1 / totalNeeds) : 0;
         const ratio2 = totalNeeds > 0 ? (need2 / totalNeeds) : 0;
         const ratio3 = totalNeeds > 0 ? (need3 / totalNeeds) : 0;
@@ -167,53 +178,36 @@ function simulateCampaign(P: number, N: number, CR: number = N) {
   let isRefundTop1 = false;
   let isRefundTop2 = false;
   let isRefundTop3 = false;
+  let refundTotal = 0; // Nouveau: total des remboursements (linéaire)
 
   if (!isMinimumCompletionsReached) {
-    // Sous 5 completions : tous les completeurs sont remboursés
-    top1Final = P; // Remboursement complet
-    top2Final = P; // Remboursement complet
-    top3Final = P; // Remboursement complet
-    isRefundTop1 = true;
-    isRefundTop2 = true;
-    isRefundTop3 = true;
-    
+    // Sous 5 completions :
+    // - Pas de "winners" (top1/2/3 = 0)
+    // - Remboursement linéaire des completers existants (P × CR)
+    // - Le créateur perd sa mise (MINT)
+    // - Le MINT est réparti entre Plateforme et Modérateurs avec un incentive croissant pour les modérateurs
+    top1Final = 0;
+    top2Final = 0;
+    top3Final = 0;
+
+    // Remboursement linéaire uniquement s'il y a au moins 1 completion
+    refundTotal = P * CR;
+    const hasAnyCompletion = CR > 0;
+    isRefundTop1 = hasAnyCompletion;
+    isRefundTop2 = hasAnyCompletion;
+    isRefundTop3 = hasAnyCompletion;
+
     // Le créateur perd sa mise, les completers sont remboursés
     creatorGain = 0;
     creatorNetGain = -mint;
-    
-    // IMPORTANT : Le MINT initial doit être redistribué vers Winstory et modérateurs
-    // même sous 5 complétions, car le créateur ne peut pas être remboursé
-    const totalRefunds = top1Final + top2Final + top3Final; // 3 × P
-    const mintToRedistribute = mint; // Le MINT initial à redistribuer
-    
-    // Répartition du MINT initial : Winstory + Modérateurs + Ajustement Top3
-    const platformFromMint = Math.round(mintToRedistribute * 0.10 * 100) / 100; // 10% du MINT (réduit)
-    const moderatorsFromMint = Math.round(mintToRedistribute * 0.20 * 100) / 100; // 20% du MINT (réduit)
-    const remainingForTop3 = Math.round(mintToRedistribute * 0.70 * 100) / 100; // 70% du MINT pour Top3 (augmenté)
-    
-    // Ajuster les gains Top3 avec le surplus du MINT
-    const top3Needs = totalRefunds; // 3 × P
-    const top3FromPool = (P * CR); // Valeur des complétions actuelles
-    const top3Deficit = Math.max(0, top3Needs - top3FromPool);
-    
-    if (top3Deficit > 0) {
-      // Utiliser le MINT restant pour combler le déficit Top3
-      const top3Bonus = Math.min(remainingForTop3, top3Deficit);
-      const top3BonusPerWinner = Math.round(top3Bonus / 3 * 100) / 100;
-      
-      top1Final = P + top3BonusPerWinner;
-      top2Final = P + top3BonusPerWinner;
-      top3Final = P + top3BonusPerWinner;
-      
-      // Ajuster platform et moderators avec le reste
-      const remainingMint = mintToRedistribute - top3Bonus;
-      platform = platformFromMint + Math.round(remainingMint * 0.375 * 100) / 100; // 15% + 37.5% du reste
-      moderators = moderatorsFromMint + Math.round(remainingMint * 0.625 * 100) / 100; // 25% + 62.5% du reste
-    } else {
-      // Pas de déficit, Top3 peut être remboursé entièrement
-      platform = platformFromMint;
-      moderators = moderatorsFromMint;
-    }
+
+    // Incentive modérateurs: part croissante avec CR (0 -> ~35%, 4 -> ~55%) sur le MINT
+    const linearFactor = Math.min(1, Math.max(0, CR / 5)); // 0.. <1 sous 5
+    const moderatorsRate = Math.min(0.6, Math.max(0.35, 0.35 + 0.20 * linearFactor));
+    const platformRate = 1 - moderatorsRate; // reste pour plateforme
+
+    platform = Math.round(mint * platformRate * 100) / 100;
+    moderators = Math.round(mint * moderatorsRate * 100) / 100;
   }
 
   // Arrondis finaux
@@ -238,17 +232,26 @@ function simulateCampaign(P: number, N: number, CR: number = N) {
     isRefundTop1,
     isRefundTop2,
     isRefundTop3,
+    refundTotal: Math.round(refundTotal * 100) / 100,
     unitPrice: P, // Prix unitaire pour les avertissements
+    currentCompletions: CR,
     campaignDuration: CAMPAIGN_DURATION_DAYS // Durée calculée dynamiquement
   };
 
   // Vérification finale: s'assurer que le total distribué ≈ totalValue (tolérance 0.01)
-  const distributed = result.creatorGain + result.top1 + result.top2 + result.top3 + result.platform + result.moderators;
+  const winnersOrRefund = isMinimumCompletionsReached 
+    ? (result.top1 + result.top2 + result.top3) 
+    : result.refundTotal;
+  const distributed = result.creatorGain + winnersOrRefund + result.platform + result.moderators;
   if (Math.abs(distributed - result.poolTotal) > 0.01 && result.poolTotal > 0) {
     const adj = result.poolTotal / distributed;
-    result.top1 = Math.round(result.top1 * adj * 100) / 100;
-    result.top2 = Math.round(result.top2 * adj * 100) / 100;
-    result.top3 = Math.round(result.top3 * adj * 100) / 100;
+    if (isMinimumCompletionsReached) {
+      result.top1 = Math.round(result.top1 * adj * 100) / 100;
+      result.top2 = Math.round(result.top2 * adj * 100) / 100;
+      result.top3 = Math.round(result.top3 * adj * 100) / 100;
+    } else {
+      result.refundTotal = Math.round(result.refundTotal * adj * 100) / 100;
+    }
     result.platform = Math.round(result.platform * adj * 100) / 100;
     result.moderators = Math.round(result.moderators * adj * 100) / 100;
     // creatorGain reste inchangé car cap et surplus déjà pris en compte
@@ -314,7 +317,14 @@ const PoolDistributionChart = ({ data, isVisible, onClose }: { data: any, isVisi
         top3: 0,
         creatorGain: 0,
         platform: 0,
-        moderators: 0
+        moderators: 0,
+        isMinimumCompletionsReached: false,
+        isRefundTop1: false,
+        isRefundTop2: false,
+        isRefundTop3: false,
+        unitPrice: 0,
+        refundTotal: 0,
+        currentCompletions: 0
       };
     }
     
@@ -427,26 +437,56 @@ const PoolDistributionChart = ({ data, isVisible, onClose }: { data: any, isVisi
   const creatorPercentage = total > 0 ? ((dynamicData.creatorGain / total) * 100).toFixed(1) : '0.0';
   const platformPercentage = total > 0 ? ((dynamicData.platform / total) * 100).toFixed(1) : '0.0';
   const moderatorsPercentage = total > 0 ? ((dynamicData.moderators / total) * 100).toFixed(1) : '0.0';
+  const refundPercentage = total > 0 ? (((dynamicData.refundTotal || 0) / total) * 100).toFixed(1) : '0.0';
 
   // Couleurs du diagramme (utilisant les mêmes que l'interface existante)
   const colors = {
     top1: '#FFD700',      // Or pour 1ère place
     top2: '#C0C0C0',      // Argent pour 2ème place
     top3: '#CD7F32',      // Bronze pour 3ème place
+    refund: '#FF2D2D',    // Rouge pour les remboursements
     creator: '#18C964',   // Vert pour le créateur
     platform: '#FFFFFF',  // Blanc pour la plateforme (différencié de la 1ère place)
     moderators: '#4A90E2' // Bleu pour les modérateurs
   };
 
-  // Données pour le diagramme
-  const chartData = [
-    { label: '1st Place', value: dynamicData.top1 || 0, percentage: top1Percentage, color: colors.top1, icon: '🥇' },
-    { label: '2nd Place', value: dynamicData.top2 || 0, percentage: top2Percentage, color: colors.top2, icon: '🥈' },
-    { label: '3rd Place', value: dynamicData.top3 || 0, percentage: top3Percentage, color: colors.top3, icon: '🥉' },
-    { label: 'Creator', value: dynamicData.creatorGain || 0, percentage: creatorPercentage, color: colors.creator, icon: '👑' },
-    { label: 'Platform', value: dynamicData.platform || 0, percentage: platformPercentage, color: colors.platform, icon: '🏢' },
-    { label: 'Moderators', value: dynamicData.moderators || 0, percentage: moderatorsPercentage, color: colors.moderators, icon: '🛡️' }
-  ];
+  // Déterminer si on est en mode remboursement (< 5 complétions)
+  const isRefundMode = !dynamicData.isMinimumCompletionsReached;
+  const hasCompletions = (dynamicData.currentCompletions || 0) > 0;
+  
+  // Données pour le diagramme - Affichage conditionnel selon le mode
+  let chartData;
+  
+  if (isRefundMode) {
+    // Mode remboursement
+    chartData = [];
+    if (hasCompletions) {
+      chartData.push({ 
+        label: 'Refund for Completers', 
+        value: dynamicData.refundTotal || 0, 
+        percentage: refundPercentage, 
+        color: colors.refund, 
+        icon: '💰',
+        isRefund: true,
+        refundAmount: dynamicData.unitPrice || 0
+      });
+    }
+    chartData.push(
+      { label: 'Creator', value: dynamicData.creatorGain || 0, percentage: creatorPercentage, color: colors.creator, icon: '👑' },
+      { label: 'Platform', value: dynamicData.platform || 0, percentage: platformPercentage, color: colors.platform, icon: '🏢' },
+      { label: 'Moderators', value: dynamicData.moderators || 0, percentage: moderatorsPercentage, color: colors.moderators, icon: '🛡️' }
+    );
+  } else {
+    // Mode normal : afficher les 3 premières places + autres
+    chartData = [
+      { label: '1st Place', value: dynamicData.top1 || 0, percentage: top1Percentage, color: colors.top1, icon: '🥇' },
+      { label: '2nd Place', value: dynamicData.top2 || 0, percentage: top2Percentage, color: colors.top2, icon: '🥈' },
+      { label: '3rd Place', value: dynamicData.top3 || 0, percentage: top3Percentage, color: colors.top3, icon: '🥉' },
+      { label: 'Creator', value: dynamicData.creatorGain || 0, percentage: creatorPercentage, color: colors.creator, icon: '👑' },
+      { label: 'Platform', value: dynamicData.platform || 0, percentage: platformPercentage, color: colors.platform, icon: '🏢' },
+      { label: 'Moderators', value: dynamicData.moderators || 0, percentage: moderatorsPercentage, color: colors.moderators, icon: '🛡️' }
+    ];
+  }
 
   return (
     <>
@@ -528,6 +568,42 @@ const PoolDistributionChart = ({ data, isVisible, onClose }: { data: any, isVisi
               Visual breakdown of your $WINC reward pool
             </div>
             
+            {/* Avertissement spécial pour le mode remboursement */}
+            {isRefundMode && hasCompletions && (
+              <div style={{
+                background: 'rgba(255, 45, 45, 0.1)',
+                border: '2px solid #FF2D2D',
+                borderRadius: 12,
+                padding: '12px 16px',
+                marginBottom: 16,
+                textAlign: 'center'
+              }}>
+                <div style={{ fontSize: 14, fontWeight: 600, color: '#FF2D2D', marginBottom: 4 }}>
+                  ⚠️ Under 5 Completions - Refund Mode
+                </div>
+                <div style={{ fontSize: 12, color: '#FF2D2D' }}>
+                  All completers receive refund ({dynamicData.unitPrice} $WINC each)
+                </div>
+              </div>
+            )}
+            {isRefundMode && !hasCompletions && (
+              <div style={{
+                background: 'rgba(255, 214, 0, 0.1)',
+                border: '2px solid #FFD600',
+                borderRadius: 12,
+                padding: '12px 16px',
+                marginBottom: 16,
+                textAlign: 'center'
+              }}>
+                <div style={{ fontSize: 14, fontWeight: 600, color: '#FFD600' }}>
+                  Waiting for first completions
+                </div>
+                <div style={{ fontSize: 12, color: '#FFD600' }}>
+                  No refund is due until at least 1 completion
+                </div>
+              </div>
+            )}
+            
             {/* Total du pool en évidence */}
             <div style={{
               background: 'linear-gradient(135deg, #18C964, #00B894)',
@@ -576,27 +652,39 @@ const PoolDistributionChart = ({ data, isVisible, onClose }: { data: any, isVisi
                   zIndex: 1
                 }} />
 
-                {/* Diagramme circulaire principal */}
+                {/* Diagramme circulaire principal - Logique conditionnelle */}
                 <div style={{
                   position: 'relative',
                   width: '100%',
                   height: '100%',
                   borderRadius: '50%',
-                  background: `conic-gradient(
-                    from 0deg,
-                    ${colors.top1} 0deg,
-                    ${colors.top1} ${(parseFloat(top1Percentage) / 100) * 360}deg,
-                    ${colors.top2} ${(parseFloat(top1Percentage) / 100) * 360}deg,
-                    ${colors.top2} ${((parseFloat(top1Percentage) + parseFloat(top2Percentage)) / 100) * 360}deg,
-                    ${colors.top3} ${((parseFloat(top1Percentage) + parseFloat(top2Percentage)) / 100) * 360}deg,
-                    ${colors.top3} ${((parseFloat(top1Percentage) + parseFloat(top2Percentage) + parseFloat(top3Percentage)) / 100) * 360}deg,
-                    ${colors.creator} ${((parseFloat(top1Percentage) + parseFloat(top2Percentage) + parseFloat(top3Percentage)) / 100) * 360}deg,
-                    ${colors.creator} ${((parseFloat(top1Percentage) + parseFloat(top2Percentage) + parseFloat(top3Percentage) + parseFloat(creatorPercentage)) / 100) * 360}deg,
-                    ${colors.platform} ${((parseFloat(top1Percentage) + parseFloat(top2Percentage) + parseFloat(top3Percentage) + parseFloat(creatorPercentage)) / 100) * 360}deg,
-                    ${colors.platform} ${((parseFloat(top1Percentage) + parseFloat(top2Percentage) + parseFloat(top3Percentage) + parseFloat(creatorPercentage) + parseFloat(platformPercentage)) / 100) * 360}deg,
-                    ${colors.moderators} ${((parseFloat(top1Percentage) + parseFloat(top2Percentage) + parseFloat(top3Percentage) + parseFloat(creatorPercentage) + parseFloat(platformPercentage)) / 100) * 360}deg,
-                    ${colors.moderators} 360deg
-                  )`,
+                  background: isRefundMode 
+                    ? `conic-gradient(
+                        from 0deg,
+                        ${hasCompletions ? colors.refund : colors.creator} 0deg,
+                        ${hasCompletions ? colors.refund : colors.creator} ${ (parseFloat(hasCompletions ? refundPercentage : '0.0') / 100) * 360 }deg,
+                        ${colors.creator} ${ (parseFloat(hasCompletions ? refundPercentage : '0.0') / 100) * 360 }deg,
+                        ${colors.creator} ${ ((parseFloat(hasCompletions ? refundPercentage : '0.0') + parseFloat(creatorPercentage)) / 100) * 360 }deg,
+                        ${colors.platform} ${ ((parseFloat(hasCompletions ? refundPercentage : '0.0') + parseFloat(creatorPercentage)) / 100) * 360 }deg,
+                        ${colors.platform} ${ ((parseFloat(hasCompletions ? refundPercentage : '0.0') + parseFloat(creatorPercentage) + parseFloat(platformPercentage)) / 100) * 360 }deg,
+                        ${colors.moderators} ${ ((parseFloat(hasCompletions ? refundPercentage : '0.0') + parseFloat(creatorPercentage) + parseFloat(platformPercentage)) / 100) * 360 }deg,
+                        ${colors.moderators} 360deg
+                      )`
+                    : `conic-gradient(
+                        from 0deg,
+                        ${colors.top1} 0deg,
+                        ${colors.top1} ${(parseFloat(top1Percentage) / 100) * 360}deg,
+                        ${colors.top2} ${(parseFloat(top1Percentage) / 100) * 360}deg,
+                        ${colors.top2} ${((parseFloat(top1Percentage) + parseFloat(top2Percentage)) / 100) * 360}deg,
+                        ${colors.top3} ${((parseFloat(top1Percentage) + parseFloat(top2Percentage)) / 100) * 360}deg,
+                        ${colors.top3} ${((parseFloat(top1Percentage) + parseFloat(top2Percentage) + parseFloat(top3Percentage)) / 100) * 360}deg,
+                        ${colors.creator} ${((parseFloat(top1Percentage) + parseFloat(top2Percentage) + parseFloat(top3Percentage)) / 100) * 360}deg,
+                        ${colors.creator} ${((parseFloat(top1Percentage) + parseFloat(top2Percentage) + parseFloat(top3Percentage) + parseFloat(creatorPercentage)) / 100) * 360}deg,
+                        ${colors.platform} ${((parseFloat(top1Percentage) + parseFloat(top2Percentage) + parseFloat(top3Percentage) + parseFloat(creatorPercentage)) / 100) * 360}deg,
+                        ${colors.platform} ${((parseFloat(top1Percentage) + parseFloat(top2Percentage) + parseFloat(top3Percentage) + parseFloat(creatorPercentage) + parseFloat(platformPercentage)) / 100) * 360}deg,
+                        ${colors.moderators} ${((parseFloat(top1Percentage) + parseFloat(top2Percentage) + parseFloat(top3Percentage) + parseFloat(creatorPercentage) + parseFloat(platformPercentage)) / 100) * 360}deg,
+                        ${colors.moderators} 360deg
+                      )`,
                   zIndex: 2,
                   boxShadow: 'inset 0 0 20px rgba(0, 0, 0, 0.3)'
                 }} />
@@ -645,7 +733,9 @@ const PoolDistributionChart = ({ data, isVisible, onClose }: { data: any, isVisi
                     alignItems: 'center',
                     padding: '6px 8px',
                     borderRadius: 8,
-                    background: 'rgba(255, 255, 255, 0.03)',
+                    background: item.isRefund 
+                      ? 'rgba(255, 45, 45, 0.1)' 
+                      : 'rgba(255, 255, 255, 0.03)',
                     border: `1px solid ${item.color}`,
                     transition: 'all 0.2s ease'
                   }}
@@ -677,7 +767,10 @@ const PoolDistributionChart = ({ data, isVisible, onClose }: { data: any, isVisi
                       color: '#fff',
                       marginBottom: 1
                     }}>
-                      {item.value} $WINC
+                      {item.isRefund 
+                        ? `${item.refundAmount} $WINC each` 
+                        : `${item.value} $WINC`
+                      }
                     </div>
                     <div style={{ 
                       fontSize: 9, 
