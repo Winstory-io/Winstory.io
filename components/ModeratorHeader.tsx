@@ -3,17 +3,41 @@ import { useWalletAddress } from '../lib/hooks/useWalletConnection';
 
 interface ModeratorHeaderProps {
   activeTab: 'initial' | 'completion';
+  activeSubTab: string;
   onTabChange: (tab: 'initial' | 'completion') => void;
+  onSubTabChange: (subTab: string) => void;
   onIconClick: () => void;
   onBulbClick: () => void;
 }
 
-const ModeratorHeader: React.FC<ModeratorHeaderProps> = ({ activeTab, onTabChange, onIconClick, onBulbClick }) => {
+const ModeratorHeader: React.FC<ModeratorHeaderProps> = ({ 
+  activeTab, 
+  activeSubTab, 
+  onTabChange, 
+  onSubTabChange, 
+  onIconClick, 
+  onBulbClick 
+}) => {
   const walletAddress = useWalletAddress();
   const formatAddress = (address: any) => {
     if (!address || typeof address !== 'string') return '';
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
   };
+
+  const getSubTabs = () => {
+    if (activeTab === 'initial') {
+      return [
+        { key: 'b2c-agencies', label: 'B2C & Agencies' },
+        { key: 'individual-creators', label: 'Individual Creators' }
+      ];
+    } else {
+      return [
+        { key: 'for-b2c', label: 'For B2C' },
+        { key: 'for-individuals', label: 'For Individuals' }
+      ];
+    }
+  };
+
   return (
     <header style={{
       display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1.5rem 1rem 1rem 1rem', background: '#000', color: '#FFD600', borderBottom: '2px solid #FFD600', position: 'relative', zIndex: 10
@@ -90,6 +114,27 @@ const ModeratorHeader: React.FC<ModeratorHeaderProps> = ({ activeTab, onTabChang
           >
             Completion
           </span>
+        </div>
+        
+        {/* Sous-onglets */}
+        <div style={{ marginTop: 16, display: 'flex', justifyContent: 'center', gap: 24 }}>
+          {getSubTabs().map((subTab) => (
+            <span
+              key={subTab.key}
+              style={{
+                fontWeight: 600,
+                fontSize: 16,
+                color: activeSubTab === subTab.key ? '#FFD600' : '#665c2e',
+                borderBottom: activeSubTab === subTab.key ? '2px solid #FFD600' : 'none',
+                cursor: 'pointer',
+                padding: '4px 8px',
+                transition: 'all 0.2s ease'
+              }}
+              onClick={() => onSubTabChange(subTab.key)}
+            >
+              {subTab.label}
+            </span>
+          ))}
         </div>
       </div>
       <span onClick={() => window.location.href = '/welcome'} style={{ fontSize: 40, color: '#FFD600', cursor: 'pointer', userSelect: 'none' }}>&#10005;</span>

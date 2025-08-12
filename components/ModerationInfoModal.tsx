@@ -4,8 +4,8 @@ interface ModerationInfoModalProps {
   info: {
     startingText: string;
     guideline: string;
-    standardRewards: string;
-    premiumRewards: string;
+    standardRewards?: string;
+    premiumRewards?: string;
     completionPrice: string;
     totalCompletions: number;
   };
@@ -23,8 +23,12 @@ const ModerationInfoModal: React.FC<ModerationInfoModalProps> = ({ info, onClose
         <div style={{ fontSize: 16, lineHeight: 1.5 }}>
           <div style={{ marginBottom: 12 }}><b>Starting Text :</b><br />{info.startingText}</div>
           <div style={{ marginBottom: 12 }}><b>Guideline :</b><br />{info.guideline}</div>
-          <div style={{ marginBottom: 12 }}><b>Standard Rewards :</b><br />{info.standardRewards}</div>
-          <div style={{ marginBottom: 12 }}><b>Premium Rewards :</b><br />{info.premiumRewards}</div>
+          {info.standardRewards && (
+            <div style={{ marginBottom: 12 }}><b>Standard Rewards :</b><br />{info.standardRewards}</div>
+          )}
+          {info.premiumRewards && (
+            <div style={{ marginBottom: 12 }}><b>Premium Rewards :</b><br />{info.premiumRewards}</div>
+          )}
           <div style={{ marginBottom: 12 }}><b>Completion Price :</b><br />{info.completionPrice}</div>
           <div style={{ marginBottom: 0 }}><b>Total Completions if Validated :</b><br />{info.totalCompletions}</div>
         </div>

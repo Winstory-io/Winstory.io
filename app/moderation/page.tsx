@@ -1,56 +1,135 @@
 'use client';
 import React, { useState, useRef, useEffect } from 'react';
 import ModeratorHeader from '../../components/ModeratorHeader';
-import ModerationCard from '../../components/ModerationCard';
+import BrandInfo from '../../components/BrandInfo';
+import ModerationBubbles from '../../components/ModerationBubbles';
+import ModerationProgressPanel from '../../components/ModerationProgressPanel';
+import ModerationButtons from '../../components/ModerationButtons';
 import ModerationInfoModal from '../../components/ModerationInfoModal';
+import ModerationTooltip from '../../components/ModerationTooltip';
+import CompletionScoringModal from '../../components/CompletionScoringModal';
 import styles from '../../styles/Moderation.module.css';
-import { walletConnect } from "thirdweb/wallets";
-
-const mockModerationData = {
-  userType: 'b2c',
-  companyName: 'Acme Corp',
-  agencyName: '',
-  walletAddress: '0x1234567890abcdef1234567890abcdef12345678',
-  userName: '@User',
-  title: "La grande aventure de l'innovation",
-  info: {
-    startingText: "Ceci est le texte initial de l'utilisateur dans /yourwinstory.",
-    guideline: "Consignes de l'utilisateur dans /yourwinstory.",
-    standardRewards: "Récompenses standard renseignées ou non.",
-    premiumRewards: "Récompenses premium renseignées ou non.",
-    completionPrice: "100 $WINC",
-    totalCompletions: 10,
-  },
-  videoUrl: 'https://www.w3schools.com/html/mov_bbb.mp4',
-  videoOrientation: 'horizontal',
-  startingText: "Ceci est le texte initial de l'utilisateur dans /yourwinstory.",
-  guideline: "Consignes de l'utilisateur dans /yourwinstory.",
-  standardRewards: "Récompenses standard renseignées ou non.",
-  premiumRewards: "Récompenses premium renseignées ou non.",
-};
-
-const progressMock = {
-  stakers: 15,
-  stakersRequired: 22,
-  stakedAmount: 1240,
-  mintPrice: 1000,
-  validRatio: 67,
-  refuseRatio: 33,
-};
+import { useModeration } from '../../lib/hooks/useModeration';
+import { 
+  getMockDataByType, 
+  getMockProgressData, 
+  MockModerationData, 
+  MockProgressData 
+} from '../../lib/mockModerationData';
 
 const ModerationPage = () => {
   const [activeTab, setActiveTab] = useState<'initial' | 'completion'>('initial');
+  const [activeSubTab, setActiveSubTab] = useState('b2c-agencies');
   const [showInfo, setShowInfo] = useState(false);
   const [showBubble, setShowBubble] = useState<string | null>(null);
-  const [showValidPopup, setShowValidPopup] = useState(false);
-  const [showRefusePopup, setShowRefusePopup] = useState(false);
   const [showBulbPopup, setShowBulbPopup] = useState(false);
+  
+  // States for completion moderation
+  const [showScoringModal, setShowScoringModal] = useState(false);
+  
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoHeight, setVideoHeight] = useState(0);
 
-  // Taille et espacement des bulles
-  const bubbleSize = 100;
-  const bubbleGap = 24;
+  // Use custom hook for moderation data
+  const { stats, completionData, submitCompletionScore, submitModerationDecision } = useModeration();
+
+  // États pour les données dynamiques
+  const [currentModerationData, setCurrentModerationData] = useState<MockModerationData>(
+    getMockDataByType('b2c')
+  );
+  const [currentProgressData, setCurrentProgressData] = useState<MockProgressData>(
+    getMockProgressData()
+  );
+
+  // Déterminer le type d'utilisateur basé sur le sous-onglet actif
+  const getUserType = () => {
+    if (activeTab === 'initial') {
+      return activeSubTab === 'individual-creators' ? 'individual' : 'b2c';
+    } else {
+      return activeSubTab === 'for-individuals' ? 'individual' : 'b2c';
+    }
+  };
+
+  // Mettre à jour les données quand le sous-onglet change
+  useEffect(() => {
+    const userType = getUserType();
+    let newData: MockModerationData;
+    
+    if (activeTab === 'initial') {
+      if (activeSubTab === 'individual-creators') {
+        newData = getMockDataByType('individual');
+      } else if (activeSubTab === 'b2c-agencies') {
+        // Simuler une agence ou B2C selon le contexte
+        newData = Math.random() > 0.5 ? getMockDataByType('agency') : getMockDataByType('b2c');
+      } else {
+        newData = getMockDataByType('b2c');
+      }
+    } else {
+      // Pour les complétions, utiliser le même type que l'onglet initial
+      newData = getMockDataByType(userType);
+    }
+    
+    setCurrentModerationData(newData);
+    
+    // Mettre à jour les données de progression
+    const newProgressData = getMockProgressData();
+    newProgressData.totalVotes = newProgressData.validVotes + newProgressData.refuseVotes;
+    setCurrentProgressData(newProgressData);
+  }, [activeTab, activeSubTab]);
+
+  // Functions for completion moderation
+  const handleCompletionValid = () => {
+    setShowScoringModal(true);
+  };
+
+  const handleCompletionRefuse = async () => {
+    const success = await submitModerationDecision('refuse', 'completion');
+    if (success) {
+      console.log('Completion refused successfully');
+      // Mettre à jour les données de progression
+      const newProgressData = { ...currentProgressData };
+      newProgressData.refuseVotes += 1;
+      newProgressData.totalVotes += 1;
+      setCurrentProgressData(newProgressData);
+    }
+  };
+
+  const handleCompletionScore = async (score: number) => {
+    const success = await submitCompletionScore(score);
+    if (success) {
+      console.log(`Completion scored successfully with ${score}/100`);
+      setShowScoringModal(false);
+      // Mettre à jour les données de progression
+      const newProgressData = { ...currentProgressData };
+      newProgressData.validVotes += 1;
+      newProgressData.totalVotes += 1;
+      setCurrentProgressData(newProgressData);
+    }
+  };
+
+  const handleInitialValid = async () => {
+    const success = await submitModerationDecision('valid', 'initial');
+    if (success) {
+      console.log('Initial story validated successfully');
+      // Mettre à jour les données de progression
+      const newProgressData = { ...currentProgressData };
+      newProgressData.validVotes += 1;
+      newProgressData.totalVotes += 1;
+      setCurrentProgressData(newProgressData);
+    }
+  };
+
+  const handleInitialRefuse = async () => {
+    const success = await submitModerationDecision('refuse', 'initial');
+    if (success) {
+      console.log('Initial story refused successfully');
+      // Mettre à jour les données de progression
+      const newProgressData = { ...currentProgressData };
+      newProgressData.refuseVotes += 1;
+      newProgressData.totalVotes += 1;
+      setCurrentProgressData(newProgressData);
+    }
+  };
 
   useEffect(() => {
     if (videoRef.current) {
@@ -63,174 +142,103 @@ const ModerationPage = () => {
     ? { justifyContent: 'center', minHeight: videoHeight, display: 'flex', flexDirection: 'column' as const }
     : {};
 
+  const currentUserType = getUserType();
+
   return (
     <div className={styles.moderationBg}>
       <ModeratorHeader
         activeTab={activeTab}
+        activeSubTab={activeSubTab}
         onTabChange={setActiveTab}
+        onSubTabChange={setActiveSubTab}
         onIconClick={() => window.location.href = '/moderator/dashboard'}
         onBulbClick={() => setShowBulbPopup(true)}
       />
+      
       <div className={styles.moderationContainer}>
         {/* Colonne bulles à gauche */}
-        <div
-          className={styles.bubbleContainer}
-          style={{
-            gap: bubbleGap,
-            width: bubbleSize,
-          }}
-        >
-          {[
-            { label: 'Premium Reward', onClick: () => setShowBubble('premiumRewards') },
-            { label: 'Standard Reward', onClick: () => setShowBubble('standardRewards') },
-            { label: 'Guideline', onClick: () => setShowBubble('guideline') },
-            { label: 'Starting Story', onClick: () => setShowBubble('startingText') },
-          ].map((bulle, idx) => (
-            <div
-              key={bulle.label}
-              className={styles.cornerBubble}
-              style={{ width: bubbleSize, height: bubbleSize, fontSize: 16 }}
-              onClick={bulle.onClick}
-            >
-              {bulle.label}
-            </div>
-          ))}
-        </div>
+        <ModerationBubbles
+          userType={currentUserType}
+          onBubbleClick={setShowBubble}
+          bubbleSize={100}
+          bubbleGap={24}
+        />
+
         {/* Panneau gauche : vidéo */}
         <div className={styles.moderationPanelLeft}>
+          {/* Informations de la marque/agence */}
+          <BrandInfo
+            companyName={currentModerationData.companyName}
+            agencyName={currentModerationData.agencyName}
+            userType={currentUserType}
+            walletAddress={currentModerationData.walletAddress}
+          />
+          
           <div className={styles.videoSection} style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-            <video ref={videoRef} src={mockModerationData.videoUrl} controls className={styles.campaignVideo} style={{ margin: '0 0' }} />
+            <video ref={videoRef} src={currentModerationData.videoUrl} controls className={styles.campaignVideo} style={{ margin: '0 0' }} />
           </div>
         </div>
-        {/* Panneau droit : barres de progression + boutons, centré verticalement sur la vidéo */}
+
+        {/* Panneau droit : barres de progression + boutons */}
         <div className={styles.moderationPanelRight} style={panelRightStyle}>
-          <div className={styles.progressContainer}>
-            <div className={styles.progressItem}>
-              <div className={styles.progressHeader}>
-                <span>Minimum {progressMock.stakersRequired} active stakers have voted</span>
-                <span>{progressMock.stakers}/{progressMock.stakersRequired}</span>
-              </div>
-              <div className={styles.progressBar}>
-                <div className={styles.progressFill} style={{ width: `${Math.round((progressMock.stakers / progressMock.stakersRequired) * 100)}%`, background: 'var(--primary)' }}></div>
-              </div>
-            </div>
-            <div className={styles.progressItem}>
-              <div className={styles.progressHeader}>
-                <span>Total staked amount exceeds MINT price</span>
-              </div>
-              <div className={styles.progressBar}>
-                <div className={styles.progressFill} style={{ width: '100%', background: 'var(--secondary)' }}></div>
-              </div>
-              <div className={styles.stakingComparison}>
-                <span className={styles.stakedAmount}>{progressMock.stakedAmount} $WINC</span>
-                <span className={styles.mintPrice}>{progressMock.mintPrice} $WINC</span>
-              </div>
-            </div>
-            <div className={styles.progressItem}>
-              <div className={styles.progressHeader}>
-                <span>Vote results</span>
-                <span>2:1 ratio needed</span>
-              </div>
-              <div className={styles.voteResults}>
-                <div className={styles.voteValid} style={{ width: `${progressMock.validRatio}%` }}></div>
-                <div className={styles.voteRefuse} style={{ width: `${progressMock.refuseRatio}%` }}></div>
-              </div>
-            </div>
-          </div>
-          <div className={styles.moderationControls}>
-            <button className={`${styles.moderationButton} ${styles.validButton}`} onClick={() => setShowValidPopup(true)}>Valid</button>
-            <button className={`${styles.moderationButton} ${styles.refuseButton}`} onClick={() => setShowRefusePopup(true)}>Refuse</button>
-          </div>
+          <ModerationProgressPanel
+            stakers={currentProgressData.stakers}
+            stakersRequired={currentProgressData.stakersRequired}
+            stakedAmount={currentProgressData.stakedAmount}
+            mintPrice={currentProgressData.mintPrice}
+            validVotes={currentProgressData.validVotes}
+            refuseVotes={currentProgressData.refuseVotes}
+            totalVotes={currentProgressData.totalVotes}
+          />
+          
+          <ModerationButtons
+            activeTab={activeTab}
+            userType={currentUserType}
+            onValid={activeTab === 'initial' ? handleInitialValid : handleCompletionValid}
+            onRefuse={activeTab === 'initial' ? handleInitialRefuse : handleCompletionRefuse}
+            onValidWithScore={handleCompletionScore}
+          />
         </div>
       </div>
+
       {/* Popups bulles infos */}
       {showBubble && (
         <div className={styles.popupOverlay} onClick={() => setShowBubble(null)}>
           <div className={styles.textPopup} onClick={e => e.stopPropagation()}>
             <div className={styles.popupHeader}>
-              <h2 className={styles.popupTitle}>{showBubble === 'startingText' ? 'Starting Text' : showBubble === 'guideline' ? 'Guideline' : showBubble === 'standardRewards' ? 'Standard Reward' : 'Premium Reward'}</h2>
+              <h2 className={styles.popupTitle}>
+                {showBubble === 'startingText' ? 'Starting Story' : 
+                 showBubble === 'guideline' ? 'Guideline' : 
+                 showBubble === 'standardRewards' ? 'Standard Reward' : 'Premium Reward'}
+              </h2>
               <button className={styles.closePopup} onClick={() => setShowBubble(null)}>&times;</button>
             </div>
             <div className={styles.textPopupContent}>
-              {mockModerationData.info[showBubble]}
+              {currentModerationData.info[showBubble]}
             </div>
           </div>
         </div>
       )}
+
       {/* Popup infos campagne (bulle i) */}
       {showInfo && (
-        <ModerationInfoModal info={mockModerationData.info} onClose={() => setShowInfo(false)} />
+        <ModerationInfoModal info={currentModerationData.info} onClose={() => setShowInfo(false)} />
       )}
-      {/* Popup Valid */}
-      {showValidPopup && (
-        <div className={styles.popupOverlay} onClick={() => setShowValidPopup(false)}>
-          <div className={styles.textPopup} style={{ border: '2px solid #37FF00' }} onClick={e => e.stopPropagation()}>
-            <div className={styles.popupHeader}>
-              <button className={styles.closePopup} onClick={() => setShowValidPopup(false)}>&times;</button>
-            </div>
-            <div className={styles.textPopupContent}>
-              <b style={{ color: '#37FF00' }}>Validate this Initial Story</b>, confirming that it :<br /><br />
-              <ul style={{ color: '#37FF00', fontWeight: 600, fontSize: 16, marginBottom: 16 }}>
-                <li>Respects Winstory's moderation standards</li>
-                <li>(clarity, coherence, creativity, and potential to inspire community completions)</li>
-                <li>Contains an initial story that is understandable and usable as a narrative starting point</li>
-                <li>Does not violate any of the listed refusal rules</li>
-                <li>For company stories: follows the brand's creative structure and purpose</li>
-                <li>For individual stories : proposes an original, engaging and AI-enhanceable narrative seed</li>
-              </ul>
-              <div style={{ marginBottom: 8, color: '#fff', fontWeight: 600 }}>
-                Once validated,<br />this content will be eligible for community completions.<br /><br />
-                Your decision engages a proportional part of your staked WINC.<br />
-                If the majority of stakers vote YES and you also voted YES, you earn a share of the rewards pool.<br />
-                If the final vote is NO and you validated it, you lose proportional part of your stake.
-              </div>
-              <button className={styles.popupValidButton} onClick={() => setShowValidPopup(false)}>Valid</button>
-            </div>
-          </div>
-        </div>
-      )}
-      {/* Popup Refuse */}
-      {showRefusePopup && (
-        <div className={styles.popupOverlay} onClick={() => setShowRefusePopup(false)}>
-          <div className={styles.textPopup} style={{ border: '2px solid #FF0000', padding: '20px 24px', maxWidth: '380px' }} onClick={e => e.stopPropagation()}>
-            <div className={styles.popupHeader}>
-              <button className={styles.closePopup} onClick={() => setShowRefusePopup(false)}>&times;</button>
-            </div>
-            <div className={styles.textPopupContent}>
-              <b style={{ color: '#FF0000' }}>Refuse this Initial Story</b><br />if it falls under any of the following criteria :<br /><br />
-              <ul style={{ color: '#FF0000', fontWeight: 600, fontSize: 14, marginBottom: 12, lineHeight: '1.4' }}>
-                <li>The text or video is incomplete, incoherent, or lacks clear narrative direction</li>
-                <li>It cannot reasonably inspire meaningful community completions</li>
-                <li>It includes hate speech, racism, xenophobia, or apology for harassment and bullying</li>
-                <li>It contains deepfakes that may harm the dignity or identity of a specific (group of) person</li>
-                <li>It presents geopolitical risks</li>
-                <li>It contains explicit sexual content or pornography</li>
-                <li>It has clearly not been enhanced, assisted, or post-produced using generative AI or similar post-prod technologies</li>
-              </ul>
-              <div style={{ marginBottom: 8, color: '#fff', fontWeight: 600, fontSize: 14, lineHeight: '1.4' }}>
-                Refusing content is a strong decision.<br />Make sure it clearly meets at least one of these criteria.<br /><br />
-                Your decision engages a proportional part of your staked WINC.<br />
-                If the majority of stakers vote Refuse, and you also voted Refuse, you win a share of the rewards pool.<br />
-                If the final vote is Valid and you refused it, you lose proportional part of your stake.
-              </div>
-              <button className={styles.popupRefuseButton} onClick={() => setShowRefusePopup(false)}>Refuse</button>
-            </div>
-          </div>
-        </div>
-      )}
-      {/* Popup ampoule */}
-      {showBulbPopup && (
-        <div className={styles.popupOverlay} onClick={() => setShowBulbPopup(false)}>
-          <div className={styles.textPopup} onClick={e => e.stopPropagation()}>
-            <div className={styles.popupHeader}>
-              <button className={styles.closePopup} onClick={() => setShowBulbPopup(false)}>&times;</button>
-            </div>
-            <div className={styles.textPopupContent}>
-              <b>To be configured</b>
-            </div>
-          </div>
-        </div>
-      )}
+
+      {/* Moderation Tooltip */}
+      <ModerationTooltip 
+        isOpen={showBulbPopup} 
+        onClose={() => setShowBulbPopup(false)} 
+      />
+
+      {/* Modal de notation des complétions */}
+      <CompletionScoringModal
+        isOpen={showScoringModal}
+        onClose={() => setShowScoringModal(false)}
+        onConfirm={handleCompletionScore}
+        usedScores={completionData.usedScores}
+        contentType={completionData.contentType}
+      />
     </div>
   );
 };
