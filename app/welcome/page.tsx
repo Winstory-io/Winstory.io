@@ -41,7 +41,7 @@ export default function Home() {
       <div
         style={{
           position: 'absolute',
-          top: 24,
+          top: 32,
           left: 24,
           zIndex: 10,
           display: 'flex',
@@ -64,9 +64,9 @@ export default function Home() {
             src="/logo.svg"
             alt="Logo Winstory"
             style={{
-              width: '10vw',
-              minWidth: 48,
-              maxWidth: 120,
+              width: '15vw',
+              minWidth: 72,
+              maxWidth: 180,
               height: 'auto',
               display: 'block',
             }}
@@ -156,6 +156,67 @@ export default function Home() {
           </span>
           Complete Campaign
         </button>
+        
+        {/* My Win - Positioned separately with green color */}
+        <div style={{ 
+          position: 'fixed', 
+          bottom: '32px', 
+          right: '32px', 
+          zIndex: 100 
+        }}>
+          <button
+            style={{
+              background: '#000',
+              border: '3px solid #00FF00',
+              borderRadius: '50%',
+              width: '120px',
+              height: '120px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              boxShadow: `
+                0 0 20px rgba(0, 255, 0, 0.6),
+                0 0 40px rgba(0, 255, 0, 0.4),
+                0 0 60px rgba(0, 255, 0, 0.2),
+                inset 0 0 20px rgba(0, 255, 0, 0.1)
+              `,
+              transition: 'all 0.3s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'scale(1.05)';
+              e.currentTarget.style.boxShadow = `
+                0 0 25px rgba(0, 255, 0, 0.8),
+                0 0 50px rgba(0, 255, 0, 0.6),
+                0 0 75px rgba(0, 255, 0, 0.4),
+                inset 0 0 25px rgba(0, 255, 0, 0.2)
+              `;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'scale(1)';
+              e.currentTarget.style.boxShadow = `
+                0 0 20px rgba(0, 255, 0, 0.6),
+                0 0 40px rgba(0, 255, 0, 0.4),
+                0 0 60px rgba(0, 255, 0, 0.2),
+                inset 0 0 20px rgba(0, 255, 0, 0.1)
+              `;
+            }}
+            onClick={() => router.push('/mywin')}
+          >
+            <div style={{
+              color: '#00FF00',
+              fontWeight: 900,
+              fontSize: 24,
+              lineHeight: 1,
+              textAlign: 'center',
+              textShadow: '0 0 10px rgba(0, 255, 0, 0.8)'
+            }}>
+              <div>My</div>
+              <div>Win</div>
+            </div>
+          </button>
+        </div>
       </div>
 
       {/* Explorer en bas */}

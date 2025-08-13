@@ -119,6 +119,21 @@ const TooltipPage = () => {
               <li>Inspire, tell, and get noticed</li>
             </ul>
           </div>
+          {/* My Win */}
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: 4 }}>
+              <span style={{ fontSize: 20, marginRight: 8 }} role="img" aria-label="client">👤</span>
+              <h2 style={{ color: '#00FF00', fontSize: 20, fontWeight: 800, marginBottom: 0 }}>My Win</h2>
+            </div>
+            <h3 style={{ color: '#00FF00', fontWeight: 700, marginBottom: 4 }}>Track your actions & rewards</h3>
+            <ul style={{ color: '#fff', marginLeft: 18, fontSize: 15, fontWeight: 500 }}>
+              <li>Monitor your campaign progress and completions</li>
+              <li>Track your earnings in <span style={{ color: '#FFD600' }}>$WINC</span>, NFTs, and rewards</li>
+              <li>View moderation history and staking results</li>
+              <li>Access your personal dashboard and achievements</li>
+              <li>Stay updated on your community impact</li>
+            </ul>
+          </div>
         </div>
       </div>
     </div>
