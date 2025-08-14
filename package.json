@@ -21,7 +21,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "db:seed": "tsx prisma/seed.ts",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:studio": "prisma studio"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.10.0",
@@ -46,6 +50,7 @@
     "@types/react": "^18.3.12",
     "eslint": "^9.29.0",
     "prettier": "^3.6.0",
+    "tsx": "^4.20.4",
     "typescript": "^5.8.3"
   }
 }

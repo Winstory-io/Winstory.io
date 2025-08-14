@@ -13,7 +13,6 @@ interface DashboardStats {
   moderations: number;
   totalWinc: number;
   totalXp: number;
-  lastActivity: string;
 }
 
 export default function MyWinPage() {
@@ -25,23 +24,32 @@ export default function MyWinPage() {
     moderations: 0,
     totalWinc: 0,
     totalXp: 0,
-    lastActivity: 'Never'
   });
   const router = useRouter();
 
   // Utiliser useCallback pour éviter les re-créations de fonction
   const fetchUserStats = useCallback(async () => {
     if (account && account.address) {
-      // TODO: Fetch user stats from blockchain/database
-      // For now, using mock data
+      // TODO: Fetch user stats from blockchain/database based on user's actual behavior
+      // This will be replaced with real API calls to get:
+      // - Number of campaigns created by this user
+      // - Number of contents moderated by this user  
+      // - Number of campaigns completed by this user
+      // - Total $WINC earned from all activities
+      // - Total XP points accumulated
+      
+      // For now, initialize with 0 - will be populated with real data
       setStats({
-        creations: 3,
-        completions: 12,
-        moderations: 8,
-        totalWinc: 1250,
-        totalXp: 450,
-        lastActivity: '2 hours ago'
+        creations: 0,
+        completions: 0,
+        moderations: 0,
+        totalWinc: 0,
+        totalXp: 0,
       });
+      
+      // TODO: Implement real data fetching:
+      // const userStats = await fetchUserStatsFromBlockchain(account.address);
+      // setStats(userStats);
     }
   }, [account]);
 
@@ -57,7 +65,6 @@ export default function MyWinPage() {
         moderations: 0,
         totalWinc: 0,
         totalXp: 0,
-        lastActivity: 'Never'
       });
     }
   }, [account, fetchUserStats]);
@@ -65,15 +72,21 @@ export default function MyWinPage() {
   const handleLoginSuccess = useCallback((data: { email: string, walletAddress: string }) => {
     // L'utilisateur s'est connecté avec succès
     setIsConnected(true);
-    // TODO: Fetch user stats from blockchain/database
+    // TODO: Fetch user stats from blockchain/database based on actual user behavior
+    // This will be replaced with real API calls to get user's actual stats
+    
+    // For now, initialize with 0 - will be populated with real data
     setStats({
-      creations: 3,
-      completions: 12,
-      moderations: 8,
-      totalWinc: 1250,
-      totalXp: 450,
-      lastActivity: '2 hours ago'
+      creations: 0,
+      completions: 0,
+      moderations: 0,
+      totalWinc: 0,
+      totalXp: 0,
     });
+    
+    // TODO: Implement real data fetching:
+    // const userStats = await fetchUserStatsFromBlockchain(data.walletAddress);
+    // setStats(userStats);
   }, []);
 
   if (!isConnected) {
@@ -129,22 +142,14 @@ export default function MyWinPage() {
       position: 'relative'
     }}>
       {/* Header */}
-      <div style={{ textAlign: 'center', marginBottom: 48 }}>
+      <div style={{ textAlign: 'center', marginBottom: 48, marginTop: 32 }}>
         <div style={{ 
           display: 'flex', 
           alignItems: 'center', 
           justifyContent: 'center', 
           gap: 16,
-          marginBottom: 16,
-          marginLeft: '-100px'
+          marginBottom: 1
         }}>
-          <img
-            src="/clienticon.svg"
-            alt="My Win Icon"
-            width="120"
-            height="120"
-            style={{ display: 'block' }}
-          />
           <h1 style={{ 
             fontSize: '48px', 
             fontWeight: 900, 
@@ -154,14 +159,30 @@ export default function MyWinPage() {
             My Win
           </h1>
         </div>
-        <p style={{ 
-          fontSize: '20px', 
-          color: '#00FF00', 
-          fontWeight: 600,
-          margin: 0
+        <div style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center', 
+          gap: 8, // Réduit de 16 à 8 pour rapprocher l'icône et la phrase
+          marginBottom: 0,
+          marginLeft: '-80px' // Décalage augmenté pour centrer parfaitement "Brainpowered by You"
         }}>
-          Powered by You !
-        </p>
+          <img
+            src="/clienticon.svg"
+            alt="My Win Icon"
+            width="96" // Doublé de 48 à 96
+            height="96" // Doublé de 48 à 96
+            style={{ display: 'block' }}
+          />
+          <p style={{ 
+            fontSize: '20px', 
+            color: '#00FF00', 
+            fontWeight: 600,
+            margin: 0
+          }}>
+            Brainpowered by You
+          </p>
+        </div>
       </div>
 
       {/* Dashboard Grid */}
@@ -329,34 +350,37 @@ export default function MyWinPage() {
       </div>
 
       {/* Stats Summary */}
-      <div
-        style={{
-          display: 'flex',
-          gap: 48,
-          marginBottom: 48,
-          flexWrap: 'wrap',
-          justifyContent: 'center',
-        }}
-      >
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 32, fontWeight: 900, color: '#FFD600' }}>
+      <div style={{ 
+        display: 'grid', 
+        gridTemplateColumns: 'repeat(2, 1fr)', 
+        gap: 24, 
+        maxWidth: 600, 
+        margin: '0 auto' 
+      }}>
+        <div style={{
+          background: 'rgba(0, 255, 0, 0.1)',
+          border: '2px solid #00FF00',
+          borderRadius: '16px',
+          padding: '24px',
+          textAlign: 'center'
+        }}>
+          <div style={{ fontSize: '36px', fontWeight: 900, color: '#00FF00', marginBottom: '8px' }}>
             {stats.totalWinc}
           </div>
-          <div style={{ color: '#fff' }}>$WINC Earned</div>
+          <div style={{ color: '#fff', fontSize: '16px' }}>$WINC Earned</div>
         </div>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 32, fontWeight: 900, color: '#FFD600' }}>
+        <div style={{
+          background: 'rgba(0, 255, 0, 0.1)',
+          border: '2px solid #00FF00',
+          borderRadius: '16px',
+          padding: '24px',
+          textAlign: 'center'
+        }}>
+          <div style={{ fontSize: '36px', fontWeight: 900, color: '#00FF00', marginBottom: '8px' }}>
             {stats.totalXp}
           </div>
-          <div style={{ color: '#fff' }}>XP Points</div>
+          <div style={{ color: '#fff', fontSize: '16px' }}>XP Points</div>
         </div>
-      </div>
-
-      {/* Last Activity */}
-      <div style={{ textAlign: 'center', color: '#fff' }}>
-        <p style={{ fontSize: 16 }}>
-          Last activity: <span style={{ color: '#00FF00' }}>{stats.lastActivity}</span>
-        </p>
       </div>
     </div>
   );

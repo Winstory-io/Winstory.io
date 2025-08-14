@@ -53,4 +53,131 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+// Modèles pour la modération des campagnes
+model Campaign {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  status      CampaignStatus @default(PENDING_MODERATION)
+  type        CampaignType
+  creatorType CreatorType
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  creatorInfo    CreatorInfo?
+  content        CampaignContent?
+  rewards        CampaignRewards?
+  metadata       CampaignMetadata?
+  progress       ModerationProgress?
+  moderations    ModerationSession[]
+  
+  @@map("campaigns")
+}
+
+model CreatorInfo {
+  id           String @id @default(cuid())
+  campaignId   String @unique
+  campaign     Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  
+  // Informations du créateur
+  companyName  String?
+  agencyName   String?
+  walletAddress String
+  email        String?
+  
+  @@map("creator_infos")
+}
+
+model CampaignContent {
+  id           String @id @default(cuid())
+  campaignId   String @unique
+  campaign     Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  
+  // Contenu de la campagne
+  videoUrl     String
+  startingStory String
+  guidelines   String?
+  
+  @@map("campaign_contents")
+}
+
+model CampaignRewards {
+  id           String @id @default(cuid())
+  campaignId   String @unique
+  campaign     Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  
+  // Récompenses
+  standardReward String?
+  premiumReward  String?
+  completionPrice String?
+  
+  @@map("campaign_rewards")
+}
+
+model CampaignMetadata {
+  id           String @id @default(cuid())
+  campaignId   String @unique
+  campaign     Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  
+  // Métadonnées
+  totalCompletions Int @default(0)
+  tags            String[] // Array de tags
+  
+  @@map("campaign_metadata")
+}
+
+model ModerationProgress {
+  id           String @id @default(cuid())
+  campaignId   String @unique
+  campaign     Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  
+  // Progression de la modération
+  stakersRequired    Int @default(5)
+  stakers           Int @default(0)
+  stakedAmount      Float @default(0)
+  mintPrice         Float @default(0)
+  validVotes        Int @default(0)
+  refuseVotes       Int @default(0)
+  totalVotes        Int @default(0)
+  averageScore      Float @default(0)
+  completionScores  Int[] // Array de scores utilisés
+  
+  @@map("moderation_progress")
+}
+
+model ModerationSession {
+  id           String @id @default(cuid())
+  campaignId   String
+  campaign     Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  
+  // Session de modération
+  moderatorWallet String
+  isEligible      Boolean @default(true)
+  startedAt       DateTime @default(now())
+  completedAt     DateTime?
+  
+  @@map("moderation_sessions")
+}
+
+// Enums
+enum CampaignStatus {
+  PENDING_MODERATION
+  APPROVED
+  REJECTED
+  COMPLETED
+}
+
+enum CampaignType {
+  INITIAL
+  COMPLETION
+}
+
+enum CreatorType {
+  B2C_AGENCIES
+  INDIVIDUAL_CREATORS
+  FOR_B2C
+  FOR_INDIVIDUALS
 } 

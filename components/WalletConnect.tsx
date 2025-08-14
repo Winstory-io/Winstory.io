@@ -139,7 +139,21 @@ function WalletConnectContent({ isEmailLogin = false, isWalletLogin = false, isB
             return (
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
                     {account && (
-                        <ConnectButton client={client} />
+                        <div style={{ 
+                            background: 'rgba(0, 0, 0, 0.8)', 
+                            border: '2px solid #00FF00', 
+                            borderRadius: '12px', 
+                            padding: '16px', 
+                            marginBottom: '8px',
+                            color: '#fff',
+                            textAlign: 'center'
+                        }}>
+                            <div style={{ fontSize: '14px', color: '#00FF00', marginBottom: '8px' }}>Wallet Connected</div>
+                            <div style={{ fontSize: '16px', fontWeight: '600', marginBottom: '4px' }}>
+                                {account.address.slice(0, 6)}...{account.address.slice(-4)}
+                            </div>
+                            <div style={{ fontSize: '14px', color: '#999' }}>0 ETH</div>
+                        </div>
                     )}
                     {emailConnected && !account && (
                         <div style={{ color: '#fff', marginBottom: 8 }}>Connected with professional email (Account Abstraction)</div>
@@ -147,7 +161,17 @@ function WalletConnectContent({ isEmailLogin = false, isWalletLogin = false, isB
                     {walletConnected && !account && (
                         <div style={{ color: '#fff', marginBottom: 8 }}>Wallet connected</div>
                     )}
-                    <button onClick={handleLogout} style={{ marginTop: 8, padding: '8px 16px', borderRadius: 6, border: 'none', background: '#FFD600', color: '#181818', fontWeight: 600, cursor: 'pointer' }}>
+                    <button onClick={handleLogout} style={{ 
+                        marginTop: 8, 
+                        padding: '12px 24px', 
+                        borderRadius: '8px', 
+                        border: 'none', 
+                        background: '#FFD600', 
+                        color: '#181818', 
+                        fontWeight: '600', 
+                        cursor: 'pointer',
+                        fontSize: '16px'
+                    }}>
                         Disconnect
                     </button>
                 </div>

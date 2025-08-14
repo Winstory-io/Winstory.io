@@ -387,6 +387,57 @@ const ModerationTooltip: React.FC<ModerationTooltipProps> = ({ isOpen, onClose }
             </div>
           </section>
 
+          {/* Campaign Availability Section */}
+          <section style={{ marginBottom: '24px' }}>
+            <h2 style={{
+              color: '#FFD600',
+              fontSize: '22px',
+              fontWeight: 'bold',
+              marginBottom: '16px',
+              borderLeft: '4px solid #FFD600',
+              paddingLeft: '16px'
+            }}>
+              📊 Campaign Availability
+            </h2>
+            
+            <div style={{
+              background: 'rgba(0, 255, 0, 0.1)',
+              border: '1px solid rgba(0, 255, 0, 0.3)',
+              borderRadius: '12px',
+              padding: '20px',
+              marginBottom: '16px'
+            }}>
+              <h3 style={{
+                color: '#00FF00',
+                fontSize: '18px',
+                fontWeight: 'bold',
+                marginBottom: '12px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                💡 Tip:
+              </h3>
+              <p style={{ fontSize: '14px', color: '#fff', margin: 0, lineHeight: '1.6' }}>
+                If no campaigns are available for a specific type, you'll see a message indicating that there are currently no campaigns requiring moderation for that category. The tabs and sub-tabs allow you to navigate between different content types and see their availability in real-time.
+              </p>
+            </div>
+            
+            <div style={{
+              background: 'rgba(255, 215, 0, 0.1)',
+              border: '1px solid rgba(255, 215, 0, 0.3)',
+              borderRadius: '12px',
+              padding: '16px'
+            }}>
+              <h4 style={{ color: '#FFD600', fontSize: '16px', fontWeight: '600', marginBottom: '8px' }}>
+                🔄 Dynamic Content Display
+              </h4>
+              <p style={{ fontSize: '13px', color: '#ccc', margin: 0, lineHeight: '1.5' }}>
+                The main content area automatically updates based on your tab selection. If campaigns are available, you'll see the moderation interface. If none are available, you'll see an informative message about the current status.
+              </p>
+            </div>
+          </section>
+
           {/* Footer */}
           <div style={{
             borderTop: '1px solid rgba(255, 215, 0, 0.3)',

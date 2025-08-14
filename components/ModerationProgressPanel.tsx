@@ -8,6 +8,9 @@ interface ModerationProgressPanelProps {
   validVotes: number;
   refuseVotes: number;
   totalVotes: number;
+  averageScore?: number;
+  campaignType?: 'creation' | 'completion';
+  creatorType?: 'b2c' | 'agency' | 'individual';
   style?: React.CSSProperties;
 }
 
@@ -19,6 +22,9 @@ const ModerationProgressPanel: React.FC<ModerationProgressPanelProps> = ({
   validVotes,
   refuseVotes,
   totalVotes,
+  averageScore,
+  campaignType,
+  creatorType,
   style
 }) => {
   const stakersPercentage = Math.round((stakers / stakersRequired) * 100);
@@ -89,7 +95,7 @@ const ModerationProgressPanel: React.FC<ModerationProgressPanelProps> = ({
             color: '#FFD600',
             textAlign: 'center'
           }}>
-            Total staked amount exceeds MINT price
+            Staking Progress vs MINT Price
           </div>
           <div style={{
             width: '100%',
@@ -114,10 +120,66 @@ const ModerationProgressPanel: React.FC<ModerationProgressPanelProps> = ({
             fontWeight: 600,
             color: '#FFD600'
           }}>
-            <span>{stakedAmount} $WINC</span>
-            <span>{mintPrice} $WINC</span>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+              <span style={{ fontSize: '12px', color: '#999', marginBottom: '2px' }}>Currently Staked</span>
+              <span>{stakedAmount} $WINC</span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+              <span style={{ fontSize: '12px', color: '#999', marginBottom: '2px' }}>MINT Price Target</span>
+              <span>{mintPrice} $WINC</span>
+            </div>
+          </div>
+          <div style={{
+            fontSize: '12px',
+            color: '#999',
+            textAlign: 'center',
+            fontStyle: 'italic'
+          }}>
+            {stakedAmount >= mintPrice ? '✅ MINT price reached!' : `Need ${mintPrice - stakedAmount} more $WINC to reach MINT price`}
           </div>
         </div>
+
+        {/* Score moyen pour les complétions */}
+        {campaignType === 'completion' && averageScore !== undefined && (
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '12px'
+          }}>
+            <div style={{
+              fontSize: '14px',
+              fontWeight: 600,
+              color: '#FFD600',
+              textAlign: 'center'
+            }}>
+              Current Average Score
+            </div>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              fontSize: '24px',
+              fontWeight: 900,
+              color: '#00FF00',
+              background: 'rgba(0, 255, 0, 0.1)',
+              borderRadius: '12px',
+              padding: '16px',
+              border: '2px solid #00FF00'
+            }}>
+              {averageScore}/100
+            </div>
+            <div style={{
+              fontSize: '12px',
+              color: '#999',
+              textAlign: 'center',
+              fontStyle: 'italic'
+            }}>
+              {averageScore >= 80 ? '🌟 Excellent quality!' : 
+               averageScore >= 60 ? '👍 Good quality' : 
+               averageScore >= 40 ? '⚠️ Needs improvement' : '❌ Poor quality'}
+            </div>
+          </div>
+        )}
 
         <div style={{
           display: 'flex',

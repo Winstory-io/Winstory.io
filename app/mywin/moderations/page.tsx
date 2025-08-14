@@ -22,70 +22,19 @@ export default function MyModerationsPage() {
 
   useEffect(() => {
     if (account && account.address) {
-      // TODO: Fetch user moderations from blockchain/database
-      // For now, using mock data
-      setModerations([
-        {
-          id: '1',
-          campaignTitle: 'Product Launch Video',
-          completionTitle: 'Creative Product Showcase',
-          date: '2024-01-20',
-          vote: 'approve' as const,
-          finalResult: 'approved' as const,
-          wincEarned: 25,
-          wincLost: 0,
-          alignment: 100,
-          contentUrl: 'https://example.com/content1'
-        },
-        {
-          id: '2',
-          campaignTitle: 'Brand Awareness Campaign',
-          completionTitle: 'Brand Story Video',
-          date: '2024-01-18',
-          vote: 'approve' as const,
-          finalResult: 'approved' as const,
-          wincEarned: 20,
-          wincLost: 0,
-          alignment: 100,
-          contentUrl: 'https://example.com/content2'
-        },
-        {
-          id: '3',
-          campaignTitle: 'Community Engagement',
-          completionTitle: 'Interactive Community Content',
-          date: '2024-01-16',
-          vote: 'reject' as const,
-          finalResult: 'rejected' as const,
-          wincEarned: 15,
-          wincLost: 0,
-          alignment: 100,
-          contentUrl: 'https://example.com/content3'
-        },
-        {
-          id: '4',
-          campaignTitle: 'Tech Innovation Quest',
-          completionTitle: 'Innovation Story',
-          date: '2024-01-14',
-          vote: 'approve' as const,
-          finalResult: 'rejected' as const,
-          wincEarned: 0,
-          wincLost: 10,
-          alignment: 0,
-          contentUrl: 'https://example.com/content4'
-        },
-        {
-          id: '5',
-          campaignTitle: 'Environmental Awareness',
-          completionTitle: 'Eco-Friendly Message',
-          date: '2024-01-12',
-          vote: 'reject' as const,
-          finalResult: 'approved' as const,
-          wincEarned: 0,
-          wincLost: 15,
-          alignment: 0,
-          contentUrl: 'https://example.com/content5'
-        }
-      ]);
+      // TODO: Fetch user moderations from blockchain/database based on actual user behavior
+      // This will be replaced with real API calls to get:
+      // - Content moderated by this user
+      // - Real voting history and final results
+      // - Actual $WINC earned/lost and alignment rates
+      // - Real content URLs and campaign information
+      
+      // For now, initialize with empty array - will be populated with real data
+      setModerations([]);
+      
+      // TODO: Implement real data fetching:
+      // const userModerations = await fetchUserModerationsFromBlockchain(account.address);
+      // setModerations(userModerations);
     }
   }, [account]);
 
@@ -179,8 +128,8 @@ export default function MyModerationsPage() {
       {/* Total Stats */}
       <div style={{ 
         display: 'grid', 
-        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
-        gap: '24px', 
+        gridTemplateColumns: 'repeat(4, 1fr)', 
+        gap: '16px', 
         maxWidth: '800px', 
         width: '90vw', 
         marginBottom: '48px' 
@@ -189,49 +138,49 @@ export default function MyModerationsPage() {
           background: 'rgba(0, 255, 0, 0.1)', 
           border: '2px solid #00FF00', 
           borderRadius: '12px', 
-          padding: '24px', 
+          padding: '16px', 
           textAlign: 'center' 
         }}>
-          <div style={{ fontSize: '32px', fontWeight: 900, color: '#00FF00' }}>
+          <div style={{ fontSize: '24px', fontWeight: 900, color: '#00FF00', marginBottom: '4px' }}>
             {totalWincEarned}
           </div>
-          <div style={{ color: '#fff', fontSize: '14px' }}>Total WINC Earned</div>
+          <div style={{ color: '#fff', fontSize: '12px' }}>Total WINC Earned</div>
         </div>
         <div style={{ 
           background: 'rgba(255, 107, 107, 0.1)', 
           border: '2px solid #FF6B6B', 
           borderRadius: '12px', 
-          padding: '24px', 
+          padding: '16px', 
           textAlign: 'center' 
         }}>
-          <div style={{ fontSize: '32px', fontWeight: 900, color: '#FF6B6B' }}>
+          <div style={{ fontSize: '24px', fontWeight: 900, color: '#FF6B6B', marginBottom: '4px' }}>
             {totalWincLost}
           </div>
-          <div style={{ color: '#fff', fontSize: '14px' }}>Total WINC Lost</div>
+          <div style={{ color: '#fff', fontSize: '12px' }}>Total WINC Lost</div>
         </div>
         <div style={{ 
           background: 'rgba(255, 214, 0, 0.1)', 
           border: '2px solid #FFD600', 
           borderRadius: '12px', 
-          padding: '24px', 
+          padding: '16px', 
           textAlign: 'center' 
         }}>
-          <div style={{ fontSize: '32px', fontWeight: 900, color: '#FFD600' }}>
+          <div style={{ fontSize: '24px', fontWeight: 900, color: '#FFD600', marginBottom: '4px' }}>
             {totalVotes}
           </div>
-          <div style={{ color: '#fff', fontSize: '14px' }}>Total Votes</div>
+          <div style={{ color: '#fff', fontSize: '12px' }}>Total Votes</div>
         </div>
         <div style={{ 
           background: 'rgba(0, 255, 0, 0.1)', 
           border: '2px solid #00FF00', 
           borderRadius: '12px', 
-          padding: '24px', 
+          padding: '16px', 
           textAlign: 'center' 
         }}>
-          <div style={{ fontSize: '32px', fontWeight: 900, color: '#00FF00' }}>
+          <div style={{ fontSize: '24px', fontWeight: 900, color: '#00FF00', marginBottom: '4px' }}>
             {Math.round(averageAlignment)}%
           </div>
-          <div style={{ color: '#fff', fontSize: '14px' }}>Alignment Rate</div>
+          <div style={{ color: '#fff', fontSize: '12px' }}>Alignment Rate</div>
         </div>
       </div>
 

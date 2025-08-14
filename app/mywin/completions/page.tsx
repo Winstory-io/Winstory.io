@@ -6,14 +6,19 @@ import { useActiveAccount } from 'thirdweb/react';
 interface Completion {
   id: string;
   campaignTitle: string;
-  completionDate: string;
-  score: number;
-  validationStatus: 'validated' | 'pending' | 'rejected';
-  moderatorFeedback: string;
-  wincReward: number;
-  nftReward: string;
-  physicalReward: string;
-  digitalReward: string;
+  completionTitle: string;
+  date: string;
+  status: 'completed' | 'in_progress';
+  score?: number; // Score moyen sur 100 des modérateurs
+  ranking?: number; // Position dans le classement
+  roiEarned?: number; // ROI gagné par le completeur (seulement si top 3 sur campagne individuelle)
+  standardReward?: string; // Récompense standard proposée
+  premiumReward?: string; // Récompense premium proposée si top 3
+  campaignEndDate?: string; // Date de fin de campagne
+  completionTarget?: number; // Nombre de complétions cibles
+  currentCompletions?: number; // Nombre de complétions actuelles
+  usdcRevenue?: number; // Revenus USDC générés par les récompenses payantes
+  campaignCreatorType?: 'individual' | 'company'; // Type de créateur de la campagne
 }
 
 export default function MyCompletionsPage() {
@@ -22,87 +27,37 @@ export default function MyCompletionsPage() {
 
   useEffect(() => {
     if (account && account.address) {
-      // TODO: Fetch user completions from blockchain/database
-      // For now, using mock data
-      setCompletions([
-        {
-          id: '1',
-          campaignTitle: 'Product Launch Video',
-          completionDate: '2024-01-20',
-          score: 9.2,
-          validationStatus: 'validated',
-          moderatorFeedback: 'Excellent work! High quality content that perfectly matches the campaign requirements.',
-          wincReward: 150,
-          nftReward: 'Campaign Contributor NFT #123',
-          physicalReward: 'Limited Edition T-Shirt',
-          digitalReward: 'Premium Access Pass'
-        },
-        {
-          id: '2',
-          campaignTitle: 'Brand Awareness Campaign',
-          completionDate: '2024-01-18',
-          score: 8.7,
-          validationStatus: 'validated',
-          moderatorFeedback: 'Great content with good engagement potential. Minor improvements could enhance impact.',
-          wincReward: 120,
-          nftReward: 'Brand Ambassador NFT #456',
-          physicalReward: 'Branded Hoodie',
-          digitalReward: 'Exclusive Content Library'
-        },
-        {
-          id: '3',
-          campaignTitle: 'Community Engagement',
-          completionDate: '2024-01-22',
-          score: 7.5,
-          validationStatus: 'pending',
-          moderatorFeedback: 'Content submitted successfully. Awaiting moderator review.',
-          wincReward: 0,
-          nftReward: 'Pending',
-          physicalReward: 'Pending',
-          digitalReward: 'Pending'
-        },
-        {
-          id: '4',
-          campaignTitle: 'Tech Innovation Quest',
-          completionDate: '2024-01-16',
-          score: 6.8,
-          validationStatus: 'rejected',
-          moderatorFeedback: 'Content does not meet quality standards. Please review guidelines and resubmit.',
-          wincReward: 0,
-          nftReward: 'None',
-          physicalReward: 'None',
-          digitalReward: 'None'
-        }
-      ]);
+      // TODO: Fetch user completions from blockchain/database based on actual user behavior
+      // This will be replaced with real API calls to get:
+      // - Campaigns completed by this user
+      // - Real completion status, scores, rankings, and rewards
+      // - Actual ROI earned (only for top 3 on individual campaigns)
+      // - Real campaign progress and completion data
+      // - Actual USDC revenue and campaign creator types
+      
+      // For now, initialize with empty array - will be populated with real data
+      setCompletions([]);
+      
+      // TODO: Implement real data fetching:
+      // const userCompletions = await fetchUserCompletionsFromBlockchain(account.address);
+      // setCompletions(userCompletions);
     }
   }, [account]);
 
+  const handleCompletionClick = (completion: Completion) => {
+    // TODO: Navigate to detailed completion view
+    console.log('Viewing completion details:', completion);
+  };
+
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'validated': return '#00FF00';
-      case 'pending': return '#FFD600';
-      case 'rejected': return '#FF6B6B';
-      default: return '#fff';
-    }
+    return status === 'completed' ? '#00FF00' : '#FFD600';
   };
 
   const getStatusText = (status: string) => {
-    switch (status) {
-      case 'validated': return 'Validated';
-      case 'pending': return 'Pending Review';
-      case 'rejected': return 'Rejected';
-      default: return 'Unknown';
-    }
+    return status === 'completed' ? 'Completed' : 'In Progress';
   };
 
-  const getScoreColor = (score: number) => {
-    if (score >= 9) return '#00FF00';
-    if (score >= 7) return '#FFD600';
-    if (score >= 5) return '#FFA500';
-    return '#FF6B6B';
-  };
-
-  // Si pas d'adresse, afficher un message de chargement au lieu de rediriger
+  // Si pas d'adresse, afficher un message de chargement
   if (!account || !account.address) {
     return (
       <div style={{ 
@@ -156,136 +111,221 @@ export default function MyCompletionsPage() {
           fontSize: '18px', 
           color: '#fff' 
         }}>
-          Track your completed tasks and rewards
+          Track your campaign completions and rewards
         </p>
       </div>
 
       {/* Completions List */}
       <div style={{ 
-        display: 'flex', 
-        flexDirection: 'column', 
-        gap: '24px', 
         maxWidth: '1000px', 
-        width: '90vw', 
-        marginBottom: '48px' 
+        width: '90vw' 
       }}>
         {completions.map((completion) => (
           <div
             key={completion.id}
             style={{
-              background: 'rgba(0, 255, 0, 0.05)',
-              border: '2px solid #00FF00',
-              borderRadius: 16,
-              padding: 32,
-              transition: 'all 0.3s ease',
+              background: 'rgba(0, 0, 0, 0.8)',
+              border: `2px solid ${getStatusColor(completion.status)}`,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+              cursor: 'pointer',
+              transition: 'all 0.3s ease'
             }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-4px)';
+              e.currentTarget.style.boxShadow = `0 8px 25px ${getStatusColor(completion.status)}40`;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = 'none';
+            }}
+            onClick={() => handleCompletionClick(completion)}
           >
-            {/* Header Row */}
-            <div style={{ 
-              display: 'flex', 
-              justifyContent: 'space-between', 
-              alignItems: 'flex-start', 
-              marginBottom: '20px' 
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'flex-start',
+              marginBottom: '16px'
             }}>
-              <div style={{ flex: 1 }}>
+              <div>
                 <h3 style={{ 
                   fontSize: '24px', 
-                  fontWeight: 700, 
-                  marginBottom: '8px',
-                  color: '#00FF00'
+                  fontWeight: 800, 
+                  color: '#00FF00',
+                  marginBottom: '8px'
                 }}>
                   {completion.campaignTitle}
                 </h3>
-                <div style={{ 
-                  display: 'flex', 
-                  gap: '16px', 
-                  alignItems: 'center',
-                  fontSize: '14px',
+                <p style={{ 
+                  fontSize: '18px', 
+                  color: '#fff',
+                  marginBottom: '8px'
+                }}>
+                  {completion.completionTitle}
+                </p>
+                <p style={{ 
+                  fontSize: '14px', 
                   color: '#ccc'
                 }}>
-                  <span>Completed: {completion.completionDate}</span>
-                  <span style={{ 
-                    color: getStatusColor(completion.validationStatus),
-                    fontWeight: 600
-                  }}>
-                    {getStatusText(completion.validationStatus)}
-                  </span>
-                  <span style={{ 
-                    color: getScoreColor(completion.score),
-                    fontWeight: 600
-                  }}>
-                    Score: {completion.score}/10
-                  </span>
-                </div>
+                  Completed on {completion.date}
+                </p>
               </div>
-            </div>
-
-            {/* Feedback */}
-            <div style={{ 
-              background: 'rgba(255, 255, 255, 0.05)', 
-              padding: '16px', 
-              borderRadius: '8px',
-              marginBottom: '20px'
-            }}>
-              <p style={{ 
-                color: '#fff', 
+              
+              <div style={{
+                background: getStatusColor(completion.status),
+                color: '#000',
+                padding: '8px 16px',
+                borderRadius: '20px',
                 fontSize: '14px',
-                lineHeight: '1.5',
-                margin: 0
+                fontWeight: 700
               }}>
-                <strong>Moderator Feedback:</strong> {completion.moderatorFeedback}
-              </p>
+                {getStatusText(completion.status)}
+              </div>
             </div>
 
-            {/* Rewards */}
-            <div style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
-              gap: '16px' 
-            }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '20px', fontWeight: 700, color: '#FFD600' }}>
-                  {completion.wincReward}
+            {completion.status === 'completed' ? (
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                gap: '16px',
+                marginTop: '16px'
+              }}>
+                <div style={{
+                  background: 'rgba(0, 255, 0, 0.1)',
+                  border: '1px solid #00FF00',
+                  borderRadius: '8px',
+                  padding: '16px',
+                  textAlign: 'center'
+                }}>
+                  <div style={{ fontSize: '24px', fontWeight: 900, color: '#00FF00' }}>
+                    {completion.score}/100
+                  </div>
+                  <div style={{ fontSize: '12px', color: '#fff' }}>Average Score</div>
                 </div>
-                <div style={{ fontSize: '12px', color: '#ccc' }}>$WINC</div>
-              </div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '16px', fontWeight: 600, color: '#00FF00' }}>
-                  {completion.nftReward}
+                
+                <div style={{
+                  background: 'rgba(255, 214, 0, 0.1)',
+                  border: '1px solid #FFD600',
+                  borderRadius: '8px',
+                  padding: '16px',
+                  textAlign: 'center'
+                }}>
+                  <div style={{ fontSize: '24px', fontWeight: 900, color: '#FFD600' }}>
+                    #{completion.ranking}
+                  </div>
+                  <div style={{ fontSize: '12px', color: '#fff' }}>Ranking</div>
                 </div>
-                <div style={{ fontSize: '12px', color: '#ccc' }}>NFT Reward</div>
+                
+                {completion.roiEarned && completion.campaignCreatorType === 'individual' && completion.ranking <= 3 && (
+                  <div style={{
+                    background: 'rgba(0, 123, 255, 0.1)',
+                    border: '1px solid #007BFF',
+                    borderRadius: '8px',
+                    padding: '16px',
+                    textAlign: 'center'
+                  }}>
+                    <div style={{ fontSize: '24px', fontWeight: 900, color: '#007BFF' }}>
+                      ${completion.roiEarned}
+                    </div>
+                    <div style={{ fontSize: '12px', color: '#fff' }}>ROI Earned</div>
+                  </div>
+                )}
               </div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '16px', fontWeight: 600, color: '#00FF00' }}>
-                  {completion.physicalReward}
+            ) : (
+              <div style={{
+                background: 'rgba(255, 214, 0, 0.1)',
+                border: '1px solid #FFD600',
+                borderRadius: '8px',
+                padding: '16px',
+                marginTop: '16px'
+              }}>
+                <p style={{ 
+                  color: '#FFD600', 
+                  fontSize: '16px', 
+                  fontWeight: 600,
+                  marginBottom: '8px'
+                }}>
+                  Campaign live in progress. Waiting for the end of days/completions
+                </p>
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  fontSize: '14px',
+                  color: '#fff'
+                }}>
+                  <span>End Date: {completion.campaignEndDate}</span>
+                  <span>Progress: {completion.currentCompletions}/{completion.completionTarget}</span>
                 </div>
-                <div style={{ fontSize: '12px', color: '#ccc' }}>Physical Reward</div>
               </div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '16px', fontWeight: 600, color: '#00FF00' }}>
-                  {completion.digitalReward}
+            )}
+
+            {completion.status === 'completed' && completion.usdcRevenue && (
+              <div style={{
+                background: 'rgba(0, 255, 0, 0.1)',
+                border: '1px solid #00FF00',
+                borderRadius: '8px',
+                padding: '16px',
+                marginTop: '16px',
+                textAlign: 'center'
+              }}>
+                <div style={{ fontSize: '20px', fontWeight: 900, color: '#00FF00' }}>
+                  ${completion.usdcRevenue}
                 </div>
-                <div style={{ fontSize: '12px', color: '#ccc' }}>Digital Reward</div>
+                <div style={{ fontSize: '12px', color: '#fff' }}>USDC Revenue from Paid Rewards</div>
               </div>
-            </div>
+            )}
+
+            {completion.status === 'completed' && (
+              <div style={{
+                marginTop: '16px',
+                padding: '16px',
+                background: 'rgba(0, 0, 0, 0.3)',
+                borderRadius: '8px'
+              }}>
+                <h4 style={{ 
+                  color: '#00FF00', 
+                  fontSize: '16px', 
+                  fontWeight: 700,
+                  marginBottom: '8px'
+                }}>
+                  Rewards Offered:
+                </h4>
+                <div style={{
+                  display: 'flex',
+                  gap: '16px',
+                  flexWrap: 'wrap'
+                }}>
+                  {completion.standardReward && (
+                    <span style={{
+                      background: '#00FF00',
+                      color: '#000',
+                      padding: '4px 12px',
+                      borderRadius: '12px',
+                      fontSize: '12px',
+                      fontWeight: 600
+                    }}>
+                      {completion.standardReward}
+                    </span>
+                  )}
+                  {completion.premiumReward && (
+                    <span style={{
+                      background: '#FFD600',
+                      color: '#000',
+                      padding: '4px 12px',
+                      borderRadius: '12px',
+                      fontSize: '12px',
+                      fontWeight: 600
+                    }}>
+                      {completion.premiumReward}
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         ))}
       </div>
-
-      {completions.length === 0 && (
-        <div style={{ 
-          textAlign: 'center', 
-          color: '#fff',
-          marginTop: '48px'
-        }}>
-          <p style={{ fontSize: '18px', marginBottom: '24px' }}>
-            You haven't completed any campaigns yet.
-          </p>
-          <p style={{ fontSize: '16px', color: '#ccc' }}>
-            Complete campaigns to see your progress and rewards here.
-          </p>
-        </div>
-      )}
     </div>
   );
 } 

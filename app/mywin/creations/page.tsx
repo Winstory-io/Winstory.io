@@ -24,46 +24,18 @@ export default function MyCreationsPage() {
 
   useEffect(() => {
     if (account && account.address) {
-      // TODO: Fetch user campaigns from blockchain/database
-      // For now, using mock data
-      setCampaigns([
-        {
-          id: '1',
-          title: 'Product Launch Video',
-          description: 'Create an engaging video for our new product launch',
-          creationDate: '2024-01-15',
-          targetCompletions: 50,
-          currentCompletions: 32,
-          averageScore: 8.7,
-          rewardsDistributed: 450,
-          roi: 125,
-          status: 'active'
-        },
-        {
-          id: '2',
-          title: 'Brand Awareness Campaign',
-          description: 'Develop content to increase brand visibility',
-          creationDate: '2024-01-10',
-          targetCompletions: 30,
-          currentCompletions: 30,
-          averageScore: 9.2,
-          rewardsDistributed: 300,
-          roi: 180,
-          status: 'completed'
-        },
-        {
-          id: '3',
-          title: 'Community Engagement',
-          description: 'Foster community interaction through creative content',
-          creationDate: '2024-01-05',
-          targetCompletions: 40,
-          currentCompletions: 15,
-          averageScore: 7.8,
-          rewardsDistributed: 150,
-          roi: 85,
-          status: 'active'
-        }
-      ]);
+      // TODO: Fetch user campaigns from blockchain/database based on actual user behavior
+      // This will be replaced with real API calls to get:
+      // - Campaigns created by this user
+      // - Real completion progress, scores, rewards, and ROI data
+      // - Actual campaign status and performance metrics
+      
+      // For now, initialize with empty array - will be populated with real data
+      setCampaigns([]);
+      
+      // TODO: Implement real data fetching:
+      // const userCampaigns = await fetchUserCampaignsFromBlockchain(account.address);
+      // setCampaigns(userCampaigns);
     }
   }, [account]);
 

@@ -149,8 +149,14 @@ export default function MyWinLayout({
             />
           </button>
 
-          {/* Navigation Links */}
-          <div style={{ display: 'flex', gap: 16 }}>
+          {/* Navigation Links - Centered */}
+          <div style={{ 
+            display: 'flex', 
+            gap: 16,
+            position: 'absolute',
+            left: '50%',
+            transform: 'translateX(-50%)'
+          }}>
             <button
               onClick={() => router.push('/mywin')}
               style={{
