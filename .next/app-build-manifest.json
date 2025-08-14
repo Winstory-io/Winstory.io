@@ -6,6 +6,11 @@
       "static/chunks/thirdweb.js",
       "static/chunks/app/layout.js"
     ],
+    "/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/page.js"
+    ],
     "/welcome/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
@@ -21,62 +26,6 @@
       "static/chunks/main-app.js",
       "static/chunks/app/api/auth/[...nextauth]/route.js"
     ],
-    "/welcome/tooltip/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/welcome/tooltip/page.js"
-    ],
-    "/mywin/layout": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/thirdweb.js",
-      "static/chunks/app/mywin/layout.js"
-    ],
-    "/mywin/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/thirdweb.js",
-      "static/chunks/app/mywin/page.js"
-    ],
-    "/completion/layout": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/completion/layout.js"
-    ],
-    "/completion/login/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/thirdweb.js",
-      "static/chunks/app/completion/login/page.js"
-    ],
-    "/mywin/creations/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/thirdweb.js",
-      "static/chunks/app/mywin/creations/page.js"
-    ],
-    "/creation/layout": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/creation/layout.js"
-    ],
-    "/creation/youare/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/creation/youare/page.js"
-    ],
-    "/mywin/completions/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/thirdweb.js",
-      "static/chunks/app/mywin/completions/page.js"
-    ],
-    "/mywin/moderations/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/thirdweb.js",
-      "static/chunks/app/mywin/moderations/page.js"
-    ],
     "/moderation/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
@@ -85,8 +34,14 @@
     "/moderation/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
+      "static/chunks/thirdweb.js",
       "static/css/app/moderation/page.css",
       "static/chunks/app/moderation/page.js"
+    ],
+    "/api/moderation/campaigns/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/moderation/campaigns/route.js"
     ]
   }
 }

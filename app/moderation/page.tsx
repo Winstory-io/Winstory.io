@@ -120,9 +120,31 @@ const ModerationPage = () => {
   useEffect(() => {
     if (campaignId && account?.address && !currentSession) {
       console.log('Loading campaign from URL:', campaignId);
-      fetchCampaignById(campaignId);
+      
+      // Vérifier si l'ID existe dans nos données mockées
+      const checkCampaignExists = async () => {
+        try {
+          const { mockCampaigns } = await import('../../lib/mockData');
+          const campaignExists = mockCampaigns.some(c => c.id === campaignId);
+          
+          if (!campaignExists) {
+            console.log('Campaign ID not found in mock data, redirecting to campaign selection');
+            // Rediriger vers la sélection de campagne
+            router.push('/moderation');
+            return;
+          }
+          
+          // Si l'ID existe, charger la campagne
+          await fetchCampaignById(campaignId);
+        } catch (error) {
+          console.error('Error checking campaign existence:', error);
+          router.push('/moderation');
+        }
+      };
+      
+      checkCampaignExists();
     }
-  }, [campaignId, account?.address, currentSession]);
+  }, [campaignId, account?.address, currentSession, fetchCampaignById, router]);
   
   // Fonction pour vérifier s'il y a des campagnes disponibles pour le type actuellement sélectionné
   const hasCampaignsForCurrentSelection = async () => {
@@ -192,17 +214,28 @@ const ModerationPage = () => {
         
         console.log(`Loading campaign for: ${campaignType} - ${creatorType}`);
         
-        // Récupérer les campagnes disponibles pour ce type
-        const response = await fetch(`/api/moderation/campaigns?type=${campaignType}&creatorType=${creatorType}`);
-        const result = await response.json();
-        
-        if (result.success && result.data.length > 0) {
-          // Prendre la première campagne disponible et la charger directement
-          const campaign = result.data[0];
-          console.log('Loading campaign directly:', campaign.title);
-          await fetchCampaignById(campaign.id);
-        } else {
-          console.log('No campaigns available for this type');
+        // TEMPORAIRE: Utiliser les données mockées au lieu de l'API
+        // TODO: Remplacer par les vrais appels API quand la base de données sera configurée
+        try {
+          const { mockCampaigns } = await import('../../lib/mockData');
+          
+          // Filtrer les campagnes selon le type et créateur
+          const availableCampaigns = mockCampaigns.filter(campaign => {
+            if (campaign.type !== campaignType) return false;
+            if (campaign.creatorType !== creatorType) return false;
+            return campaign.status === 'PENDING_MODERATION';
+          });
+          
+          if (availableCampaigns.length > 0) {
+            // Prendre la première campagne disponible et la charger directement
+            const campaign = availableCampaigns[0];
+            console.log('Loading campaign directly from mock data:', campaign.title);
+            await fetchCampaignById(campaign.id);
+          } else {
+            console.log('No campaigns available for this type in mock data');
+          }
+        } catch (error) {
+          console.error('Error loading campaign from mock data:', error);
         }
       } catch (error) {
         console.error('Error loading campaign for new selection:', error);
@@ -601,43 +634,7 @@ const ModerationPage = () => {
             Select the type of content you want to moderate. The system will automatically assign you the highest priority campaign that requires moderation.
           </p>
           
-          {/* Règle des 22 modérateurs */}
-          <div style={{
-            background: 'rgba(255, 215, 0, 0.1)',
-            border: '2px solid #FFD700',
-            borderRadius: '12px',
-            padding: '20px',
-            marginTop: '24px',
-            maxWidth: '600px',
-            textAlign: 'center'
-          }}>
-            <h3 style={{
-              fontSize: '18px',
-              fontWeight: '700',
-              color: '#FFD700',
-              marginBottom: '12px'
-            }}>
-              ⚠️ Important: Minimum 22 Moderators Required
-            </h3>
-            <p style={{
-              fontSize: '14px',
-              color: '#FFD700',
-              margin: '0',
-              lineHeight: '1.5'
-            }}>
-              <strong>Rule:</strong> Any content can only be moderated when there are at least 22 different moderators available. 
-              This ensures fair and diverse moderation across all campaigns.
-            </p>
-            <p style={{
-              fontSize: '12px',
-              color: '#FFD700',
-              margin: '8px 0 0 0',
-              lineHeight: '1.4',
-              opacity: 0.8
-            }}>
-              Only campaigns meeting this requirement will be displayed as available for moderation.
-            </p>
-          </div>
+
         </div>
 
         {/* Moderation Tooltip */}
@@ -877,6 +874,64 @@ const ModerationPage = () => {
             userType={convertPrismaCreatorType(campaign.creatorType)}
             walletAddress={campaign.creatorInfo.walletAddress}
           />
+          
+          {/* Titre dynamique selon le type de campagne */}
+          <div style={{
+            padding: '16px',
+            marginBottom: '16px',
+            background: 'rgba(255, 215, 0, 0.1)',
+            borderRadius: '12px',
+            border: '1px solid rgba(255, 215, 0, 0.3)'
+          }}>
+            <h2 style={{
+              fontSize: '20px',
+              fontWeight: '700',
+              color: '#FFD600',
+              marginBottom: '8px',
+              textAlign: 'center'
+            }}>
+              {campaign.title}
+            </h2>
+            
+            {/* Informations supplémentaires pour les complétions */}
+            {campaign.type === 'COMPLETION' && (
+              <div style={{
+                fontSize: '14px',
+                color: '#fff',
+                textAlign: 'center',
+                lineHeight: '1.4'
+              }}>
+                {campaign.creatorType === 'FOR_B2C' ? (
+                  <div>
+                    <div style={{ color: '#00FF00', fontWeight: '600', marginBottom: '4px' }}>
+                      🏢 Campagne d'entreprise: {campaign.originalCampaign?.companyName || 'Entreprise B2C'}
+                    </div>
+                    <div style={{ color: '#FFD600', fontSize: '12px' }}>
+                      Complété par: {campaign.completerWallet ? 
+                        `${campaign.completerWallet.slice(0, 6)}...${campaign.completerWallet.slice(-4)}` : 
+                        'Créateur individuel'
+                      }
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <div style={{ color: '#00FF00', fontWeight: '600', marginBottom: '4px' }}>
+                      👤 Campagne d'individu: {campaign.originalCreator?.walletAddress ? 
+                        `${campaign.originalCreator.walletAddress.slice(0, 6)}...${campaign.originalCreator.walletAddress.slice(-4)}` : 
+                        'Créateur individuel'
+                      }
+                    </div>
+                    <div style={{ color: '#FFD600', fontSize: '12px' }}>
+                      Complété par: {campaign.completerWallet ? 
+                        `${campaign.completerWallet.slice(0, 6)}...${campaign.completerWallet.slice(-4)}` : 
+                        'Créateur individuel'
+                      }
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
           
           <div className={styles.videoSection} style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
             <video 

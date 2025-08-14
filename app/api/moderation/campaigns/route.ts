@@ -38,24 +38,12 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    // Filtrer les campagnes qui ont au minimum 22 modérateurs différents
+    // Filtrer les campagnes qui ont un progrès et sont en attente de modération
     const eligibleCampaigns = campaigns.filter(campaign => {
-      if (!campaign.progress) return false;
-      
-      // Vérifier le nombre de modérateurs uniques
-      const uniqueModerators = new Set();
-      
-      // Ajouter les modérateurs existants (si des sessions existent)
-      if (campaign.moderations) {
-        campaign.moderations.forEach(session => {
-          if (session.moderatorWallet) {
-            uniqueModerators.add(session.moderatorWallet);
-          }
-        });
-      }
-      
-      // Vérifier si on a au moins 22 modérateurs
-      return uniqueModerators.size >= 22;
+      // Vérifier que la campagne a un progrès et est en attente de modération
+      return campaign.progress !== null && 
+             campaign.progress !== undefined && 
+             campaign.status === 'PENDING_MODERATION';
     });
 
     return NextResponse.json({
@@ -63,8 +51,7 @@ export async function GET(request: NextRequest) {
       data: eligibleCampaigns,
       count: eligibleCampaigns.length,
       totalCampaigns: campaigns.length,
-      eligibleCampaigns: eligibleCampaigns.length,
-      minimumModeratorsRequired: 22
+      eligibleCampaigns: eligibleCampaigns.length
     });
 
   } catch (error) {

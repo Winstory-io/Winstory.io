@@ -44,14 +44,15 @@ export const useModeration = () => {
 
       console.log('Fetching campaign with ID:', campaignId);
 
-      const campaigns = await fetchAvailableCampaigns();
-      console.log('Available campaigns:', campaigns);
-
-      const campaign = campaigns.find(c => c.id === campaignId);
+      // TEMPORAIRE: Utiliser des données mockées pour tester l'interface
+      // TODO: Remplacer par les vraies appels API quand la base de données sera configurée
+      const { mockCampaigns } = await import('../mockData');
+      
+      const campaign = mockCampaigns.find(c => c.id === campaignId);
       console.log('Found campaign:', campaign);
 
       if (campaign) {
-        // Transformer les données Prisma en format ModerationSession
+        // Transformer les données mockées en format ModerationSession
         const session: ModerationSession = {
           id: `session_${campaign.id}`,
           campaignId: campaign.id,
@@ -89,51 +90,16 @@ export const useModeration = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [fetchAvailableCampaigns, account?.address]);
+  }, [account?.address]);
 
   // Fonction pour vérifier la disponibilité des campagnes par type
   const checkCampaignsAvailability = useCallback(async () => {
     try {
-      // Initial Story : modération du contenu créé par des entreprises B2C
-      const initialB2CCampaigns = await fetchAvailableCampaigns('INITIAL', 'B2C_AGENCIES');
+      // TEMPORAIRE: Utiliser des données mockées pour tester l'interface
+      // TODO: Remplacer par les vraies appels API quand la base de données sera configurée
+      const { mockCampaignsAvailability } = await import('../mockData');
       
-      // Initial Story : modération du contenu créé par des individus
-      const initialIndividualCampaigns = await fetchAvailableCampaigns('INITIAL', 'INDIVIDUAL_CREATORS');
-      
-      // Completion : modération de contenus d'individus qui complètent des campagnes d'entreprises B2C
-      const completionForB2CCampaigns = await fetchAvailableCampaigns('COMPLETION', 'FOR_B2C');
-      
-      // Completion : modération de contenus d'individus qui complètent des campagnes d'autres individus
-      const completionForIndividualsCampaigns = await fetchAvailableCampaigns('COMPLETION', 'FOR_INDIVIDUALS');
-
-      // Vérifier que chaque campagne a au minimum 22 modérateurs différents
-      const filterEligibleCampaigns = (campaigns: any[]) => {
-        return campaigns.filter(campaign => {
-          if (!campaign.progress) return false;
-          
-          // Vérifier le nombre de modérateurs uniques
-          const uniqueModerators = new Set();
-          
-          // Ajouter les modérateurs existants (si des sessions existent)
-          if (campaign.moderations) {
-            campaign.moderations.forEach((session: any) => {
-              if (session.moderatorWallet) {
-                uniqueModerators.add(session.moderatorWallet);
-              }
-            });
-          }
-          
-          // Vérifier si on a au moins 22 modérateurs
-          return uniqueModerators.size >= 22;
-        });
-      };
-
-      return {
-        hasInitialB2CCampaigns: filterEligibleCampaigns(initialB2CCampaigns).length > 0,
-        hasInitialIndividualCampaigns: filterEligibleCampaigns(initialIndividualCampaigns).length > 0,
-        hasCompletionB2CCampaigns: filterEligibleCampaigns(completionForB2CCampaigns).length > 0,
-        hasCompletionIndividualCampaigns: filterEligibleCampaigns(completionForIndividualsCampaigns).length > 0
-      };
+      return mockCampaignsAvailability;
     } catch (error) {
       console.error('Error checking campaigns availability:', error);
       return {
@@ -143,7 +109,7 @@ export const useModeration = () => {
         hasCompletionIndividualCampaigns: false
       };
     }
-  }, [fetchAvailableCampaigns]);
+  }, []);
 
   // Fonction pour soumettre une décision de modération
   const submitModerationDecision = useCallback(async (

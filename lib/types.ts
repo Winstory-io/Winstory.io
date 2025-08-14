@@ -143,6 +143,15 @@ export interface ModerationCampaign {
   rewards?: CampaignRewards;
   metadata: CampaignMetadata;
   progress: ModerationProgress;
+  // Propriétés supplémentaires pour les complétions
+  originalCampaign?: {
+    companyName?: string;
+    walletAddress: string;
+  };
+  originalCreator?: {
+    walletAddress: string;
+  };
+  completerWallet?: string;
 }
 
 // Fonctions utilitaires pour le mapping
