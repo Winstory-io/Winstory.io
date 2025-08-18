@@ -20,6 +20,7 @@ const CompletionInfoPopup: React.FC<CompletionInfoPopupProps> = ({
       case 'initialFilm': return 'Initial Film';
       case 'startingText': return 'Starting Text';
       case 'guideline': return 'Guideline';
+      case 'rewards': return 'Rewards';
       case 'standardReward': return 'Standard Reward';
       case 'premiumReward': return 'Premium Reward';
       case 'completingText': return 'Completing Text';
@@ -32,6 +33,7 @@ const CompletionInfoPopup: React.FC<CompletionInfoPopupProps> = ({
       case 'initialFilm': return '🎬';
       case 'startingText': return '📝';
       case 'guideline': return '📋';
+      case 'rewards': return '🎁';
       case 'standardReward': return '🎁';
       case 'premiumReward': return '🏆';
       case 'completingText': return '✍️';

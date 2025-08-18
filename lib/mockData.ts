@@ -1,10 +1,10 @@
 // Données mockées pour tester l'interface de modération
 export const mockCampaigns = [
   {
-    id: '1',
+    id: 'cmebxme5q0000v8t5stv7634v', // ID exact utilisé dans l'URL
     title: 'Nike Running Challenge',
     description: 'Campagne Nike pour promouvoir la course à pied',
-    status: 'PENDING_MODERATION',
+    status: 'APPROVED',
     type: 'INITIAL',
     creatorType: 'B2C_AGENCIES',
     createdAt: new Date(),
@@ -16,13 +16,13 @@ export const mockCampaigns = [
       email: 'marketing@nike.com'
     },
     content: {
-      videoUrl: 'https://example.com/nike-running-challenge.mp4',
-      startingStory: 'Une jeune athlète découvre sa passion pour la course à pied dans les rues de sa ville.',
-      guidelines: 'Le contenu doit être inspirant et respecter les valeurs de Nike.'
+      videoUrl: 'https://www.w3schools.com/html/mov_bbb.mp4',
+      startingStory: 'Une jeune athlète découvre sa passion pour la course à pied dans les rues de sa ville. Elle commence par de petits joggings matinaux et progressivement développe sa technique et son endurance.',
+      guidelines: 'Le contenu doit être inspirant et respecter les valeurs de Nike : dépassement de soi, authenticité, et inclusion. Pas de contenu violent ou offensant.'
     },
     rewards: {
       standardReward: 'Nike Running Shoes (valeur: 150€)',
-      premiumReward: 'Nike Running Shoes + Apple Watch (valeur: 800€)',
+      premiumReward: 'Nike Running Shoes + Apple Watch + Coaching personnalisé (valeur: 800€)',
       completionPrice: '50 WINC'
     },
     metadata: {
@@ -45,7 +45,7 @@ export const mockCampaigns = [
     id: '2',
     title: 'Street Art Revolution',
     description: 'Artiste de rue partageant son processus créatif',
-    status: 'PENDING_MODERATION',
+    status: 'APPROVED',
     type: 'INITIAL',
     creatorType: 'INDIVIDUAL_CREATORS',
     createdAt: new Date(),
@@ -57,9 +57,10 @@ export const mockCampaigns = [
       email: 'streetartist@email.com'
     },
     content: {
-      videoUrl: 'https://example.com/street-art-revolution.mp4',
-      startingStory: 'Un artiste de rue transforme un mur gris en une œuvre d\'art vibrante.',
-      guidelines: 'Le contenu doit être authentique et montrer le processus créatif.'
+      videoUrl: 'https://www.w3schools.com/html/mov_bbb.mp4', // Vidéo d'exemple courte pour test
+      videoOrientation: 'vertical', // Configuration pour test d'ergonomie verticale
+      startingStory: 'Un artiste de rue transforme un mur gris en une œuvre d\'art vibrante qui raconte l\'histoire de son quartier et de sa communauté. Cette vidéo verticale capture l\'essence de l\'art urbain moderne et permet de tester l\'ergonomie de l\'interface.',
+      guidelines: 'Le contenu doit être authentique et montrer le processus créatif. Respecter les espaces publics et les réglementations locales. Format vertical respectant l\'orientation naturelle de la vidéo importée par le créateur.'
     },
     rewards: {
       standardReward: null,
@@ -99,12 +100,12 @@ export const mockCampaigns = [
     },
     content: {
       videoUrl: 'https://example.com/local-business-spotlight.mp4',
-      startingStory: 'Un créateur de contenu met en valeur une entreprise locale.',
-      guidelines: 'Le contenu doit être authentique et promouvoir l\'entreprise locale.'
+      startingStory: 'Un créateur de contenu met en valeur une entreprise locale en créant une vidéo authentique qui montre l\'impact positif de Nike dans la communauté.',
+      guidelines: 'Le contenu doit être authentique et promouvoir l\'entreprise locale tout en respectant les valeurs de la marque Nike.'
     },
     rewards: {
-      standardReward: '50 WINC',
-      premiumReward: '100 WINC + Merchandising',
+      standardReward: '50 WINC + Nike merchandise',
+      premiumReward: '100 WINC + Nike merchandise + Event access',
       completionPrice: '25 WINC'
     },
     metadata: {
@@ -122,11 +123,8 @@ export const mockCampaigns = [
       averageScore: 85,
       completionScores: [90, 85, 80]
     },
-    // Informations supplémentaires pour les complétions
-    originalCampaign: {
-      companyName: 'Nike Inc.',
-      walletAddress: '0x1234567890123456789012345678901234567890'
-    },
+    // Informations supplémentaires pour les complétions FOR_B2C
+    originalCampaignCompanyName: 'Nike Inc.',
     completerWallet: '0xabcdef1234567890abcdef1234567890abcdef12'
   },
   {
@@ -146,12 +144,12 @@ export const mockCampaigns = [
     },
     content: {
       videoUrl: 'https://example.com/community-art-project.mp4',
-      startingStory: 'Un artiste complète le projet d\'un autre artiste de la communauté.',
-      guidelines: 'Le contenu doit respecter la vision originale tout en apportant une touche personnelle.'
+      startingStory: 'Un artiste complète le projet d\'un autre artiste de la communauté en ajoutant sa propre vision créative tout en respectant l\'intention originale.',
+      guidelines: 'Le contenu doit respecter la vision originale tout en apportant une touche personnelle. Favoriser la collaboration et l\'entraide artistique.'
     },
     rewards: {
       standardReward: '30 WINC',
-      premiumReward: '60 WINC',
+      premiumReward: '60 WINC + Art supplies',
       completionPrice: '15 WINC'
     },
     metadata: {
@@ -169,11 +167,179 @@ export const mockCampaigns = [
       averageScore: 72,
       completionScores: [75, 70, 71]
     },
-    // Informations supplémentaires pour les complétions
-    originalCreator: {
-      walletAddress: '0x9876543210987654321098765432109876543210'
-    },
+    // Informations supplémentaires pour les complétions FOR_INDIVIDUALS
+    originalCreatorWallet: '0x9876543210987654321098765432109876543210',
     completerWallet: '0x1111111111111111111111111111111111111111'
+  },
+  {
+    id: '5',
+    title: 'Adidas Sport Innovation',
+    description: 'Campagne Adidas pour l\'innovation sportive',
+    status: 'APPROVED',
+    type: 'INITIAL',
+    creatorType: 'B2C_AGENCIES',
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    creatorInfo: {
+      companyName: 'Adidas AG',
+      agencyName: 'TBWA',
+      walletAddress: '0x2345678901234567890123456789012345678901',
+      email: 'marketing@adidas.com'
+    },
+    content: {
+      videoUrl: 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4',
+      startingStory: 'Découvrez comment Adidas révolutionne le monde du sport avec des technologies innovantes et durables.',
+      guidelines: 'Mettre en avant l\'innovation technologique et l\'engagement environnemental d\'Adidas.'
+    },
+    rewards: {
+      standardReward: 'Adidas Ultraboost (valeur: 180€)',
+      premiumReward: 'Adidas Ultraboost + Tracksuit + Training session (valeur: 500€)',
+      completionPrice: '40 WINC'
+    },
+    metadata: {
+      totalCompletions: 0,
+      tags: ['sport', 'innovation', 'technology', 'sustainability']
+    },
+    progress: {
+      stakersRequired: 5,
+      stakers: 1,
+      stakedAmount: 80.0,
+      mintPrice: 120.0,
+      validVotes: 0,
+      refuseVotes: 0,
+      totalVotes: 0,
+      averageScore: 0,
+      completionScores: []
+    }
+  },
+  {
+    id: '6',
+    title: 'Music Producer Journey',
+    description: 'Producteur de musique partageant son processus créatif',
+    status: 'APPROVED',
+    type: 'INITIAL',
+    creatorType: 'INDIVIDUAL_CREATORS',
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    creatorInfo: {
+      companyName: null,
+      agencyName: null,
+      walletAddress: '0x3456789012345678901234567890123456789012',
+      email: 'musicproducer@email.com'
+    },
+    content: {
+      videoUrl: 'https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-mp4-file.mp4',
+      startingStory: 'Suivez le parcours d\'un producteur de musique indépendant qui crée des beats uniques dans son home studio.',
+      guidelines: 'Le contenu doit être éducatif et montrer le processus de création musicale. Respecter les droits d\'auteur.'
+    },
+    rewards: {
+      standardReward: null,
+      premiumReward: null,
+      completionPrice: null
+    },
+    metadata: {
+      totalCompletions: 0,
+      tags: ['music', 'production', 'creativity', 'education']
+    },
+    progress: {
+      stakersRequired: 5,
+      stakers: 2,
+      stakedAmount: 90.0,
+      mintPrice: 60.0,
+      validVotes: 1,
+      refuseVotes: 0,
+      totalVotes: 1,
+      averageScore: 0,
+      completionScores: []
+    }
+  },
+  {
+    id: '7',
+    title: 'Adidas Campaign Completion - Fitness Journey',
+    description: 'Complétion de campagne Adidas par un fitness enthusiast',
+    status: 'PENDING_MODERATION',
+    type: 'COMPLETION',
+    creatorType: 'FOR_B2C',
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    creatorInfo: {
+      companyName: null,
+      agencyName: null,
+      walletAddress: '0x4567890123456789012345678901234567890123',
+      email: 'fitness@email.com'
+    },
+    content: {
+      videoUrl: 'https://example.com/adidas-fitness-completion.mp4',
+      startingStory: 'Un passionné de fitness montre comment les produits Adidas l\'accompagnent dans sa transformation physique.',
+      guidelines: 'Montrer l\'utilisation authentique des produits Adidas dans un contexte de fitness et bien-être.'
+    },
+    rewards: {
+      standardReward: '45 WINC + Adidas gear',
+      premiumReward: '90 WINC + Adidas gear + Gym membership',
+      completionPrice: '20 WINC'
+    },
+    metadata: {
+      totalCompletions: 0,
+      tags: ['fitness', 'lifestyle', 'transformation']
+    },
+    progress: {
+      stakersRequired: 5,
+      stakers: 3,
+      stakedAmount: 160.0,
+      mintPrice: 70.0,
+      validVotes: 2,
+      refuseVotes: 0,
+      totalVotes: 2,
+      averageScore: 78,
+      completionScores: [80, 76]
+    },
+    // Informations supplémentaires pour les complétions FOR_B2C
+    originalCampaignCompanyName: 'Adidas AG',
+    completerWallet: '0x4567890123456789012345678901234567890123'
+  },
+  {
+    id: '8',
+    title: 'Music Collaboration - Producer Completion',
+    description: 'Complétion de campagne musicale par un autre producteur',
+    status: 'PENDING_MODERATION',
+    type: 'COMPLETION',
+    creatorType: 'FOR_INDIVIDUALS',
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    creatorInfo: {
+      companyName: null,
+      agencyName: null,
+      walletAddress: '0x5678901234567890123456789012345678901234',
+      email: 'collaborator@email.com'
+    },
+    content: {
+      videoUrl: 'https://example.com/music-collaboration.mp4',
+      startingStory: 'Un producteur collabore avec l\'artiste original pour créer un remix unique qui fusionne leurs styles respectifs.',
+      guidelines: 'Respecter le style original tout en apportant une créativité personnelle. Favoriser la collaboration artistique.'
+    },
+    rewards: {
+      standardReward: '25 WINC',
+      premiumReward: '50 WINC + Studio time',
+      completionPrice: '12 WINC'
+    },
+    metadata: {
+      totalCompletions: 0,
+      tags: ['music', 'collaboration', 'remix']
+    },
+    progress: {
+      stakersRequired: 5,
+      stakers: 2,
+      stakedAmount: 95.0,
+      mintPrice: 55.0,
+      validVotes: 1,
+      refuseVotes: 0,
+      totalVotes: 1,
+      averageScore: 88,
+      completionScores: [88]
+    },
+    // Informations supplémentaires pour les complétions FOR_INDIVIDUALS
+    originalCreatorWallet: '0x3456789012345678901234567890123456789012',
+    completerWallet: '0x5678901234567890123456789012345678901234'
   }
 ];
 

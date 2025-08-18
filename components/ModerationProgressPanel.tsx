@@ -2,7 +2,6 @@ import React from 'react';
 
 interface ModerationProgressPanelProps {
   stakers: number;
-  stakersRequired: number;
   stakedAmount: number;
   mintPrice: number;
   validVotes: number;
@@ -12,11 +11,11 @@ interface ModerationProgressPanelProps {
   campaignType?: 'creation' | 'completion';
   creatorType?: 'b2c' | 'agency' | 'individual';
   style?: React.CSSProperties;
+  onClick?: () => void;
 }
 
 const ModerationProgressPanel: React.FC<ModerationProgressPanelProps> = ({
   stakers,
-  stakersRequired,
   stakedAmount,
   mintPrice,
   validVotes,
@@ -25,7 +24,8 @@ const ModerationProgressPanel: React.FC<ModerationProgressPanelProps> = ({
   averageScore,
   campaignType,
   creatorType,
-  style
+  style,
+  onClick
 }) => {
   // Calculs pour les 3 conditions de validation
   const condition1Met = totalVotes >= 22; // 22 modérateurs minimum ont voté
@@ -66,59 +66,79 @@ const ModerationProgressPanel: React.FC<ModerationProgressPanelProps> = ({
 
   return (
     <div style={style}>
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '24px',
-        padding: '24px',
-        background: 'rgba(0, 0, 0, 0.8)',
-        borderRadius: '16px',
-        border: '1px solid rgba(255, 215, 0, 0.3)',
-        backdropFilter: 'blur(10px)',
-        minWidth: '320px'
-      }}>
+      <div 
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '16px', // Augmenté de 12px à 16px pour plus d'espace
+          padding: '18px', // Augmenté de 16px à 18px
+          background: 'rgba(0, 0, 0, 0.8)',
+          borderRadius: '16px',
+          border: '1px solid rgba(255, 215, 0, 0.3)',
+          backdropFilter: 'blur(10px)',
+          minWidth: '340px', // Augmenté de 320px à 340px
+          maxHeight: '55vh', // Augmenté de 45vh à 55vh pour plus d'espace
+          overflow: 'hidden',
+          cursor: onClick ? 'pointer' : 'default',
+          transition: 'all 0.2s ease'
+        }}
+        onClick={onClick}
+        onMouseEnter={(e) => {
+          if (onClick) {
+            e.currentTarget.style.transform = 'translateY(-2px)';
+            e.currentTarget.style.boxShadow = '0 8px 25px rgba(255, 215, 0, 0.2)';
+            e.currentTarget.style.borderColor = 'rgba(255, 215, 0, 0.5)';
+          }
+        }}
+        onMouseLeave={(e) => {
+          if (onClick) {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = 'none';
+            e.currentTarget.style.borderColor = 'rgba(255, 215, 0, 0.3)';
+          }
+        }}
+      >
         
         {/* Condition 1: 22 modérateurs minimum ont voté */}
         <div style={{
           display: 'flex',
           flexDirection: 'column',
-          gap: '12px'
+          gap: '8px' // Augmenté de 6px à 8px
         }}>
           <div style={{
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            fontSize: '14px',
+            fontSize: '14px', // Augmenté de 13px à 14px
             fontWeight: 600,
             color: condition1Met ? '#00FF00' : '#FFD600'
           }}>
-            <span>22 modérateurs minimum ont voté</span>
+            <span>Minimum 22 moderators voted</span>
             <span style={{ color: condition1Met ? '#00FF00' : '#FFD600' }}>
               {totalVotes}/22
             </span>
           </div>
           <div style={{
             width: '100%',
-            height: '8px',
+            height: '6px', // Augmenté de 4px à 6px
             background: 'rgba(255, 215, 0, 0.2)',
-            borderRadius: '4px',
+            borderRadius: '3px', // Augmenté de 2px à 3px
             overflow: 'hidden'
           }}>
             <div style={{
-              width: `${Math.min((totalVotes / 22) * 100, 100)}%`,
+              width: `${Math.min(100, (totalVotes / 22) * 100)}%`,
               height: '100%',
               background: condition1Met ? '#00FF00' : '#FFD600',
-              borderRadius: '4px',
-              transition: 'width 0.5s ease'
+              borderRadius: '3px', // Augmenté de 2px à 3px
+              transition: 'width 0.3s ease'
             }}></div>
           </div>
           <div style={{
-            fontSize: '12px',
-            color: condition1Met ? '#00FF00' : '#999',
-            textAlign: 'center',
-            fontStyle: 'italic'
+            fontSize: '11px', // Augmenté de 10px à 11px
+            color: '#999',
+            textAlign: 'center'
           }}>
-            {condition1Met ? '✅ Condition 1 atteinte!' : `${22 - totalVotes} votes restants`}
+            {totalVotes}/22 - {22 - totalVotes} votes remaining
           </div>
         </div>
 
@@ -126,10 +146,10 @@ const ModerationProgressPanel: React.FC<ModerationProgressPanelProps> = ({
         <div style={{
           display: 'flex',
           flexDirection: 'column',
-          gap: '12px'
+          gap: '8px' // Augmenté de 6px à 8px
         }}>
           <div style={{
-            fontSize: '14px',
+            fontSize: '13px', // Augmenté de 12px à 13px
             fontWeight: 600,
             color: condition2Met ? '#00FF00' : '#FFD600',
             textAlign: 'center'
@@ -138,212 +158,215 @@ const ModerationProgressPanel: React.FC<ModerationProgressPanelProps> = ({
           </div>
           <div style={{
             width: '100%',
-            height: '8px',
-            background: 'rgba(255, 215, 0, 0.2)',
-            borderRadius: '4px',
-            overflow: 'hidden'
+            height: '6px', // Augmenté de 4px à 6px
+            background: 'rgba(0, 255, 0, 0.2)',
+            borderRadius: '3px', // Augmenté de 2px à 3px
+            overflow: 'hidden',
+            position: 'relative'
           }}>
             <div style={{
-              width: `${Math.min((stakedAmount / mintPrice) * 100, 100)}%`,
+              width: `${Math.min(100, (stakedAmount / mintPrice) * 100)}%`,
               height: '100%',
               background: condition2Met ? '#00FF00' : '#FFD600',
-              borderRadius: '4px',
-              transition: 'width 0.5s ease'
+              borderRadius: '3px', // Augmenté de 2px à 3px
+              transition: 'width 0.3s ease'
             }}></div>
           </div>
           <div style={{
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            fontSize: '14px',
-            fontWeight: 600,
-            color: '#FFD600'
+            fontSize: '11px', // Augmenté de 10px à 11px
+            color: '#999'
           }}>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-              <span style={{ fontSize: '12px', color: '#999', marginBottom: '2px' }}>Currently Staked</span>
-              <span>{stakedAmount} $WINC</span>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-              <span style={{ fontSize: '12px', color: '#999', marginBottom: '2px' }}>MINT Price Target</span>
-              <span>{mintPrice} $WINC</span>
-            </div>
+            <span>Currently Staked: {stakedAmount} $WINC</span>
+            <span>MINT Price: {mintPrice} $WINC</span>
           </div>
           <div style={{
-            fontSize: '12px',
+            fontSize: '11px', // Augmenté de 10px à 11px
             color: condition2Met ? '#00FF00' : '#999',
             textAlign: 'center',
             fontStyle: 'italic'
           }}>
-            {condition2Met ? '✅ Condition 2 atteinte!' : `Need ${mintPrice - stakedAmount} more $WINC`}
+            {condition2Met ? '✅ Condition 2 met!' : 'Staking insufficient'}
           </div>
         </div>
 
-        {/* Condition 3: 2:1 ratio minimum Valid/Refuse */}
+        {/* Condition 3 et Score - Layout horizontal pour économiser la hauteur */}
         <div style={{
           display: 'flex',
-          flexDirection: 'column',
-          gap: '12px'
+          gap: '16px', // Augmenté de 12px à 16px
+          alignItems: 'flex-start'
         }}>
+          {/* Condition 3: 2:1 ratio minimum Valid/Refuse */}
           <div style={{
-            fontSize: '14px',
-            fontWeight: 600,
-            color: condition3Met ? '#00FF00' : '#FFD600',
-            textAlign: 'center'
-          }}>
-            2:1 ratio minimum Valid/Refuse
-          </div>
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            fontSize: '14px',
-            fontWeight: 600,
-            color: '#FFD600'
-          }}>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <span style={{ fontSize: '12px', color: '#999', marginBottom: '2px' }}>Valid Votes</span>
-              <span style={{ color: '#00FF00' }}>{validVotes}</span>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <span style={{ fontSize: '12px', color: '#999', marginBottom: '2px' }}>Refuse Votes</span>
-              <span style={{ color: '#FF0000' }}>{refuseVotes}</span>
-            </div>
-          </div>
-          <div style={{
-            fontSize: '12px',
-            color: condition3Met ? '#00FF00' : '#999',
-            textAlign: 'center',
-            fontStyle: 'italic'
-          }}>
-            {condition3Met ? '✅ Condition 3 atteinte!' : 'Ratio 2:1 non atteint'}
-          </div>
-        </div>
-
-        {/* Score moyen pour les complétions avec couleur dynamique */}
-        {campaignType === 'completion' && averageScore !== undefined && (
-          <div style={{
+            flex: '1',
             display: 'flex',
             flexDirection: 'column',
-            gap: '12px'
+            gap: '8px' // Augmenté de 6px à 8px
           }}>
             <div style={{
-              fontSize: '14px',
+              fontSize: '12px', // Augmenté de 11px à 12px
               fontWeight: 600,
               color: '#FFD600',
               textAlign: 'center'
             }}>
-              Current Average Score
+              2:1 ratio minimum Valid/Refuse
             </div>
             <div style={{
-              position: 'relative',
               display: 'flex',
-              justifyContent: 'center',
+              justifyContent: 'space-between',
               alignItems: 'center',
-              fontSize: '24px',
-              fontWeight: '900',
-              color: getScoreColor(averageScore),
-              background: getScoreBackgroundColor(averageScore),
-              borderRadius: '12px',
-              padding: '16px',
-              border: `2px solid ${getScoreBorderColor(averageScore)}`,
-              minWidth: '120px',
-              minHeight: '60px'
+              gap: '10px' // Augmenté de 8px à 10px
             }}>
-              {/* Barre de remplissage proportionnelle au score */}
-              <div style={{
-                position: 'absolute',
-                left: '0',
-                top: '0',
-                bottom: '0',
-                width: `${getScoreFillPercentage(averageScore)}%`,
-                background: getScoreColor(averageScore),
-                borderRadius: '10px',
-                opacity: 0.3,
-                zIndex: 1
-              }}></div>
-              {/* Score au-dessus de la barre */}
-              <span style={{ position: 'relative', zIndex: 2 }}>
-                {averageScore}/100
-              </span>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <span style={{ fontSize: '10px', color: '#999', marginBottom: '2px' }}>Valid</span>
+                <span style={{ color: '#00FF00', fontSize: '16px', fontWeight: 'bold' }}>{validVotes}</span>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <span style={{ fontSize: '10px', color: '#999', marginBottom: '2px' }}>Refuse</span>
+                <span style={{ color: '#FF0000', fontSize: '16px', fontWeight: 'bold' }}>{refuseVotes}</span>
+              </div>
             </div>
             <div style={{
-              fontSize: '12px',
-              color: getScoreColor(averageScore),
+              fontSize: '10px', // Augmenté de 9px à 10px
+              color: condition3Met ? '#00FF00' : '#999',
               textAlign: 'center',
               fontStyle: 'italic'
             }}>
-              {averageScore >= 80 ? '🌟 Excellent quality!' : 
-               averageScore >= 60 ? '👍 Good quality' : 
-               averageScore >= 40 ? '⚠️ Needs improvement' : '❌ Poor quality'}
+              {condition3Met ? '✅ Condition 3 met!' : 'Ratio 2:1 not met'}
             </div>
           </div>
-        )}
 
-        {/* Résumé des conditions */}
+          {/* Score moyen pour les complétions - À côté de la condition 3 */}
+          {campaignType === 'completion' && averageScore !== undefined && (
+            <div style={{
+              flex: '1',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '8px', // Augmenté de 6px à 8px
+              alignItems: 'center'
+            }}>
+              <div style={{
+                fontSize: '12px', // Augmenté de 11px à 12px
+                fontWeight: 600,
+                color: '#FFD600',
+                textAlign: 'center'
+              }}>
+                Current Average Score
+              </div>
+              <div style={{
+                position: 'relative',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                fontSize: '18px', // Augmenté de 16px à 18px
+                fontWeight: '900',
+                color: getScoreColor(averageScore),
+                background: getScoreBackgroundColor(averageScore),
+                borderRadius: '8px', // Augmenté de 6px à 8px
+                padding: '10px', // Augmenté de 8px à 10px
+                border: `2px solid ${getScoreBorderColor(averageScore)}`,
+                minWidth: '80px', // Augmenté de 70px à 80px
+                minHeight: '40px' // Augmenté de 35px à 40px
+              }}>
+                {/* Barre de remplissage proportionnelle au score */}
+                <div style={{
+                  position: 'absolute',
+                  left: '0',
+                  top: '0',
+                  bottom: '0',
+                  width: `${getScoreFillPercentage(averageScore)}%`,
+                  background: getScoreColor(averageScore),
+                  borderRadius: '6px', // Augmenté de 4px à 6px
+                  opacity: 0.3,
+                  zIndex: 1
+                }}></div>
+                {/* Score au-dessus de la barre */}
+                <span style={{ position: 'relative', zIndex: 2 }}>
+                  {averageScore}/100
+                </span>
+              </div>
+              <div style={{
+                fontSize: '10px', // Augmenté de 9px à 10px
+                color: getScoreColor(averageScore),
+                textAlign: 'center',
+                fontStyle: 'italic'
+              }}>
+                {averageScore >= 80 ? '🌟 Excellent!' : 
+                 averageScore >= 60 ? '👍 Good' : 
+                 averageScore >= 40 ? '⚠️ Needs work' : '❌ Poor'}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Résumé des conditions - Plus lisible */}
         <div style={{
-          padding: '16px',
+          padding: '10px', // Augmenté de 8px à 10px
           background: 'rgba(255, 215, 0, 0.1)',
-          borderRadius: '12px',
+          borderRadius: '8px', // Augmenté de 6px à 8px
           border: '1px solid rgba(255, 215, 0, 0.3)'
         }}>
           <div style={{
-            fontSize: '14px',
+            fontSize: '13px', // Augmenté de 12px à 13px
             fontWeight: '700',
             color: '#FFD600',
             textAlign: 'center',
-            marginBottom: '12px'
+            marginBottom: '8px' // Augmenté de 6px à 8px
           }}>
             Validation Status
           </div>
           <div style={{
             display: 'flex',
-            flexDirection: 'column',
-            gap: '8px'
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            gap: '10px' // Augmenté de 8px à 10px
           }}>
             <div style={{
               display: 'flex',
-              justifyContent: 'space-between',
               alignItems: 'center',
-              fontSize: '12px',
+              gap: '5px', // Augmenté de 4px à 5px
+              fontSize: '11px', // Augmenté de 10px à 11px
               color: condition1Met ? '#00FF00' : '#999'
             }}>
-              <span>22 modérateurs votés</span>
+              <span>22 moderators</span>
               <span>{condition1Met ? '✅' : '❌'}</span>
             </div>
             <div style={{
               display: 'flex',
-              justifyContent: 'space-between',
               alignItems: 'center',
-              fontSize: '12px',
+              gap: '5px', // Augmenté de 4px à 5px
+              fontSize: '11px', // Augmenté de 10px à 11px
               color: condition2Met ? '#00FF00' : '#999'
             }}>
-              <span>$WINC staked &gt; MINT price</span>
+              <span>$WINC staked</span>
               <span>{condition2Met ? '✅' : '❌'}</span>
             </div>
             <div style={{
               display: 'flex',
-              justifyContent: 'space-between',
               alignItems: 'center',
-              fontSize: '12px',
+              gap: '5px', // Augmenté de 4px à 5px
+              fontSize: '11px', // Augmenté de 10px à 11px
               color: condition3Met ? '#00FF00' : '#999'
             }}>
-              <span>2:1 ratio atteint</span>
+              <span>2:1 ratio</span>
               <span>{condition3Met ? '✅' : '❌'}</span>
             </div>
           </div>
           {condition1Met && condition2Met && condition3Met && (
             <div style={{
-              fontSize: '14px',
+              fontSize: '12px', // Augmenté de 11px à 12px
               fontWeight: '700',
               color: '#00FF00',
               textAlign: 'center',
-              marginTop: '12px',
-              padding: '8px',
+              marginTop: '8px', // Augmenté de 6px à 8px
+              padding: '6px', // Augmenté de 4px à 6px
               background: 'rgba(0, 255, 0, 0.1)',
-              borderRadius: '8px',
+              borderRadius: '6px', // Augmenté de 4px à 6px
               border: '1px solid #00FF00'
             }}>
-              🎉 Toutes les conditions sont remplies !
+              🎉 All conditions met!
             </div>
           )}
         </div>

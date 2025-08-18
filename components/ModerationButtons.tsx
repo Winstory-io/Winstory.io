@@ -17,6 +17,11 @@ const ModerationButtons: React.FC<ModerationButtonsProps> = ({
 }) => {
   const [showValidPopup, setShowValidPopup] = useState(false);
   const [showRefusePopup, setShowRefusePopup] = useState(false);
+  const [showScoringPopup, setShowScoringPopup] = useState(false);
+  const [currentScore, setCurrentScore] = useState(50);
+
+  // Scores déjà utilisés (en production, cela viendrait de la base de données)
+  const [usedScores] = useState<number[]>([25, 75, 88]); // Exemple de scores déjà utilisés
 
   const getValidPopupContent = () => {
     if (activeTab === 'initial') {
@@ -84,6 +89,52 @@ const ModerationButtons: React.FC<ModerationButtonsProps> = ({
     }
   };
 
+  const getScoreDescription = (score: number) => {
+    if (score < 30) return 'Poor quality content';
+    if (score < 50) return 'Below average content';
+    if (score < 70) return 'Average quality content';
+    if (score < 90) return 'Good quality content';
+    return 'Excellent quality content';
+  };
+
+  const getScoreColor = (score: number) => {
+    if (score < 30) return '#ff4444';
+    if (score < 50) return '#ff8800';
+    if (score < 70) return '#ffcc00';
+    if (score < 90) return '#88cc00';
+    return '#00ff88';
+  };
+
+  const isScoreUsed = (score: number) => usedScores.includes(score);
+
+  const handleValidClick = () => {
+    if (activeTab === 'completion') {
+      // Pour les completions, ouvrir d'abord le popup de validation, puis le scoring
+      setShowValidPopup(true);
+    } else {
+      // Pour les initials, ouvrir directement le popup de validation
+      setShowValidPopup(true);
+    }
+  };
+
+  const handleValidConfirm = () => {
+    setShowValidPopup(false);
+    if (activeTab === 'completion') {
+      // Ouvrir le popup de notation après validation
+      setShowScoringPopup(true);
+    } else {
+      // Pour les initials, valider directement
+      onValid();
+    }
+  };
+
+  const handleScoreConfirm = () => {
+    if (!isScoreUsed(currentScore) && onValidWithScore) {
+      onValidWithScore(currentScore);
+      setShowScoringPopup(false);
+    }
+  };
+
   const validContent = getValidPopupContent();
   const refuseContent = getRefusePopupContent();
 
@@ -91,24 +142,27 @@ const ModerationButtons: React.FC<ModerationButtonsProps> = ({
     <>
       <div style={{
         display: 'flex',
-        flexDirection: 'column',
+        flexDirection: 'row',
         gap: '16px',
-        marginTop: '24px'
+        marginTop: '8px', // Réduit de 24px à 8px pour rapprocher du panneau
+        justifyContent: 'center'
       }}>
         <button
           style={{
-            padding: '16px 32px',
-            fontSize: '18px',
+            padding: '14px 24px', // Légèrement réduit pour un meilleur fit côte à côte
+            fontSize: '16px',
             fontWeight: 700,
-            borderRadius: '12px',
+            borderRadius: '10px',
             border: 'none',
             cursor: 'pointer',
             background: 'linear-gradient(135deg, #37FF00 0%, #2eea8b 100%)',
             color: '#000',
             transition: 'all 0.3s ease',
-            boxShadow: '0 4px 20px rgba(55, 255, 0, 0.3)'
+            boxShadow: '0 4px 20px rgba(55, 255, 0, 0.3)',
+            minWidth: '120px',
+            flex: '1'
           }}
-          onClick={() => setShowValidPopup(true)}
+          onClick={handleValidClick}
           onMouseEnter={(e) => {
             e.currentTarget.style.transform = 'translateY(-2px)';
             e.currentTarget.style.boxShadow = '0 6px 25px rgba(55, 255, 0, 0.4)';
@@ -123,16 +177,18 @@ const ModerationButtons: React.FC<ModerationButtonsProps> = ({
         
         <button
           style={{
-            padding: '16px 32px',
-            fontSize: '18px',
+            padding: '14px 24px',
+            fontSize: '16px',
             fontWeight: 700,
-            borderRadius: '12px',
+            borderRadius: '10px',
             border: 'none',
             cursor: 'pointer',
             background: 'linear-gradient(135deg, #FF0000 0%, #ff4444 100%)',
             color: '#fff',
             transition: 'all 0.3s ease',
-            boxShadow: '0 4px 20px rgba(255, 0, 0, 0.3)'
+            boxShadow: '0 4px 20px rgba(255, 0, 0, 0.3)',
+            minWidth: '120px',
+            flex: '1'
           }}
           onClick={() => setShowRefusePopup(true)}
           onMouseEnter={(e) => {
@@ -241,13 +297,165 @@ const ModerationButtons: React.FC<ModerationButtonsProps> = ({
                 cursor: 'pointer',
                 transition: 'all 0.3s ease'
               }}
-              onClick={() => {
-                setShowValidPopup(false);
-                onValid();
-              }}
+              onClick={handleValidConfirm}
             >
               {activeTab === 'initial' ? 'Valid' : 'Valid & Score'}
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Popup Scoring (pour les completions) */}
+      {showScoringPopup && (
+        <div 
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0, 0, 0, 0.8)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1001,
+            padding: '20px'
+          }}
+          onClick={() => setShowScoringPopup(false)}
+        >
+          <div 
+            style={{
+              background: 'rgba(0, 0, 0, 0.95)',
+              border: '2px solid #FFD600',
+              borderRadius: '16px',
+              padding: '32px',
+              maxWidth: '450px',
+              position: 'relative'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              style={{
+                position: 'absolute',
+                top: '16px',
+                right: '16px',
+                background: 'none',
+                border: 'none',
+                color: '#FFD600',
+                fontSize: '24px',
+                cursor: 'pointer',
+                fontWeight: 'bold'
+              }}
+              onClick={() => setShowScoringPopup(false)}
+            >
+              ×
+            </button>
+            
+            <h2 style={{ color: '#FFD600', marginBottom: '16px', fontSize: '20px', fontWeight: 'bold' }}>
+              Score this completion
+            </h2>
+            
+            <p style={{ color: '#fff', marginBottom: '20px', fontSize: '14px' }}>
+              Move the slider to assign a score from 0 to 100 based on the overall quality of this completion
+            </p>
+            
+            {/* Slider Container */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                marginBottom: '8px',
+                fontSize: '12px',
+                color: '#999'
+              }}>
+                <span>0</span>
+                <span>100</span>
+              </div>
+              
+              <div style={{ position: 'relative', marginBottom: '16px' }}>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={currentScore}
+                  onChange={(e) => setCurrentScore(parseInt(e.target.value))}
+                  style={{
+                    width: '100%',
+                    height: '8px',
+                    borderRadius: '4px',
+                    background: '#333',
+                    outline: 'none',
+                    appearance: 'none'
+                  }}
+                />
+                
+                {/* Marqueurs pour les scores déjà utilisés */}
+                {usedScores.map((score, index) => (
+                  <div
+                    key={index}
+                    style={{
+                      position: 'absolute',
+                      top: '-4px',
+                      left: `${score}%`,
+                      width: '4px',
+                      height: '16px',
+                      background: '#FF0000',
+                      borderRadius: '2px',
+                      transform: 'translateX(-50%)'
+                    }}
+                  />
+                ))}
+              </div>
+              
+              <div style={{ 
+                textAlign: 'center',
+                fontSize: '24px',
+                fontWeight: 'bold',
+                color: getScoreColor(currentScore),
+                marginBottom: '8px'
+              }}>
+                {currentScore}
+              </div>
+              
+              <div style={{ 
+                textAlign: 'center',
+                fontSize: '14px',
+                color: isScoreUsed(currentScore) ? '#FF0000' : '#fff',
+                marginBottom: '16px'
+              }}>
+                {isScoreUsed(currentScore) ? '⚠️ This score has already been used' : getScoreDescription(currentScore)}
+              </div>
+            </div>
+            
+            <button
+              style={{
+                width: '100%',
+                padding: '16px',
+                fontSize: '16px',
+                fontWeight: 'bold',
+                borderRadius: '8px',
+                border: 'none',
+                background: isScoreUsed(currentScore) ? '#666' : '#FFD600',
+                color: isScoreUsed(currentScore) ? '#999' : '#000',
+                cursor: isScoreUsed(currentScore) ? 'not-allowed' : 'pointer',
+                transition: 'all 0.3s ease',
+                opacity: isScoreUsed(currentScore) ? 0.5 : 1
+              }}
+              onClick={handleScoreConfirm}
+              disabled={isScoreUsed(currentScore)}
+            >
+              Score {currentScore}/100
+            </button>
+            
+            <p style={{ 
+              color: '#999', 
+              fontSize: '12px', 
+              textAlign: 'center', 
+              marginTop: '12px',
+              margin: 0
+            }}>
+              Each score can only be used once per campaign. Unavailable scores are marked in red.
+            </p>
           </div>
         </div>
       )}

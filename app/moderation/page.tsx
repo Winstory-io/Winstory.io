@@ -1,16 +1,19 @@
 'use client';
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useActiveAccount } from 'thirdweb/react';
 import WalletConnect from '../../components/WalletConnect';
 import ModeratorHeader, { CloseButton } from '../../components/ModeratorHeader';
-import BrandInfo from '../../components/BrandInfo';
 import ModerationBubbles from '../../components/ModerationBubbles';
 import ModerationProgressPanel from '../../components/ModerationProgressPanel';
+import ModerationTooltip from '../../components/ModerationTooltip';
 import ModerationButtons from '../../components/ModerationButtons';
 import ModerationInfoModal from '../../components/ModerationInfoModal';
-import ModerationTooltip from '../../components/ModerationTooltip';
 import CompletionScoringModal from '../../components/CompletionScoringModal';
+import CompletionRateModal from '../../components/CompletionRateModal';
+import RewardsModal from '../../components/RewardsModal';
+import InfoModal from '../../components/InfoModal';
+import ModerationStatsModal from '../../components/ModerationStatsModal';
 import styles from '../../styles/Moderation.module.css';
 import { useModeration } from '../../lib/hooks/useModeration';
 import { ModerationCampaign, getUICreatorType, getUICampaignType } from '../../lib/types';
@@ -32,14 +35,55 @@ const ModerationPage = () => {
   const [showBubble, setShowBubble] = useState<string | null>(null);
   const [showBulbPopup, setShowBulbPopup] = useState(false);
   const [showScoringModal, setShowScoringModal] = useState(false);
+  const [showRewardsModal, setShowRewardsModal] = useState(false);
+  const [showStatsModal, setShowStatsModal] = useState(false);
+  const [showInfoModal, setShowInfoModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    icon: string;
+    content: string;
+    videoUrl?: string;
+  }>({
+    isOpen: false,
+    title: '',
+    icon: '',
+    content: '',
+    videoUrl: undefined
+  });
+  const [isLoadingCampaign, setIsLoadingCampaign] = useState(false);
   
-  // État pour stocker la disponibilité des campagnes
-  const [campaignsAvailability, setCampaignsAvailability] = useState<{
-    hasInitialB2CCampaigns: boolean;
-    hasInitialIndividualCampaigns: boolean;
-    hasCompletionB2CCampaigns: boolean;
-    hasCompletionIndividualCampaigns: boolean;
-  } | null>(null);
+  // Fonction pour gérer les clics sur les bulles
+  const handleBubbleClick = (bubbleType: string) => {
+    if (bubbleType === 'rewards') {
+      setShowRewardsModal(true);
+    } else if (bubbleType === 'startingText') {
+      setShowInfoModal({
+        isOpen: true,
+        title: 'Starting Story',
+        icon: '📝',
+        content: currentSession?.campaign.content.startingStory || '',
+        videoUrl: undefined
+      });
+    } else if (bubbleType === 'guideline') {
+      setShowInfoModal({
+        isOpen: true,
+        title: 'Guideline',
+        icon: '📋',
+        content: currentSession?.campaign.content.guidelines || '',
+        videoUrl: undefined
+      });
+    } else if (bubbleType === 'initialVideo') {
+      setShowInfoModal({
+        isOpen: true,
+        title: 'Initial Video',
+        icon: '🎬',
+        content: '',
+        videoUrl: currentSession?.campaign.content.videoUrl
+      });
+    } else {
+      setShowBubble(bubbleType);
+    }
+  };
   
   // Fonction pour convertir les clés de sous-type en labels lisibles
   const getSubTypeLabel = (subType: string) => {
@@ -55,16 +99,6 @@ const ModerationPage = () => {
   const activeSubTypeLabel = getSubTypeLabel(activeSubTab);
   
   // Fonctions de conversion des types Prisma vers types familiers
-  const convertPrismaCreatorType = (prismaType: string): 'b2c' | 'agency' | 'individual' => {
-    if (prismaType === 'B2C_AGENCIES' || prismaType === 'FOR_B2C') {
-      return 'b2c';
-    } else if (prismaType === 'INDIVIDUAL_CREATORS' || prismaType === 'FOR_INDIVIDUALS') {
-      return 'individual';
-    } else {
-      return 'individual';
-    }
-  };
-
   const convertPrismaCampaignType = (prismaType: string): 'creation' | 'completion' => {
     if (prismaType === 'INITIAL') {
       return 'creation';
@@ -74,9 +108,26 @@ const ModerationPage = () => {
       return 'creation';
     }
   };
+
+  // Fonction de mapping pour convertir les types de campagne
+  const mapCampaignType = (uiType: string): 'creation' | 'completion' => {
+    return uiType === 'initial' ? 'creation' : 'completion';
+  };
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoHeight, setVideoHeight] = useState(0);
+  const [detectedOrientation, setDetectedOrientation] = useState<'horizontal' | 'vertical' | null>(null);
+
+  // Fonction pour détecter l'orientation réelle de la vidéo
+  const handleVideoLoadedMetadata = () => {
+    if (videoRef.current) {
+      const video = videoRef.current;
+      const aspectRatio = video.videoWidth / video.videoHeight;
+      const orientation = aspectRatio > 1 ? 'horizontal' : 'vertical';
+      setDetectedOrientation(orientation);
+      console.log(`Vidéo détectée: ${video.videoWidth}x${video.videoHeight} - Orientation: ${orientation}`);
+    }
+  };
 
   // Utiliser le hook de modération dynamique
   const { 
@@ -88,91 +139,11 @@ const ModerationPage = () => {
     submitCompletionScore,
     checkCampaignsAvailability,
     fetchCampaignById,
-    refreshData 
+    fetchAvailableCampaigns,
+    loadCampaignForCriteria,
+    refreshData,
+    setCurrentSession
   } = useModeration();
-  
-  // Charger la disponibilité des campagnes au montage - SIMPLIFIÉ
-  useEffect(() => {
-    console.log('useEffect triggered - account:', account?.address);
-    // Temporairement désactivé pour éviter la boucle
-    // if (account?.address) {
-    //   loadCampaignsAvailability();
-    // }
-  }, [account?.address]);
-
-  // Charger la disponibilité des campagnes quand l'utilisateur est connecté
-  useEffect(() => {
-    const loadAvailability = async () => {
-      if (account?.address) {
-        try {
-          const availability = await checkCampaignsAvailability();
-          setCampaignsAvailability(availability);
-        } catch (error) {
-          console.error('Error loading campaigns availability:', error);
-        }
-      }
-    };
-    
-    loadAvailability();
-  }, [account?.address]);
-
-  // Charger la campagne quand campaignId est présent dans l'URL
-  useEffect(() => {
-    if (campaignId && account?.address && !currentSession) {
-      console.log('Loading campaign from URL:', campaignId);
-      
-      // Vérifier si l'ID existe dans nos données mockées
-      const checkCampaignExists = async () => {
-        try {
-          const { mockCampaigns } = await import('../../lib/mockData');
-          const campaignExists = mockCampaigns.some(c => c.id === campaignId);
-          
-          if (!campaignExists) {
-            console.log('Campaign ID not found in mock data, redirecting to campaign selection');
-            // Rediriger vers la sélection de campagne
-            router.push('/moderation');
-            return;
-          }
-          
-          // Si l'ID existe, charger la campagne
-          await fetchCampaignById(campaignId);
-        } catch (error) {
-          console.error('Error checking campaign existence:', error);
-          router.push('/moderation');
-        }
-      };
-      
-      checkCampaignExists();
-    }
-  }, [campaignId, account?.address, currentSession, fetchCampaignById, router]);
-  
-  // Fonction pour vérifier s'il y a des campagnes disponibles pour le type actuellement sélectionné
-  const hasCampaignsForCurrentSelection = async () => {
-    try {
-      // Récupérer la disponibilité des campagnes depuis le hook
-      const availability = await checkCampaignsAvailability();
-      
-      // Logique métier : chaque onglet affiche le contenu approprié
-      if (activeTab === 'initial' && activeSubTab === 'b2c-agencies') {
-        // Initial Story > B2C & Agencies : modération de contenu créé par des entreprises B2C
-        return availability.hasInitialB2CCampaigns;
-      } else if (activeTab === 'initial' && activeSubTab === 'individual-creators') {
-        // Initial Story > Individual Creators : modération de contenu créé par des individus
-        return availability.hasInitialIndividualCampaigns;
-      } else if (activeTab === 'completion' && activeSubTab === 'for-b2c') {
-        // Completion > For B2C : modération de contenus d'individus qui complètent des campagnes d'entreprises B2C
-        return availability.hasCompletionB2CCampaigns;
-      } else if (activeTab === 'completion' && activeSubTab === 'for-individuals') {
-        // Completion > For Individuals : modération de contenus d'individus qui complètent des campagnes d'autres individus
-        return availability.hasCompletionIndividualCampaigns;
-      }
-      
-      return false;
-    } catch (error) {
-      console.error('Error checking campaigns availability:', error);
-      return false;
-    }
-  };
   
   // Mettre à jour les onglets quand les paramètres d'URL changent
   useEffect(() => {
@@ -186,659 +157,610 @@ const ModerationPage = () => {
     }
   }, [campaignType, campaignSubType]);
 
-  // Vider la session actuelle et charger la nouvelle campagne quand on change d'onglets ou sous-onglets
+  // Charger la campagne quand campaignId est présent dans l'URL
   useEffect(() => {
-    const loadCampaignForNewSelection = async () => {
-      if (!account?.address) return;
+    if (campaignId && account?.address && !currentSession) {
+      console.log('Loading campaign from URL:', campaignId);
+      setIsLoadingCampaign(true);
       
-      try {
-        // Déterminer le type de campagne et créateur selon la sélection actuelle
-        let campaignType = 'INITIAL';
-        let creatorType = 'B2C_AGENCIES';
-        
-        if (activeTab === 'initial') {
-          campaignType = 'INITIAL';
-          if (activeSubTab === 'b2c-agencies') {
-            creatorType = 'B2C_AGENCIES';
-          } else if (activeSubTab === 'individual-creators') {
-            creatorType = 'INDIVIDUAL_CREATORS';
-          }
-        } else if (activeTab === 'completion') {
-          campaignType = 'COMPLETION';
-          if (activeSubTab === 'for-b2c') {
-            creatorType = 'FOR_B2C';
-          } else if (activeSubTab === 'for-individuals') {
-            creatorType = 'FOR_INDIVIDUALS';
-          }
-        }
-        
-        console.log(`Loading campaign for: ${campaignType} - ${creatorType}`);
-        
-        // TEMPORAIRE: Utiliser les données mockées au lieu de l'API
-        // TODO: Remplacer par les vrais appels API quand la base de données sera configurée
-        try {
-          const { mockCampaigns } = await import('../../lib/mockData');
-          
-          // Filtrer les campagnes selon le type et créateur
-          const availableCampaigns = mockCampaigns.filter(campaign => {
-            if (campaign.type !== campaignType) return false;
-            if (campaign.creatorType !== creatorType) return false;
-            return campaign.status === 'PENDING_MODERATION';
-          });
-          
-          if (availableCampaigns.length > 0) {
-            // Prendre la première campagne disponible et la charger directement
-            const campaign = availableCampaigns[0];
-            console.log('Loading campaign directly from mock data:', campaign.title);
-            await fetchCampaignById(campaign.id);
-          } else {
-            console.log('No campaigns available for this type in mock data');
-          }
-        } catch (error) {
-          console.error('Error loading campaign from mock data:', error);
-        }
-      } catch (error) {
-        console.error('Error loading campaign for new selection:', error);
-      }
-    };
+      // Laisser le hook useModeration gérer le chargement
+      fetchCampaignById(campaignId).finally(() => {
+        setIsLoadingCampaign(false);
+      });
+    }
+  }, [campaignId, account?.address, currentSession, fetchCampaignById]);
+
+  // Fonction pour charger automatiquement la première campagne disponible
+  const loadFirstAvailableCampaign = async () => {
+    if (!account?.address) return;
     
-    // Charger la campagne pour la nouvelle sélection
-    loadCampaignForNewSelection();
-  }, [activeTab, activeSubTab, account?.address]);
-
-  // Vérifier l'éligibilité de l'utilisateur et charger la campagne prioritaire
-  useEffect(() => {
-    if (!campaignId) {
-      // Pas de campagne spécifique, on reste sur la page pour afficher la sélection
-      return;
+    try {
+      setIsLoadingCampaign(true);
+      console.log('Loading first available campaign for:', activeTab, activeSubTab);
+      
+      // Utiliser la nouvelle fonction du hook
+      const session = await loadCampaignForCriteria(activeTab, activeSubTab);
+      
+      if (session) {
+        console.log('Loaded campaign:', session.campaign.title);
+        // Rediriger vers cette campagne
+        router.push(`/moderation?campaignId=${session.campaign.id}&type=${activeTab}&subtype=${activeSubTab}`);
+      } else {
+        console.log('No campaigns available for current selection');
+        // Réinitialiser la session actuelle si aucune campagne n'est disponible
+        setCurrentSession(null);
+      }
+    } catch (error) {
+      console.error('Error loading first available campaign:', error);
+      setCurrentSession(null);
+    } finally {
+      setIsLoadingCampaign(false);
     }
+  };
 
-    if (currentSession && !currentSession.isEligible) {
-      // L'utilisateur n'est pas éligible pour cette campagne
-      router.push('/moderation/unauthorized');
-      return;
+  // Gestionnaires d'événements pour les onglets
+  const handleTabChange = async (newTab: 'initial' | 'completion') => {
+    setActiveTab(newTab);
+    console.log('Tab changed to:', newTab);
+    
+    // Réinitialiser le sous-onglet selon le nouvel onglet
+    const newSubTab = newTab === 'initial' ? 'b2c-agencies' : 'for-b2c';
+    setActiveSubTab(newSubTab);
+    
+    // Réinitialiser la session actuelle
+    setCurrentSession(null);
+    
+    // Charger immédiatement la première campagne disponible pour ce type
+    try {
+      setIsLoadingCampaign(true);
+      const session = await loadCampaignForCriteria(newTab, newSubTab);
+      
+      if (session) {
+        console.log('Loaded campaign for new tab:', session.campaign.title);
+        // Mettre à jour l'URL sans redirection
+        window.history.replaceState({}, '', `/moderation?campaignId=${session.campaign.id}&type=${newTab}&subtype=${newSubTab}`);
+      } else {
+        console.log('No campaigns available for:', newTab, newSubTab);
+        // Mettre à jour l'URL sans campaignId
+        window.history.replaceState({}, '', `/moderation?type=${newTab}&subtype=${newSubTab}`);
+      }
+    } catch (error) {
+      console.error('Error loading campaign for new tab:', error);
+    } finally {
+      setIsLoadingCampaign(false);
     }
-  }, [campaignId, currentSession, router, account?.address]);
+  };
 
-  // Gestion des événements de modération
-  const handleCompletionValid = () => {
-    setShowScoringModal(true);
+  const handleSubTabChange = async (newSubTab: string) => {
+    setActiveSubTab(newSubTab);
+    console.log('Sub tab changed to:', newSubTab);
+    
+    // Réinitialiser la session actuelle
+    setCurrentSession(null);
+    
+    // Charger immédiatement la première campagne disponible pour ce sous-type
+    try {
+      setIsLoadingCampaign(true);
+      const session = await loadCampaignForCriteria(activeTab, newSubTab);
+      
+      if (session) {
+        console.log('Loaded campaign for new sub tab:', session.campaign.title);
+        // Mettre à jour l'URL sans redirection
+        window.history.replaceState({}, '', `/moderation?campaignId=${session.campaign.id}&type=${activeTab}&subtype=${newSubTab}`);
+      } else {
+        console.log('No campaigns available for:', activeTab, newSubTab);
+        // Mettre à jour l'URL sans campaignId
+        window.history.replaceState({}, '', `/moderation?type=${activeTab}&subtype=${newSubTab}`);
+      }
+    } catch (error) {
+      console.error('Error loading campaign for new sub tab:', error);
+    } finally {
+      setIsLoadingCampaign(false);
+    }
+  };
+
+  // Gestionnaires pour les actions de modération
+  const handleInitialValid = async () => {
+    if (!currentSession) return;
+    
+    try {
+      const success = await submitModerationDecision('valid', 'creation');
+      if (success) {
+        console.log('Initial story validated successfully');
+        // Recharger les données ou rediriger
+        router.push('/moderation');
+      }
+    } catch (error) {
+      console.error('Error validating initial story:', error);
+    }
+  };
+
+  const handleCompletionValid = async () => {
+    if (!currentSession) return;
+    
+    try {
+      const success = await submitModerationDecision('valid', 'completion');
+      if (success) {
+        console.log('Completion validated successfully');
+        // Recharger les données ou rediriger
+        router.push('/moderation');
+      }
+    } catch (error) {
+      console.error('Error validating completion:', error);
+    }
   };
 
   const handleCompletionRefuse = async () => {
-    if (currentSession) {
+    if (!currentSession) return;
+    
+    try {
       const success = await submitModerationDecision('refuse', 'completion');
       if (success) {
         console.log('Completion refused successfully');
-        refreshData();
+        // Recharger les données ou rediriger
+        router.push('/moderation');
       }
+    } catch (error) {
+      console.error('Error refusing completion:', error);
     }
   };
 
   const handleCompletionScore = async (score: number) => {
-    if (currentSession) {
+    if (!currentSession) return;
+    
+    try {
       const success = await submitCompletionScore(score);
       if (success) {
-        console.log(`Completion scored successfully with ${score}/100`);
+        console.log('Completion score submitted successfully:', score);
         setShowScoringModal(false);
-        refreshData();
+        // Recharger les données ou rediriger
+        router.push('/moderation');
       }
+    } catch (error) {
+      console.error('Error submitting completion score:', error);
     }
   };
 
-  const handleInitialValid = async () => {
-    if (currentSession) {
-      const success = await submitModerationDecision('valid', 'creation');
-      if (success) {
-        console.log('Initial story validated successfully');
-        refreshData();
-      }
-    }
-  };
+  // Calculer le style du panneau droit
+  const panelRightStyle = {
+    justifyContent: 'flex-start',
+    minHeight: 420,
+    maxHeight: '60vh',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0' // Réduire l'espacement entre les éléments
+  } as React.CSSProperties;
 
-  const handleInitialRefuse = async () => {
-    if (currentSession) {
-      const success = await submitModerationDecision('refuse', 'creation');
-      if (success) {
-        console.log('Initial story refused successfully');
-        refreshData();
-      }
-    }
-  };
+  // Debug: Afficher l'état actuel
+  console.log('DEBUG: Current state', { 
+    campaignId, 
+    isLoading, 
+    error, 
+    currentSession, 
+    account: !!account?.address 
+  });
 
-  // Ajuster la hauteur de la vidéo
-  useEffect(() => {
-    if (videoRef.current) {
-      setVideoHeight(videoRef.current.clientHeight);
-    }
-  }, [currentSession?.campaign.content.videoUrl]);
-
-  // Calcul pour aligner le panneau de droite verticalement avec la vidéo
-  const panelRightStyle = videoHeight
-    ? { justifyContent: 'center', minHeight: videoHeight, display: 'flex', flexDirection: 'column' as const }
-    : {};
-
-  // Affichage de chargement - seulement si on a un campaignId et qu'on charge
-  if (campaignId && isLoading) {
+  // VÉRIFIER L'AUTHENTIFICATION EN PREMIER
+  if (!account?.address) {
     return (
       <div className={styles.moderationBg}>
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
-          alignItems: 'center', 
-          minHeight: '100vh',
-          color: '#00FF00',
-          fontSize: '24px'
-        }}>
-          Loading moderation data...
-        </div>
-      </div>
-    );
-  }
-
-  // Affichage d'erreur - seulement si on a un campaignId et qu'il y a une erreur
-  if (campaignId && error) {
-    return (
-      <div className={styles.moderationBg}>
-        <div style={{ 
-          display: 'flex', 
-          flexDirection: 'column',
-          justifyContent: 'center', 
-          alignItems: 'center', 
-          minHeight: '100vh',
-          color: '#FF6B6B',
-          fontSize: '24px',
-          textAlign: 'center',
-          padding: '24px'
-        }}>
-          <div>Error loading moderation data:</div>
-          <div style={{ fontSize: '18px', marginTop: '16px' }}>{error}</div>
-          <button 
-            onClick={refreshData}
-            style={{
-              marginTop: '24px',
-              padding: '12px 24px',
-              background: '#00FF00',
-              color: '#000',
-              border: 'none',
-              borderRadius: '8px',
-              fontSize: '16px',
-              cursor: 'pointer'
-            }}
-          >
-            Retry
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // Pas de session ET pas de campaignId - afficher l'authentification
-  if (!currentSession && !campaignId && !account?.address) {
-    return (
-      <div className={styles.moderationBg}>
-        {/* Croix rouge fixe en haut à droite */}
-        <CloseButton />
-
-        <div style={{
-          display: 'flex', 
-          flexDirection: 'column',
-          justifyContent: 'center', 
-          alignItems: 'center', 
-          minHeight: '100vh',
-          color: '#00FF00',
-          textAlign: 'center',
-          padding: '24px'
-        }}>
-          <h1 style={{ 
-            fontSize: '32px', 
-            marginBottom: '24px' 
-          }}>
-            Please authenticate to access moderation
-          </h1>
-          <WalletConnect
-            isBothLogin={true}
-            onLoginSuccess={() => {
-              // L'authentification réussie déclenchera le chargement des données
-              console.log('Authentication successful');
-              // Une fois connecté, on reste sur la page pour afficher la sélection
-              // car currentSession sera null mais account sera défini
-            }}
-          />
-        </div>
-      </div>
-    );
-  }
-
-  // Utilisateur connecté mais pas de campagne spécifique - afficher la sélection
-  if (!campaignId && account?.address) {
-    return (
-      <div className={styles.moderationBg}>
-        {/* Croix rouge fixe en haut à droite */}
-        <CloseButton />
-
-        <ModeratorHeader
-          activeTab={activeTab}
-          activeSubTab={activeSubTab}
-          onTabChange={setActiveTab}
-          onSubTabChange={setActiveSubTab}
-          onIconClick={() => router.push('/welcome')}
-          onBulbClick={() => setShowBulbPopup(true)}
-        />
-        
         <div style={{
           display: 'flex',
           flexDirection: 'column',
-          justifyContent: 'center',
           alignItems: 'center',
-          minHeight: 'calc(100vh - 200px)',
-          color: '#FFD600',
-          textAlign: 'center',
-          padding: '24px'
+          justifyContent: 'center',
+          minHeight: '100vh',
+          padding: '2rem'
         }}>
-          <h1 style={{ 
-            fontSize: '48px', 
-            fontWeight: '900',
-            marginBottom: '48px',
-            color: '#FFD600'
+          <h1 style={{
+            color: '#FFD600',
+            fontSize: '2.5rem',
+            fontWeight: '700',
+            marginBottom: '1rem',
+            textAlign: 'center'
           }}>
-            Select Campaign to Moderate
+            Moderation Dashboard
           </h1>
-          
-          {/* Indicateur de sélection actuelle */}
-          <div style={{
-            background: 'rgba(0, 255, 0, 0.1)',
-            border: '2px solid #00FF00',
-            borderRadius: '12px',
-            padding: '16px 24px',
-            marginBottom: '32px',
-            color: '#00FF00'
-          }}>
-            <div style={{ fontSize: '18px', fontWeight: '700', marginBottom: '8px' }}>
-              Current Selection:
-            </div>
-            <div style={{ fontSize: '16px' }}>
-              {activeTab === 'initial' ? 'Initial Story' : 'Completion'} → {activeSubTypeLabel}
-            </div>
-          </div>
-          
-          {/* Contenu dynamique selon la sélection */}
-          {campaignsAvailability && (() => {
-            // Déterminer s'il y a des campagnes disponibles pour la sélection actuelle
-            let hasCampaigns = false;
-            let campaignType = '';
-            let creatorType = '';
-            
-            if (activeTab === 'initial' && activeSubTab === 'b2c-agencies') {
-              hasCampaigns = campaignsAvailability.hasInitialB2CCampaigns;
-              campaignType = 'INITIAL';
-              creatorType = 'B2C_AGENCIES';
-            } else if (activeTab === 'initial' && activeSubTab === 'individual-creators') {
-              hasCampaigns = campaignsAvailability.hasInitialIndividualCampaigns;
-              campaignType = 'INITIAL';
-              creatorType = 'INDIVIDUAL_CREATORS';
-            } else if (activeTab === 'completion' && activeSubTab === 'for-b2c') {
-              hasCampaigns = campaignsAvailability.hasCompletionB2CCampaigns;
-              campaignType = 'COMPLETION';
-              creatorType = 'FOR_B2C';
-            } else if (activeTab === 'completion' && activeSubTab === 'for-individuals') {
-              hasCampaigns = campaignsAvailability.hasCompletionIndividualCampaigns;
-              campaignType = 'COMPLETION';
-              creatorType = 'FOR_INDIVIDUALS';
-            }
-            
-            return hasCampaigns ? (
-              // Si des campagnes sont disponibles, afficher l'interface de modération
-              <div style={{
-                background: 'rgba(0, 255, 0, 0.1)',
-                border: '2px solid #00FF00',
-                borderRadius: '16px',
-                padding: '32px',
-                maxWidth: '600px',
-                textAlign: 'center'
-              }}>
-                <h2 style={{
-                  fontSize: '24px',
-                  fontWeight: '700',
-                  color: '#00FF00',
-                  marginBottom: '16px'
-                }}>
-                  🎯 Campaigns Available for Moderation
-                </h2>
-                <p style={{
-                  fontSize: '16px',
-                  color: '#fff',
-                  marginBottom: '16px',
-                  lineHeight: '1.6'
-                }}>
-                  There are campaigns available for {activeTab === 'initial' ? 'initial story' : 'completion'} moderation in the "{activeSubTypeLabel}" category.
-                </p>
-                
-                {/* Explication claire du type de contenu */}
-                <div style={{
-                  background: 'rgba(0, 255, 0, 0.2)',
-                  border: '1px solid #00FF00',
-                  borderRadius: '8px',
-                  padding: '16px',
-                  marginBottom: '24px',
-                  textAlign: 'left'
-                }}>
-                  <p style={{
-                    fontSize: '14px',
-                    color: '#00FF00',
-                    margin: '0',
-                    lineHeight: '1.5'
-                  }}>
-                    <strong>Content Type:</strong> {
-                      activeTab === 'initial' 
-                        ? `Content created by ${activeSubTab === 'b2c-agencies' ? 'B2C companies and agencies' : 'individual creators'}`
-                        : `Content created by individuals completing campaigns ${activeSubTab === 'for-b2c' ? 'from B2C companies' : 'from other individuals'}`
-                    }
-                  </p>
-                </div>
-                
-                <button
-                  onClick={async () => {
-                    try {
-                      // Récupérer les campagnes depuis l'API
-                      const response = await fetch(`/api/moderation/campaigns?type=${campaignType}&creatorType=${creatorType}`);
-                      const result = await response.json();
-                      
-                      if (result.success && result.data.length > 0) {
-                        // Prendre la première campagne disponible
-                        const campaign = result.data[0];
-                        router.push(`/moderation?campaignId=${campaign.id}&type=${activeTab}&subtype=${activeSubTab}`);
-                      } else {
-                        console.error('No campaigns available for this type');
-                      }
-                    } catch (error) {
-                      console.error('Error fetching campaign:', error);
-                    }
-                  }}
-                  style={{
-                    padding: '16px 32px',
-                    background: '#00FF00',
-                    color: '#000',
-                    border: 'none',
-                    borderRadius: '8px',
-                    fontSize: '18px',
-                    fontWeight: '700',
-                    cursor: 'pointer',
-                    transition: 'all 0.3s ease'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = '#00CC00';
-                    e.currentTarget.style.transform = 'scale(1.05)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = '#00FF00';
-                    e.currentTarget.style.transform = 'scale(1)';
-                  }}
-                >
-                  Start Moderation
-                </button>
-              </div>
-            ) : (
-              // Si pas de campagnes disponibles, afficher le message d'information
-              <div style={{
-                background: 'rgba(255, 0, 0, 0.1)',
-                border: '2px solid #FF0000',
-                borderRadius: '16px',
-                padding: '32px',
-                maxWidth: '600px',
-                textAlign: 'center'
-              }}>
-                <h2 style={{
-                  fontSize: '24px',
-                  fontWeight: '700',
-                  color: '#FF0000',
-                  marginBottom: '16px'
-                }}>
-                  📭 No Campaigns Available
-                </h2>
-                <p style={{
-                  fontSize: '16px',
-                  color: '#fff',
-                  marginBottom: '24px',
-                  lineHeight: '1.6'
-                }}>
-                  There are currently no {activeTab === 'initial' ? 'initial story' : 'completion'} campaigns of type "{activeSubTypeLabel}" that require moderation.
-                </p>
-                <div style={{
-                  background: 'rgba(255, 255, 0, 0.1)',
-                  border: '1px solid #FFFF00',
-                  borderRadius: '8px',
-                  padding: '16px',
-                  marginTop: '16px'
-                }}>
-                  <p style={{
-                    fontSize: '14px',
-                    color: '#FFFF00',
-                    margin: '0',
-                    lineHeight: '1.5'
-                  }}>
-                    💡 <strong>Tip:</strong> Try switching to a different tab or sub-tab to see if there are campaigns available in other categories.
-                  </p>
-                </div>
-              </div>
-            );
-          })()}
-          
           <p style={{
-            fontSize: '16px',
-            color: '#999',
-            marginTop: '32px',
-            maxWidth: '600px',
-            lineHeight: '1.6'
+            color: '#fff',
+            fontSize: '1.2rem',
+            marginBottom: '2rem',
+            textAlign: 'center',
+            maxWidth: '600px'
           }}>
-            Select the type of content you want to moderate. The system will automatically assign you the highest priority campaign that requires moderation.
+            Connect your wallet to access the moderation interface and start moderating campaigns.
           </p>
-          
-
+          <WalletConnect isBothLogin={true} />
         </div>
-
-        {/* Moderation Tooltip */}
-        <ModerationTooltip 
-          isOpen={showBulbPopup} 
-          onClose={() => setShowBulbPopup(false)} 
-        />
       </div>
     );
   }
 
-  // Pas de session mais on a un campaignId - afficher un message d'erreur
-  if (!currentSession && campaignId) {
-    // Vérifier s'il y a des campagnes disponibles pour ce type
-    const hasCampaignsForType = async () => {
-      try {
-        const availability = await checkCampaignsAvailability();
-        return (
-          (activeTab === 'initial' && activeSubTab === 'b2c-agencies' && availability.hasInitialB2CCampaigns) ||
-          (activeTab === 'initial' && activeSubTab === 'individual-creators' && availability.hasInitialIndividualCampaigns) ||
-          (activeTab === 'completion' && activeSubTab === 'for-b2c' && availability.hasCompletionB2CCampaigns) ||
-          (activeTab === 'completion' && activeSubTab === 'for-individuals' && availability.hasCompletionIndividualCampaigns)
-        );
-      } catch (error) {
-        console.error('Error checking campaigns availability:', error);
-        return false;
-      }
-    };
+  // FORCER l'affichage de l'interface de modération optimisée
+  // Cette condition doit être vérifiée APRÈS l'authentification
+  if (campaignId) {
+    console.log('DEBUG: Forcing moderation interface display with optimizations');
     
-    // Pour l'instant, on suppose qu'il y a des campagnes disponibles
-    const hasCampaigns = true;
-    
-    // Si pas de campagnes disponibles, afficher le message approprié
-    if (!hasCampaigns) {
+    // Au lieu de simuler, utiliser les vraies données si disponibles
+    if (currentSession) {
+      const { campaign, progress } = currentSession;
+      
       return (
         <div className={styles.moderationBg}>
           <ModeratorHeader
             activeTab={activeTab}
             activeSubTab={activeSubTab}
-            onTabChange={setActiveTab}
-            onSubTabChange={setActiveSubTab}
+            onTabChange={handleTabChange}
+            onSubTabChange={handleSubTabChange}
             onIconClick={() => router.push('/welcome')}
             onBulbClick={() => setShowBulbPopup(true)}
           />
           
-          <div style={{ 
-            display: 'flex', 
-            flexDirection: 'column',
-            justifyContent: 'center', 
-            alignItems: 'center', 
-            minHeight: 'calc(100vh - 200px)',
-            color: '#FFD600',
-            textAlign: 'center',
-            padding: '24px'
-          }}>
-            <h1 style={{ 
-              fontSize: '32px', 
-              fontWeight: '700',
-              marginBottom: '24px',
-              color: '#FFD600'
-            }}>
-              No Winstory campaigns to moderate
-            </h1>
-            <p style={{
-              fontSize: '18px',
-              color: '#999',
-              marginBottom: '32px',
-              maxWidth: '600px',
-              lineHeight: '1.6'
-            }}>
-              There are currently no {activeTab === 'initial' ? 'initial story' : 'completion'} campaigns of type "{activeSubTypeLabel}" that require moderation.
-            </p>
-            <div style={{
-              background: 'rgba(255, 215, 0, 0.1)',
-              border: '2px solid #FFD600',
-              borderRadius: '12px',
-              padding: '20px',
-              marginBottom: '32px',
-              maxWidth: '500px'
-            }}>
-              <div style={{ fontSize: '16px', color: '#FFD600', fontWeight: '600', marginBottom: '12px' }}>
-                Current Selection:
-              </div>
-              <div style={{ fontSize: '18px', color: '#FFD600', fontWeight: '700' }}>
-                {activeTab === 'initial' ? 'Initial Story' : 'Completion'} → {activeSubTypeLabel}
+          <div className={styles.moderationContainer}>
+            {/* Colonne bulles à gauche */}
+            <ModerationBubbles
+              userType={getUICreatorType(campaign)}
+              onBubbleClick={handleBubbleClick}
+              bubbleSize={110}
+              bubbleGap={24}
+              campaignType={getUICampaignType(campaign)}
+              hasRewards={!!(campaign.rewards?.standardReward || campaign.rewards?.premiumReward)}
+            />
+
+            {/* Panneau gauche : vidéo */}
+            <div className={styles.moderationPanelLeft}>
+              {/* Interface optimisée - Initial Story */}
+              {campaign.type === 'INITIAL' ? (
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  marginBottom: '8px',
+                  padding: '8px 12px',
+                  background: 'rgba(255, 215, 0, 0.1)',
+                  borderRadius: '8px',
+                  border: '1px solid rgba(255, 215, 0, 0.3)'
+                }}>
+                  {/* Titre de la campagne */}
+                  <h2 style={{
+                    fontSize: '14px',
+                    fontWeight: 'normal',
+                    fontStyle: 'italic',
+                    color: '#FFD600',
+                    margin: '0'
+                  }}>
+                    {campaign.title}
+                  </h2>
+                  
+                  {/* Icône et nom de l'entreprise/créateur */}
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    fontSize: '17px',
+                    fontWeight: 'bold',
+                    color: '#00FF00'
+                  }}>
+                    {campaign.creatorType === 'B2C_AGENCIES' ? (
+                      <>
+                        <img 
+                          src="/company.svg" 
+                          alt="Company" 
+                          style={{ width: '32px', height: '32px' }}
+                        />
+                        <span>{campaign.creatorInfo.companyName || 'B2C Company'}</span>
+                      </>
+                    ) : (
+                      <>
+                        <img 
+                          src="/individual.svg" 
+                          alt="Individual" 
+                          style={{ width: '32px', height: '32px' }}
+                        />
+                        <span>{campaign.creatorInfo.walletAddress ? 
+                          `${campaign.creatorInfo.walletAddress.slice(0, 4)}...${campaign.creatorInfo.walletAddress.slice(-4)}` : 
+                          'Individual'
+                        }</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                // Interface optimisée - Completion compacte
+                <div style={{
+                  padding: '8px 12px',
+                  marginBottom: '8px',
+                  background: 'rgba(255, 215, 0, 0.1)',
+                  borderRadius: '8px',
+                  border: '1px solid rgba(255, 215, 0, 0.3)'
+                }}>
+                  {/* Titre plus compact */}
+                  <h2 style={{
+                    fontSize: '14px',
+                    fontWeight: 'normal',
+                    fontStyle: 'italic',
+                    color: '#FFD600',
+                    marginBottom: '6px',
+                    textAlign: 'center'
+                  }}>
+                    {campaign.title}
+                  </h2>
+                  
+                  {/* Informations sur une seule ligne compacte avec icônes */}
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    gap: '8px',
+                    fontSize: '16px',
+                    fontWeight: 'bold',
+                    color: '#fff'
+                  }}>
+                    {campaign.creatorType === 'FOR_B2C' ? (
+                      <>
+                        <div style={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          gap: '4px',
+                          color: '#00FF00' 
+                        }}>
+                          <img 
+                            src="/company.svg" 
+                            alt="Company" 
+                            style={{ width: '28px', height: '28px' }}
+                          />
+                          <span>{campaign.originalCampaignCompanyName || 'B2C Company'}</span>
+                        </div>
+                        <span style={{ color: '#FFD600' }}>→</span>
+                        <div style={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          gap: '4px',
+                          color: '#FFD600' 
+                        }}>
+                          <img 
+                            src="/individual.svg" 
+                            alt="Individual" 
+                            style={{ width: '28px', height: '28px' }}
+                          />
+                          <span>{campaign.completerWallet ? 
+                            `${campaign.completerWallet.slice(0, 4)}...${campaign.completerWallet.slice(-4)}` : 
+                            'Individual'
+                          }</span>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div style={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          gap: '4px',
+                          color: '#00FF00' 
+                        }}>
+                          <img 
+                            src="/individual.svg" 
+                            alt="Individual" 
+                            style={{ width: '28px', height: '28px' }}
+                          />
+                          <span>{campaign.originalCreatorWallet ? 
+                            `${campaign.originalCreatorWallet.slice(0, 4)}...${campaign.originalCreatorWallet.slice(-4)}` : 
+                            'Individual'
+                          }</span>
+                        </div>
+                        <span style={{ color: '#FFD600' }}>→</span>
+                        <div style={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          gap: '4px',
+                          color: '#FFD600' 
+                        }}>
+                          <img 
+                            src="/individual.svg" 
+                            alt="Individual" 
+                            style={{ width: '28px', height: '28px' }}
+                          />
+                          <span>{campaign.completerWallet ? 
+                            `${campaign.completerWallet.slice(0, 4)}...${campaign.completerWallet.slice(-4)}` : 
+                            'Individual'
+                          }</span>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Zone vidéo */}
+              <div className={styles.videoSection} style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                <video 
+                  ref={videoRef} 
+                  src={campaign.content.videoUrl} 
+                  controls 
+                  onLoadedMetadata={handleVideoLoadedMetadata}
+                  className={`${styles.campaignVideo} ${(campaign.content.videoOrientation === 'vertical' || detectedOrientation === 'vertical') ? styles.vertical : ''}`}
+                  style={{ margin: '0 0' }} 
+                />
               </div>
             </div>
-            <button
-              onClick={() => router.push('/moderation')}
-              style={{
-                padding: '16px 32px',
-                background: '#FFD600',
-                color: '#000',
-                border: 'none',
-                borderRadius: '12px',
-                fontSize: '18px',
-                fontWeight: '700',
-                cursor: 'pointer',
-                transition: 'all 0.3s ease'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = '#FFE44D';
-                e.currentTarget.style.transform = 'translateY(-2px)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = '#FFD600';
-                e.currentTarget.style.transform = 'translateY(0)';
-              }}
-            >
-              Back to Campaign Selection
-            </button>
+
+            {/* Panneau de droite : progression de modération */}
+            <div className={styles.moderationPanelRight}>
+              <ModerationProgressPanel
+                stakers={progress.stakers}
+                stakedAmount={progress.stakedAmount}
+                mintPrice={progress.mintPrice}
+                validVotes={progress.validVotes}
+                refuseVotes={progress.refuseVotes}
+                totalVotes={progress.totalVotes}
+                averageScore={progress.averageScore}
+                campaignType={mapCampaignType(getUICampaignType(campaign))}
+                creatorType={getUICreatorType(campaign)}
+                onClick={() => setShowStatsModal(true)}
+                style={{
+                  justifyContent: 'flex-start',
+                  minHeight: 420,
+                  maxHeight: '60vh',
+                  display: 'flex',
+                  flexDirection: 'column'
+                }}
+              />
+              
+              {/* Boutons de modération */}
+              <ModerationButtons
+                activeTab={activeTab}
+                userType={getUICreatorType(campaign)}
+                onValid={activeTab === 'initial' ? handleInitialValid : handleCompletionValid}
+                onRefuse={activeTab === 'initial' ? handleCompletionRefuse : handleCompletionRefuse}
+                onValidWithScore={handleCompletionScore}
+              />
+            </div>
           </div>
 
-          {/* Moderation Tooltip */}
-          <ModerationTooltip 
-            isOpen={showBulbPopup} 
-            onClose={() => setShowBulbPopup(false)} 
+          {/* Nouveau modal d'information */}
+          <InfoModal
+            isOpen={showInfoModal.isOpen}
+            onClose={() => setShowInfoModal({ ...showInfoModal, isOpen: false })}
+            title={showInfoModal.title}
+            icon={showInfoModal.icon}
+            content={showInfoModal.content}
+            videoUrl={showInfoModal.videoUrl}
+          />
+
+          {/* Modal d'information sur la modération */}
+          <ModerationTooltip
+            isOpen={showBulbPopup}
+            onClose={() => setShowBulbPopup(false)}
+          />
+
+          {/* Modal des récompenses combinées */}
+          <RewardsModal
+            isOpen={showRewardsModal}
+            onClose={() => setShowRewardsModal(false)}
+            standardReward={campaign.rewards?.standardReward}
+            premiumReward={campaign.rewards?.premiumReward}
+          />
+
+          {/* Modal des statistiques de modération */}
+          <ModerationStatsModal
+            isOpen={showStatsModal}
+            onClose={() => setShowStatsModal(false)}
+            stakers={progress.stakers}
+            stakedAmount={progress.stakedAmount}
+            mintPrice={progress.mintPrice}
+            validVotes={progress.validVotes}
+            refuseVotes={progress.refuseVotes}
+            totalVotes={progress.totalVotes}
+            averageScore={progress.averageScore}
+            campaignType={mapCampaignType(getUICampaignType(campaign))}
+            creatorType={getUICreatorType(campaign)}
           />
         </div>
       );
+    } else if (isLoading) {
+      // Afficher un état de chargement pendant que la campagne se charge
+      return (
+        <div className={styles.moderationBg}>
+          <ModeratorHeader
+            activeTab={activeTab}
+            activeSubTab={activeSubTab}
+            onTabChange={handleTabChange}
+            onSubTabChange={handleSubTabChange}
+            onIconClick={() => router.push('/welcome')}
+            onBulbClick={() => setShowBulbPopup(true)}
+          />
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'center', 
+            alignItems: 'center', 
+            height: '60vh',
+            color: '#FFD600',
+            fontSize: '18px'
+          }}>
+            Loading campaign...
+          </div>
+        </div>
+      );
+    } else {
+      // Si pas de session et pas en chargement, essayer de charger la campagne
+      if (account?.address) {
+        fetchCampaignById(campaignId);
+      }
+      return (
+        <div className={styles.moderationBg}>
+          <ModeratorHeader
+            activeTab={activeTab}
+            activeSubTab={activeSubTab}
+            onTabChange={handleTabChange}
+            onSubTabChange={handleSubTabChange}
+            onIconClick={() => router.push('/welcome')}
+            onBulbClick={() => setShowBulbPopup(true)}
+          />
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'center', 
+            alignItems: 'center', 
+            height: '60vh',
+            color: '#FFD600',
+            fontSize: '18px'
+          }}>
+            {account?.address ? 'Loading campaign...' : 'Please connect your wallet'}
+          </div>
+        </div>
+      );
     }
-    
-    // Si des campagnes sont disponibles mais qu'on n'arrive pas à les charger, afficher un message d'erreur
+  }
+
+  // Si pas de campaignId, charger automatiquement la première campagne disponible
+
+  // Si pas de session en cours, charger automatiquement la première campagne disponible
+  if (!currentSession && !isLoading && account?.address) {
+    loadFirstAvailableCampaign();
     return (
       <div className={styles.moderationBg}>
         <ModeratorHeader
           activeTab={activeTab}
           activeSubTab={activeSubTab}
-          onTabChange={setActiveTab}
-          onSubTabChange={setActiveSubTab}
+          onTabChange={handleTabChange}
+          onSubTabChange={handleSubTabChange}
           onIconClick={() => router.push('/welcome')}
           onBulbClick={() => setShowBulbPopup(true)}
         />
-        
         <div style={{ 
           display: 'flex', 
-          flexDirection: 'column',
           justifyContent: 'center', 
           alignItems: 'center', 
-          minHeight: 'calc(100vh - 200px)',
-          color: '#FF6B6B',
-          textAlign: 'center',
-          padding: '24px'
+          height: '60vh',
+          color: '#FFD600',
+          fontSize: '18px'
         }}>
-          <h1 style={{ 
-            fontSize: '32px', 
-            fontWeight: '700',
-            marginBottom: '24px',
-            color: '#FF6B6B'
-          }}>
-            Campaign Loading Error
-          </h1>
-          <p style={{
-            fontSize: '18px',
-            color: '#999',
-            marginBottom: '32px',
-            maxWidth: '600px',
-            lineHeight: '1.6'
-          }}>
-            There was an error loading the campaign data. This might be due to type conflicts that need to be resolved.
-          </p>
-          <div style={{
-            background: 'rgba(255, 107, 107, 0.1)',
-            border: '1px solid rgba(255, 107, 107, 0.3)',
-            borderRadius: '8px',
-            padding: '16px',
-            marginBottom: '24px',
-            maxWidth: '500px'
-          }}>
-            <p style={{ fontSize: '14px', color: '#FF8888', margin: 0 }}>
-              💡 <strong>Debug Info:</strong> Campaign ID: {campaignId}, Type: {activeTab}, Subtype: {activeSubTab}
-            </p>
-          </div>
-          <button
-            onClick={() => router.push('/moderation')}
-            style={{
-              padding: '16px 32px',
-              background: '#FF6B6B',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '12px',
-              fontSize: '18px',
-              fontWeight: '700',
-              cursor: 'pointer',
-              transition: 'all 0.3s ease'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = '#FF8E8E';
-              e.currentTarget.style.transform = 'translateY(-2px)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = '#FF6B6B';
-              e.currentTarget.style.transform = 'translateY(0)';
-            }}
-          >
-            Back to Campaign Selection
-          </button>
+          Loading first available campaign...
         </div>
+      </div>
+    );
+  }
 
-        {/* Moderation Tooltip */}
-        <ModerationTooltip 
-          isOpen={showBulbPopup} 
-          onClose={() => setShowBulbPopup(false)} 
+  // Interface normale avec session
+  if (!currentSession) {
+    return (
+      <div className={styles.moderationBg}>
+        <ModeratorHeader
+          activeTab={activeTab}
+          activeSubTab={activeSubTab}
+          onTabChange={handleTabChange}
+          onSubTabChange={handleSubTabChange}
+          onIconClick={() => router.push('/welcome')}
+          onBulbClick={() => setShowBulbPopup(true)}
         />
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          height: '60vh',
+          color: '#999',
+          fontSize: '18px'
+        }}>
+          No campaigns available for moderation
+        </div>
       </div>
     );
   }
@@ -850,8 +772,8 @@ const ModerationPage = () => {
       <ModeratorHeader
         activeTab={activeTab}
         activeSubTab={activeSubTab}
-        onTabChange={setActiveTab}
-        onSubTabChange={setActiveSubTab}
+        onTabChange={handleTabChange}
+        onSubTabChange={handleSubTabChange}
         onIconClick={() => router.push('/welcome')}
         onBulbClick={() => setShowBulbPopup(true)}
       />
@@ -859,86 +781,185 @@ const ModerationPage = () => {
       <div className={styles.moderationContainer}>
         {/* Colonne bulles à gauche */}
         <ModerationBubbles
-          userType={convertPrismaCreatorType(campaign.creatorType)}
-          onBubbleClick={setShowBubble}
-          bubbleSize={100}
-          bubbleGap={24}
+          userType={getUICreatorType(campaign)}
+          onBubbleClick={handleBubbleClick}
+                        bubbleSize={85}
+          bubbleGap={14}
+          campaignType={getUICampaignType(campaign)}
+          hasRewards={!!(campaign.rewards?.standardReward || campaign.rewards?.premiumReward)}
         />
 
         {/* Panneau gauche : vidéo */}
         <div className={styles.moderationPanelLeft}>
-          {/* Informations de la marque/agence/individu */}
-          <BrandInfo
-            companyName={campaign.creatorInfo.companyName}
-            agencyName={campaign.creatorInfo.agencyName}
-            userType={convertPrismaCreatorType(campaign.creatorType)}
-            walletAddress={campaign.creatorInfo.walletAddress}
-          />
-          
-          {/* Titre dynamique selon le type de campagne */}
-          <div style={{
-            padding: '16px',
-            marginBottom: '16px',
-            background: 'rgba(255, 215, 0, 0.1)',
-            borderRadius: '12px',
-            border: '1px solid rgba(255, 215, 0, 0.3)'
-          }}>
-            <h2 style={{
-              fontSize: '20px',
-              fontWeight: '700',
-              color: '#FFD600',
-              marginBottom: '8px',
-              textAlign: 'center'
+          {/* Titre dynamique selon le type de campagne - REMPLACE BrandInfo */}
+          {campaign.type === 'INITIAL' ? (
+            // Pour les histoires initiales : titre et infos compactes
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: '8px', // Réduit de 16px à 8px
+              padding: '8px 12px', // Réduit de 12px 16px à 8px 12px
+              background: 'rgba(255, 215, 0, 0.1)',
+              borderRadius: '8px',
+              border: '1px solid rgba(255, 215, 0, 0.3)'
             }}>
-              {campaign.title}
-            </h2>
-            
-            {/* Informations supplémentaires pour les complétions */}
-            {campaign.type === 'COMPLETION' && (
-              <div style={{
+              {/* Titre de la campagne */}
+              <h2 style={{
                 fontSize: '14px',
-                color: '#fff',
-                textAlign: 'center',
-                lineHeight: '1.4'
+                fontWeight: 'normal',
+                fontStyle: 'italic',
+                color: '#FFD600',
+                margin: '0'
               }}>
-                {campaign.creatorType === 'FOR_B2C' ? (
-                  <div>
-                    <div style={{ color: '#00FF00', fontWeight: '600', marginBottom: '4px' }}>
-                      🏢 Campagne d'entreprise: {campaign.originalCampaign?.companyName || 'Entreprise B2C'}
-                    </div>
-                    <div style={{ color: '#FFD600', fontSize: '12px' }}>
-                      Complété par: {campaign.completerWallet ? 
-                        `${campaign.completerWallet.slice(0, 6)}...${campaign.completerWallet.slice(-4)}` : 
-                        'Créateur individuel'
-                      }
-                    </div>
-                  </div>
+                {campaign.title}
+              </h2>
+              
+              {/* Icône et nom de l'entreprise/créateur */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                fontSize: '17px',
+                fontWeight: 'bold',
+                color: '#00FF00'
+              }}>
+                {campaign.creatorType === 'B2C_AGENCIES' ? (
+                  <>
+                    <img 
+                      src="/company.svg" 
+                      alt="Company" 
+                      style={{ width: '32px', height: '32px' }}
+                    />
+                    <span>{campaign.creatorInfo.companyName || 'B2C Company'}</span>
+                  </>
                 ) : (
-                  <div>
-                    <div style={{ color: '#00FF00', fontWeight: '600', marginBottom: '4px' }}>
-                      👤 Campagne d'individu: {campaign.originalCreator?.walletAddress ? 
-                        `${campaign.originalCreator.walletAddress.slice(0, 6)}...${campaign.originalCreator.walletAddress.slice(-4)}` : 
-                        'Créateur individuel'
-                      }
-                    </div>
-                    <div style={{ color: '#FFD600', fontSize: '12px' }}>
-                      Complété par: {campaign.completerWallet ? 
-                        `${campaign.completerWallet.slice(0, 6)}...${campaign.completerWallet.slice(-4)}` : 
-                        'Créateur individuel'
-                      }
-                    </div>
-                  </div>
+                  <>
+                    <img 
+                      src="/individual.svg" 
+                      alt="Individual" 
+                      style={{ width: '32px', height: '32px' }}
+                    />
+                    <span>{campaign.creatorInfo.walletAddress ? 
+                      `${campaign.creatorInfo.walletAddress.slice(0, 4)}...${campaign.creatorInfo.walletAddress.slice(-4)}` : 
+                      'Individual'
+                    }</span>
+                  </>
                 )}
               </div>
-            )}
-          </div>
+            </div>
+          ) : (
+            // Pour les complétions : titre et informations compactes
+            <div style={{
+              padding: '8px 12px', // Réduit de 16px à 8px/12px
+              marginBottom: '8px', // Réduit de 16px à 8px
+              background: 'rgba(255, 215, 0, 0.1)',
+              borderRadius: '8px', // Réduit de 12px à 8px
+              border: '1px solid rgba(255, 215, 0, 0.3)'
+            }}>
+              {/* Titre plus compact */}
+              <h2 style={{
+                fontSize: '14px',
+                fontWeight: 'normal',
+                fontStyle: 'italic',
+                color: '#FFD600',
+                marginBottom: '6px',
+                textAlign: 'center'
+              }}>
+                {campaign.title}
+              </h2>
+              
+              {/* Informations sur une seule ligne compacte avec icônes */}
+              <div style={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                gap: '8px',
+                fontSize: '16px',
+                fontWeight: 'bold',
+                color: '#fff'
+              }}>
+                {campaign.creatorType === 'FOR_B2C' ? (
+                  <>
+                    <div style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '4px',
+                      color: '#00FF00' 
+                    }}>
+                      <img 
+                        src="/company.svg" 
+                        alt="Company" 
+                        style={{ width: '28px', height: '28px' }}
+                      />
+                      <span>{campaign.originalCampaignCompanyName || 'B2C Company'}</span>
+                    </div>
+                    <span style={{ color: '#FFD600' }}>→</span>
+                    <div style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '4px',
+                      color: '#FFD600' 
+                    }}>
+                      <img 
+                        src="/individual.svg" 
+                        alt="Individual" 
+                        style={{ width: '28px', height: '28px' }}
+                      />
+                      <span>{campaign.completerWallet ? 
+                        `${campaign.completerWallet.slice(0, 4)}...${campaign.completerWallet.slice(-4)}` : 
+                        'Individual'
+                      }</span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '4px',
+                      color: '#00FF00' 
+                    }}>
+                      <img 
+                        src="/individual.svg" 
+                        alt="Individual" 
+                        style={{ width: '28px', height: '28px' }}
+                      />
+                      <span>{campaign.originalCreatorWallet ? 
+                        `${campaign.originalCreatorWallet.slice(0, 4)}...${campaign.originalCreatorWallet.slice(-4)}` : 
+                        'Individual'
+                      }</span>
+                    </div>
+                    <span style={{ color: '#FFD600' }}>→</span>
+                    <div style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '4px',
+                      color: '#FFD600' 
+                    }}>
+                      <img 
+                        src="/individual.svg" 
+                        alt="Individual" 
+                        style={{ width: '28px', height: '28px' }}
+                      />
+                      <span>{campaign.completerWallet ? 
+                        `${campaign.completerWallet.slice(0, 4)}...${campaign.completerWallet.slice(-4)}` : 
+                        'Individual'
+                      }</span>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
           
           <div className={styles.videoSection} style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
             <video 
               ref={videoRef} 
               src={campaign.content.videoUrl} 
               controls 
-              className={styles.campaignVideo} 
+              onLoadedMetadata={handleVideoLoadedMetadata}
+              className={`${styles.campaignVideo} ${(campaign.content.videoOrientation === 'vertical' || detectedOrientation === 'vertical') ? styles.vertical : ''}`}
               style={{ margin: '0 0' }} 
             />
           </div>
@@ -948,20 +969,20 @@ const ModerationPage = () => {
         <div className={styles.moderationPanelRight} style={panelRightStyle}>
           <ModerationProgressPanel
             stakers={progress.stakers}
-            stakersRequired={progress.stakersRequired}
             stakedAmount={progress.stakedAmount}
             mintPrice={progress.mintPrice}
             validVotes={progress.validVotes}
             refuseVotes={progress.refuseVotes}
             totalVotes={progress.totalVotes}
             averageScore={progress.averageScore}
-            campaignType={convertPrismaCampaignType(campaign.type)}
-            creatorType={convertPrismaCreatorType(campaign.creatorType)}
+            campaignType={mapCampaignType(getUICampaignType(campaign))}
+            creatorType={getUICreatorType(campaign)}
+            onClick={() => setShowStatsModal(true)}
           />
           
           <ModerationButtons
             activeTab={activeTab}
-            userType={convertPrismaCreatorType(campaign.creatorType)}
+            userType={getUICreatorType(campaign)}
             onValid={activeTab === 'initial' ? handleInitialValid : handleCompletionValid}
             onRefuse={activeTab === 'initial' ? handleCompletionRefuse : handleCompletionRefuse}
             onValidWithScore={handleCompletionScore}
@@ -969,27 +990,15 @@ const ModerationPage = () => {
         </div>
       </div>
 
-      {/* Popups bulles infos - Contenu dynamique */}
-      {showBubble && (
-        <div className={styles.popupOverlay} onClick={() => setShowBubble(null)}>
-          <div className={styles.textPopup} onClick={e => e.stopPropagation()}>
-            <div className={styles.popupHeader}>
-              <h2 className={styles.popupTitle}>
-                {showBubble === 'startingText' ? 'Starting Story' : 
-                 showBubble === 'guideline' ? 'Guideline' : 
-                 showBubble === 'standardRewards' ? 'Standard Reward' : 'Premium Reward'}
-              </h2>
-              <button className={styles.closePopup} onClick={() => setShowBubble(null)}>&times;</button>
-            </div>
-            <div className={styles.textPopupContent}>
-              {showBubble === 'startingText' && campaign.content.startingStory}
-              {showBubble === 'guideline' && campaign.content.guidelines}
-              {showBubble === 'standardRewards' && campaign.rewards?.standardReward}
-              {showBubble === 'premiumRewards' && campaign.rewards?.premiumReward}
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Nouveau modal d'information */}
+      <InfoModal
+        isOpen={showInfoModal.isOpen}
+        onClose={() => setShowInfoModal({ ...showInfoModal, isOpen: false })}
+        title={showInfoModal.title}
+        icon={showInfoModal.icon}
+        content={showInfoModal.content}
+        videoUrl={showInfoModal.videoUrl}
+      />
 
       {/* Popup infos campagne (bulle i) */}
       {showInfo && (
@@ -1018,7 +1027,30 @@ const ModerationPage = () => {
         onClose={() => setShowScoringModal(false)}
         onConfirm={handleCompletionScore}
         usedScores={progress.completionScores || []}
-        contentType={convertPrismaCreatorType(campaign.creatorType)}
+        contentType={getUICreatorType(campaign)}
+      />
+
+      {/* Modal des récompenses combinées */}
+      <RewardsModal
+        isOpen={showRewardsModal}
+        onClose={() => setShowRewardsModal(false)}
+        standardReward={campaign.rewards?.standardReward}
+        premiumReward={campaign.rewards?.premiumReward}
+      />
+
+      {/* Modal des statistiques de modération */}
+      <ModerationStatsModal
+        isOpen={showStatsModal}
+        onClose={() => setShowStatsModal(false)}
+        stakers={progress.stakers}
+        stakedAmount={progress.stakedAmount}
+        mintPrice={progress.mintPrice}
+        validVotes={progress.validVotes}
+        refuseVotes={progress.refuseVotes}
+        totalVotes={progress.totalVotes}
+        averageScore={progress.averageScore}
+        campaignType={mapCampaignType(getUICampaignType(campaign))}
+        creatorType={getUICreatorType(campaign)}
       />
     </div>
   );

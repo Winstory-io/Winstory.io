@@ -28,7 +28,7 @@ const bubbleStyle = {
   borderRadius: 16,
   padding: '8px 16px',
   fontWeight: 700,
-  fontSize: 14,
+  fontSize: 16,
   cursor: 'pointer',
   zIndex: 2,
   boxShadow: '0 2px 12px #000',
@@ -63,8 +63,7 @@ const ModerationCard: React.FC<ModerationCardProps> = ({
       <div style={{ fontStyle: 'italic', fontSize: 18, marginBottom: 18 }}>{title}</div>
       <div style={{ position: 'relative', width: videoOrientation === 'vertical' ? 240 : 400, height: videoOrientation === 'vertical' ? 400 : 225, background: '#222', borderRadius: 16, overflow: 'hidden', marginBottom: 24, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         {/* Bulles d'accès rapide */}
-        <div style={{ ...bubbleStyle, top: 8, left: 8 }} onClick={() => onBubbleClick('standardRewards')}>Standard Reward</div>
-        <div style={{ ...bubbleStyle, top: 8, right: 8 }} onClick={() => onBubbleClick('premiumRewards')}>Premium Reward</div>
+        <div style={{ ...bubbleStyle, top: 8, left: '50%', transform: 'translateX(-50%)' }} onClick={() => onBubbleClick('rewards')}>Rewards</div>
         <div style={{ ...bubbleStyle, bottom: 8, left: 8 }} onClick={() => onBubbleClick('startingText')}>Starting Text</div>
         <div style={{ ...bubbleStyle, bottom: 8, right: 8 }} onClick={() => onBubbleClick('guideline')}>Guideline</div>
         <video src={videoUrl} controls style={{ width: '100%', height: '100%', objectFit: 'cover', background: '#000' }} />

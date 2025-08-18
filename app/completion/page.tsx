@@ -1,16 +1,39 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import CompletionPopup from '../../components/CompletionPopup';
+import CompletionVideoNavigator from '../../components/CompletionVideoNavigator';
+import CompletionInfo from '../../components/CompletionInfo';
+import CompletionTooltip from '../../components/CompletionTooltip';
+import { mockCampaigns } from '../../lib/mockData';
+import { Campaign, ModerationCampaign } from '../../lib/types';
 
 const CompletionPage = () => {
   const [activeTab, setActiveTab] = useState<'b2c' | 'individual'>('b2c');
   const [showTooltip, setShowTooltip] = useState(false);
   const [showInfo, setShowInfo] = useState(false);
   const [showComplete, setShowComplete] = useState(false);
+  const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
+  const [availableCampaigns, setAvailableCampaigns] = useState<any[]>([]);
   const router = useRouter();
+
+  // Filter campaigns based on active tab
+  useEffect(() => {
+    const filtered = mockCampaigns.filter(campaign => {
+      // Only show approved campaigns for completion
+      if (campaign.status !== 'APPROVED') return false;
+      
+      if (activeTab === 'b2c') {
+        return campaign.creatorType === 'B2C_AGENCIES' || campaign.creatorType === 'FOR_B2C';
+      } else {
+        return campaign.creatorType === 'INDIVIDUAL_CREATORS' || campaign.creatorType === 'FOR_INDIVIDUALS';
+      }
+    });
+    setAvailableCampaigns(filtered);
+    setCurrentVideoIndex(0); // Reset to first video when tab changes
+  }, [activeTab]);
 
   // Nettoyer le localStorage au chargement de la page principale de completion
   React.useEffect(() => {
@@ -47,9 +70,73 @@ const CompletionPage = () => {
     localStorage.setItem("completionType", activeTab);
   }, [activeTab]);
 
-  // Placeholder identity
-  const companyIdentity = '@Company';
-  const individualIdentity = '@0x12...89AB';
+  // Keyboard navigation
+  React.useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (showTooltip || showInfo || showComplete) return; // Don't navigate when modals are open
+      
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        goToPreviousVideo();
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        goToNextVideo();
+      } else if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        setShowComplete(true);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [showTooltip, showInfo, showComplete, availableCampaigns.length]);
+
+  // Navigation functions
+  const goToPreviousVideo = () => {
+    if (availableCampaigns.length > 0) {
+      setCurrentVideoIndex((prev) => 
+        prev === 0 ? availableCampaigns.length - 1 : prev - 1
+      );
+    }
+  };
+
+  const goToNextVideo = () => {
+    if (availableCampaigns.length > 0) {
+      setCurrentVideoIndex((prev) => 
+        prev === availableCampaigns.length - 1 ? 0 : prev + 1
+      );
+    }
+  };
+
+  // Get current campaign data
+  const currentCampaign = availableCampaigns[currentVideoIndex];
+  
+  // Dynamic identity based on campaign type
+  const getIdentity = () => {
+    if (!currentCampaign) return activeTab === 'b2c' ? '@Company' : '@0x12...89AB';
+    
+    if (currentCampaign.creatorType === 'B2C_AGENCIES' || currentCampaign.creatorType === 'FOR_B2C') {
+      return `@${currentCampaign.creatorInfo?.companyName || 'Company'}`;
+    } else {
+      const wallet = currentCampaign.creatorInfo?.walletAddress || '0x1234567890123456789012345678901234567890';
+      return `@${wallet.slice(0, 6)}...${wallet.slice(-4)}`;
+    }
+  };
+
+  // Calculate time left (mock implementation)
+  const getTimeLeft = () => {
+    if (!currentCampaign) return "7 days left";
+    // Mock calculation - in real app this would be based on campaign end date
+    return `${Math.floor(Math.random() * 14) + 1} days left`;
+  };
+
+  // Get completion stats
+  const getCompletionStats = () => {
+    if (!currentCampaign) return { minted: 0, available: 100 };
+    const minted = currentCampaign.metadata?.totalCompletions || 0;
+    const available = 100; // Mock total available
+    return { minted, available };
+  };
 
   return (
     <div style={{ minHeight: '100vh', background: '#000', color: '#FFD600', fontFamily: 'inherit', position: 'relative' }}>
@@ -71,7 +158,7 @@ const CompletionPage = () => {
       </div>
 
       {/* Onglets */}
-      <div style={{ display: 'flex', justifyContent: 'center', gap: 48, marginTop: 32 }}>
+      <div style={{ display: 'flex', justifyContent: 'center', gap: 48, marginTop: 24 }}>
         <button
           onClick={() => setActiveTab('b2c')}
           style={{
@@ -107,9 +194,9 @@ const CompletionPage = () => {
       </div>
 
       {/* Identité + info */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, marginTop: 20 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, marginTop: 16 }}>
         <div style={{ background: '#FFD600', color: '#222', borderRadius: 12, padding: '8px 18px', fontWeight: 700, fontSize: 16 }}>
-          {activeTab === 'b2c' ? companyIdentity : individualIdentity}
+          {getIdentity()}
         </div>
         <button onClick={() => setShowInfo(true)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
           <div style={{ background: '#FFD600', borderRadius: '50%', width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -117,43 +204,161 @@ const CompletionPage = () => {
           </div>
         </button>
       </div>
-      {/* Titre de campagne (placeholder) */}
-      <div style={{ textAlign: 'center', marginTop: 4, fontStyle: 'italic', color: '#FFD600', fontSize: 14 }}>Title</div>
 
-      {/* Vidéo (placeholder responsive) */}
-      <div style={{ display: 'flex', justifyContent: 'center', marginTop: 32 }}>
-        <div style={{ width: '90vw', maxWidth: 700, aspectRatio: '16/9', background: 'linear-gradient(135deg,#FFD600 60%,#111 100%)', borderRadius: 18, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <span style={{ fontSize: 80, color: '#111', opacity: 0.3 }}>&#9654;</span>
-        </div>
+      {/* Titre de campagne (dynamique) */}
+      <div style={{ textAlign: 'center', marginTop: 2, fontStyle: 'italic', color: '#FFD600', fontSize: 13 }}>
+        {currentCampaign?.title || 'Title'}
       </div>
 
-      {/* Bouton Complete */}
-      <div style={{ display: 'flex', justifyContent: 'center', marginTop: 20 }}>
-        <button
-          onClick={() => setShowComplete(true)}
-          style={{ background: '#4ECB71', color: '#111', fontWeight: 700, fontSize: 26, border: 'none', borderRadius: 16, padding: '16px 48px', cursor: 'pointer', boxShadow: '0 2px 8px #0008' }}
-        >
-          Complete
-        </button>
+            {/* Vidéo avec navigation */}
+      <div style={{ marginTop: 20 }}>
+        <CompletionVideoNavigator
+          campaigns={availableCampaigns}
+          currentIndex={currentVideoIndex}
+          onPrevious={goToPreviousVideo}
+          onNext={goToNextVideo}
+          onCampaignInfo={() => setShowInfo(true)}
+        />
       </div>
 
-      {/* Pop-ups (vides pour l'instant) */}
-      {showTooltip && (
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: '#000A', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }} onClick={() => setShowTooltip(false)}>
-          <div style={{ background: '#222', color: '#FFD600', padding: 32, borderRadius: 18, minWidth: 320 }}>Tooltip (à paramétrer)</div>
-        </div>
-      )}
-      {showInfo && (
+      {/* Campaign details */}
+      <CompletionInfo
+        campaign={currentCampaign}
+        getTimeLeft={getTimeLeft}
+        getCompletionStats={getCompletionStats}
+      />
+
+      {/* Bouton Complete ou message d'aide */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: 10 }}>
+        {availableCampaigns.length > 0 ? (
+          <>
+            <button
+              onClick={() => setShowComplete(true)}
+              style={{ 
+                background: '#4ECB71', 
+                color: '#111', 
+                fontWeight: 700, 
+                fontSize: 22, 
+                border: 'none', 
+                borderRadius: 14, 
+                padding: '12px 36px', 
+                cursor: 'pointer', 
+                boxShadow: '0 2px 8px #0008',
+                transition: 'all 0.2s'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'scale(1.05)';
+                e.currentTarget.style.boxShadow = '0 4px 16px #0008';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'scale(1)';
+                e.currentTarget.style.boxShadow = '0 2px 8px #0008';
+              }}
+              title="Start completing this campaign (Enter or Space)"
+            >
+              Complete
+            </button>
+            <div style={{
+              marginTop: 8,
+              fontSize: 11,
+              color: '#666',
+              textAlign: 'center'
+            }}>
+              Press Enter or Space to complete • Use ← → to navigate
+            </div>
+          </>
+        ) : (
+          <div style={{
+            textAlign: 'center',
+            color: '#666',
+            fontSize: 16,
+            padding: '20px',
+            border: '2px dashed #333',
+            borderRadius: 16,
+            maxWidth: 400
+          }}>
+            <div style={{ fontSize: 40, marginBottom: 12 }}>📭</div>
+            <div style={{ marginBottom: 8 }}>No approved campaigns available</div>
+            <div style={{ fontSize: 14 }}>
+              Check back later or switch to {activeTab === 'b2c' ? 'Individuals' : 'B2C Companies'} tab
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Tooltip modal */}
+      <CompletionTooltip
+        isOpen={showTooltip}
+        onClose={() => setShowTooltip(false)}
+      />
+
+      {/* Campaign info modal */}
+      {showInfo && currentCampaign && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: '#000A', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }} onClick={() => setShowInfo(false)}>
-          <div style={{ background: '#222', color: '#FFD600', padding: 32, borderRadius: 18, minWidth: 320 }}>Infos campagne (à paramétrer)</div>
+          <div 
+            style={{ 
+              background: '#222', 
+              color: '#FFD600', 
+              padding: 32, 
+              borderRadius: 18, 
+              maxWidth: 500,
+              width: '90vw',
+              maxHeight: '80vh',
+              overflowY: 'auto'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 style={{ marginBottom: 16, color: '#FFD600' }}>{currentCampaign.title}</h2>
+            <div style={{ marginBottom: 12, color: '#fff' }}>
+              <strong>Starting Story:</strong>
+              <p style={{ marginTop: 8, lineHeight: 1.4 }}>{currentCampaign.content?.startingStory}</p>
+            </div>
+            {currentCampaign.content?.guidelines && (
+              <div style={{ marginBottom: 12, color: '#fff' }}>
+                <strong>Guidelines:</strong>
+                <p style={{ marginTop: 8, lineHeight: 1.4 }}>{currentCampaign.content.guidelines}</p>
+              </div>
+            )}
+            {currentCampaign.rewards?.standardReward && (
+              <div style={{ marginBottom: 12, color: '#fff' }}>
+                <strong>Standard Reward:</strong>
+                <p style={{ marginTop: 8, color: '#4ECB71' }}>{currentCampaign.rewards.standardReward}</p>
+              </div>
+            )}
+            {currentCampaign.rewards?.premiumReward && (
+              <div style={{ marginBottom: 12, color: '#fff' }}>
+                <strong>Premium Reward:</strong>
+                <p style={{ marginTop: 8, color: '#FFD600' }}>{currentCampaign.rewards.premiumReward}</p>
+              </div>
+            )}
+            <button 
+              onClick={() => setShowInfo(false)}
+              style={{ 
+                background: '#FFD600', 
+                color: '#000', 
+                border: 'none', 
+                borderRadius: 8, 
+                padding: '8px 16px', 
+                cursor: 'pointer',
+                marginTop: 16,
+                fontWeight: 600
+              }}
+            >
+              Close
+            </button>
+          </div>
         </div>
       )}
+
       {showComplete && (
         <CompletionPopup
           open={showComplete}
           onClose={() => setShowComplete(false)}
           activeTab={activeTab}
-          identity={activeTab === 'b2c' ? companyIdentity : individualIdentity}
+          identity={getIdentity()}
+          currentCampaign={currentCampaign}
+          getTimeLeft={getTimeLeft}
+          getCompletionStats={getCompletionStats}
         />
       )}
     </div>

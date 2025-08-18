@@ -56,14 +56,14 @@ async function main() {
       },
       progress: {
         create: {
-          stakersRequired: 5,
-          stakers: 3,
-          stakedAmount: 150.0,
-          mintPrice: 100.0,
-          validVotes: 2,
+          stakersRequired: 22,
+          stakers: 2,
+          stakedAmount: 100.0,
+          mintPrice: 75.0,
+          validVotes: 1,
           refuseVotes: 0,
-          totalVotes: 2,
-          averageScore: 0,
+          totalVotes: 1,
+          averageScore: 0.0,
           completionScores: []
         }
       }
@@ -88,9 +88,10 @@ async function main() {
       },
       content: {
         create: {
-          videoUrl: 'https://example.com/street-art-revolution.mp4',
-          startingStory: 'Un artiste de rue transforme un mur gris en une œuvre d\'art vibrante et colorée. Il partage son processus de création, de l\'inspiration à la réalisation finale.',
-          guidelines: 'Le contenu doit être authentique, montrer le processus créatif, inclure des éléments de transformation urbaine et respecter les valeurs artistiques.'
+          videoUrl: 'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
+          videoOrientation: 'vertical',
+          startingStory: 'Un artiste de rue transforme un mur gris en une œuvre d\'art vibrante et colorée. Il partage son processus de création, de l\'inspiration à la réalisation finale. Cette vidéo verticale capture l\'essence de l\'art urbain moderne.',
+          guidelines: 'Le contenu doit être authentique, montrer le processus créatif, inclure des éléments de transformation urbaine et respecter les valeurs artistiques. Format vertical optimisé pour mobile.'
         }
       },
       rewards: {
@@ -108,14 +109,14 @@ async function main() {
       },
       progress: {
         create: {
-          stakersRequired: 3,
-          stakers: 1,
-          stakedAmount: 50.0,
-          mintPrice: 25.0,
+          stakersRequired: 22,
+          stakers: 2,
+          stakedAmount: 100.0,
+          mintPrice: 75.0,
           validVotes: 1,
           refuseVotes: 0,
           totalVotes: 1,
-          averageScore: 0,
+          averageScore: 0.0,
           completionScores: []
         }
       }
@@ -130,6 +131,8 @@ async function main() {
       type: 'COMPLETION',
       creatorType: 'FOR_B2C',
       status: 'PENDING_MODERATION',
+      originalCampaignCompanyName: 'Nike Inc.',
+      completerWallet: '0xabcdef1234567890abcdef1234567890abcdef12',
       creatorInfo: {
         create: {
           companyName: 'Nike Inc.',
@@ -160,10 +163,10 @@ async function main() {
       },
       progress: {
         create: {
-          stakersRequired: 5,
-          stakers: 5,
-          stakedAmount: 250.0,
-          mintPrice: 100.0,
+          stakersRequired: 22,
+          stakers: 2,
+          stakedAmount: 100.0,
+          mintPrice: 75.0,
           validVotes: 8,
           refuseVotes: 2,
           totalVotes: 10,
@@ -182,6 +185,8 @@ async function main() {
       type: 'COMPLETION',
       creatorType: 'FOR_INDIVIDUALS',
       status: 'PENDING_MODERATION',
+      originalCreatorWallet: '0x9876543210987654321098765432109876543210',
+      completerWallet: '0x1111111111111111111111111111111111111111',
       creatorInfo: {
         create: {
           companyName: null,
@@ -212,10 +217,10 @@ async function main() {
       },
       progress: {
         create: {
-          stakersRequired: 3,
-          stakers: 3,
-          stakedAmount: 75.0,
-          mintPrice: 25.0,
+          stakersRequired: 22,
+          stakers: 2,
+          stakedAmount: 100.0,
+          mintPrice: 75.0,
           validVotes: 6,
           refuseVotes: 1,
           totalVotes: 7,

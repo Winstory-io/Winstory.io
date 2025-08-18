@@ -15,19 +15,27 @@ export const useModeration = () => {
       setIsLoading(true);
       setError(null);
 
-      const params = new URLSearchParams();
-      if (type) params.append('type', type);
-      if (creatorType) params.append('creatorType', creatorType);
-
-      const response = await fetch(`/api/moderation/campaigns?${params}`);
-      const result = await response.json();
-
-      if (result.success) {
-        setAvailableCampaigns(result.data);
-        return result.data;
-      } else {
-        throw new Error(result.error || 'Failed to fetch campaigns');
+      // Pour les tests, utiliser directement les données mockées
+      const { mockCampaigns } = await import('../mockData');
+      console.log('Using mock campaigns:', mockCampaigns);
+      
+      // Filtrer les campagnes selon le type et créateur spécifiés
+      let filteredCampaigns = mockCampaigns;
+      
+      if (type && creatorType) {
+        filteredCampaigns = mockCampaigns.filter((campaign: any) => {
+          // Vérifier que le type de campagne correspond
+          const typeMatch = campaign.type === type;
+          
+          // Vérifier que le type de créateur correspond
+          const creatorMatch = campaign.creatorType === creatorType;
+          
+          return typeMatch && creatorMatch;
+        });
       }
+      
+      setAvailableCampaigns(filteredCampaigns);
+      return filteredCampaigns;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch campaigns');
       return [];
@@ -39,46 +47,34 @@ export const useModeration = () => {
   // Fonction pour récupérer une campagne spécifique
   const fetchCampaignById = useCallback(async (campaignId: string) => {
     try {
+      console.log('DEBUG: fetchCampaignById called with:', campaignId);
       setIsLoading(true);
       setError(null);
 
       console.log('Fetching campaign with ID:', campaignId);
 
-      // TEMPORAIRE: Utiliser des données mockées pour tester l'interface
-      // TODO: Remplacer par les vraies appels API quand la base de données sera configurée
+      // Utiliser directement les données mockées
       const { mockCampaigns } = await import('../mockData');
+      console.log('Available mock campaigns:', mockCampaigns);
       
       const campaign = mockCampaigns.find(c => c.id === campaignId);
       console.log('Found campaign:', campaign);
 
       if (campaign) {
-        // Transformer les données mockées en format ModerationSession
+        // Créer une session simple sans transformation complexe
         const session: ModerationSession = {
           id: `session_${campaign.id}`,
           campaignId: campaign.id,
           moderatorWallet: account?.address || '',
           isEligible: true,
           startedAt: new Date(),
-          campaign: {
-            id: campaign.id,
-            title: campaign.title,
-            description: campaign.description,
-            status: campaign.status,
-            type: campaign.type,
-            creatorType: campaign.creatorType,
-            createdAt: campaign.createdAt,
-            updatedAt: campaign.updatedAt,
-            creatorInfo: campaign.creatorInfo,
-            content: campaign.content,
-            rewards: campaign.rewards,
-            metadata: campaign.metadata,
-            progress: campaign.progress
-          },
-          progress: campaign.progress
+          campaign: campaign as any, // Utiliser any pour éviter les conflits de type
+          progress: campaign.progress as any
         };
 
         console.log('Created session:', session);
         setCurrentSession(session);
+        setIsLoading(false); // S'assurer que isLoading est mis à false
         return session;
       } else {
         throw new Error(`Campaign with ID ${campaignId} not found`);
@@ -86,22 +82,28 @@ export const useModeration = () => {
     } catch (err) {
       console.error('Error in fetchCampaignById:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch campaign');
+      setIsLoading(false); // S'assurer que isLoading est mis à false même en cas d'erreur
       return null;
-    } finally {
-      setIsLoading(false);
     }
   }, [account?.address]);
 
   // Fonction pour vérifier la disponibilité des campagnes par type
   const checkCampaignsAvailability = useCallback(async () => {
     try {
-      // TEMPORAIRE: Utiliser des données mockées pour tester l'interface
-      // TODO: Remplacer par les vraies appels API quand la base de données sera configurée
-      const { mockCampaignsAvailability } = await import('../mockData');
+      // Utiliser l'API pour vérifier la disponibilité
+      const campaigns = await fetchAvailableCampaigns();
       
-      return mockCampaignsAvailability;
-    } catch (error) {
-      console.error('Error checking campaigns availability:', error);
+      // Analyser les campagnes disponibles par type
+      const availability = {
+        hasInitialB2CCampaigns: campaigns.some(c => c.type === 'INITIAL' && c.creatorType === 'B2C_AGENCIES'),
+        hasInitialIndividualCampaigns: campaigns.some(c => c.type === 'INITIAL' && c.creatorType === 'INDIVIDUAL_CREATORS'),
+        hasCompletionB2CCampaigns: campaigns.some(c => c.type === 'COMPLETION' && c.creatorType === 'FOR_B2C'),
+        hasCompletionIndividualCampaigns: campaigns.some(c => c.type === 'COMPLETION' && c.creatorType === 'FOR_INDIVIDUALS')
+      };
+
+      return availability;
+    } catch (err) {
+      console.error('Error checking campaigns availability:', err);
       return {
         hasInitialB2CCampaigns: false,
         hasInitialIndividualCampaigns: false,
@@ -109,7 +111,7 @@ export const useModeration = () => {
         hasCompletionIndividualCampaigns: false
       };
     }
-  }, []);
+  }, [fetchAvailableCampaigns]);
 
   // Fonction pour soumettre une décision de modération
   const submitModerationDecision = useCallback(async (
@@ -183,15 +185,123 @@ export const useModeration = () => {
     const loadCampaignFromUrl = async () => {
       const urlParams = new URLSearchParams(window.location.search);
       const campaignId = urlParams.get('campaignId');
+      const type = urlParams.get('type');
+      const subtype = urlParams.get('subtype');
       
       if (campaignId && account?.address) {
-        console.log('Loading campaign from URL:', campaignId);
+        console.log('Loading campaign from URL:', campaignId, 'type:', type, 'subtype:', subtype);
         await fetchCampaignById(campaignId);
+      } else if (account?.address && type && subtype) {
+        // Si pas de campaignId spécifique, charger la première campagne disponible pour ce type/sous-type
+        console.log('No specific campaignId, loading first available for:', type, subtype);
+        const campaigns = await fetchAvailableCampaigns(
+          type === 'completion' ? 'COMPLETION' : 'INITIAL',
+          subtype === 'b2c-agencies' ? 'B2C_AGENCIES' :
+          subtype === 'individual-creators' ? 'INDIVIDUAL_CREATORS' :
+          subtype === 'for-b2c' ? 'FOR_B2C' : 'FOR_INDIVIDUALS'
+        );
+        
+        if (campaigns && campaigns.length > 0) {
+          const firstCampaign = campaigns[0];
+          console.log('Loading first available campaign:', firstCampaign.title);
+          await fetchCampaignById(firstCampaign.id);
+        }
       }
     };
 
-    loadCampaignFromUrl();
-  }, [account?.address]);
+    // Charger immédiatement si on a déjà un account
+    if (account?.address) {
+      loadCampaignFromUrl();
+    }
+  }, [account?.address, fetchCampaignById, fetchAvailableCampaigns]);
+
+  // Charger aussi quand l'URL change (pour les navigations)
+  useEffect(() => {
+    const handleUrlChange = () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const campaignId = urlParams.get('campaignId');
+      const type = urlParams.get('type');
+      const subtype = urlParams.get('subtype');
+      
+      if (campaignId && account?.address) {
+        console.log('URL changed, loading campaign:', campaignId);
+        fetchCampaignById(campaignId);
+      } else if (account?.address && type && subtype && !campaignId) {
+        // Charger la première campagne disponible pour ce type/sous-type
+        console.log('URL changed, loading first available for:', type, subtype);
+        fetchAvailableCampaigns(
+          type === 'completion' ? 'COMPLETION' : 'INITIAL',
+          subtype === 'b2c-agencies' ? 'B2C_AGENCIES' :
+          subtype === 'individual-creators' ? 'INDIVIDUAL_CREATORS' :
+          subtype === 'for-b2c' ? 'FOR_B2C' : 'FOR_INDIVIDUALS'
+        ).then(campaigns => {
+          if (campaigns && campaigns.length > 0) {
+            const firstCampaign = campaigns[0];
+            console.log('Loading first available campaign:', firstCampaign.title);
+            fetchCampaignById(firstCampaign.id);
+          }
+        });
+      }
+    };
+
+    // Écouter les changements d'URL
+    window.addEventListener('popstate', handleUrlChange);
+    
+    // Vérifier l'URL actuelle
+    handleUrlChange();
+
+    return () => window.removeEventListener('popstate', handleUrlChange);
+  }, [account?.address, fetchCampaignById, fetchAvailableCampaigns]);
+
+  // Fonction utilitaire pour charger une campagne selon les critères
+  const loadCampaignForCriteria = useCallback(async (type: string, subtype: string) => {
+    if (!account?.address) return null;
+    
+    try {
+      console.log('Loading campaign for criteria:', type, subtype);
+      
+      // Convertir les paramètres UI vers les types Prisma
+      const prismaType = type === 'completion' ? 'COMPLETION' : 'INITIAL';
+      const prismaCreatorType = subtype === 'b2c-agencies' ? 'B2C_AGENCIES' :
+                               subtype === 'individual-creators' ? 'INDIVIDUAL_CREATORS' :
+                               subtype === 'for-b2c' ? 'FOR_B2C' : 'FOR_INDIVIDUALS';
+      
+      const campaigns = await fetchAvailableCampaigns(prismaType, prismaCreatorType);
+      
+      if (campaigns && campaigns.length > 0) {
+        const firstCampaign = campaigns[0];
+        console.log('Found campaign for criteria:', firstCampaign.title);
+        const session = await fetchCampaignById(firstCampaign.id);
+        return session;
+      } else {
+        console.log('No campaigns found for criteria:', type, subtype);
+        setCurrentSession(null);
+        return null;
+      }
+    } catch (error) {
+      console.error('Error loading campaign for criteria:', error);
+      setCurrentSession(null);
+      return null;
+    }
+  }, [account?.address, fetchAvailableCampaigns, fetchCampaignById]);
+
+  // Charger la campagne au montage si on a un campaignId dans l'URL
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const campaignId = urlParams.get('campaignId');
+      const type = urlParams.get('type');
+      const subtype = urlParams.get('subtype');
+      
+      if (campaignId && account?.address && !currentSession) {
+        console.log('Initial load, campaign ID found:', campaignId);
+        fetchCampaignById(campaignId);
+      } else if (!campaignId && type && subtype && account?.address && !currentSession) {
+        console.log('Initial load, no campaign ID, loading for:', type, subtype);
+        loadCampaignForCriteria(type, subtype);
+      }
+    }
+  }, [account?.address, currentSession, fetchCampaignById, loadCampaignForCriteria]);
 
   return {
     currentSession,
@@ -201,7 +311,10 @@ export const useModeration = () => {
     submitModerationDecision,
     submitCompletionScore,
     fetchCampaignById,
+    fetchAvailableCampaigns,
     checkCampaignsAvailability,
-    refreshData: () => checkCampaignsAvailability()
+    loadCampaignForCriteria,
+    refreshData: () => checkCampaignsAvailability(),
+    setCurrentSession
   };
 }; 

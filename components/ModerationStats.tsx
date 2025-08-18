@@ -13,6 +13,7 @@ interface ModerationStatsProps {
     validVotes: number;
     refuseVotes: number;
     requiredRatio: number; // 2:1 = 2, 3:1 = 3, etc.
+    totalVotes: number;
   };
   contentType: 'b2c' | 'agency' | 'individual';
 }
@@ -23,11 +24,11 @@ const ModerationStats: React.FC<ModerationStatsProps> = ({
   voting,
   contentType
 }) => {
-  const stakersPercentage = Math.min((stakers.current / stakers.required) * 100, 100);
+  // Calculs des pourcentages
+  const stakersPercentage = Math.min((stakers.current / 22) * 100, 100);
   const stakedPercentage = Math.min((staking.stakedAmount / staking.mintPrice) * 100, 100);
-  const totalVotes = voting.validVotes + voting.refuseVotes;
-  const validPercentage = totalVotes > 0 ? (voting.validVotes / totalVotes) * 100 : 50;
-  const refusePercentage = totalVotes > 0 ? (voting.refuseVotes / totalVotes) * 100 : 50;
+  const validPercentage = voting.totalVotes > 0 ? (voting.validVotes / voting.totalVotes) * 100 : 0;
+  const refusePercentage = voting.totalVotes > 0 ? (voting.refuseVotes / voting.totalVotes) * 100 : 0;
 
   const getContentTypeLabel = () => {
     switch (contentType) {
@@ -48,13 +49,13 @@ const ModerationStats: React.FC<ModerationStatsProps> = ({
         {/* Stakers Progress */}
         <div className="stat-item">
           <div className="stat-header">
-            <span>Minimum {stakers.required} active stakers have voted</span>
-            <span className="stat-value">{stakers.current}/{stakers.required}</span>
+            <span>22 modérateurs minimum ont voté</span>
+            <span className="stat-value">{stakers.current}/22</span>
           </div>
           <div className="progress-bar">
             <div 
               className="progress-fill primary" 
-              style={{ width: `${stakersPercentage}%` }}
+              style={{ width: `${Math.min((stakers.current / 22) * 100, 100)}%` }}
             />
           </div>
         </div>

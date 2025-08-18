@@ -66,6 +66,11 @@ model Campaign {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   
+  // Champs pour les campagnes de completion
+  originalCampaignCompanyName String?  // Nom de l'entreprise pour FOR_B2C
+  originalCreatorWallet       String?  // Wallet du créateur original pour FOR_INDIVIDUALS
+  completerWallet            String?  // Wallet du compléteur
+  
   // Relations
   creatorInfo    CreatorInfo?
   content        CampaignContent?
@@ -98,6 +103,7 @@ model CampaignContent {
   
   // Contenu de la campagne
   videoUrl     String
+  videoOrientation String? @default("horizontal") // "horizontal" ou "vertical"
   startingStory String
   guidelines   String?
   
@@ -135,7 +141,7 @@ model ModerationProgress {
   campaign     Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
   
   // Progression de la modération
-  stakersRequired    Int @default(5)
+  stakersRequired    Int @default(22)  // Changé de 5 à 22
   stakers           Int @default(0)
   stakedAmount      Float @default(0)
   mintPrice         Float @default(0)
@@ -181,3 +187,5 @@ enum CreatorType {
   FOR_B2C
   FOR_INDIVIDUALS
 } 
+
+ 

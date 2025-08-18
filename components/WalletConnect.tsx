@@ -3,7 +3,7 @@
 import { ConnectButton, useActiveAccount } from "thirdweb/react";
 import { ThirdwebProvider } from "thirdweb/react";
 import { createThirdwebClient } from "thirdweb";
-import { ethereum } from "thirdweb/chains";
+import { defineChain } from "thirdweb/chains";
 import { inAppWallet } from "thirdweb/wallets";
 import { walletConnect } from "thirdweb/wallets";
 import { useEffect, useState } from "react";

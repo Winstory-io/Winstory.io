@@ -27,14 +27,14 @@
 }
 
 .moderationPanelLeft {
-  width: 55%;
+  width: 45%;
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
 .moderationPanelRight {
-  width: 35%;
+  width: 45%;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -62,6 +62,34 @@
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
   background-color: #222;
   position: relative;
+}
+
+/* Style spécifique pour les vidéos verticales - Optimisé pour visibilité sans scroll */
+.campaignVideo.vertical {
+  width: 280px; /* Largeur pour format vertical */
+  height: 420px; /* Hauteur pour format vertical (ratio 2:3 ≈ 9:16) */
+  max-width: 90%; /* Responsive pour mobile */
+  max-height: 45vh; /* Limite pour éviter le scroll */
+  object-fit: cover; /* Remplit le conteneur vertical même avec vidéo horizontale */
+  object-position: center;
+  background: #000;
+  border-radius: 12px;
+}
+
+/* Responsive pour vidéos verticales sur mobile */
+@media (max-width: 768px) {
+  .campaignVideo.vertical {
+    width: 260px; /* Proportionnellement réduit pour mobile */
+    height: 390px; /* Maintient le ratio 2:3, visible sans scroll */
+    max-width: 90vw; /* S'adapte aux petits écrans */
+  }
+}
+
+@media (max-width: 480px) {
+  .campaignVideo.vertical {
+    width: 220px; /* Encore plus petit pour très petits écrans */
+    height: 330px; /* Maintient le ratio 2:3, visible sans scroll */
+  }
 }
 
 .cornerBubble {

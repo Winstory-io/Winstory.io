@@ -32,6 +32,7 @@ export interface CampaignContent {
   id: string;
   campaignId: string;
   videoUrl: string;
+  videoOrientation?: 'horizontal' | 'vertical';
   startingStory: string;
   guidelines?: string;
 }
@@ -144,14 +145,9 @@ export interface ModerationCampaign {
   metadata: CampaignMetadata;
   progress: ModerationProgress;
   // Propriétés supplémentaires pour les complétions
-  originalCampaign?: {
-    companyName?: string;
-    walletAddress: string;
-  };
-  originalCreator?: {
-    walletAddress: string;
-  };
-  completerWallet?: string;
+  originalCampaignCompanyName?: string;  // Nom de l'entreprise pour FOR_B2C
+  originalCreatorWallet?: string;        // Wallet du créateur original pour FOR_INDIVIDUALS
+  completerWallet?: string;             // Wallet du compléteur
 }
 
 // Fonctions utilitaires pour le mapping
