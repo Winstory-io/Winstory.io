@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import { getVideoFromIndexedDB } from '@/lib/videoStorage';
 
 const CloseIcon = ({ onClick }: { onClick: () => void }) => (
   <svg onClick={onClick} width={32} height={32} viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ cursor: 'pointer', position: 'absolute', top: 24, right: 24, zIndex: 100 }}>
@@ -17,8 +18,12 @@ interface RecapData {
     guideline: string;
   };
   film?: {
-    url: string;
+    url?: string; // Garde pour compatibilité
+    videoId?: string; // Nouvel ID pour IndexedDB
     aiRequested: boolean;
+    fileName?: string;
+    fileSize?: number;
+    format?: string;
   };
   completions?: {
     wincValue: number;
@@ -264,6 +269,7 @@ export default function IndividualRecapPage() {
   const [showFullStartingStory, setShowFullStartingStory] = useState(false);
   const [showFullGuideline, setShowFullGuideline] = useState(false);
   const [economicData, setEconomicData] = useState<any>(null);
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
 
   useEffect(() => {
     // Charger les données depuis le localStorage
@@ -284,6 +290,28 @@ export default function IndividualRecapPage() {
     if (filmData) {
       try {
         recapData.film = JSON.parse(filmData);
+        console.log("Film data loaded:", {
+          hasUrl: !!recapData.film?.url,
+          hasVideoId: !!recapData.film?.videoId,
+          urlType: recapData.film?.url ? (recapData.film.url.startsWith('data:') ? 'base64' : 'blob') : 'none',
+          urlLength: recapData.film?.url?.length || 0,
+          fileName: recapData.film?.fileName
+        });
+        
+        // Charger la vidéo depuis IndexedDB si on a un videoId
+        if (recapData.film?.videoId) {
+          getVideoFromIndexedDB(recapData.film.videoId).then(videoFile => {
+            if (videoFile) {
+              const url = URL.createObjectURL(videoFile);
+              setVideoUrl(url);
+              console.log('Video loaded from IndexedDB:', url);
+            } else {
+              console.warn('Video not found in IndexedDB for ID:', recapData.film?.videoId);
+            }
+          }).catch(error => {
+            console.error('Failed to load video from IndexedDB:', error);
+          });
+        }
       } catch (e) {
         console.error("Error parsing film data:", e);
       }
@@ -410,11 +438,17 @@ export default function IndividualRecapPage() {
   };
 
   const handleStartingStoryClick = () => {
-    setShowFullStartingStory(!showFullStartingStory);
+    // Ne toggle que si le texte est assez long pour être tronqué
+    if (recap.story?.startingStory && recap.story.startingStory.length > 200) {
+      setShowFullStartingStory(!showFullStartingStory);
+    }
   };
 
   const handleGuidelineClick = () => {
-    setShowFullGuideline(!showFullGuideline);
+    // Ne toggle que si le texte est assez long pour être tronqué
+    if (recap.story?.guideline && recap.story.guideline.length > 200) {
+      setShowFullGuideline(!showFullGuideline);
+    }
   };
 
   const truncateText = (text: string, maxLength: number = 200) => {
@@ -512,7 +546,7 @@ export default function IndividualRecapPage() {
                       fontSize: 16, 
                       lineHeight: 1.6, 
                       whiteSpace: 'pre-line',
-                      cursor: 'pointer',
+                      cursor: (recap.story?.startingStory && recap.story.startingStory.length > 200) ? 'pointer' : 'default',
                       padding: '8px',
                       borderRadius: '6px',
                       transition: 'background-color 0.2s',
@@ -531,7 +565,7 @@ export default function IndividualRecapPage() {
                       ? recap.story.startingStory 
                       : truncateText(recap.story.startingStory, 200)
                     }
-                    {!showFullStartingStory && recap.story.startingStory && (
+                    {!showFullStartingStory && recap.story.startingStory && recap.story.startingStory.length > 200 && (
                       <div style={{ 
                         color: '#FFD600', 
                         fontSize: '14px', 
@@ -553,7 +587,7 @@ export default function IndividualRecapPage() {
                       fontSize: 16, 
                       lineHeight: 1.6, 
                       whiteSpace: 'pre-line',
-                      cursor: 'pointer',
+                      cursor: (recap.story?.guideline && recap.story.guideline.length > 200) ? 'pointer' : 'default',
                       padding: '8px',
                       borderRadius: '6px',
                       transition: 'background-color 0.2s',
@@ -573,7 +607,7 @@ export default function IndividualRecapPage() {
                       : truncateText(recap.story.guideline, 200)
                     }
                   </div>
-                  {!showFullGuideline && (
+                  {!showFullGuideline && recap.story.guideline && recap.story.guideline.length > 200 && (
                     <div style={{ 
                       color: '#FFD600', 
                       fontSize: '14px', 
@@ -597,7 +631,7 @@ export default function IndividualRecapPage() {
               </div>
               <div style={{ background: '#000', border: '2px solid #FFD600', borderRadius: 12, padding: 20 }}>
                 {/* Affichage de la preview vidéo */}
-                {recap.film.url ? (
+                {(videoUrl || (recap.film.url && recap.film.url !== 'null' && recap.film.url.length > 10)) ? (
                   <div style={{ textAlign: 'center' }}>
                     <div style={{ color: '#FFD600', fontWeight: 600, fontSize: 16, marginBottom: 12 }}>Video Preview:</div>
                     
@@ -616,7 +650,7 @@ export default function IndividualRecapPage() {
                     }}>
                       <video
                         controls
-                        src={recap.film.url}
+                        src={videoUrl || recap.film.url}
                         style={{ 
                           width: '100%', 
                           height: '100%', 
@@ -626,6 +660,13 @@ export default function IndividualRecapPage() {
                         }}
                         preload="metadata"
                         playsInline
+                        onError={(e) => {
+                          console.warn('Video failed to load:', recap.film.url);
+                          // Fallback: afficher un message d'erreur dans la console
+                        }}
+                        onLoadStart={() => {
+                          console.log('Video loading started');
+                        }}
                       />
                     </div>
 

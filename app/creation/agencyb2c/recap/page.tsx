@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import ProtectedRoute from '@/components/ProtectedRoute';
+import { getVideoFromIndexedDB } from '@/lib/videoStorage';
 
 const Modal = ({ open, onClose, children }: { open: boolean, onClose: () => void, children: React.ReactNode }) => {
   if (!open) return null;
@@ -21,6 +22,7 @@ export default function AgencyB2CRecap() {
   const [modal, setModal] = useState<{ open: boolean, content: React.ReactNode }>({ open: false, content: null });
   const [confirmed, setConfirmed] = useState(false);
   const [showLeaveModal, setShowLeaveModal] = useState(false);
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
 
   useEffect(() => {
     const readLocalStorage = () => {
@@ -28,6 +30,28 @@ export default function AgencyB2CRecap() {
       const company = JSON.parse(localStorage.getItem("company") || "null");
       const story = JSON.parse(localStorage.getItem("story") || "null");
       const film = JSON.parse(localStorage.getItem("film") || "null");
+      console.log("Agency B2C Film data loaded:", {
+        hasUrl: !!film?.url,
+        hasVideoId: !!film?.videoId,
+        urlType: film?.url ? (film.url.startsWith('data:') ? 'base64' : 'blob') : 'none',
+        urlLength: film?.url?.length || 0,
+        fileName: film?.fileName
+      });
+      
+      // Charger la vidéo depuis IndexedDB si on a un videoId
+      if (film?.videoId) {
+        getVideoFromIndexedDB(film.videoId).then(videoFile => {
+          if (videoFile) {
+            const url = URL.createObjectURL(videoFile);
+            setVideoUrl(url);
+            console.log('Agency B2C Video loaded from IndexedDB:', url);
+          } else {
+            console.warn('Agency B2C Video not found in IndexedDB for ID:', film?.videoId);
+          }
+        }).catch(error => {
+          console.error('Failed to load Agency B2C video from IndexedDB:', error);
+        });
+      }
       const standardToken = JSON.parse(localStorage.getItem("standardTokenReward") || "null");
       const standardItem = JSON.parse(localStorage.getItem("standardItemReward") || "null");
       const premiumToken = JSON.parse(localStorage.getItem("premiumTokenReward") || "null");
@@ -97,13 +121,30 @@ export default function AgencyB2CRecap() {
   const openModal = (label: string, value: string | undefined, isFilm?: boolean) => {
     setModal({
       open: true,
-      content: isFilm && recap.film?.url ? (
+      content: isFilm && (videoUrl || (recap.film?.url && recap.film.url !== 'null' && recap.film.url.length > 10)) ? (
         <div>
           <h3 style={{ marginBottom: 16, fontSize: 20 }}>{label}</h3>
-          <video controls style={{ width: '100%', maxWidth: 500, borderRadius: 8 }}>
-            <source src={recap.film.url} type="video/mp4" />
+          <video 
+            controls 
+            style={{ width: '100%', maxWidth: 500, borderRadius: 8 }}
+            onError={(e) => {
+              console.warn('Video failed to load in modal:', videoUrl || recap.film.url);
+            }}
+            onLoadStart={() => {
+              console.log('Video loading started in modal');
+            }}
+          >
+            <source src={videoUrl || recap.film.url} type="video/mp4" />
             Your browser does not support the video tag.
           </video>
+          {/* Informations sur le fichier */}
+          {recap.film.fileName && (
+            <div style={{ marginTop: 12, padding: 8, background: 'rgba(255,215,0,0.1)', borderRadius: 4 }}>
+              <div style={{ fontSize: 12, color: '#FFD600' }}>
+                📁 {recap.film.fileName} • {recap.film.fileSize ? Math.round(recap.film.fileSize / (1024*1024) * 100)/100 + ' MB' : ''} • {recap.film.format || 'unknown format'}
+              </div>
+            </div>
+          )}
         </div>
       ) : (
         <div>

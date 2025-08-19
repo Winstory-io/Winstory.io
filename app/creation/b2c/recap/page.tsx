@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import ProtectedRoute from '@/components/ProtectedRoute';
+import { getVideoFromIndexedDB } from '@/lib/videoStorage';
 
 const Modal = ({ open, onClose, children }: { open: boolean, onClose: () => void, children: React.ReactNode }) => {
   if (!open) return null;
@@ -21,6 +22,7 @@ export default function RecapB2C() {
   const [modal, setModal] = useState<{ open: boolean, content: React.ReactNode }>({ open: false, content: null });
   const [confirmed, setConfirmed] = useState(false);
   const [showLeaveModal, setShowLeaveModal] = useState(false);
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
 
   useEffect(() => {
     const readLocalStorage = () => {
@@ -28,6 +30,28 @@ export default function RecapB2C() {
       const company = JSON.parse(localStorage.getItem("company") || "null");
       const story = JSON.parse(localStorage.getItem("story") || "null");
       const film = JSON.parse(localStorage.getItem("film") || "null");
+      console.log("B2C Film data loaded:", {
+        hasUrl: !!film?.url,
+        hasVideoId: !!film?.videoId,
+        urlType: film?.url ? (film.url.startsWith('data:') ? 'base64' : 'blob') : 'none',
+        urlLength: film?.url?.length || 0,
+        fileName: film?.fileName
+      });
+      
+      // Charger la vidéo depuis IndexedDB si on a un videoId
+      if (film?.videoId) {
+        getVideoFromIndexedDB(film.videoId).then(videoFile => {
+          if (videoFile) {
+            const url = URL.createObjectURL(videoFile);
+            setVideoUrl(url);
+            console.log('B2C Video loaded from IndexedDB:', url);
+          } else {
+            console.warn('B2C Video not found in IndexedDB for ID:', film?.videoId);
+          }
+        }).catch(error => {
+          console.error('Failed to load B2C video from IndexedDB:', error);
+        });
+      }
       const standardToken = JSON.parse(localStorage.getItem("standardTokenReward") || "null");
       const standardItem = JSON.parse(localStorage.getItem("standardItemReward") || "null");
       const premiumToken = JSON.parse(localStorage.getItem("premiumTokenReward") || "null");
@@ -97,8 +121,8 @@ export default function RecapB2C() {
   const openModal = (label: string, value: string | undefined, isFilm?: boolean) => {
     setModal({
       open: true,
-      content: isFilm && recap.film?.url ? (
-        <video src={recap.film.url} controls style={{ width: '100%', borderRadius: 12 }} />
+      content: isFilm && (videoUrl || recap.film?.url) ? (
+        <video src={videoUrl || recap.film.url} controls style={{ width: '100%', borderRadius: 12 }} />
       ) : (
         <div style={{ color: '#FFD600', fontSize: 18, whiteSpace: 'pre-line' }}>
           <b>{label}</b>

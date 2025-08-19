@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { storeVideoInIndexedDB, generateVideoId, cleanupOldVideos } from '@/lib/videoStorage';
 
 // --- Icons ---
 const BriefcaseIcon = () => (
@@ -136,14 +137,43 @@ export default function YourFilmPage() {
     setPreferWinstory(event.target.checked);
   };
 
-  const handleNext = () => {
-    // Sauvegarde dans le localStorage
-    localStorage.setItem("film", JSON.stringify({
-      aiRequested: preferWinstory,
-      url: videoPreview // null si pas de vidéo
-    }));
-    // Redirige vers la page Rewards or Not pour la suite du process B2C
-    router.push('/creation/b2c/rewardsornot');
+  const handleNext = async () => {
+    // Sauvegarde dans IndexedDB pour éviter les limites de localStorage
+    if (video) {
+      try {
+        // Stocker le fichier vidéo dans IndexedDB
+        const videoId = generateVideoId();
+        await storeVideoInIndexedDB(videoId, video);
+        
+        // Nettoyer les anciennes vidéos en arrière-plan
+        cleanupOldVideos().catch(console.warn);
+        
+        // Sauvegarder seulement les métadonnées dans localStorage
+        localStorage.setItem("film", JSON.stringify({
+          aiRequested: preferWinstory,
+          videoId: videoId, // ID pour récupérer la vidéo depuis IndexedDB
+          fileName: video?.name || null,
+          fileSize: video?.size || null,
+          format: videoFormat || null
+        }));
+        
+        // Redirige vers la page Rewards or Not pour la suite du process B2C
+        router.push('/creation/b2c/rewardsornot');
+      } catch (error) {
+        console.error('Failed to store video:', error);
+        alert('Failed to save video. Please try again.');
+      }
+    } else {
+      // Pas de vidéo, sauvegarder quand même les données
+      localStorage.setItem("film", JSON.stringify({
+        aiRequested: preferWinstory,
+        videoId: null,
+        fileName: null,
+        fileSize: null,
+        format: null
+      }));
+      router.push('/creation/b2c/rewardsornot');
+    }
   };
 
   const handleUploadClick = () => {
