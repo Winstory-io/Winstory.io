@@ -1,7 +1,3 @@
 {
-  "/creation/b2c/login/page": "app/creation/b2c/login/page.js",
-  "/welcome/page": "app/welcome/page.js",
-  "/welcome/tooltip/page": "app/welcome/tooltip/page.js",
-  "/mywin/page": "app/mywin/page.js",
-  "/creation/youare/page": "app/creation/youare/page.js"
+  "/creation/individual/yourcompletions/page": "app/creation/individual/yourcompletions/page.js"
 }

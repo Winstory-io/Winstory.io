@@ -64,19 +64,19 @@ function simulateCampaign(P: number, N: number, CR: number = N) {
   // Valeur totale du pool
   const totalValue = (P * CR) + mint;
 
-  // Partages de base (la somme ≈ 1.0)
-  const BASE_TOP3 = 0.55;
-  const BASE_CREATOR = 0.20;
-  const BASE_PLATFORM = 0.07;      // peut descendre dynamiquement jusqu'à 0.03
-  const BASE_MODERATORS = 0.18;    // peut descendre dynamiquement jusqu'à 0.10
+  // Partages de base (la somme ≈ 1.0) - Platform réduite de 25%, redistribuée équitablement
+  const BASE_TOP3 = 0.56;          // +0.01 (augmentation)
+  const BASE_CREATOR = 0.203;      // +0.003 (augmentation)
+  const BASE_PLATFORM = 0.0525;    // -0.0175 (réduction de 25% de 0.07)
+  const BASE_MODERATORS = 0.1845;  // +0.0045 (augmentation pour bénéficier de la réduction platform)
 
   // Boost des Top3 quand la complétion est faible, pris sur mods/platform en priorité
   const boostForWinners = 0.15 * (1 - tauxCompletion); // +15% vers Top3 à 0%, 0 à 100%
   let top3Share = BASE_TOP3 + boostForWinners;
 
-  // Réductions dynamiques mods/platform si CR bas
-  let platformShare = Math.max(0.03, BASE_PLATFORM - 0.02 * (1 - tauxCompletion));
-  let moderatorsShare = Math.max(0.10, BASE_MODERATORS - 0.08 * (1 - tauxCompletion));
+  // Réductions dynamiques mods/platform si CR bas (ajustées pour la nouvelle répartition)
+  let platformShare = Math.max(0.0225, BASE_PLATFORM - 0.015 * (1 - tauxCompletion)); // Réduit de 25%
+  let moderatorsShare = Math.max(0.16, BASE_MODERATORS - 0.015 * (1 - tauxCompletion)); // Augmenté (bénéficie de la réduction platform)
 
   // Reste pour le créateur (plancher 12%)
   let creatorShare = 1 - (top3Share + platformShare + moderatorsShare);
@@ -202,39 +202,16 @@ function simulateCampaign(P: number, N: number, CR: number = N) {
     creatorGain = 0;
     creatorNetGain = -mint;
     
-    // IMPORTANT : Le MINT initial doit être redistribué vers Winstory et modérateurs
-    // même sous 5 complétions, car le créateur ne peut pas être remboursé
-    const totalRefunds = top1Final + top2Final + top3Final; // 3 × P
-    const mintToRedistribute = mint; // Le MINT initial à redistribuer
+    // NOUVEAU : Gains modérateurs strictement croissants pour éviter les coalitions
+    // Formule : gain_base + (completions_ratio * bonus_croissance)
+    // À CR=0 : gain minimal, à CR=4 : gain qui assure continuité avec CR=5
+    const baseModeratorGain = mint * 0.15; // Gain de base minimal (15% du MINT)
+    const maxModeratorGainBeforeNormal = mint * 0.35; // Gain max avant passage au mode normal
+    const completionRatio = CR / 4; // 0 à CR=0, 1 à CR=4
+    const growthBonus = (maxModeratorGainBeforeNormal - baseModeratorGain) * completionRatio;
     
-    // Répartition du MINT initial : Winstory + Modérateurs + Ajustement Top3
-    const platformFromMint = Math.round(mintToRedistribute * 0.10 * 100) / 100; // 10% du MINT (réduit)
-    const moderatorsFromMint = Math.round(mintToRedistribute * 0.20 * 100) / 100; // 20% du MINT (réduit)
-    const remainingForTop3 = Math.round(mintToRedistribute * 0.70 * 100) / 100; // 70% du MINT pour Top3 (augmenté)
-    
-    // Ajuster les gains Top3 avec le surplus du MINT
-    const top3Needs = totalRefunds; // 3 × P
-    const top3FromPool = (P * CR); // Valeur des complétions actuelles
-    const top3Deficit = Math.max(0, top3Needs - top3FromPool);
-    
-    if (top3Deficit > 0) {
-      // Utiliser le MINT restant pour combler le déficit Top3
-      const top3Bonus = Math.min(remainingForTop3, top3Deficit);
-      const top3BonusPerWinner = Math.round(top3Bonus / 3 * 100) / 100;
-      
-      top1Final = P + top3BonusPerWinner;
-      top2Final = P + top3BonusPerWinner;
-      top3Final = P + top3BonusPerWinner;
-      
-      // Ajuster platform et moderators avec le reste
-      const remainingMint = mintToRedistribute - top3Bonus;
-      platform = platformFromMint + Math.round(remainingMint * 0.375 * 100) / 100; // 15% + 37.5% du reste
-      moderators = moderatorsFromMint + Math.round(remainingMint * 0.625 * 100) / 100; // 25% + 62.5% du reste
-    } else {
-      // Pas de déficit, Top3 peut être remboursé entièrement
-      platform = platformFromMint;
-      moderators = moderatorsFromMint;
-    }
+    moderators = Math.round((baseModeratorGain + growthBonus) * 100) / 100;
+    platform = Math.round((mint - moderators) * 100) / 100; // Le reste va à la plateforme
   }
 
   // Arrondis finaux
@@ -333,9 +310,9 @@ export default function IndividualRecapPage() {
         if (data.platform <= 0 || data.moderators <= 0) {
           console.warn("⚠️ Platform ou Moderators = 0 détecté, correction automatique appliquée");
           
-          // Calculer un minimum basé sur le MINT
-          const minPlatform = Math.max(0.1, data.mint * 0.05); // 5% du MINT minimum
-          const minModerators = Math.max(0.2, data.mint * 0.10); // 10% du MINT minimum
+          // Calculer un minimum basé sur le MINT (ajusté pour la réduction de 25% de la plateforme)
+          const minPlatform = Math.max(0.075, data.mint * 0.0375); // 3.75% du MINT minimum (réduit de 25%)
+          const minModerators = Math.max(0.2, data.mint * 0.10); // 10% du MINT minimum (inchangé)
           
           data.platform = Math.max(data.platform, minPlatform);
           data.moderators = Math.max(data.moderators, minModerators);
@@ -391,9 +368,9 @@ export default function IndividualRecapPage() {
         if (data.platform <= 0 || data.moderators <= 0) {
           console.warn("⚠️ Platform ou Moderators = 0 détecté, correction automatique appliquée");
           
-          // Calculer un minimum basé sur le MINT
-          const minPlatform = Math.max(0.1, data.mint * 0.05); // 5% du MINT minimum
-          const minModerators = Math.max(0.2, data.mint * 0.10); // 10% du MINT minimum
+          // Calculer un minimum basé sur le MINT (ajusté pour la réduction de 25% de la plateforme)
+          const minPlatform = Math.max(0.075, data.mint * 0.0375); // 3.75% du MINT minimum (réduit de 25%)
+          const minModerators = Math.max(0.2, data.mint * 0.10); // 10% du MINT minimum (inchangé)
           
           data.platform = Math.max(data.platform, minPlatform);
           data.moderators = Math.max(data.moderators, minModerators);
@@ -619,70 +596,146 @@ export default function IndividualRecapPage() {
                 Your Film
               </div>
               <div style={{ background: '#000', border: '2px solid #FFD600', borderRadius: 12, padding: 20 }}>
-                {/* Affichage des informations de la vidéo sans tentative de chargement */}
-                <div>
-                  <div style={{ color: '#FFD600', fontWeight: 600, fontSize: 16, marginBottom: 8 }}>Video Uploaded:</div>
-                  
-                  {/* Icône de vidéo */}
-                  <div style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'center',
-                    padding: '20px',
-                    background: 'rgba(255, 215, 0, 0.1)',
-                    borderRadius: '8px',
-                    border: '1px solid #FFD600',
-                    marginBottom: '16px'
-                  }}>
-                    <img 
-                      src="/importvideo.svg" 
-                      alt="Video Uploaded" 
-                      style={{ width: '80px', height: '80px', marginRight: '16px' }} 
-                    />
-                    <div style={{ color: '#FFD600', fontSize: '18px', fontWeight: '600' }}>
-                      ✓ Video Successfully Uploaded
-                    </div>
-                  </div>
-
-                  {/* Informations détaillées sur la vidéo */}
-                  {(recap.film as any).fileName && (
+                {/* Affichage de la preview vidéo */}
+                {recap.film.url ? (
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ color: '#FFD600', fontWeight: 600, fontSize: 16, marginBottom: 12 }}>Video Preview:</div>
+                    
+                    {/* Conteneur vidéo avec dimensions adaptatives */}
                     <div style={{ 
-                      padding: '16px', 
-                      background: 'rgba(255, 215, 0, 0.1)', 
-                      borderRadius: '8px', 
-                      border: '1px solid #FFD600',
-                      marginBottom: '12px'
+                      position: 'relative', 
+                      display: 'flex', 
+                      justifyContent: 'center', 
+                      alignItems: 'center',
+                      maxWidth: (recap.film as any).format === 'horizontal' ? '500px' : '300px',
+                      height: (recap.film as any).format === 'horizontal' ? '280px' : '400px',
+                      margin: '0 auto',
+                      background: '#000',
+                      borderRadius: '8px',
+                      border: '1px solid #FFD600'
                     }}>
-                      <div style={{ color: '#FFD600', fontSize: 14, fontWeight: 600, marginBottom: 8 }}>📁 File Details:</div>
-                      <div style={{ color: '#fff', fontSize: 14, marginBottom: 4 }}>
-                        <strong>Name:</strong> {(recap.film as any).fileName}
-                      </div>
-                      {(recap.film as any).fileSize && (
-                        <div style={{ color: '#fff', fontSize: 14, marginBottom: 4 }}>
-                          <strong>Size:</strong> {Math.round((recap.film as any).fileSize / (1024 * 1024) * 100) / 100} MB
-                        </div>
-                      )}
-                      {(recap.film as any).format && (
-                        <div style={{ color: '#fff', fontSize: 14 }}>
-                          <strong>Format:</strong> {(recap.film as any).format}
-                        </div>
-                      )}
+                      <video
+                        controls
+                        src={recap.film.url}
+                        style={{ 
+                          width: '100%', 
+                          height: '100%', 
+                          objectFit: 'contain', 
+                          background: '#000', 
+                          borderRadius: '8px'
+                        }}
+                        preload="metadata"
+                        playsInline
+                      />
                     </div>
-                  )}
 
-                  {/* Message informatif */}
-                  <div style={{ 
-                    padding: '12px', 
-                    background: 'rgba(24, 201, 100, 0.1)', 
-                    borderRadius: '6px', 
-                    border: '1px solid #18C964',
-                    textAlign: 'center'
-                  }}>
-                    <div style={{ color: '#18C964', fontSize: 12, fontStyle: 'italic' }}>
-                      Your video has been uploaded and will be used for community completions
+                    {/* Informations détaillées sur la vidéo */}
+                    {(recap.film as any).fileName && (
+                      <div style={{ 
+                        padding: '12px', 
+                        background: 'rgba(255, 215, 0, 0.1)', 
+                        borderRadius: '8px', 
+                        border: '1px solid #FFD600',
+                        marginTop: '16px',
+                        textAlign: 'left'
+                      }}>
+                        <div style={{ color: '#FFD600', fontSize: 14, fontWeight: 600, marginBottom: 8 }}>📁 File Details:</div>
+                        <div style={{ color: '#fff', fontSize: 14, marginBottom: 4 }}>
+                          <strong>Name:</strong> {(recap.film as any).fileName}
+                        </div>
+                        {(recap.film as any).fileSize && (
+                          <div style={{ color: '#fff', fontSize: 14, marginBottom: 4 }}>
+                            <strong>Size:</strong> {Math.round((recap.film as any).fileSize / (1024 * 1024) * 100) / 100} MB
+                          </div>
+                        )}
+                        {(recap.film as any).format && (
+                          <div style={{ color: '#fff', fontSize: 14 }}>
+                            <strong>Format:</strong> {(recap.film as any).format}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Message informatif */}
+                    <div style={{ 
+                      padding: '12px', 
+                      background: 'rgba(24, 201, 100, 0.1)', 
+                      borderRadius: '6px', 
+                      border: '1px solid #18C964',
+                      textAlign: 'center',
+                      marginTop: '12px'
+                    }}>
+                      <div style={{ color: '#18C964', fontSize: 12, fontStyle: 'italic' }}>
+                        ✓ Your video is ready for community completions
+                      </div>
                     </div>
                   </div>
-                </div>
+                ) : (
+                  /* Fallback si pas d'URL vidéo - garder l'ancien affichage */
+                  <div>
+                    <div style={{ color: '#FFD600', fontWeight: 600, fontSize: 16, marginBottom: 8 }}>Video Uploaded:</div>
+                    
+                    {/* Icône de vidéo */}
+                    <div style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center',
+                      padding: '20px',
+                      background: 'rgba(255, 215, 0, 0.1)',
+                      borderRadius: '8px',
+                      border: '1px solid #FFD600',
+                      marginBottom: '16px'
+                    }}>
+                      <img 
+                        src="/importvideo.svg" 
+                        alt="Video Uploaded" 
+                        style={{ width: '80px', height: '80px', marginRight: '16px' }} 
+                      />
+                      <div style={{ color: '#FFD600', fontSize: '18px', fontWeight: '600' }}>
+                        ✓ Video Successfully Uploaded
+                      </div>
+                    </div>
+
+                    {/* Informations détaillées sur la vidéo */}
+                    {(recap.film as any).fileName && (
+                      <div style={{ 
+                        padding: '16px', 
+                        background: 'rgba(255, 215, 0, 0.1)', 
+                        borderRadius: '8px', 
+                        border: '1px solid #FFD600',
+                        marginBottom: '12px'
+                      }}>
+                        <div style={{ color: '#FFD600', fontSize: 14, fontWeight: 600, marginBottom: 8 }}>📁 File Details:</div>
+                        <div style={{ color: '#fff', fontSize: 14, marginBottom: 4 }}>
+                          <strong>Name:</strong> {(recap.film as any).fileName}
+                        </div>
+                        {(recap.film as any).fileSize && (
+                          <div style={{ color: '#fff', fontSize: 14, marginBottom: 4 }}>
+                            <strong>Size:</strong> {Math.round((recap.film as any).fileSize / (1024 * 1024) * 100) / 100} MB
+                          </div>
+                        )}
+                        {(recap.film as any).format && (
+                          <div style={{ color: '#fff', fontSize: 14 }}>
+                            <strong>Format:</strong> {(recap.film as any).format}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Message informatif */}
+                    <div style={{ 
+                      padding: '12px', 
+                      background: 'rgba(24, 201, 100, 0.1)', 
+                      borderRadius: '6px', 
+                      border: '1px solid #18C964',
+                      textAlign: 'center'
+                    }}>
+                      <div style={{ color: '#18C964', fontSize: 12, fontStyle: 'italic' }}>
+                        Your video has been uploaded and will be used for community completions
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}

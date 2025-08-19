@@ -40,19 +40,19 @@ function simulateCampaign(P: number, N: number, CR: number = N) {
   // Valeur totale du pool
   const totalValue = (P * CR) + mint;
 
-  // Partages de base (la somme ≈ 1.0)
-  const BASE_TOP3 = 0.55;
-  const BASE_CREATOR = 0.20;
-  const BASE_PLATFORM = 0.07;      // peut descendre dynamiquement jusqu'à 0.03
-  const BASE_MODERATORS = 0.18;    // peut descendre dynamiquement jusqu'à 0.10
+  // Partages de base (la somme ≈ 1.0) - Platform réduite de 25%, redistribuée équitablement
+  const BASE_TOP3 = 0.56;          // +0.01 (augmentation)
+  const BASE_CREATOR = 0.203;      // +0.003 (augmentation)
+  const BASE_PLATFORM = 0.0525;    // -0.0175 (réduction de 25% de 0.07)
+  const BASE_MODERATORS = 0.1845;  // +0.0045 (augmentation pour bénéficier de la réduction platform)
 
   // Boost des Top3 quand la complétion est faible, pris sur mods/platform en priorité
   const boostForWinners = 0.15 * (1 - tauxCompletion); // +15% vers Top3 à 0%, 0 à 100%
   let top3Share = BASE_TOP3 + boostForWinners;
 
-  // Réductions dynamiques mods/platform si CR bas
-  let platformShare = Math.max(0.03, BASE_PLATFORM - 0.02 * (1 - tauxCompletion));
-  let moderatorsShare = Math.max(0.10, BASE_MODERATORS - 0.08 * (1 - tauxCompletion));
+  // Réductions dynamiques mods/platform si CR bas (ajustées pour la nouvelle répartition)
+  let platformShare = Math.max(0.0225, BASE_PLATFORM - 0.015 * (1 - tauxCompletion)); // Réduit de 25%
+  let moderatorsShare = Math.max(0.16, BASE_MODERATORS - 0.015 * (1 - tauxCompletion)); // Augmenté (bénéficie de la réduction platform)
 
   // Reste pour le créateur (plancher 12%)
   let creatorShare = 1 - (top3Share + platformShare + moderatorsShare);
@@ -178,39 +178,16 @@ function simulateCampaign(P: number, N: number, CR: number = N) {
     creatorGain = 0;
     creatorNetGain = -mint;
     
-    // IMPORTANT : Le MINT initial doit être redistribué vers Winstory et modérateurs
-    // même sous 5 complétions, car le créateur ne peut pas être remboursé
-    const totalRefunds = top1Final + top2Final + top3Final; // 3 × P
-    const mintToRedistribute = mint; // Le MINT initial à redistribuer
+    // NOUVEAU : Gains modérateurs strictement croissants pour éviter les coalitions
+    // Formule : gain_base + (completions_ratio * bonus_croissance)
+    // À CR=0 : gain minimal, à CR=4 : gain qui assure continuité avec CR=5
+    const baseModeratorGain = mint * 0.15; // Gain de base minimal (15% du MINT)
+    const maxModeratorGainBeforeNormal = mint * 0.35; // Gain max avant passage au mode normal
+    const completionRatio = CR / 4; // 0 à CR=0, 1 à CR=4
+    const growthBonus = (maxModeratorGainBeforeNormal - baseModeratorGain) * completionRatio;
     
-    // Répartition du MINT initial : Winstory + Modérateurs + Ajustement Top3
-    const platformFromMint = Math.round(mintToRedistribute * 0.10 * 100) / 100; // 10% du MINT (réduit)
-    const moderatorsFromMint = Math.round(mintToRedistribute * 0.20 * 100) / 100; // 20% du MINT (réduit)
-    const remainingForTop3 = Math.round(mintToRedistribute * 0.70 * 100) / 100; // 70% du MINT pour Top3 (augmenté)
-    
-    // Ajuster les gains Top3 avec le surplus du MINT
-    const top3Needs = totalRefunds; // 3 × P
-    const top3FromPool = (P * CR); // Valeur des complétions actuelles
-    const top3Deficit = Math.max(0, top3Needs - top3FromPool);
-    
-    if (top3Deficit > 0) {
-      // Utiliser le MINT restant pour combler le déficit Top3
-      const top3Bonus = Math.min(remainingForTop3, top3Deficit);
-      const top3BonusPerWinner = Math.round(top3Bonus / 3 * 100) / 100;
-      
-      top1Final = P + top3BonusPerWinner;
-      top2Final = P + top3BonusPerWinner;
-      top3Final = P + top3BonusPerWinner;
-      
-      // Ajuster platform et moderators avec le reste
-      const remainingMint = mintToRedistribute - top3Bonus;
-      platform = platformFromMint + Math.round(remainingMint * 0.375 * 100) / 100; // 15% + 37.5% du reste
-      moderators = moderatorsFromMint + Math.round(remainingMint * 0.625 * 100) / 100; // 25% + 62.5% du reste
-    } else {
-      // Pas de déficit, Top3 peut être remboursé entièrement
-      platform = platformFromMint;
-      moderators = moderatorsFromMint;
-    }
+    moderators = Math.round((baseModeratorGain + growthBonus) * 100) / 100;
+    platform = Math.round((mint - moderators) * 100) / 100; // Le reste va à la plateforme
   }
 
   // Arrondis finaux
@@ -335,9 +312,9 @@ const CompletionRateModal: React.FC<CompletionRateModalProps> = ({
       if (data.platform <= 0 || data.moderators <= 0) {
         console.warn("⚠️ Platform ou Moderators = 0 détecté, correction automatique appliquée");
         
-        // Calculer un minimum basé sur le MINT
-        const minPlatform = Math.max(0.1, data.mint * 0.05); // 5% du MINT minimum
-        const minModerators = Math.max(0.2, data.mint * 0.10); // 10% du MINT minimum
+        // Calculer un minimum basé sur le MINT (ajusté pour la réduction de 25% de la plateforme)
+        const minPlatform = Math.max(0.075, data.mint * 0.0375); // 3.75% du MINT minimum (réduit de 25%)
+        const minModerators = Math.max(0.2, data.mint * 0.10); // 10% du MINT minimum (inchangé)
         
         data.platform = Math.max(data.platform, minPlatform);
         data.moderators = Math.max(data.moderators, minModerators);

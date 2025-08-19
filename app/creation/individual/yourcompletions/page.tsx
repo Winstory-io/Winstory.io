@@ -43,11 +43,11 @@ function simulateCampaign(P: number, N: number, CR: number = N) {
   // Valeur totale du pool
   const totalValue = (P * CR) + mint;
 
-  // Partages de base (la somme ≈ 1.0)
-  const BASE_TOP3 = 0.55;
-  const BASE_CREATOR = 0.20;
-  const BASE_PLATFORM = 0.07;      // peut descendre dynamiquement jusqu'à 0.03
-  const BASE_MODERATORS = 0.18;    // peut descendre dynamiquement jusqu'à 0.10
+  // Partages de base (la somme ≈ 1.0) - Platform réduite de 25%, redistribuée équitablement
+  const BASE_TOP3 = 0.56;          // +0.01 (augmentation)
+  const BASE_CREATOR = 0.203;      // +0.003 (augmentation)
+  const BASE_PLATFORM = 0.0525;    // -0.0175 (réduction de 25% de 0.07)
+  const BASE_MODERATORS = 0.1845;  // +0.0045 (augmentation pour bénéficier de la réduction platform)
 
   // CORRECTION : Logique améliorée pour éviter les baisses contre-intuitives des gains modérateurs
   // Boost des Top3 quand la complétion est faible, mais avec protection des modérateurs
@@ -56,8 +56,8 @@ function simulateCampaign(P: number, N: number, CR: number = N) {
 
   // CORRECTION : Protection des modérateurs - gains toujours croissants
   // Au lieu de réduire drastiquement, on ajuste plus progressivement
-  let platformShare = Math.max(0.05, BASE_PLATFORM - 0.01 * (1 - tauxCompletion)); // Réduction plus douce
-  let moderatorsShare = Math.max(0.15, BASE_MODERATORS - 0.02 * (1 - tauxCompletion)); // Réduction plus douce
+  let platformShare = Math.max(0.0375, BASE_PLATFORM - 0.0075 * (1 - tauxCompletion)); // Réduction plus douce (ajustée pour la nouvelle base)
+  let moderatorsShare = Math.max(0.16, BASE_MODERATORS - 0.015 * (1 - tauxCompletion)); // Augmenté (bénéficie de la réduction platform)
 
   // Reste pour le créateur (plancher 12%)
   let creatorShare = 1 - (top3Share + platformShare + moderatorsShare);
@@ -170,23 +170,27 @@ function simulateCampaign(P: number, N: number, CR: number = N) {
       }
     }
   } else {
-    // CORRECTION : Mode normal (CR >= 5) - Transition fluide pour les modérateurs
-    // Calculer d'abord les gains de base selon les parts normales
-    const baseModerators = Math.round(totalValue * moderatorsShare * 100) / 100;
+    // NOUVEAU : Mode normal (CR >= 5) - Gains modérateurs STRICTEMENT croissants
+    // Calculer le gain des modérateurs de façon croissante continue
     
-    // Créer une transition fluide depuis le mode remboursement
-    // À CR=5, les modérateurs doivent avoir au moins le gain qu'ils auraient eu à CR=4 + une croissance minimale
-    const transitionFactor = Math.min(1, Math.max(0, (CR - 5) / 5)); // 0 à CR=5, 1 à CR=10+
+    // À CR=4 : maxModeratorGainBeforeNormal = mint * 0.35
+    // À CR=5+ : gain basé sur le pool total avec croissance garantie
+    const cr4ModeratorGain = mint * 0.35; // Gain à CR=4 (référence)
     
-    // Gain minimum garanti basé sur le mode remboursement (extrapolé) + croissance minimale
-    const refundModeModerators = mint * Math.min(0.6, Math.max(0.35, 0.35 + 0.20 * 0.8)); // CR=4 equivalent
+    // Gain théorique basé sur le pool normal
+    const theoreticalModerators = Math.round(totalValue * moderatorsShare * 100) / 100;
     
-    // GARANTIR la croissance : au minimum le gain CR=4 + 1% de croissance
-    const guaranteedMinGain = refundModeModerators * 1.01; // +1% minimum
-    const minModeratorsGain = Math.max(baseModerators, guaranteedMinGain);
+    // GARANTIR la croissance : toujours > gain à CR=4, avec croissance linéaire
+    const completionProgress = Math.min(1, (CR - 5) / (N - 5)); // 0 à CR=5, 1 à CR=N
+    const minimumGrowthRate = 1.02; // +2% minimum par rapport à CR=4
+    const maximumGrowthRate = 1.5; // +50% maximum à 100% completion
     
-    // Transition progressive : de minModeratorsGain vers baseModerators
-    moderators = Math.round((minModeratorsGain + (baseModerators - minModeratorsGain) * transitionFactor) * 100) / 100;
+    const growthMultiplier = minimumGrowthRate + (maximumGrowthRate - minimumGrowthRate) * completionProgress;
+    const guaranteedMinGain = cr4ModeratorGain * growthMultiplier;
+    
+    // Prendre le maximum entre le gain théorique et le gain garanti croissant
+    moderators = Math.max(theoreticalModerators, guaranteedMinGain);
+    moderators = Math.round(moderators * 100) / 100;
     
     // Ajuster la plateforme pour maintenir l'équilibre
     const totalDistributed = creatorGain + top1 + top2 + top3 + moderators;
@@ -208,7 +212,7 @@ function simulateCampaign(P: number, N: number, CR: number = N) {
     // - Pas de "winners" (top1/2/3 = 0)
     // - Remboursement linéaire des completers existants (P × CR)
     // - Le créateur perd sa mise (MINT)
-    // - Le MINT est réparti entre Plateforme et Modérateurs avec un incentive croissant pour les modérateurs
+    // - NOUVEAU : Gains modérateurs strictement croissants pour éviter les coalitions
     top1Final = 0;
     top2Final = 0;
     top3Final = 0;
@@ -224,15 +228,16 @@ function simulateCampaign(P: number, N: number, CR: number = N) {
     creatorGain = 0;
     creatorNetGain = -mint;
 
-    // CORRECTION : Incentive modérateurs avec transition fluide vers le mode normal
-    // Part croissante avec CR (0 -> ~35%, 4 -> ~55%) sur le MINT
-    // Mais on prépare la transition pour éviter la discontinuité à CR=5
-    const linearFactor = Math.min(1, Math.max(0, CR / 5)); // 0.. <1 sous 5
-    const moderatorsRate = Math.min(0.6, Math.max(0.35, 0.35 + 0.20 * linearFactor));
-    const platformRate = 1 - moderatorsRate; // reste pour plateforme
-
-    platform = Math.round(mint * platformRate * 100) / 100;
-    moderators = Math.round(mint * moderatorsRate * 100) / 100;
+    // NOUVEAU : Gains modérateurs strictement croissants basés sur le nombre de completions
+    // Formule : gain_base + (completions_ratio * bonus_croissance)
+    // À CR=0 : gain minimal, à CR=4 : gain qui assure continuité avec CR=5
+    const baseModeratorGain = mint * 0.15; // Gain de base minimal (15% du MINT)
+    const maxModeratorGainBeforeNormal = mint * 0.35; // Gain max avant passage au mode normal
+    const completionRatio = CR / 4; // 0 à CR=0, 1 à CR=4
+    const growthBonus = (maxModeratorGainBeforeNormal - baseModeratorGain) * completionRatio;
+    
+    moderators = Math.round((baseModeratorGain + growthBonus) * 100) / 100;
+    platform = Math.round((mint - moderators) * 100) / 100; // Le reste va à la plateforme
   }
 
   // Arrondis finaux
@@ -362,9 +367,9 @@ const PoolDistributionChart = ({ data, isVisible, onClose }: { data: any, isVisi
     if (campaignData.platform <= 0 || campaignData.moderators <= 0) {
       console.warn("⚠️ Platform ou Moderators = 0 détecté, correction automatique appliquée");
       
-      // Calculer un minimum basé sur le MINT
-      const minPlatform = Math.max(0.1, campaignData.mint * 0.05); // 5% du MINT minimum
-      const minModerators = Math.max(0.2, campaignData.mint * 0.10); // 10% du MINT minimum
+      // Calculer un minimum basé sur le MINT (ajusté pour la réduction de 25% de la plateforme)
+      const minPlatform = Math.max(0.075, campaignData.mint * 0.0375); // 3.75% du MINT minimum (réduit de 25%)
+      const minModerators = Math.max(0.2, campaignData.mint * 0.10); // 10% du MINT minimum (inchangé)
       
       campaignData.platform = Math.max(campaignData.platform, minPlatform);
       campaignData.moderators = Math.max(campaignData.moderators, minModerators);
@@ -1951,10 +1956,10 @@ export default function YourCompletionsPage() {
 
                 <div style={{ marginBottom: 16 }}>
                   <strong style={{ color: '#FFD600' }}>🏆 Reward Distribution</strong><br />
-                  • <strong>Top 3 Winners:</strong> 50% of total pool + creator surplus + reductions<br />
+                  • <strong>Top 3 Winners:</strong> 56% of total pool + creator surplus + reductions<br />
                   • <strong>Creator:</strong> Capped at 1.5x MINT (≤60%) to 2.5x MINT (100%)<br />
-                  • <strong>Platform:</strong> 7% of total pool (10% - 30% reduction)<br />
-                  • <strong>Moderators:</strong> 32% of total pool (40% - 20% reduction)
+                  • <strong>Platform:</strong> 5.25% of total pool (25% reduction from previous 7%)<br />
+                  • <strong>Moderators:</strong> 18.45% of total pool (enhanced from platform reduction)
                 </div>
 
                 <div style={{ marginBottom: 16 }}>
