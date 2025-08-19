@@ -1,4 +1,10 @@
 {
+  "lib/hooks/useModeration.ts -> ../mockData": {
+    "id": "lib/hooks/useModeration.ts -> ../mockData",
+    "files": [
+      "static/chunks/_app-pages-browser_lib_mockData_ts.js"
+    ]
+  },
   "node_modules/thirdweb/dist/esm/chains/constants.js -> ./utils.js": {
     "id": "node_modules/thirdweb/dist/esm/chains/constants.js -> ./utils.js",
     "files": []

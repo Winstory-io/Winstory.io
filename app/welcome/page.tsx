@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import TipBox from '@/components/icons/TipBox';
 import CreationIcon from '@/components/icons/CreationIcon';
 import ModerationIcon from '@/components/icons/ModerationIcon';
@@ -9,10 +9,20 @@ import ExplorerIcon from '@/components/icons/ExplorerIcon';
 import { useRouter } from 'next/navigation';
 import { useWalletAddress } from '@/lib/hooks/useWalletConnection';
 import { clearUserCache } from '@/lib/utils';
+import { useActiveAccount, ConnectButton } from 'thirdweb/react';
+import { createThirdwebClient } from 'thirdweb';
+
+const client = createThirdwebClient({
+  clientId: "4ddc5eed2e073e550a7307845d10f348",
+});
 
 export default function Home() {
   const router = useRouter();
   const walletAddress = useWalletAddress();
+  const account = useActiveAccount();
+  const [showDisconnectMenu, setShowDisconnectMenu] = useState(false);
+  const [isForceDisconnected, setIsForceDisconnected] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   // Nettoyer automatiquement le cache à chaque visite de la page welcome
   useEffect(() => {
@@ -21,6 +31,49 @@ export default function Home() {
       clearUserCache();
     }
   }, []);
+
+  const truncateAddress = (address: string) => {
+    return `${address.slice(0, 6)}...${address.slice(-4)}`;
+  };
+
+  const handleForceDisconnect = () => {
+    // Marquer comme forcément déconnecté
+    setIsForceDisconnected(true);
+    
+    // Fermer le menu
+    setShowDisconnectMenu(false);
+  };
+
+  const toggleMenu = () => {
+    setShowDisconnectMenu(!showDisconnectMenu);
+  };
+
+  // Réinitialiser l'état de déconnexion forcée si un nouveau compte se connecte
+  useEffect(() => {
+    if (account && account.address) {
+      setIsForceDisconnected(false);
+    }
+  }, [account]);
+
+  // Fermer le menu si on clique en dehors
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setShowDisconnectMenu(false);
+      }
+    };
+
+    if (showDisconnectMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showDisconnectMenu]);
+
+  // Déterminer si le wallet est connecté (compte en compte la déconnexion forcée)
+  const isWalletConnected = account && account.address && !isForceDisconnected;
 
   return (
     <div
@@ -74,19 +127,163 @@ export default function Home() {
         </button>
       </div>
 
-      {/* Ampoule en haut à droite */}
+      {/* Zone en haut à droite avec wallet et tooltip */}
       <div
         style={{
           position: 'absolute',
           top: 32,
           right: 32,
-          cursor: 'pointer',
           zIndex: 10,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '16px',
         }}
-        onClick={() => router.push('/welcome/tooltip')}
       >
-        <TipBox />
+        {/* Affichage du wallet si connecté, sinon point rouge si déconnecté */}
+        {isWalletConnected ? (
+          /* Wallet Address Display with Disconnect Menu */
+          <div style={{ position: 'relative' }} ref={menuRef}>
+            <button
+              onClick={toggleMenu}
+              style={{
+                background: showDisconnectMenu ? 'rgba(0, 255, 0, 0.2)' : 'rgba(0, 255, 0, 0.1)',
+                border: '2px solid #00FF00',
+                borderRadius: '20px',
+                padding: '8px 16px',
+                color: '#00FF00',
+                fontWeight: 700,
+                fontSize: 14,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease'
+              }}
+            >
+              <div style={{
+                width: '8px',
+                height: '8px',
+                background: '#00FF00',
+                borderRadius: '50%',
+                animation: 'pulse 2s infinite'
+              }} />
+              {truncateAddress(account.address)}
+              <span style={{ 
+                fontSize: '12px', 
+                transition: 'transform 0.3s ease',
+                transform: showDisconnectMenu ? 'rotate(180deg)' : 'rotate(0deg)'
+              }}>
+                ▼
+              </span>
+            </button>
+            
+            {/* Disconnect Menu */}
+            {showDisconnectMenu && (
+              <div
+                style={{
+                  position: 'absolute',
+                  top: '100%',
+                  right: 0,
+                  marginTop: '8px',
+                  background: 'rgba(0, 0, 0, 0.95)',
+                  border: '2px solid #00FF00',
+                  borderRadius: '12px',
+                  padding: '12px',
+                  minWidth: '200px',
+                  zIndex: 1000,
+                  boxShadow: '0 4px 20px rgba(0, 255, 0, 0.3)'
+                }}
+              >
+                <div style={{
+                  width: '100%',
+                  padding: '8px 0',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  color: '#00FF00',
+                  textAlign: 'center',
+                  marginBottom: '12px'
+                }}>
+                  Connected Wallet
+                </div>
+                <div style={{ 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  alignItems: 'center',
+                  gap: '8px'
+                }}>
+                  <ConnectButton 
+                    client={client}
+                    onDisconnect={handleForceDisconnect}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        ) : (
+          /* Point rouge si déconnecté */
+          <div
+            style={{
+              position: 'relative',
+              width: '12px',
+              height: '12px',
+              background: '#FF0000',
+              borderRadius: '50%',
+              cursor: 'pointer',
+              animation: 'pulse 2s infinite',
+              boxShadow: '0 0 10px rgba(255, 0, 0, 0.6)'
+            }}
+            title="Wallet disconnected"
+            onMouseEnter={(e) => {
+              // Créer un tooltip hover
+              const tooltip = document.createElement('div');
+              tooltip.textContent = 'Wallet disconnected';
+              tooltip.style.position = 'absolute';
+              tooltip.style.bottom = '20px';
+              tooltip.style.right = '0';
+              tooltip.style.background = 'rgba(0, 0, 0, 0.9)';
+              tooltip.style.color = '#FF0000';
+              tooltip.style.padding = '4px 8px';
+              tooltip.style.borderRadius = '4px';
+              tooltip.style.fontSize = '12px';
+              tooltip.style.whiteSpace = 'nowrap';
+              tooltip.style.zIndex = '1001';
+              tooltip.style.border = '1px solid #FF0000';
+              e.currentTarget.appendChild(tooltip);
+            }}
+            onMouseLeave={(e) => {
+              const tooltip = e.currentTarget.querySelector('div');
+              if (tooltip) {
+                e.currentTarget.removeChild(tooltip);
+              }
+            }}
+          />
+        )}
+
+        {/* Ampoule tooltip */}
+        <div
+          style={{
+            cursor: 'pointer',
+          }}
+          onClick={() => router.push('/welcome/tooltip')}
+        >
+          <TipBox />
+        </div>
       </div>
+
+      {/* Styles CSS pour l'animation pulse */}
+      <style jsx>{`
+        @keyframes pulse {
+          0% {
+            box-shadow: 0 0 0 0 rgba(0, 255, 0, 0.7);
+          }
+          70% {
+            box-shadow: 0 0 0 10px rgba(0, 255, 0, 0);
+          }
+          100% {
+            box-shadow: 0 0 0 0 rgba(0, 255, 0, 0);
+          }
+        }
+      `}</style>
 
       {/* Actions principales */}
       <div

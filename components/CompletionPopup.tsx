@@ -322,13 +322,10 @@ const CompletionPopup: React.FC<CompletionPopupProps> = ({ open, onClose, active
               ))}
             </div>
           </div>
-          {/* Infos bas - Dynamic */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 18, fontSize: 15 }}>
+          {/* Infos bas - Dynamic (updated) */}
+          <div style={{ display: 'flex', justifyContent: 'flex-start', marginTop: 18, fontSize: 15 }}>
             <div style={{ fontWeight: 600, color: '#FFD600' }}>
               ⏰ {getTimeLeft ? getTimeLeft() : 'Time left to Complete'}
-            </div>
-            <div style={{ fontWeight: 600, color: '#4ECB71' }}>
-              💰 {currentCampaign?.rewards?.completionPrice || 'Completion Price'}
             </div>
           </div>
           <div style={{ fontSize: 13, marginBottom: 0, color: '#FF2D2D' }}>
@@ -378,6 +375,28 @@ const CompletionPopup: React.FC<CompletionPopupProps> = ({ open, onClose, active
             ×
           </button>
           <div style={{ color: activeColor, fontSize: 28, fontWeight: 700, textAlign: 'center', marginBottom: 10, marginTop: 0 }}>Completion</div>
+          
+          {/* Prix de completion permanent - en bas à droite */}
+          <div style={{
+            position: 'absolute',
+            bottom: 16,
+            right: 16,
+            background: 'rgba(0, 0, 0, 0.8)',
+            border: '2px solid #4ECB71',
+            borderRadius: 8,
+            padding: '4px 8px',
+            fontSize: 12,
+            fontWeight: 700,
+            color: '#4ECB71',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 4,
+            zIndex: 1
+          }}>
+            <span>💰</span>
+            <span>{currentCampaign?.rewards?.completionPrice || 'Free'}</span>
+          </div>
+
           <div style={{ width: '100%', display: 'flex', justifyContent: 'center', marginBottom: 20, marginTop: 8, flexDirection: 'column', alignItems: 'center' }}>
             <textarea
               style={{ width: '95%', minHeight: 110, maxHeight: 160, borderRadius: 12, border: `2px solid ${activeColor}`, padding: 16, fontSize: 17, background: '#111', color: '#fff', fontWeight: 500, resize: 'none', outline: 'none' }}
@@ -464,6 +483,7 @@ const CompletionPopup: React.FC<CompletionPopupProps> = ({ open, onClose, active
                 >
                   ×
                 </button>
+
               </div>
             )}
           </div>

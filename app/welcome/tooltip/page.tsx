@@ -134,6 +134,53 @@ const TooltipPage = () => {
               <li>Stay updated on your community impact</li>
             </ul>
           </div>
+
+          {/* Connection Information */}
+          <div style={{
+            marginTop: 24,
+            padding: 16,
+            background: 'rgba(255, 215, 0, 0.1)',
+            border: '1px solid rgba(255, 215, 0, 0.3)',
+            borderRadius: 12,
+            fontSize: 14
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
+              <span style={{ fontSize: 18, marginRight: 8 }} role="img" aria-label="wallet">🔗</span>
+              <h3 style={{ color: '#FFD600', fontSize: 16, fontWeight: 700, marginBottom: 0 }}>Wallet Connection</h3>
+            </div>
+            <div style={{ color: '#fff', lineHeight: 1.4 }}>
+              <p style={{ margin: '8px 0' }}>
+                <strong style={{ color: '#FFD600' }}>To connect your wallet</strong>, choose a process linked to a campaign:
+              </p>
+              <ul style={{ marginLeft: 18, margin: '8px 0' }}>
+                <li><strong>Create Campaign</strong>, <strong>Moderate</strong>, <strong>Complete Campaign</strong>, or <strong>My Win</strong></li>
+                <li>These sections require wallet connection via <span style={{ color: '#FFD600' }}>Account Abstraction</span> or <span style={{ color: '#FFD600' }}>classic Web3</span></li>
+                <li>This opens access to both <span style={{ color: '#FFD600' }}>Web2</span> and <span style={{ color: '#FFD600' }}>Web3</span> users</li>
+              </ul>
+              <p style={{ margin: '8px 0' }}>
+                <strong style={{ color: '#00FF00' }}>Explorer</strong> is freely accessible without connection to browse content.
+              </p>
+              <p style={{ margin: '8px 0', fontSize: 13, fontStyle: 'italic', color: '#ccc' }}>
+                Note: Wallet connection is not available from this Welcome menu.
+              </p>
+              <div style={{
+                marginTop: 12,
+                padding: 12,
+                background: 'rgba(255, 45, 45, 0.1)',
+                border: '1px solid rgba(255, 45, 45, 0.3)',
+                borderRadius: 8,
+                fontSize: 13
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', marginBottom: 6 }}>
+                  <span style={{ fontSize: 14, marginRight: 6 }} role="img" aria-label="security">🔒</span>
+                  <strong style={{ color: '#FF2D2D', fontSize: 14 }}>Security Notice</strong>
+                </div>
+                <p style={{ margin: 0, color: '#fff', lineHeight: 1.3 }}>
+                  You may be disconnected when switching between processes. This is due to our security measures to guarantee credibility and prevent impersonation of companies and users.
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
