@@ -75,3 +75,51 @@ export function clearUserCache(): void {
     console.warn('Erreur lors du nettoyage du cache:', error);
   }
 }
+
+/**
+ * Détecte l'orientation d'une vidéo à partir d'un fichier
+ * @param file - Le fichier vidéo à analyser
+ * @returns Promise qui résout avec l'orientation détectée
+ */
+export const detectVideoOrientation = (file: File): Promise<'horizontal' | 'vertical'> => {
+  return new Promise((resolve, reject) => {
+    const video = document.createElement('video');
+    const url = URL.createObjectURL(file);
+    
+    video.onloadedmetadata = () => {
+      URL.revokeObjectURL(url);
+      const aspectRatio = video.videoWidth / video.videoHeight;
+      const orientation = aspectRatio > 1 ? 'horizontal' : 'vertical';
+      resolve(orientation);
+    };
+    
+    video.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error('Impossible de charger la vidéo'));
+    };
+    
+    video.src = url;
+  });
+};
+
+/**
+ * Valide si l'orientation d'une vidéo correspond à l'orientation attendue
+ * @param file - Le fichier vidéo à valider
+ * @param expectedOrientation - L'orientation attendue ('horizontal' | 'vertical')
+ * @returns Promise qui résout avec true si valide, false sinon
+ */
+export const validateVideoOrientation = async (
+  file: File, 
+  expectedOrientation: 'horizontal' | 'vertical'
+): Promise<{ isValid: boolean; detectedOrientation: 'horizontal' | 'vertical' }> => {
+  try {
+    const detectedOrientation = await detectVideoOrientation(file);
+    return {
+      isValid: detectedOrientation === expectedOrientation,
+      detectedOrientation
+    };
+  } catch (error) {
+    console.error('Erreur lors de la validation de l\'orientation:', error);
+    throw error;
+  }
+};

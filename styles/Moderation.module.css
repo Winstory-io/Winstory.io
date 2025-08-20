@@ -45,6 +45,10 @@
   position: relative;
   margin-bottom: 2rem;
   margin-top: 1rem;
+  min-height: 300px; /* Hauteur minimum pour accommoder les vidéos verticales */
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .videoWrapper {
@@ -64,31 +68,34 @@
   position: relative;
 }
 
-/* Style spécifique pour les vidéos verticales - Optimisé pour visibilité sans scroll */
+/* Style spécifique pour les vidéos verticales - Format 9:16 optimal */
 .campaignVideo.vertical {
   width: 280px; /* Largeur pour format vertical */
-  height: 420px; /* Hauteur pour format vertical (ratio 2:3 ≈ 9:16) */
+  height: 497px; /* Hauteur pour format vertical (ratio 9:16 exact) */
   max-width: 90%; /* Responsive pour mobile */
-  max-height: 45vh; /* Limite pour éviter le scroll */
-  object-fit: cover; /* Remplit le conteneur vertical même avec vidéo horizontale */
+  max-height: 55vh; /* Limite augmentée pour un meilleur affichage */
+  object-fit: contain; /* Préserve les proportions sans déformation */
   object-position: center;
   background: #000;
   border-radius: 12px;
+  aspect-ratio: 9/16; /* Force le ratio 9:16 */
 }
 
 /* Responsive pour vidéos verticales sur mobile */
 @media (max-width: 768px) {
   .campaignVideo.vertical {
     width: 260px; /* Proportionnellement réduit pour mobile */
-    height: 390px; /* Maintient le ratio 2:3, visible sans scroll */
+    height: 462px; /* Maintient le ratio 9:16 exact */
     max-width: 90vw; /* S'adapte aux petits écrans */
+    max-height: 50vh; /* Ajusté pour mobile */
   }
 }
 
 @media (max-width: 480px) {
   .campaignVideo.vertical {
     width: 220px; /* Encore plus petit pour très petits écrans */
-    height: 330px; /* Maintient le ratio 2:3, visible sans scroll */
+    height: 391px; /* Maintient le ratio 9:16 exact */
+    max-height: 45vh; /* Limite pour très petits écrans */
   }
 }
 

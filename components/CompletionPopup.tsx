@@ -1,6 +1,7 @@
 import React from 'react';
 import styles from '../styles/Moderation.module.css';
 import { useRouter } from 'next/navigation';
+import { validateVideoOrientation } from '../lib/utils';
 
 interface CompletionPopupProps {
   open: boolean;
@@ -26,6 +27,9 @@ const CompletionPopup: React.FC<CompletionPopupProps> = ({ open, onClose, active
   // Ajout pour pop-up spécifique à la bulle
   const [openedBubble, setOpenedBubble] = React.useState<string | null>(null);
   const [showLeaveConfirmModal, setShowLeaveConfirmModal] = React.useState(false);
+  // Nouveaux états pour la validation d'orientation
+  const [orientationError, setOrientationError] = React.useState<string | null>(null);
+  const [isValidatingOrientation, setIsValidatingOrientation] = React.useState(false);
 
   // Charger les données sauvegardées quand le popup s'ouvre
   React.useEffect(() => {
@@ -120,6 +124,43 @@ const CompletionPopup: React.FC<CompletionPopupProps> = ({ open, onClose, active
       localStorage.setItem("premiumTokenReward", JSON.stringify({ name: "Premium Token", amountPerUser: 100, contractAddress: "0x123...456" }));
       localStorage.setItem("completionMintPrice", "0.05 ETH");
       router.push('/completion/recap');
+    }
+  };
+
+  const handleFileUpload = async (uploadedFile: File) => {
+    if (!currentCampaign?.content?.videoOrientation) {
+      // Si pas d'orientation spécifiée, accepter le fichier
+      setFile(uploadedFile);
+      setOrientationError(null);
+      return;
+    }
+
+    setIsValidatingOrientation(true);
+    setOrientationError(null);
+
+    try {
+      const { isValid, detectedOrientation } = await validateVideoOrientation(
+        uploadedFile, 
+        currentCampaign.content.videoOrientation
+      );
+
+      if (isValid) {
+        setFile(uploadedFile);
+        setOrientationError(null);
+      } else {
+        setFile(null);
+        const expectedText = currentCampaign.content.videoOrientation === 'vertical' ? 'vertical' : 'horizontal';
+        const detectedText = detectedOrientation === 'vertical' ? 'vertical' : 'horizontal';
+        setOrientationError(
+          `Incorrect video format! This campaign requires a ${expectedText} video, but you uploaded a ${detectedText} video. Please upload a video with the correct orientation.`
+        );
+      }
+    } catch (error) {
+      console.error('Erreur lors de la validation d\'orientation:', error);
+      setOrientationError('Error analyzing the video. Please try again.');
+      setFile(null);
+    } finally {
+      setIsValidatingOrientation(false);
     }
   };
 
@@ -432,18 +473,52 @@ const CompletionPopup: React.FC<CompletionPopupProps> = ({ open, onClose, active
                   Upload MP4 film according to your Completion Text (max.100MB)
                   {currentCampaign?.content?.videoOrientation === 'vertical' ? 
                     <div style={{ fontSize: 14, marginTop: 4, color: '#FFD600' }}>📱 Please upload vertical video</div> :
-                    <div style={{ fontSize: 14, marginTop: 4, color: '#FFD600' }}>🖥️ Please upload horizontal video</div>
+                    currentCampaign?.content?.videoOrientation === 'horizontal' ?
+                    <div style={{ fontSize: 14, marginTop: 4, color: '#FFD600' }}>🖥️ Please upload horizontal video</div> :
+                    <div style={{ fontSize: 14, marginTop: 4, color: '#FFD600' }}>🖥️ Please upload horizontal/vertical video</div>
                   }
                   <input
                     id="mp4-upload"
                     type="file"
                     accept="video/mp4"
                     style={{ display: 'none' }}
-                    onChange={e => {
-                      if (e.target.files && e.target.files[0]) setFile(e.target.files[0]);
+                    onChange={async (e) => {
+                      if (e.target.files && e.target.files[0]) {
+                        await handleFileUpload(e.target.files[0]);
+                      }
                     }}
                   />
                 </label>
+              </div>
+            )}
+            {orientationError && (
+              <div style={{
+                background: '#FF4444',
+                color: '#fff',
+                padding: '12px 16px',
+                borderRadius: 8,
+                margin: '12px auto',
+                maxWidth: 480,
+                fontSize: 14,
+                textAlign: 'center',
+                border: '2px solid #FF6666'
+              }}>
+                ⚠️ {orientationError}
+              </div>
+            )}
+            {isValidatingOrientation && (
+              <div style={{
+                background: '#FFD600',
+                color: '#000',
+                padding: '12px 16px',
+                borderRadius: 8,
+                margin: '12px auto',
+                maxWidth: 480,
+                fontSize: 14,
+                textAlign: 'center',
+                fontWeight: 600
+              }}>
+                🔄 Validating video orientation...
               </div>
             )}
             {videoUrl && (

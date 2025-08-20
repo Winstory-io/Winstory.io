@@ -16,7 +16,17 @@ const LockIcon = ({ open }: { open: boolean }) => open ? (
   <svg width="28" height="28" viewBox="0 0 24 24" fill="none" style={{marginLeft:12,verticalAlign:'middle'}} xmlns="http://www.w3.org/2000/svg"><rect x="5" y="11" width="14" height="8" rx="2" stroke="#888" strokeWidth="2"/><path d="M8 11V8a4 4 0 1 1 8 0v3" stroke="#888" strokeWidth="2" strokeLinecap="round"/><path d="M12 15v3" stroke="#888" strokeWidth="2" strokeLinecap="round"/></svg>
 );
 
-const Stepper = ({ value, setValue, min, max, step, color, disabled }) => {
+interface StepperProps {
+  value: number;
+  setValue: (value: number) => void;
+  min?: number;
+  max?: number;
+  step?: number;
+  color?: string;
+  disabled?: boolean;
+}
+
+const Stepper = ({ value, setValue, min, max, step, color, disabled }: StepperProps) => {
   const [pressed, setPressed] = React.useState<null | number>(null);
   const intervalRef = React.useRef<NodeJS.Timeout | null>(null);
 

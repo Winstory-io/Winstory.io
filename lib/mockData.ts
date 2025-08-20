@@ -57,7 +57,7 @@ export const mockCampaigns = [
       email: 'streetartist@email.com'
     },
     content: {
-      videoUrl: 'https://www.w3schools.com/html/mov_bbb.mp4', // Vidéo d'exemple courte pour test
+      videoUrl: '/IMG_1476.mp4', // Votre vidéo verticale de test
       videoOrientation: 'vertical', // Configuration pour test d'ergonomie verticale
       startingStory: 'Un artiste de rue transforme un mur gris en une œuvre d\'art vibrante qui raconte l\'histoire de son quartier et de sa communauté. Cette vidéo verticale capture l\'essence de l\'art urbain moderne et permet de tester l\'ergonomie de l\'interface.',
       guidelines: 'Le contenu doit être authentique et montrer le processus créatif. Respecter les espaces publics et les réglementations locales. Format vertical respectant l\'orientation naturelle de la vidéo importée par le créateur.'

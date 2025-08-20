@@ -23,6 +23,7 @@ export default function AgencyB2CRecap() {
   const [confirmed, setConfirmed] = useState(false);
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const [videoLoading, setVideoLoading] = useState(false);
 
   useEffect(() => {
     const readLocalStorage = () => {
@@ -40,6 +41,7 @@ export default function AgencyB2CRecap() {
       
       // Charger la vidéo depuis IndexedDB si on a un videoId
       if (film?.videoId) {
+        setVideoLoading(true);
         getVideoFromIndexedDB(film.videoId).then(videoFile => {
           if (videoFile) {
             const url = URL.createObjectURL(videoFile);
@@ -50,6 +52,8 @@ export default function AgencyB2CRecap() {
           }
         }).catch(error => {
           console.error('Failed to load Agency B2C video from IndexedDB:', error);
+        }).finally(() => {
+          setVideoLoading(false);
         });
       }
       const standardToken = JSON.parse(localStorage.getItem("standardTokenReward") || "null");
@@ -70,6 +74,15 @@ export default function AgencyB2CRecap() {
     };
   }, []);
 
+  // Nettoyage des URLs de blob quand le composant est démonté
+  useEffect(() => {
+    return () => {
+      if (videoUrl && videoUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(videoUrl);
+      }
+    };
+  }, [videoUrl]);
+
   // Pour la maquette, fallback si pas de données
   const email = recap.user?.email || '';
   const companyName = recap.company?.name || '';
@@ -78,7 +91,7 @@ export default function AgencyB2CRecap() {
   const guideline = recap.story?.guideline || "@guideline";
   const filmLabel = recap.film?.aiRequested
     ? "The video will be delivered within 24h after payment."
-    : recap.film?.url
+    : (videoUrl || recap.film?.url)
       ? "View your film"
       : "@yourfilm";
   const rewardLabel = recap.reward?.rewardLabel || "No Rewards";
@@ -124,19 +137,26 @@ export default function AgencyB2CRecap() {
       content: isFilm && (videoUrl || (recap.film?.url && recap.film.url !== 'null' && recap.film.url.length > 10)) ? (
         <div>
           <h3 style={{ marginBottom: 16, fontSize: 20 }}>{label}</h3>
-          <video 
-            controls 
-            style={{ width: '100%', maxWidth: 500, borderRadius: 8 }}
-            onError={(e) => {
-              console.warn('Video failed to load in modal:', videoUrl || recap.film.url);
-            }}
-            onLoadStart={() => {
-              console.log('Video loading started in modal');
-            }}
-          >
-            <source src={videoUrl || recap.film.url} type="video/mp4" />
-            Your browser does not support the video tag.
-          </video>
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: 12 }}>
+            <video 
+              controls 
+              style={{ 
+                maxWidth: '100%', 
+                maxHeight: '70vh', 
+                borderRadius: 8,
+                objectFit: 'contain'
+              }}
+              onError={(e) => {
+                console.warn('Video failed to load in modal:', videoUrl || recap.film.url);
+              }}
+              onLoadStart={() => {
+                console.log('Video loading started in modal');
+              }}
+            >
+              <source src={videoUrl || recap.film.url} type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+          </div>
           {/* Informations sur le fichier */}
           {recap.film.fileName && (
             <div style={{ marginTop: 12, padding: 8, background: 'rgba(255,215,0,0.1)', borderRadius: 4 }}>
@@ -247,11 +267,13 @@ export default function AgencyB2CRecap() {
           <div style={{ marginBottom: 40 }}>
             <h2 style={{ color: '#FFD600', fontSize: 24, fontWeight: 700, marginBottom: 20 }}>Film</h2>
             <div 
-              style={{ border: "2px solid #333", borderRadius: 16, padding: 24, background: '#181818', cursor: 'pointer' }}
-              onClick={() => openModal("Your Film", filmLabel, true)}
+              style={{ border: "2px solid #333", borderRadius: 16, padding: 24, background: '#181818', cursor: videoLoading ? 'default' : 'pointer' }}
+              onClick={videoLoading ? undefined : () => openModal("Your Film", filmLabel, true)}
             >
               <h3 style={{ color: '#FFD600', marginBottom: 12, fontSize: 18 }}>Film</h3>
-              <p style={{ margin: 0, fontSize: 16 }}>{filmLabel}</p>
+              <p style={{ margin: 0, fontSize: 16 }}>
+                {videoLoading ? 'Loading video...' : filmLabel}
+              </p>
             </div>
           </div>
 

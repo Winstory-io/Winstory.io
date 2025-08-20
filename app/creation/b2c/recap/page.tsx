@@ -23,6 +23,7 @@ export default function RecapB2C() {
   const [confirmed, setConfirmed] = useState(false);
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const [videoLoading, setVideoLoading] = useState(false);
 
   useEffect(() => {
     const readLocalStorage = () => {
@@ -40,6 +41,7 @@ export default function RecapB2C() {
       
       // Charger la vidéo depuis IndexedDB si on a un videoId
       if (film?.videoId) {
+        setVideoLoading(true);
         getVideoFromIndexedDB(film.videoId).then(videoFile => {
           if (videoFile) {
             const url = URL.createObjectURL(videoFile);
@@ -50,6 +52,8 @@ export default function RecapB2C() {
           }
         }).catch(error => {
           console.error('Failed to load B2C video from IndexedDB:', error);
+        }).finally(() => {
+          setVideoLoading(false);
         });
       }
       const standardToken = JSON.parse(localStorage.getItem("standardTokenReward") || "null");
@@ -70,6 +74,15 @@ export default function RecapB2C() {
     };
   }, []);
 
+  // Nettoyage des URLs de blob quand le composant est démonté
+  useEffect(() => {
+    return () => {
+      if (videoUrl && videoUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(videoUrl);
+      }
+    };
+  }, [videoUrl]);
+
   // Pour la maquette, fallback si pas de données
   const email = recap.user?.email || '';
   const companyName = recap.company?.name || '';
@@ -78,7 +91,7 @@ export default function RecapB2C() {
   const guideline = recap.story?.guideline || "@guideline";
   const filmLabel = recap.film?.aiRequested
     ? "The video will be delivered within 24h after payment."
-    : recap.film?.url
+    : (videoUrl || recap.film?.url)
       ? "View your film"
       : "@yourfilm";
   const rewardLabel = recap.reward?.rewardLabel || "No Rewards";
@@ -122,7 +135,18 @@ export default function RecapB2C() {
     setModal({
       open: true,
       content: isFilm && (videoUrl || recap.film?.url) ? (
-        <video src={videoUrl || recap.film.url} controls style={{ width: '100%', borderRadius: 12 }} />
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <video 
+            src={videoUrl || recap.film.url} 
+            controls 
+            style={{ 
+              maxWidth: '100%', 
+              maxHeight: '70vh', 
+              borderRadius: 12,
+              objectFit: 'contain'
+            }} 
+          />
+        </div>
       ) : (
         <div style={{ color: '#FFD600', fontSize: 18, whiteSpace: 'pre-line' }}>
           <b>{label}</b>
@@ -219,7 +243,11 @@ export default function RecapB2C() {
               <div style={{ background: 'rgba(255,215,0,0.15)', border: '1px solid #FFD600', borderRadius: 8, padding: 12, marginLeft: 8, color: '#FFD600', fontWeight: 600, fontSize: 15, textAlign: 'center', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 Winstory creates the Film. Delivered within 24h after payment. +$500
               </div>
-            ) : recap.film?.url ? (
+            ) : videoLoading ? (
+              <div style={{ flex: 1, border: "2px solid #FFD600", borderRadius: 12, padding: 12, color: "#FFD600", fontStyle: "italic", fontSize: 16, background: 'none', fontWeight: 700, marginLeft: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                Loading video...
+              </div>
+            ) : (videoUrl || recap.film?.url) ? (
               <button onClick={() => openModal('Your film', filmLabel, true)} style={{ flex: 1, border: "2px solid #FFD600", borderRadius: 12, padding: 12, color: "#FFD600", fontStyle: "italic", fontSize: 16, background: 'none', cursor: 'pointer', fontWeight: 700, marginLeft: 8 }}>{filmLabel}</button>
             ) : (
               <button onClick={() => openModal('Your film', filmLabel)} style={{ flex: 1, border: "2px solid #FFD600", borderRadius: 12, padding: 12, color: "#FFD600", fontStyle: "italic", fontSize: 16, background: 'none', cursor: 'pointer', fontWeight: 700, marginLeft: 8 }}>{filmLabel}</button>
