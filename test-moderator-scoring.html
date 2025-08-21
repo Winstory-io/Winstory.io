@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Système de Notation par Modérateur</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #fff;
+        }
+        .test-section {
+            background: #2a2a2a;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            border: 1px solid #444;
+        }
+        .test-button {
+            background: #FFD600;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .test-button:hover {
+            background: #FFE44D;
+        }
+        .result {
+            background: #333;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border-left: 4px solid #FFD600;
+        }
+        .error {
+            border-left-color: #ff4444;
+        }
+        .success {
+            border-left-color: #00ff88;
+        }
+        .score-slider {
+            width: 100%;
+            margin: 20px 0;
+        }
+        .used-scores {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 10px 0;
+        }
+        .used-score {
+            background: #ff4444;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test du Système de Notation par Modérateur</h1>
+    
+    <div class="test-section">
+        <h2>Configuration de Test</h2>
+        <label>Campaign ID: <input type="text" id="campaignId" value="test_campaign_123" style="width: 200px; padding: 5px;"></label><br><br>
+        <label>Moderator Wallet: <input type="text" id="moderatorWallet" value="0x1234567890123456789012345678901234567890" style="width: 400px; padding: 5px;"></label>
+    </div>
+
+    <div class="test-section">
+        <h2>1. Récupération des Scores Utilisés</h2>
+        <button class="test-button" onclick="fetchUsedScores()">Récupérer les Scores Utilisés</button>
+        <div id="fetchResult" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>2. Ajout d'un Score</h2>
+        <label>Score (0-100): <input type="range" id="scoreSlider" min="0" max="100" value="50" class="score-slider"></label>
+        <span id="scoreValue">50</span><br><br>
+        <button class="test-button" onclick="addScore()">Ajouter ce Score</button>
+        <div id="addResult" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>3. Test de Contrainte Unique</h2>
+        <button class="test-button" onclick="testUniqueConstraint()">Tester la Contrainte Unique</button>
+        <div id="constraintResult" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>4. Test d'Isolation par Modérateur</h2>
+        <button class="test-button" onclick="testModeratorIsolation()">Tester l'Isolation</button>
+        <div id="isolationResult" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>5. État Actuel</h2>
+        <button class="test-button" onclick="refreshState()">Actualiser l'État</button>
+        <div id="currentState" class="result"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3000/api/moderation/moderator-scores';
+        
+        // Mettre à jour l'affichage du score
+        document.getElementById('scoreSlider').addEventListener('input', function() {
+            document.getElementById('scoreValue').textContent = this.value;
+        });
+
+        async function fetchUsedScores() {
+            const campaignId = document.getElementById('campaignId').value;
+            const moderatorWallet = document.getElementById('moderatorWallet').value;
+            
+            try {
+                const response = await fetch(`${API_BASE}?campaignId=${campaignId}&moderatorWallet=${moderatorWallet}`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    document.getElementById('fetchResult').innerHTML = `
+                        <div class="success">
+                            <strong>✅ Scores récupérés avec succès</strong><br>
+                            Scores utilisés: ${data.usedScores.length > 0 ? data.usedScores.join(', ') : 'Aucun'}
+                        </div>
+                    `;
+                } else {
+                    document.getElementById('fetchResult').innerHTML = `
+                        <div class="error">
+                            <strong>❌ Erreur lors de la récupération</strong><br>
+                            ${data.error || 'Erreur inconnue'}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById('fetchResult').innerHTML = `
+                    <div class="error">
+                        <strong>❌ Erreur réseau</strong><br>
+                        ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        async function addScore() {
+            const campaignId = document.getElementById('campaignId').value;
+            const moderatorWallet = document.getElementById('moderatorWallet').value;
+            const score = parseInt(document.getElementById('scoreSlider').value);
+            
+            try {
+                const response = await fetch(API_BASE, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        campaignId,
+                        moderatorWallet,
+                        score,
+                        completionId: `completion_${Date.now()}`
+                    }),
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    document.getElementById('addResult').innerHTML = `
+                        <div class="success">
+                            <strong>✅ Score ajouté avec succès</strong><br>
+                            Score: ${score}/100<br>
+                            ID: ${data.scoreId}
+                        </div>
+                    `;
+                    // Actualiser l'affichage des scores utilisés
+                    setTimeout(fetchUsedScores, 500);
+                } else {
+                    document.getElementById('addResult').innerHTML = `
+                        <div class="error">
+                            <strong>❌ Erreur lors de l'ajout</strong><br>
+                            ${data.error || 'Erreur inconnue'}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById('addResult').innerHTML = `
+                    <div class="error">
+                        <strong>❌ Erreur réseau</strong><br>
+                        ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        async function testUniqueConstraint() {
+            const campaignId = document.getElementById('campaignId').value;
+            const moderatorWallet = document.getElementById('moderatorWallet').value;
+            const score = parseInt(document.getElementById('scoreSlider').value);
+            
+            try {
+                const response = await fetch(API_BASE, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        campaignId,
+                        moderatorWallet,
+                        score,
+                        completionId: `completion_duplicate_${Date.now()}`
+                    }),
+                });
+                
+                const data = await response.json();
+                
+                if (response.status === 409) {
+                    document.getElementById('constraintResult').innerHTML = `
+                        <div class="success">
+                            <strong>✅ Contrainte unique respectée</strong><br>
+                            Le score ${score} ne peut pas être utilisé deux fois par le même modérateur pour la même campagne.<br>
+                            Erreur: ${data.error}
+                        </div>
+                    `;
+                } else if (response.ok) {
+                    document.getElementById('constraintResult').innerHTML = `
+                        <div class="error">
+                            <strong>❌ Contrainte unique non respectée</strong><br>
+                            Le score ${score} a été accepté alors qu'il était déjà utilisé.
+                        </div>
+                    `;
+                } else {
+                    document.getElementById('constraintResult').innerHTML = `
+                        <div class="error">
+                            <strong>❌ Erreur inattendue</strong><br>
+                            ${data.error || 'Erreur inconnue'}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById('constraintResult').innerHTML = `
+                    <div class="error">
+                        <strong>❌ Erreur réseau</strong><br>
+                        ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        async function testModeratorIsolation() {
+            const campaignId = document.getElementById('campaignId').value;
+            const moderatorWallet = document.getElementById('moderatorWallet').value;
+            const otherModerator = '0xABCDEF1234567890123456789012345678901234';
+            const score = 88; // Score fixe pour le test
+            
+            try {
+                // Ajouter le score pour l'autre modérateur
+                const response1 = await fetch(API_BASE, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        campaignId,
+                        moderatorWallet: otherModerator,
+                        score,
+                        completionId: `completion_other_${Date.now()}`
+                    }),
+                });
+                
+                if (response1.ok) {
+                    // Vérifier que le score n'est pas visible pour le premier modérateur
+                    const response2 = await fetch(`${API_BASE}?campaignId=${campaignId}&moderatorWallet=${moderatorWallet}`);
+                    const data2 = await response2.json();
+                    
+                    if (!data2.usedScores.includes(score)) {
+                        document.getElementById('isolationResult').innerHTML = `
+                            <div class="success">
+                                <strong>✅ Isolation par modérateur respectée</strong><br>
+                                Le score ${score} a été ajouté pour l'autre modérateur mais n'est pas visible pour le modérateur actuel.<br>
+                                Scores du modérateur actuel: ${data2.usedScores.join(', ') || 'Aucun'}
+                            </div>
+                        `;
+                    } else {
+                        document.getElementById('isolationResult').innerHTML = `
+                            <div class="error">
+                                <strong>❌ Isolation par modérateur non respectée</strong><br>
+                                Le score ${score} est visible pour le modérateur actuel alors qu'il ne devrait pas l'être.
+                            </div>
+                        `;
+                    }
+                } else {
+                    document.getElementById('isolationResult').innerHTML = `
+                        <div class="error">
+                            <strong>❌ Erreur lors du test d'isolation</strong><br>
+                            Impossible d'ajouter le score pour l'autre modérateur.
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById('isolationResult').innerHTML = `
+                    <div class="error">
+                        <strong>❌ Erreur réseau</strong><br>
+                        ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        async function refreshState() {
+            const campaignId = document.getElementById('campaignId').value;
+            const moderatorWallet = document.getElementById('moderatorWallet').value;
+            
+            try {
+                const response = await fetch(`${API_BASE}?campaignId=${campaignId}&moderatorWallet=${moderatorWallet}`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    const usedScores = data.usedScores || [];
+                    document.getElementById('currentState').innerHTML = `
+                        <div class="success">
+                            <strong>📊 État Actuel</strong><br>
+                            <strong>Campaign ID:</strong> ${campaignId}<br>
+                            <strong>Moderator Wallet:</strong> ${moderatorWallet}<br>
+                            <strong>Scores utilisés:</strong> ${usedScores.length > 0 ? usedScores.join(', ') : 'Aucun'}<br>
+                            <strong>Total scores:</strong> ${usedScores.length}/101 (0-100)
+                        </div>
+                    `;
+                } else {
+                    document.getElementById('currentState').innerHTML = `
+                        <div class="error">
+                            <strong>❌ Erreur lors de la récupération de l'état</strong><br>
+                            ${data.error || 'Erreur inconnue'}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById('currentState').innerHTML = `
+                    <div class="error">
+                        <strong>❌ Erreur réseau</strong><br>
+                        ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        // Charger l'état initial
+        window.onload = function() {
+            refreshState();
+        };
+    </script>
+</body>
+</html> 

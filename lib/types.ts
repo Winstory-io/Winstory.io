@@ -79,6 +79,16 @@ export interface ModerationSession {
   progress: ModerationProgress;
 }
 
+// Nouveau type pour traquer les scores utilisés par modérateur
+export interface ModeratorCompletionScore {
+  id: string;
+  campaignId: string;
+  moderatorWallet: string;
+  completionId?: string;
+  score: number;
+  scoredAt: Date;
+}
+
 // Enums Prisma
 export type CampaignStatus = 'PENDING_MODERATION' | 'APPROVED' | 'REJECTED' | 'COMPLETED';
 export type CampaignType = 'INITIAL' | 'COMPLETION';

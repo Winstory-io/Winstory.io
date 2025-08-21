@@ -423,7 +423,7 @@ const ModerationButtons: React.FC<ModerationButtonsProps> = ({
                 color: isScoreUsed(currentScore) ? '#FF0000' : '#fff',
                 marginBottom: '16px'
               }}>
-                {isScoreUsed(currentScore) ? '⚠️ This score has already been used' : getScoreDescription(currentScore)}
+                {isScoreUsed(currentScore) ? '⚠️ You have already used this score for another completion from this campaign' : getScoreDescription(currentScore)}
               </div>
             </div>
             
@@ -454,7 +454,7 @@ const ModerationButtons: React.FC<ModerationButtonsProps> = ({
               marginTop: '12px',
               margin: 0
             }}>
-              Each score can only be used once per campaign. Unavailable scores are marked in red.
+              Each score can only be used once per campaign by the same moderator. Unavailable scores are marked in red.
             </p>
           </div>
         </div>

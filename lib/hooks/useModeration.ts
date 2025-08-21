@@ -8,6 +8,8 @@ export const useModeration = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [availableCampaigns, setAvailableCampaigns] = useState<any[]>([]);
+  // Nouveau state pour les scores utilisés par le modérateur actuel
+  const [moderatorUsedScores, setModeratorUsedScores] = useState<number[]>([]);
 
   // Fonction pour récupérer les campagnes disponibles depuis l'API
   const fetchAvailableCampaigns = useCallback(async (type?: string, creatorType?: string) => {
@@ -44,6 +46,40 @@ export const useModeration = () => {
     }
   }, []);
 
+  // Fonction pour récupérer les scores utilisés par le modérateur actuel pour une campagne
+  const fetchModeratorUsedScores = useCallback(async (campaignId: string) => {
+    if (!account?.address || !campaignId) {
+      setModeratorUsedScores([]);
+      return [];
+    }
+
+    try {
+      console.log('🔍 Récupération des scores utilisés pour la campagne:', campaignId);
+      
+      const response = await fetch(
+        `/api/moderation/moderator-scores?campaignId=${campaignId}&moderatorWallet=${account.address}`
+      );
+      
+      if (response.ok) {
+        const data = await response.json();
+        const scores = data.usedScores || [];
+        console.log('✅ Scores utilisés récupérés:', scores);
+        setModeratorUsedScores(scores);
+        return scores;
+      } else {
+        console.warn('⚠️ Échec de récupération des scores utilisés:', response.status);
+        // En cas d'erreur, on met un tableau vide pour éviter de bloquer l'interface
+        setModeratorUsedScores([]);
+        return [];
+      }
+    } catch (error) {
+      console.error('❌ Erreur lors de la récupération des scores utilisés:', error);
+      // En cas d'erreur réseau, on met un tableau vide pour éviter de bloquer l'interface
+      setModeratorUsedScores([]);
+      return [];
+    }
+  }, [account?.address]);
+
   // Fonction pour récupérer une campagne spécifique
   const fetchCampaignById = useCallback(async (campaignId: string) => {
     try {
@@ -74,6 +110,13 @@ export const useModeration = () => {
 
         console.log('Created session:', session);
         setCurrentSession(session);
+        
+        // Récupérer les scores utilisés par ce modérateur pour cette campagne
+        // Seulement si c'est une campagne de type COMPLETION
+        if (campaign.type === 'COMPLETION') {
+          await fetchModeratorUsedScores(campaignId);
+        }
+        
         setIsLoading(false); // S'assurer que isLoading est mis à false
         return session;
       } else {
@@ -85,7 +128,7 @@ export const useModeration = () => {
       setIsLoading(false); // S'assurer que isLoading est mis à false même en cas d'erreur
       return null;
     }
-  }, [account?.address]);
+  }, [account?.address, fetchModeratorUsedScores]);
 
   // Fonction pour vérifier la disponibilité des campagnes par type
   const checkCampaignsAvailability = useCallback(async () => {
@@ -146,32 +189,61 @@ export const useModeration = () => {
     }
   }, [currentSession]);
 
-  // Fonction pour soumettre un score de complétion
-  const submitCompletionScore = useCallback(async (score: number) => {
-    if (!currentSession) return false;
+  // Fonction pour soumettre un score de complétion avec validation par modérateur
+  const submitCompletionScore = useCallback(async (score: number, completionId?: string) => {
+    if (!currentSession || !account?.address) return false;
 
     try {
-      // TODO: Implémenter la vraie logique de soumission de score
-      setCurrentSession(prev => {
-        if (!prev) return null;
-        const newProgress = { ...prev.progress };
-        if (!newProgress.completionScores) {
-          newProgress.completionScores = [];
-        }
-        newProgress.completionScores.push(score);
-        
-        return {
-          ...prev,
-          progress: newProgress
-        };
+      // Vérifier localement si le score est déjà utilisé
+      if (moderatorUsedScores.includes(score)) {
+        console.error('Score already used by this moderator');
+        return false;
+      }
+
+      // Soumettre le score via l'API
+      const response = await fetch('/api/moderation/moderator-scores', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          campaignId: currentSession.id,
+          moderatorWallet: account.address,
+          score,
+          completionId,
+        }),
       });
 
-      return true;
+      if (response.ok) {
+        // Mettre à jour la liste locale des scores utilisés
+        setModeratorUsedScores(prev => [...prev, score]);
+        
+        // Mettre à jour la session locale (pour l'affichage)
+        setCurrentSession(prev => {
+          if (!prev) return null;
+          const newProgress = { ...prev.progress };
+          if (!newProgress.completionScores) {
+            newProgress.completionScores = [];
+          }
+          newProgress.completionScores.push(score);
+          
+          return {
+            ...prev,
+            progress: newProgress
+          };
+        });
+
+        return true;
+      } else {
+        const errorData = await response.json();
+        console.error('Failed to submit completion score:', errorData.error);
+        return false;
+      }
     } catch (err) {
       console.error('Failed to submit completion score:', err);
       return false;
     }
-  }, [currentSession]);
+  }, [currentSession, account?.address, moderatorUsedScores]);
 
   // Charger les campagnes disponibles au montage du composant
   useEffect(() => {
@@ -308,12 +380,14 @@ export const useModeration = () => {
     isLoading,
     error,
     availableCampaigns,
+    moderatorUsedScores, // Exposer les scores utilisés par le modérateur
     submitModerationDecision,
     submitCompletionScore,
     fetchCampaignById,
     fetchAvailableCampaigns,
     checkCampaignsAvailability,
     loadCampaignForCriteria,
+    fetchModeratorUsedScores, // Exposer la fonction pour recharger les scores
     refreshData: () => checkCampaignsAvailability(),
     setCurrentSession
   };

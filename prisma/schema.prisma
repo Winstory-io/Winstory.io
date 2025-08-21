@@ -78,6 +78,7 @@ model Campaign {
   metadata       CampaignMetadata?
   progress       ModerationProgress?
   moderations    ModerationSession[]
+  moderatorScores ModeratorCompletionScore[]
   
   @@map("campaigns")
 }
@@ -166,6 +167,21 @@ model ModerationSession {
   completedAt     DateTime?
   
   @@map("moderation_sessions")
+}
+
+// Nouveau modèle pour traquer les scores utilisés par modérateur
+model ModeratorCompletionScore {
+  id              String @id @default(cuid())
+  campaignId      String
+  campaign        Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  moderatorWallet String
+  completionId    String? // ID de la complétion notée (optionnel pour l'instant)
+  score          Int
+  scoredAt       DateTime @default(now())
+  
+  // Contrainte unique : un modérateur ne peut utiliser le même score qu'une fois par campagne
+  @@unique([campaignId, moderatorWallet, score])
+  @@map("moderator_completion_scores")
 }
 
 // Enums

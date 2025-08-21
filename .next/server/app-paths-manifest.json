@@ -1,7 +1,3 @@
 {
-  "/creation/b2c/rewardsornot/page": "app/creation/b2c/rewardsornot/page.js",
-  "/creation/b2c/yourfilm/page": "app/creation/b2c/yourfilm/page.js",
-  "/creation/b2c/standardrewards/page": "app/creation/b2c/standardrewards/page.js",
-  "/creation/b2c/recap/page": "app/creation/b2c/recap/page.js",
-  "/creation/b2c/premiumrewards/page": "app/creation/b2c/premiumrewards/page.js"
+  "/api/moderation/moderator-scores/route": "app/api/moderation/moderator-scores/route.js"
 }

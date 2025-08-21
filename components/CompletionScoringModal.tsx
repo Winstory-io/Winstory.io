@@ -107,7 +107,7 @@ const CompletionScoringModal: React.FC<CompletionScoringModalProps> = ({
           </div>
           
           <div className="score-description">
-            {isScoreUsed(score) ? '⚠️ This score has already been used' : getScoreDescription(score)}
+            {isScoreUsed(score) ? '⚠️ You have already used this score for another completion from this campaign' : getScoreDescription(score)}
           </div>
           
           <button
@@ -123,7 +123,7 @@ const CompletionScoringModal: React.FC<CompletionScoringModalProps> = ({
           </button>
           
           <div className="score-note">
-            <p>Each score can only be used once per campaign. Unavailable scores are marked on the slider.</p>
+            <p>Each score can only be used once per campaign by the same moderator. Scores marked as unavailable are those you have already used for other completions from this same initial campaign.</p>
             <p><strong>Content type:</strong> {contentType === 'b2c' ? 'B2C Creation' : contentType === 'agency' ? 'Agency B2C' : 'Individual Creation'}</p>
           </div>
         </div>

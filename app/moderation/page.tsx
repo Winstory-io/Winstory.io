@@ -135,6 +135,7 @@ const ModerationPage = () => {
     isLoading, 
     error, 
     availableCampaigns,
+    moderatorUsedScores, // Scores utilisés par le modérateur actuel
     submitModerationDecision, 
     submitCompletionScore,
     checkCampaignsAvailability,
@@ -1026,7 +1027,7 @@ const ModerationPage = () => {
         isOpen={showScoringModal}
         onClose={() => setShowScoringModal(false)}
         onConfirm={handleCompletionScore}
-        usedScores={progress.completionScores || []}
+        usedScores={moderatorUsedScores || []}
         contentType={getUICreatorType(campaign)}
       />
 
