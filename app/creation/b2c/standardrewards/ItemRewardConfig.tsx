@@ -252,6 +252,7 @@ export default function ItemRewardConfig({ onClose }: { onClose: () => void }) {
               <option value="Chiliz">Chiliz</option>
               <option value="Solana">Solana</option>
               <option value="Bitcoin">Bitcoin</option>
+              <option value="Base">Base</option>
             </select>
             
             <select 

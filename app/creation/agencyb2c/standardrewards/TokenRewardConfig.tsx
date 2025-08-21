@@ -200,6 +200,7 @@ export default function AgencyB2CTokenRewardConfig({ onClose }: { onClose: () =>
               <option value="Chiliz">Chiliz</option>
               <option value="Solana">Solana</option>
               <option value="Bitcoin">Bitcoin</option>
+              <option value="Base">Base</option>
             </select>
             
             <select 

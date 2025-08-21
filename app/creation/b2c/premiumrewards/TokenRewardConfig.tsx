@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import styles from '../standardrewards/Rewards.module.css';
 import { useWalletAddress } from '../../../../lib/hooks/useWalletConnection';
 import { useRouter } from 'next/navigation';
+import { saveUnifiedRewardConfig } from '../../../../lib/rewards-manager';
 
 interface TokenInfo {
   name: string;
@@ -134,6 +135,7 @@ export default function TokenRewardConfig({ onClose }: { onClose: () => void }) 
               <option value="Chiliz">Chiliz</option>
               <option value="Solana">Solana</option>
               <option value="Bitcoin">Bitcoin</option>
+              <option value="Base">Base</option>
             </select>
             
             <select 
@@ -254,7 +256,7 @@ export default function TokenRewardConfig({ onClose }: { onClose: () => void }) 
             disabled={!(tokenInfo && tokenName && contractAddress && amountPerUser && !error)}
             onClick={() => {
               // Sauvegarde la config premium
-              const config = {
+              const premiumConfig = {
                 type: 'token',
                 name: tokenName,
                 contractAddress,
@@ -265,7 +267,24 @@ export default function TokenRewardConfig({ onClose }: { onClose: () => void }) 
                 tokenInfo,
                 walletAddress
               };
-              localStorage.setItem('premiumTokenReward', JSON.stringify(config));
+              
+              // Sauvegarder aussi dans localStorage pour compatibilité
+              localStorage.setItem('premiumTokenReward', JSON.stringify(premiumConfig));
+              
+              // Créer la configuration unifiée
+              const standardConfig = JSON.parse(localStorage.getItem('standardTokenReward') || 'null');
+              const maxCompletions = Number(localStorage.getItem('maxCompletions') || '0');
+              
+              if (standardConfig && walletAddress && maxCompletions > 0 && typeof amountPerUser === 'number') {
+                // Type assertion pour assurer la compatibilité
+                const typedPremiumConfig = {
+                  ...premiumConfig,
+                  type: 'token' as const,
+                  amountPerUser: amountPerUser // S'assurer que c'est un number
+                };
+                saveUnifiedRewardConfig(standardConfig, typedPremiumConfig, walletAddress, maxCompletions);
+              }
+              
               router.push('/creation/b2c/recap');
             }}
           >

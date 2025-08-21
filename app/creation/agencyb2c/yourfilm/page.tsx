@@ -258,13 +258,13 @@ export default function YourFilmAgencyPage() {
                 </div>
             )}
 
-            <main style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', width: '100%', marginTop: -100 }}>
+            <main style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', width: '100%', marginTop: -60 }}>
                 {videoPreview ? (
-                    <section style={{ textAlign: 'center', maxWidth: videoFormat === 'horizontal' ? 800 : 400, margin: '0 auto' }}>
+                    <section style={{ textAlign: 'center', maxWidth: videoFormat === 'horizontal' ? 800 : 360, margin: '0 auto' }}>
                         <p style={{ color: '#18C964', fontSize: 20, marginBottom: 24 }}>
                             Thank you for your film in {videoFormat} format, based on your Starting Story, the starting point for your Community's completions.
                         </p>
-                        <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center', width: videoFormat === 'horizontal' ? 800 : 400, height: videoFormat === 'horizontal' ? 450 : 600, maxWidth: '100%', margin: '0 auto', background: '#000', borderRadius: 8 }}>
+                        <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center', width: videoFormat === 'horizontal' ? 800 : 360, height: videoFormat === 'horizontal' ? 450 : 520, maxWidth: '100%', margin: '0 auto', background: '#000', borderRadius: 8 }}>
                             <video
                               ref={videoRef}
                               controls

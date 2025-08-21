@@ -102,6 +102,17 @@ export const SUPPORTED_BLOCKCHAINS: Record<string, BlockchainConfig> = {
       symbol: 'CHZ',
       decimals: 18
     }
+  },
+  'Base': {
+    name: 'Base',
+    chainId: 8453,
+    rpcUrl: 'https://mainnet.base.org',
+    explorerUrl: 'https://basescan.org',
+    nativeCurrency: {
+      name: 'Ether',
+      symbol: 'ETH',
+      decimals: 18
+    }
   }
 };
 
@@ -152,6 +163,7 @@ export function isValidContractAddress(address: string, blockchain: string): boo
     case 'BNB Chain':
     case 'Avalanche':
     case 'Chiliz':
+    case 'Base':
       // EVM addresses: 42 characters starting with 0x, followed by 40 hex characters
       return /^0x[a-f0-9]{40}$/.test(cleanAddress);
     
@@ -184,6 +196,8 @@ export function getAddressValidationError(address: string, blockchain: string): 
       case 'Polygon':
       case 'BNB Chain':
       case 'Avalanche':
+      case 'Chiliz':
+      case 'Base':
         return 'Invalid EVM address format. Must be 42 characters starting with 0x';
       case 'Solana':
         return 'Invalid Solana address format. Must be 32-44 base58 characters';

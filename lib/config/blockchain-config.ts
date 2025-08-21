@@ -123,6 +123,20 @@ export const BLOCKCHAIN_CONFIGS: Record<string, BlockchainConfig> = {
     supportedStandards: ['ERC20', 'ERC1155', 'ERC721'],
     addressRegex: /^0x[a-f0-9]{40}$/,
     validationMessage: 'Invalid EVM address format. Must be 42 characters starting with 0x'
+  },
+  'Base': {
+    name: 'Base',
+    chainId: 8453,
+    rpcUrl: 'https://mainnet.base.org',
+    explorerUrl: 'https://basescan.org',
+    nativeCurrency: {
+      name: 'Ether',
+      symbol: 'ETH',
+      decimals: 18
+    },
+    supportedStandards: ['ERC20', 'ERC1155', 'ERC721'],
+    addressRegex: /^0x[a-f0-9]{40}$/,
+    validationMessage: 'Invalid EVM address format. Must be 42 characters starting with 0x'
   }
 };
 
@@ -236,6 +250,7 @@ export function getBlockchainIcon(blockchain: string): string {
     case 'Solana': return '🟢';
     case 'Bitcoin': return '🟠';
     case 'Chiliz': return '🔥';
+    case 'Base': return '🟦';
     default: return '⚪';
   }
 }

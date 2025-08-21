@@ -7,6 +7,7 @@ import { useRealTimeBalance } from '../../../../lib/hooks/useWalletBalance';
 import { useActiveAccount } from "thirdweb/react";
 import { useRouter } from 'next/navigation';
 import { validateContract } from '../../../../lib/blockchain-rpc';
+import { saveUnifiedRewardConfig } from '../../../../lib/rewards-manager';
 
 interface TokenInfo {
   name: string;
@@ -253,6 +254,7 @@ export default function TokenRewardConfig({ onClose }: { onClose: () => void }) 
               <option value="Chiliz">Chiliz</option>
               <option value="Solana">Solana</option>
               <option value="Bitcoin">Bitcoin</option>
+              <option value="Base">Base</option>
             </select>
             
             <select 

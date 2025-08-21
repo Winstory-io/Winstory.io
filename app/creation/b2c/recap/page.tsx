@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { getVideoFromIndexedDB } from '@/lib/videoStorage';
+import { getUnifiedRewardConfig, validateRewardConfig } from '@/lib/rewards-manager';
 
 const Modal = ({ open, onClose, children }: { open: boolean, onClose: () => void, children: React.ReactNode }) => {
   if (!open) return null;
@@ -56,12 +57,29 @@ export default function RecapB2C() {
           setVideoLoading(false);
         });
       }
+      
+      // Charger les configurations de récompenses
       const standardToken = JSON.parse(localStorage.getItem("standardTokenReward") || "null");
       const standardItem = JSON.parse(localStorage.getItem("standardItemReward") || "null");
       const premiumToken = JSON.parse(localStorage.getItem("premiumTokenReward") || "null");
       const premiumItem = JSON.parse(localStorage.getItem("premiumItemReward") || "null");
       const roiData = JSON.parse(localStorage.getItem("roiData") || "null");
-      setRecap({ user, company, story, film, standardToken, standardItem, premiumToken, premiumItem, roiData });
+      
+      // Charger la configuration unifiée
+      const unifiedConfig = getUnifiedRewardConfig();
+      
+      setRecap({ 
+        user, 
+        company, 
+        story, 
+        film, 
+        standardToken, 
+        standardItem, 
+        premiumToken, 
+        premiumItem, 
+        roiData,
+        unifiedConfig 
+      });
     };
     readLocalStorage();
     window.addEventListener('focus', readLocalStorage);
@@ -317,6 +335,28 @@ export default function RecapB2C() {
                     )}
                     <div style={{ color: '#FF2D2D', fontStyle: 'italic', fontSize: 12, marginTop: 8, borderTop: '1px solid #FFD600', paddingTop: 8 }}>
                       Your logged-in account must have all the rewards
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {/* Information sur les blockchains utilisées */}
+              {recap.unifiedConfig && (
+                <div style={{ background: 'rgba(0,196,108,0.15)', borderRadius: 12, padding: 14, textAlign: 'center', border: '1px solid #00C46C', marginTop: 12 }}>
+                  <div style={{ color: '#00C46C', fontWeight: 700, fontSize: 16, marginBottom: 8 }}>Multi-Blockchain Distribution</div>
+                  <div style={{ color: '#fff', fontSize: 14, lineHeight: 1.4 }}>
+                    {recap.unifiedConfig.standard && (
+                      <div style={{ marginBottom: 4 }}>
+                        <span style={{ color: '#00C46C', fontWeight: 600 }}>Standard Rewards:</span> {recap.unifiedConfig.standard.blockchain}
+                      </div>
+                    )}
+                    {recap.unifiedConfig.premium && (
+                      <div style={{ marginBottom: 4 }}>
+                        <span style={{ color: '#FFD600', fontWeight: 600 }}>Premium Rewards:</span> {recap.unifiedConfig.premium.blockchain}
+                      </div>
+                    )}
+                    <div style={{ color: '#00C46C', fontStyle: 'italic', fontSize: 12, marginTop: 8, borderTop: '1px solid #00C46C', paddingTop: 8 }}>
+                      Winstory will automatically distribute rewards on each blockchain
                     </div>
                   </div>
                 </div>

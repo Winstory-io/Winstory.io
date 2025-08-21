@@ -1,13 +1,19 @@
 {
+  "app/creation/b2c/premiumrewards/ItemRewardConfig.tsx -> ../../../../lib/blockchain-rpc": {
+    "id": "app/creation/b2c/premiumrewards/ItemRewardConfig.tsx -> ../../../../lib/blockchain-rpc",
+    "files": [
+      "static/chunks/_app-pages-browser_lib_blockchain-rpc_ts.js"
+    ]
+  },
+  "app/creation/b2c/premiumrewards/TokenRewardConfig.tsx -> ../../../../lib/blockchain-rpc": {
+    "id": "app/creation/b2c/premiumrewards/TokenRewardConfig.tsx -> ../../../../lib/blockchain-rpc",
+    "files": [
+      "static/chunks/_app-pages-browser_lib_blockchain-rpc_ts.js"
+    ]
+  },
   "lib/blockchain.ts -> ./blockchain-rpc": {
     "id": "lib/blockchain.ts -> ./blockchain-rpc",
     "files": []
-  },
-  "lib/hooks/useModeration.ts -> ../mockData": {
-    "id": "lib/hooks/useModeration.ts -> ../mockData",
-    "files": [
-      "static/chunks/_app-pages-browser_lib_mockData_ts.js"
-    ]
   },
   "lib/hooks/useWalletBalance.ts -> ../blockchain-rpc": {
     "id": "lib/hooks/useWalletBalance.ts -> ../blockchain-rpc",
