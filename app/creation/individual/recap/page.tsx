@@ -270,6 +270,7 @@ export default function IndividualRecapPage() {
   const [showFullGuideline, setShowFullGuideline] = useState(false);
   const [economicData, setEconomicData] = useState<any>(null);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const [videoLoading, setVideoLoading] = useState(false);
 
   useEffect(() => {
     // Charger les données depuis le localStorage
@@ -300,6 +301,7 @@ export default function IndividualRecapPage() {
         
         // Charger la vidéo depuis IndexedDB si on a un videoId
         if (recapData.film?.videoId) {
+          setVideoLoading(true);
           getVideoFromIndexedDB(recapData.film.videoId).then(videoFile => {
             if (videoFile) {
               const url = URL.createObjectURL(videoFile);
@@ -308,8 +310,10 @@ export default function IndividualRecapPage() {
             } else {
               console.warn('Video not found in IndexedDB for ID:', recapData.film?.videoId);
             }
+            setVideoLoading(false);
           }).catch(error => {
             console.error('Failed to load video from IndexedDB:', error);
+            setVideoLoading(false);
           });
         }
       } catch (e) {
@@ -460,6 +464,12 @@ export default function IndividualRecapPage() {
 
   return (
     <ProtectedRoute>
+      <style jsx>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
       <div style={{ minHeight: '100vh', background: '#000', color: '#fff', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', position: 'relative', paddingTop: 48 }}>
         {/* Croix rouge à l'extérieur en haut à droite */}
         <CloseIcon onClick={handleCloseClick} />
@@ -708,6 +718,58 @@ export default function IndividualRecapPage() {
                     }}>
                       <div style={{ color: '#18C964', fontSize: 12, fontStyle: 'italic' }}>
                         ✓ Your video is ready for community completions
+                      </div>
+                    </div>
+                  </div>
+                ) : videoLoading ? (
+                  /* État de chargement de la vidéo depuis IndexedDB */
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ color: '#FFD600', fontWeight: 600, fontSize: 16, marginBottom: 12 }}>Loading Video...</div>
+                    <div style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center',
+                      padding: '40px',
+                      background: 'rgba(255, 215, 0, 0.1)',
+                      borderRadius: '8px',
+                      border: '1px solid #FFD600',
+                      marginBottom: '16px'
+                    }}>
+                      <div style={{ 
+                        width: '40px', 
+                        height: '40px', 
+                        border: '4px solid #FFD600', 
+                        borderTop: '4px solid transparent',
+                        borderRadius: '50%',
+                        animation: 'spin 1s linear infinite',
+                        marginRight: '16px'
+                      }}></div>
+                      <div style={{ color: '#FFD600', fontSize: '16px', fontWeight: '600' }}>
+                        Retrieving your video...
+                      </div>
+                    </div>
+                  </div>
+                ) : recap.film.videoId ? (
+                  /* Cas où on a un videoId mais la vidéo n'a pas encore été chargée */
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ color: '#FFD600', fontWeight: 600, fontSize: 16, marginBottom: 12 }}>Video Ready:</div>
+                    <div style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center',
+                      padding: '20px',
+                      background: 'rgba(24, 201, 100, 0.1)',
+                      borderRadius: '8px',
+                      border: '1px solid #18C964',
+                      marginBottom: '16px'
+                    }}>
+                      <img 
+                        src="/importvideo.svg" 
+                        alt="Video Ready" 
+                        style={{ width: '60px', height: '60px', marginRight: '16px' }} 
+                      />
+                      <div style={{ color: '#18C964', fontSize: '16px', fontWeight: '600' }}>
+                        ✓ Your video is stored and ready for preview
                       </div>
                     </div>
                   </div>

@@ -1,11 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { useActiveAccount, ConnectButton } from 'thirdweb/react';
-import { createThirdwebClient } from 'thirdweb';
+import { useAddress, ConnectWallet } from '@thirdweb-dev/react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-
-const client = createThirdwebClient({
-  clientId: "4ddc5eed2e073e550a7307845d10f348",
-});
 
 // Composant CloseButton réutilisable
 export const CloseButton: React.FC = () => {
@@ -77,7 +72,7 @@ const ModeratorHeader: React.FC<ModeratorHeaderProps> = ({
   onBulbClick 
 }) => {
   const router = useRouter();
-  const account = useActiveAccount();
+  const account = useAddress();
   const [showDisconnectMenu, setShowDisconnectMenu] = useState(false);
   const [isForceDisconnected, setIsForceDisconnected] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -98,7 +93,7 @@ const ModeratorHeader: React.FC<ModeratorHeaderProps> = ({
 
   // Reset disconnect state if a new account connects
   useEffect(() => {
-    if (account && account.address) {
+    if (account) {
       setIsForceDisconnected(false);
     }
   }, [account]);
@@ -229,7 +224,7 @@ const ModeratorHeader: React.FC<ModeratorHeaderProps> = ({
       </div>
 
       {/* Wallet Address Display with Disconnect Menu */}
-      {account && account.address && (
+      {account && (
         <div style={{ position: 'relative' }} ref={menuRef}>
           <button
             onClick={toggleMenu}
@@ -255,7 +250,7 @@ const ModeratorHeader: React.FC<ModeratorHeaderProps> = ({
               borderRadius: '50%',
               animation: 'pulse 2s infinite'
             }} />
-            {truncateAddress(account.address)}
+            {truncateAddress(account)}
             <span style={{ 
               fontSize: '12px', 
               transition: 'transform 0.3s ease',
@@ -295,8 +290,7 @@ const ModeratorHeader: React.FC<ModeratorHeaderProps> = ({
                 Connected
               </div>
               <div style={{ padding: '0 8px' }}>
-                <ConnectButton 
-                  client={client}
+                <ConnectWallet 
                   onDisconnect={handleForceDisconnect}
                 />
               </div>

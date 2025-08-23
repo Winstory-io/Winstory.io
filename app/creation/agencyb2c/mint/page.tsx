@@ -113,14 +113,6 @@ export default function AgencyB2CMintPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {/* USDC */}
               <button 
-                onClick={() => handlePaymentMethod('USDC_Polygon')}
-                style={{ background: 'none', border: '2px solid #18C964', color: '#18C964', borderRadius: 16, fontSize: 16, fontWeight: 700, padding: '12px 0', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 }}
-                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(24, 201, 100, 0.1)'}
-                onMouseLeave={(e) => e.currentTarget.style.background = 'none'}
-              >
-                USDC (Polygon)
-              </button>
-              <button 
                 onClick={() => handlePaymentMethod('USDC_Base')}
                 style={{ background: 'none', border: '2px solid #18C964', color: '#18C964', borderRadius: 16, fontSize: 16, fontWeight: 700, padding: '12px 0', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 }}
                 onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(24, 201, 100, 0.1)'}

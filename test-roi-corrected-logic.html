@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test ROI Logic Corrigée - Net Profit</title>
+    <style>
+        body {
+            background: #000;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            margin: 0;
+        }
+        .test-container {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        .logic-test {
+            background: #111;
+            border: 2px solid #00C46C;
+            border-radius: 20px;
+            padding: 32px;
+            margin-bottom: 24px;
+        }
+        .test-section {
+            background: rgba(0, 196, 108, 0.1);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(0, 196, 108, 0.3);
+        }
+        .test-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #00C46C;
+            margin-bottom: 16px;
+        }
+        .test-case {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            border-left: 4px solid #00C46C;
+        }
+        .test-case h4 {
+            color: #00C46C;
+            margin-top: 0;
+            margin-bottom: 8px;
+        }
+        .test-result {
+            font-family: monospace;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 8px;
+            border-radius: 4px;
+            margin-top: 8px;
+        }
+        .formula-box {
+            background: rgba(255, 214, 0, 0.1);
+            border: 1px solid rgba(255, 214, 0, 0.3);
+            border-radius: 12px;
+            padding: 16px;
+            margin: 16px 0;
+            font-family: monospace;
+        }
+        .formula-title {
+            color: #FFD600;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .highlight {
+            color: #00C46C;
+            font-weight: 700;
+        }
+        .warning {
+            color: #F31260;
+            font-weight: 700;
+        }
+        .slider-container {
+            margin: 20px 0;
+        }
+        .slider {
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: linear-gradient(90deg, #00C46C 0%, #FFD600 50%, #F31260 100%);
+            outline: none;
+            cursor: pointer;
+        }
+        .slider-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+            font-size: 12px;
+            color: #666;
+        }
+        .roi-display {
+            background: rgba(0, 196, 108, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(0, 196, 108, 0.3);
+            text-align: center;
+            margin-top: 20px;
+        }
+        .info-box {
+            background: rgba(255, 214, 0, 0.1);
+            border: 1px solid rgba(255, 214, 0, 0.3);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+        .info-box h3 {
+            color: #FFD600;
+            margin-top: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <div class="info-box">
+            <h3>🧪 Test de la Logique ROI Corrigée - Net Profit</h3>
+            <p>Ce test vérifie que la logique ROI est maintenant basée sur le <strong>Net Profit</strong> configuré, pas sur les frais de completion.</p>
+        </div>
+
+        <!-- Explication de la correction -->
+        <div class="info-box">
+            <h3>🔧 Correction Appliquée</h3>
+            <p><strong>AVANT (Incorrect) :</strong> ROI basé sur les frais de completion × 50%</p>
+            <p><strong>APRÈS (Correct) :</strong> ROI basé sur le Net Profit proportionnel au taux de completion</p>
+        </div>
+
+        <!-- Test de la logique -->
+        <div class="logic-test">
+            <div class="test-title">🔍 Test de la Logique ROI Corrigée</div>
+            
+            <!-- Exemple concret -->
+            <div class="test-section">
+                <h4>📊 Exemple Concret : Configuration Test</h4>
+                <div class="formula-box">
+                    <div class="formula-title">Configuration de Test :</div>
+                    • Investment (MINT): $1500 (base $1000 + AI $500)<br/>
+                    • Net Profit configuré: $1000<br/>
+                    • Unit Value: $100<br/>
+                    • Max Completions: 50
+                </div>
+            </div>
+
+            <div class="test-section">
+                <h4>🎯 Scénarios de Test avec la Logique Corrigée</h4>
+                
+                <div class="test-case">
+                    <h4>✅ Scénario 1: 0% Completions</h4>
+                    <p><strong>Logique attendue:</strong> Aucune completion = Aucun retour, juste l'investissement initial</p>
+                    <div class="test-result">
+                        Investment: $1500<br/>
+                        Net Profit (0%): $0.00<br/>
+                        <strong>Affichage: "Investment: $1500" (pas "ROI")</strong>
+                    </div>
+                </div>
+
+                <div class="test-case">
+                    <h4>✅ Scénario 2: 50% Completions (25 sur 50)</h4>
+                    <p><strong>Logique attendue:</strong> 50% de completion = 50% du Net Profit</p>
+                    <div class="test-result">
+                        Investment: $1500<br/>
+                        Net Profit (50%): $500.00 (50% de $1000)<br/>
+                        <strong>Affichage: "ROI: $2000"</strong>
+                    </div>
+                </div>
+
+                <div class="test-case">
+                    <h4>✅ Scénario 3: 100% Completions (50 sur 50)</h4>
+                    <p><strong>Logique attendue:</strong> 100% de completion = 100% du Net Profit</p>
+                    <div class="test-result">
+                        Investment: $1500<br/>
+                        Net Profit (100%): $1000.00 (100% de $1000)<br/>
+                        <strong>Affichage: "ROI: $2500"</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Formule de calcul -->
+            <div class="test-section">
+                <h4>🧮 Formule de Calcul Corrigée</h4>
+                <div class="formula-box">
+                    <div class="formula-title">Formule Winstory Corrigée :</div>
+                    <strong>Recovered = Net Profit × (Completion Rate / 100)</strong><br/>
+                    <strong>ROI = Investment + Recovered</strong><br/><br/>
+                    
+                    <strong>Exemple avec 50% de completion :</strong><br/>
+                    • Investment: $1500<br/>
+                    • Net Profit configuré: $1000<br/>
+                    • Completion Rate: 50%<br/>
+                    • <span class="highlight">Recovered: $1000 × 50% = $500.00</span><br/>
+                    • ROI: $1500 + $500.00 = <span class="highlight">$2000.00</span>
+                </div>
+            </div>
+
+            <!-- Jauge interactive de test -->
+            <div class="test-section">
+                <h4>🎮 Test de la Jauge Interactive avec Logique Corrigée</h4>
+                <p>Déplacez le slider pour tester la logique en temps réel :</p>
+                
+                <div class="slider-container">
+                    <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        value="50"
+                        class="slider"
+                        oninput="testROICorrectedLogic(this.value)"
+                    />
+                    <div class="slider-labels">
+                        <span>0%</span>
+                        <span>25%</span>
+                        <span>50%</span>
+                        <span>75%</span>
+                        <span>100%</span>
+                    </div>
+                </div>
+
+                <!-- Affichage du test -->
+                <div class="roi-display">
+                    <div style="font-size: 14px; color: #ccc; margin-bottom: 8px;">
+                        Current Completion Rate: <span style="color: #00C46C; font-weight: 600;" id="completionRate">50%</span>
+                    </div>
+                    <div style="font-size: 16px; color: #ccc; margin-bottom: 8px;">
+                        Net Profit ({document.getElementById('completionRate').textContent}): <span style="color: #00C46C; font-weight: 600;" id="netProfit">$500.00</span>
+                    </div>
+                    <div style="font-size: 24px; font-weight: 700; color: #00C46C;" id="roiDisplay">
+                        ROI: $2000.00
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pourquoi cette correction était nécessaire -->
+            <div class="test-section">
+                <h4>💡 Pourquoi Cette Correction Était Nécessaire ?</h4>
+                <div class="formula-box">
+                    <div class="formula-title">Problème identifié :</div>
+                    <strong>❌ AVANT (Incorrect) :</strong><br/>
+                    • ROI basé sur les frais de completion × 50%<br/>
+                    • Résultat : $4000 au lieu de $2500<br/>
+                    • Logique économique fausse<br/><br/>
+                    
+                    <strong>✅ APRÈS (Correct) :</strong><br/>
+                    • ROI basé sur le Net Profit proportionnel<br/>
+                    • Résultat : $2500 (Investment $1500 + Net Profit $1000)<br/>
+                    • Logique économique respectée
+                </div>
+            </div>
+        </div>
+
+        <!-- Résumé des corrections -->
+        <div class="info-box">
+            <h3>✅ Corrections Appliquées</h3>
+            <ul>
+                <li><strong>Logique corrigée :</strong> ROI basé sur le Net Profit configuré, pas sur les frais de completion</li>
+                <li><strong>Formule exacte :</strong> Recovered = Net Profit × (Completion Rate / 100)</li>
+                <li><strong>Calcul cohérent :</strong> Investment + Net Profit proportionnel = ROI correct</li>
+                <li><strong>Exemple validé :</strong> $1500 + $1000 = $2500 (pas $4000)</li>
+                <li><strong>Logique économique :</strong> Respect du modèle Winstory avec Net Profit</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Données de test
+        const actualMintCost = 1500; // MINT de base + AI
+        const netProfit = 1000; // Net Profit configuré
+
+        function testROICorrectedLogic(value) {
+            const completionRate = parseInt(value);
+            const recovered = netProfit * (completionRate / 100);
+            const roi = actualMintCost + recovered;
+            
+            // Mettre à jour l'affichage
+            document.getElementById('completionRate').textContent = completionRate + '%';
+            document.getElementById('netProfit').textContent = '$' + recovered.toFixed(2);
+            
+            // Affichage conditionnel selon la logique corrigée
+            if (completionRate === 0) {
+                document.getElementById('roiDisplay').innerHTML = '<span>Investment: $' + actualMintCost.toFixed(2) + '</span>';
+            } else {
+                document.getElementById('roiDisplay').innerHTML = '<span>ROI: $' + roi.toFixed(2) + '</span>';
+            }
+        }
+
+        // Initialisation
+        testROICorrectedLogic(50);
+    </script>
+</body>
+</html> 

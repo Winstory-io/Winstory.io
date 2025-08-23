@@ -49,7 +49,7 @@ export default function ThirdwebEmailAuth({
     };
 
     const preLogin = async (email: string) => {
-        // Email validation
+        // Validation de l'email
         const validation = validateProfessionalEmail(email);
         if (!validation.valid) {
             setMessage(validation.message);
@@ -61,7 +61,7 @@ export default function ThirdwebEmailAuth({
         setMessage('');
 
         try {
-            // Send verification code
+            // Envoyer le code de vérification
             await preAuthenticate({
                 client,
                 strategy: "email",
@@ -89,8 +89,7 @@ export default function ThirdwebEmailAuth({
         setMessage('');
 
         try {
-            // Verify code and connect
-            let walletAddress = '';
+            // Vérifier le code et se connecter
             await connect(async () => {
                 const wallet = inAppWallet();
                 await wallet.connect({
@@ -99,9 +98,6 @@ export default function ThirdwebEmailAuth({
                     email,
                     verificationCode,
                 });
-                // Get address from the connected account instead of wallet object
-                const account = await wallet.getAccount();
-                walletAddress = account?.address || '';
                 return wallet;
             });
 
@@ -110,12 +106,9 @@ export default function ThirdwebEmailAuth({
             setVerificationCode('');
             setIsCodeSent(false);
             setIsConnected(true);
-            // Stockage direct dans le localStorage
-            localStorage.setItem("user", JSON.stringify({ email }));
-            localStorage.setItem("company", JSON.stringify({ name: email.split('@')[1] }));
-            if (onSuccess) onSuccess({ email, walletAddress });
+            onSuccess?.({ email, walletAddress: 'connected' });
         } catch (error) {
-            const errorMessage = 'Incorrect verification code or connection error';
+            const errorMessage = 'Invalid verification code or connection error';
             setMessage(errorMessage);
             onError?.(errorMessage);
         } finally {
@@ -144,7 +137,7 @@ export default function ThirdwebEmailAuth({
         setMessage('');
     };
 
-    // Correction de l'affichage :
+    // Si connecté, afficher le ConnectButton thirdweb
     if (isConnected) {
         return (
             <div style={{
@@ -254,7 +247,7 @@ export default function ThirdwebEmailAuth({
                                 opacity: isLoading ? 0.6 : 1
                             }}
                         >
-                            {isLoading ? 'Sending...' : 'Receive verification code'}
+                            {isLoading ? 'Sending...' : 'Send verification code'}
                         </button>
                     </div>
                 ) : (

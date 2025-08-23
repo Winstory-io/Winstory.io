@@ -1,15 +1,9 @@
 "use client";
 
-import { useRouter, usePathname } from 'next/navigation';
-import Image from 'next/image';
-import { useActiveAccount, ConnectButton } from 'thirdweb/react';
-import { createThirdwebClient } from 'thirdweb';
+import { useAddress, ConnectWallet } from '@thirdweb-dev/react';
 import { useState, useEffect, useRef } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
 import WalletConnect from '@/components/WalletConnect';
-
-const client = createThirdwebClient({
-  clientId: "4ddc5eed2e073e550a7307845d10f348",
-});
 
 export default function MyWinLayout({
   children,
@@ -18,7 +12,7 @@ export default function MyWinLayout({
 }) {
   const router = useRouter();
   const pathname = usePathname();
-  const account = useActiveAccount();
+  const account = useAddress();
   const [showDisconnectMenu, setShowDisconnectMenu] = useState(false);
   const [isForceDisconnected, setIsForceDisconnected] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -55,7 +49,7 @@ export default function MyWinLayout({
 
   // Réinitialiser l'état de déconnexion forcée si un nouveau compte se connecte
   useEffect(() => {
-    if (account && account.address) {
+    if (account) {
       setIsForceDisconnected(false);
     }
   }, [account]);
@@ -78,7 +72,7 @@ export default function MyWinLayout({
   }, [showDisconnectMenu]);
 
   // Si pas de compte connecté OU si déconnexion forcée, afficher l'écran d'authentification
-  if (!account || !account.address || isForceDisconnected) {
+  if (!account || isForceDisconnected) {
     return (
       <div style={{ minHeight: '100vh', background: '#000' }}>
         <div style={{ 
@@ -245,7 +239,7 @@ export default function MyWinLayout({
                 borderRadius: '50%',
                 animation: 'pulse 2s infinite'
               }} />
-              {truncateAddress(account.address)}
+              {truncateAddress(account)}
               <span style={{ 
                 fontSize: '12px', 
                 transition: 'transform 0.3s ease',
@@ -285,8 +279,7 @@ export default function MyWinLayout({
                   Connected
                 </div>
                 <div style={{ padding: '0 8px' }}>
-                  <ConnectButton 
-                    client={client}
+                  <ConnectWallet 
                     onDisconnect={handleForceDisconnect}
                   />
                 </div>

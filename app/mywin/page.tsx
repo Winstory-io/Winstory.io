@@ -1,7 +1,7 @@
 "use client";
 
+import { useAddress } from '@thirdweb-dev/react';
 import { useState, useEffect, useCallback } from 'react';
-import { useActiveAccount } from 'thirdweb/react';
 import WalletConnect from '@/components/WalletConnect';
 import { useRouter } from 'next/navigation';
 import CreationIcon from '@/components/icons/CreationIcon';
@@ -16,7 +16,7 @@ interface DashboardStats {
 }
 
 export default function MyWinPage() {
-  const account = useActiveAccount();
+  const account = useAddress();
   const [isConnected, setIsConnected] = useState(false);
   const [stats, setStats] = useState<DashboardStats>({
     creations: 0,
@@ -29,7 +29,7 @@ export default function MyWinPage() {
 
   // Utiliser useCallback pour éviter les re-créations de fonction
   const fetchUserStats = useCallback(async () => {
-    if (account && account.address) {
+    if (account) {
       // TODO: Fetch user stats from blockchain/database based on user's actual behavior
       // This will be replaced with real API calls to get:
       // - Number of campaigns created by this user
@@ -54,7 +54,7 @@ export default function MyWinPage() {
   }, [account]);
 
   useEffect(() => {
-    if (account && account.address) {
+    if (account) {
       setIsConnected(true);
       fetchUserStats();
     } else {

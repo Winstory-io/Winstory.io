@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useEffect, useState } from 'react';
 import styles from '../standardrewards/Rewards.module.css';
 import { useWalletAddress } from '../../../../lib/hooks/useWalletConnection';

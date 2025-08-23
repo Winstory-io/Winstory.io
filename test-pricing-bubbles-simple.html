@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test PricingBubbles Simple - Debug Runtime Error</title>
+    <style>
+        body {
+            background: #000;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            margin: 0;
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .debug-section {
+            background: #111;
+            border: 2px solid #00C46C;
+            border-radius: 20px;
+            padding: 32px;
+            margin-bottom: 24px;
+        }
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #00C46C;
+            margin-bottom: 16px;
+        }
+        .error-display {
+            background: rgba(255, 0, 0, 0.1);
+            border: 1px solid #ff0000;
+            border-radius: 12px;
+            padding: 16px;
+            margin: 16px 0;
+            color: #ff6666;
+        }
+        .success-display {
+            background: rgba(0, 255, 0, 0.1);
+            border: 1px solid #00ff00;
+            border-radius: 12px;
+            padding: 16px;
+            margin: 16px 0;
+            color: #66ff66;
+        }
+        .code-block {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 12px;
+            margin: 12px 0;
+            font-family: monospace;
+            font-size: 14px;
+            border-left: 4px solid #00C46C;
+            overflow-x: auto;
+        }
+        .test-button {
+            background: #00C46C;
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            margin: 8px;
+        }
+        .test-button:hover {
+            background: #00A050;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <div class="debug-section">
+            <div class="section-title">🐛 Debug Runtime Error - "Cannot read properties of undefined (reading 'call')"</div>
+            
+            <div class="error-display">
+                <strong>Erreur détectée :</strong> TypeError: Cannot read properties of undefined (reading 'call')
+                <br/>Cette erreur indique généralement un problème d'import ou de composant React
+            </div>
+
+            <div class="section-title">🔍 Analyse du Problème</div>
+            
+            <p>Cette erreur runtime peut avoir plusieurs causes :</p>
+            <ol>
+                <li><strong>Import manquant :</strong> Un composant ou module n'est pas correctement importé</li>
+                <li><strong>Composant non défini :</strong> Un composant est utilisé avant d'être défini</li>
+                <li><strong>Problème de scope :</strong> Une fonction est appelée en dehors de son contexte</li>
+                <li><strong>Dépendance manquante :</strong> Une bibliothèque externe n'est pas chargée</li>
+            </ol>
+
+            <div class="section-title">🧪 Tests de Diagnostic</div>
+            
+            <button class="test-button" onclick="testBasicFunctionality()">Test 1: Fonctionnalité de Base</button>
+            <button class="test-button" onclick="testROICalculation()">Test 2: Calcul ROI</button>
+            <button class="test-button" onclick="testColorSystem()">Test 3: Système de Couleurs</button>
+            <button class="test-button" onclick="testModalContent()">Test 4: Contenu Modal</button>
+
+            <div id="testResults"></div>
+        </div>
+
+        <div class="debug-section">
+            <div class="section-title">📋 Code de Test - Fonction getROIColor</div>
+            
+            <div class="code-block">
+// Fonction de test pour le système de couleurs
+function testGetROIColor() {
+  const getROIColor = (roi, mintCost) => {
+    if (roi === 0) return '#FFD600'; // Jaune pour Initial MINT
+    
+    const progress = roi / mintCost; // Progression par rapport au MINT initial
+    
+    if (progress < 0.25) return '#F31260'; // Rouge (0-25%)
+    if (progress < 0.5) return '#FF8C00';  // Orange (25-50%)
+    if (progress < 0.75) return '#FFD600'; // Jaune (50-75%)
+    if (progress < 1) return '#18C964';    // Vert clair (75-100%)
+    if (progress >= 1) return '#00C46C';   // Vert foncé (100%+)
+    return '#00C46C'; // Fallback
+  };
+
+  // Tests
+  console.log('Test getROIColor:');
+  console.log('0% progression:', getROIColor(0, 1500));      // Jaune
+  console.log('25% progression:', getROIColor(375, 1500));   // Rouge
+  console.log('50% progression:', getROIColor(750, 1500));   // Orange
+  console.log('75% progression:', getROIColor(1125, 1500));  // Jaune
+  console.log('100% progression:', getROIColor(1500, 1500)); // Vert clair
+  console.log('150% progression:', getROIColor(2250, 1500)); // Vert foncé
+  
+  return 'Test getROIColor terminé avec succès';
+}
+            </div>
+
+            <button class="test-button" onclick="runROIColorTest()">Exécuter Test ROI Colors</button>
+        </div>
+
+        <div class="debug-section">
+            <div class="section-title">🔧 Solutions Possibles</div>
+            
+            <div class="success-display">
+                <strong>Solution 1 : Vérifier les Imports</strong>
+                <br/>S'assurer que tous les composants React sont correctement importés
+            </div>
+
+            <div class="success-display">
+                <strong>Solution 2 : Vérifier l'Ordre des Déclarations</strong>
+                <br/>S'assurer que les composants sont déclarés avant d'être utilisés
+            </div>
+
+            <div class="success-display">
+                <strong>Solution 3 : Vérifier les Dépendances</strong>
+                <br/>S'assurer que toutes les bibliothèques sont installées et à jour
+            </div>
+
+            <div class="success-display">
+                <strong>Solution 4 : Vérifier la Syntaxe JSX</strong>
+                <br/>S'assurer qu'il n'y a pas d'erreurs de syntaxe dans le JSX
+            </div>
+        </div>
+
+        <div class="debug-section">
+            <div class="section-title">📊 Logs de Console</div>
+            
+            <div id="consoleLogs" style="background: rgba(0,0,0,0.3); border-radius: 8px; padding: 16px; font-family: monospace; font-size: 12px; max-height: 200px; overflow-y: auto;">
+                <div>Console logs apparaîtront ici...</div>
+            </div>
+            
+            <button class="test-button" onclick="clearLogs()">Effacer les Logs</button>
+        </div>
+    </div>
+
+    <script>
+        // Fonction pour ajouter des logs
+        function addLog(message, type = 'info') {
+            const logsDiv = document.getElementById('consoleLogs');
+            const logEntry = document.createElement('div');
+            logEntry.style.color = type === 'error' ? '#ff6666' : type === 'success' ? '#66ff66' : '#ffffff';
+            logEntry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logsDiv.appendChild(logEntry);
+            logsDiv.scrollTop = logsDiv.scrollHeight;
+        }
+
+        // Test 1: Fonctionnalité de base
+        function testBasicFunctionality() {
+            try {
+                addLog('Test 1: Vérification des fonctionnalités de base...', 'info');
+                
+                // Test des variables globales
+                if (typeof window !== 'undefined') {
+                    addLog('✓ Window object disponible', 'success');
+                } else {
+                    addLog('✗ Window object non disponible', 'error');
+                }
+
+                // Test des fonctions de base
+                if (typeof console !== 'undefined') {
+                    addLog('✓ Console disponible', 'success');
+                } else {
+                    addLog('✗ Console non disponible', 'error');
+                }
+
+                addLog('Test 1 terminé avec succès', 'success');
+            } catch (error) {
+                addLog(`Test 1 échoué: ${error.message}`, 'error');
+            }
+        }
+
+        // Test 2: Calcul ROI
+        function testROICalculation() {
+            try {
+                addLog('Test 2: Test du calcul ROI...', 'info');
+                
+                const calculateRecovered = (completionRate, unitValue, maxCompletions) => {
+                    if (!unitValue || !maxCompletions) return 0;
+                    const actualCompletions = Math.round((completionRate / 100) * maxCompletions);
+                    const totalFees = unitValue * actualCompletions;
+                    const recovered = totalFees * 0.50;
+                    return recovered;
+                };
+
+                const testCases = [
+                    { rate: 0, expected: 0 },
+                    { rate: 50, expected: 1250 },
+                    { rate: 100, expected: 2500 }
+                ];
+
+                testCases.forEach(testCase => {
+                    const result = calculateRecovered(testCase.rate, 100, 50);
+                    if (Math.abs(result - testCase.expected) < 0.01) {
+                        addLog(`✓ ROI ${testCase.rate}%: ${result} (attendu: ${testCase.expected})`, 'success');
+                    } else {
+                        addLog(`✗ ROI ${testCase.rate}%: ${result} (attendu: ${testCase.expected})`, 'error');
+                    }
+                });
+
+                addLog('Test 2 terminé avec succès', 'success');
+            } catch (error) {
+                addLog(`Test 2 échoué: ${error.message}`, 'error');
+            }
+        }
+
+        // Test 3: Système de couleurs
+        function testColorSystem() {
+            try {
+                addLog('Test 3: Test du système de couleurs...', 'info');
+                
+                const getROIColor = (roi, mintCost) => {
+                    if (roi === 0) return '#FFD600';
+                    const progress = roi / mintCost;
+                    if (progress < 0.25) return '#F31260';
+                    if (progress < 0.5) return '#FF8C00';
+                    if (progress < 0.75) return '#FFD600';
+                    if (progress < 1) return '#18C964';
+                    return '#00C46C';
+                };
+
+                const testCases = [
+                    { roi: 0, mintCost: 1500, expectedColor: '#FFD600' },
+                    { roi: 375, mintCost: 1500, expectedColor: '#F31260' },
+                    { roi: 750, mintCost: 1500, expectedColor: '#FF8C00' },
+                    { roi: 1500, mintCost: 1500, expectedColor: '#18C964' },
+                    { roi: 2250, mintCost: 1500, expectedColor: '#00C46C' }
+                ];
+
+                testCases.forEach(testCase => {
+                    const color = getROIColor(testCase.roi, testCase.mintCost);
+                    if (color === testCase.expectedColor) {
+                        addLog(`✓ ROI ${testCase.roi}/${testCase.mintCost}: ${color}`, 'success');
+                    } else {
+                        addLog(`✗ ROI ${testCase.roi}/${testCase.mintCost}: ${color} (attendu: ${testCase.expectedColor})`, 'error');
+                    }
+                });
+
+                addLog('Test 3 terminé avec succès', 'success');
+            } catch (error) {
+                addLog(`Test 3 échoué: ${error.message}`, 'error');
+            }
+        }
+
+        // Test 4: Contenu modal
+        function testModalContent() {
+            try {
+                addLog('Test 4: Test du contenu modal...', 'info');
+                
+                // Simulation des données ROI
+                const mockRoiData = {
+                    unitValue: 100,
+                    maxCompletions: 50,
+                    netProfit: 1000
+                };
+
+                if (mockRoiData.unitValue && mockRoiData.maxCompletions) {
+                    addLog('✓ Données ROI valides', 'success');
+                } else {
+                    addLog('✗ Données ROI invalides', 'error');
+                }
+
+                addLog('Test 4 terminé avec succès', 'success');
+            } catch (error) {
+                addLog(`Test 4 échoué: ${error.message}`, 'error');
+            }
+        }
+
+        // Test ROI Colors
+        function runROIColorTest() {
+            try {
+                addLog('Exécution du test ROI Colors...', 'info');
+                const result = testGetROIColor();
+                addLog(`✓ ${result}`, 'success');
+            } catch (error) {
+                addLog(`✗ Test ROI Colors échoué: ${error.message}`, 'error');
+            }
+        }
+
+        // Fonction de test getROIColor
+        function testGetROIColor() {
+            const getROIColor = (roi, mintCost) => {
+                if (roi === 0) return '#FFD600';
+                const progress = roi / mintCost;
+                if (progress < 0.25) return '#F31260';
+                if (progress < 0.5) return '#FF8C00';
+                if (progress < 0.75) return '#FFD600';
+                if (progress < 1) return '#18C964';
+                return '#00C46C';
+            };
+
+            addLog('Test getROIColor:');
+            addLog(`0% progression: ${getROIColor(0, 1500)}`);
+            addLog(`25% progression: ${getROIColor(375, 1500)}`);
+            addLog(`50% progression: ${getROIColor(750, 1500)}`);
+            addLog(`75% progression: ${getROIColor(1125, 1500)}`);
+            addLog(`100% progression: ${getROIColor(1500, 1500)}`);
+            addLog(`150% progression: ${getROIColor(2250, 1500)}`);
+            
+            return 'Test getROIColor terminé avec succès';
+        }
+
+        // Effacer les logs
+        function clearLogs() {
+            document.getElementById('consoleLogs').innerHTML = '<div>Console logs effacés...</div>';
+        }
+
+        // Initialisation
+        addLog('Page de test chargée - Prêt pour les diagnostics', 'success');
+    </script>
+</body>
+</html> 

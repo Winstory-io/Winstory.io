@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test ROI Hover Effects</title>
+    <style>
+        body {
+            background: #000;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        .test-container {
+            max-width: 420px;
+            margin: 0 auto;
+        }
+        .roi-encart {
+            background: rgba(0, 196, 108, 0.08);
+            border: 1px solid rgba(0, 196, 108, 0.3);
+            border-radius: 16px;
+            padding: 16px 20px;
+            margin-top: 16px;
+            text-align: center;
+            box-shadow: 0 4px 16px rgba(0, 196, 108, 0.15);
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+        .roi-encart:hover {
+            box-shadow: 0 8px 32px rgba(0, 196, 108, 0.4);
+            filter: brightness(1.1);
+            border-color: rgba(0, 196, 108, 0.6);
+            background: rgba(0, 196, 108, 0.15);
+        }
+        .liseret {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(0, 196, 108, 0.6), transparent);
+        }
+        .liseret.top { top: 0; }
+        .liseret.bottom { bottom: 0; }
+        .roi-title {
+            color: #00C46C;
+            font-weight: 700;
+            font-size: 16px;
+            margin-bottom: 4px;
+        }
+        .roi-amount {
+            color: #00C46C;
+            font-weight: 700;
+            font-size: 20px;
+        }
+        .roi-details {
+            color: #00C46C;
+            font-size: 12px;
+            margin-top: 4px;
+            opacity: 0.8;
+        }
+        .test-info {
+            background: rgba(255, 214, 0, 0.1);
+            border: 1px solid rgba(255, 214, 0, 0.3);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+        .test-info h3 {
+            color: #FFD600;
+            margin-top: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <div class="test-info">
+            <h3>🧪 Test des Effets Hover de l'Encart ROI</h3>
+            <p>Passez votre souris sur l'encart vert ci-dessous pour tester :</p>
+            <ul>
+                <li>✅ Effet luminescent au hover</li>
+                <li>✅ Changement de transparence</li>
+                <li>✅ Ombre plus prononcée</li>
+                <li>✅ Curseur pointer</li>
+            </ul>
+        </div>
+
+        <!-- Encart ROI avec effets hover -->
+        <div class="roi-encart" onclick="showROIModal()">
+            <div class="liseret top"></div>
+            <div class="liseret bottom"></div>
+            
+            <div class="roi-title">
+                If 100% Completions:
+            </div>
+            <div class="roi-amount">
+                Total ROI: $1500
+            </div>
+            <div class="roi-details">
+                MINT ($1000) + Net Profits ($500)
+            </div>
+        </div>
+
+        <div class="test-info">
+            <h3>📊 Données de Test</h3>
+            <p>Cet encart simule les données d'une campagne avec :</p>
+            <ul>
+                <li>MINT de base : $1000</li>
+                <li>Net Profits : $500</li>
+                <li>ROI total : $1500</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        function showROIModal() {
+            alert('Modal ROI détaillé - Dans l\'app Next.js, cela ouvrira un pop-up avec le détail du calcul mathématique');
+        }
+    </script>
+</body>
+</html> 

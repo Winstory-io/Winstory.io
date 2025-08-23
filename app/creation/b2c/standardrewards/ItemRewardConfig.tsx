@@ -4,7 +4,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import styles from './Rewards.module.css';
 import { getAddressValidationError, getDecimalsNote } from '../../../../lib/blockchain';
 import { useRealTimeBalance } from '../../../../lib/hooks/useWalletBalance';
-import { useActiveAccount } from "thirdweb/react";
+import { useAddress } from "@thirdweb-dev/react";
 import { useRouter } from 'next/navigation';
 import { validateContract } from '../../../../lib/blockchain-rpc';
 
@@ -32,8 +32,8 @@ export default function ItemRewardConfig({ onClose }: { onClose: () => void }) {
   const [isCheckingBalance, setIsCheckingBalance] = useState<boolean>(false);
 
   // Wallet connection
-  const account = useActiveAccount();
-  const walletAddress = account?.address;
+  const account = useAddress();
+  const walletAddress = account;
   const contractAddressRef = useRef<HTMLInputElement>(null);
 
   // Real-time balance monitoring with wallet address

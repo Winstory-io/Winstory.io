@@ -9,6 +9,9 @@ export default function AgencyB2CPremiumRewardsPage() {
     <div className={styles.container}>
       <RewardsHeader />
       <div className={styles.subtitles}>
+        <div className={styles.standardRewardsConfigured}>
+          Standard Rewards : ✅
+        </div>
         <p className={styles.choose}>Choose how you want to thank your best Community</p>
         <h2 className={styles.standard}>Premium Rewards</h2>
         <p className={styles.italic}>

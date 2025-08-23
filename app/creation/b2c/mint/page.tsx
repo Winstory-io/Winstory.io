@@ -3,8 +3,6 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import PricingBubbles from "@/components/PricingBubbles";
-import { getUnifiedRewardConfig, validateRewardConfig } from "@/lib/rewards-manager";
-import RewardDistributionStatus from "@/components/RewardDistributionStatus";
 
 export default function MintPage() {
   const router = useRouter();
@@ -76,19 +74,6 @@ export default function MintPage() {
     
     // Stocker le prix final pour le paiement
     localStorage.setItem("finalPrice", price.toString());
-    
-    // Valider la configuration des récompenses
-    const unifiedConfig = getUnifiedRewardConfig();
-    if (unifiedConfig) {
-      const validation = validateRewardConfig(unifiedConfig);
-      if (!validation.isValid) {
-        console.error('Reward configuration validation failed:', validation.errors);
-        // TODO: Afficher les erreurs à l'utilisateur
-      } else if (validation.warnings.length > 0) {
-        console.warn('Reward configuration warnings:', validation.warnings);
-        // TODO: Afficher les avertissements à l'utilisateur
-      }
-    }
   }, []);
 
   const handlePaymentMethod = (method: string) => {
@@ -106,9 +91,6 @@ export default function MintPage() {
         <img src="/company.svg" alt="Company" style={{ width: 96, height: 96, marginRight: 16 }} />
         <h1 style={{ fontSize: 36, fontWeight: 700, margin: 0, textAlign: 'center' }}>MINT</h1>
       </div>
-      
-      {/* Reward Distribution Status */}
-      <RewardDistributionStatus />
       
       {/* Desktop Layout - Two columns */}
       <div style={{ 
@@ -130,14 +112,6 @@ export default function MintPage() {
             <h2 style={{ color: '#FFD600', fontWeight: 700, fontSize: 22, marginBottom: 20, textAlign: 'center' }}>Choose your payment method</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {/* USDC */}
-              <button 
-                onClick={() => handlePaymentMethod('USDC_Polygon')}
-                style={{ background: 'none', border: '2px solid #18C964', color: '#18C964', borderRadius: 16, fontSize: 16, fontWeight: 700, padding: '12px 0', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 }}
-                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(24, 201, 100, 0.1)'}
-                onMouseLeave={(e) => e.currentTarget.style.background = 'none'}
-              >
-                USDC (Polygon)
-              </button>
               <button 
                 onClick={() => handlePaymentMethod('USDC_Base')}
                 style={{ background: 'none', border: '2px solid #18C964', color: '#18C964', borderRadius: 16, fontSize: 16, fontWeight: 700, padding: '12px 0', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 }}

@@ -19,8 +19,10 @@
   },
   "scripts": {
     "dev": "next dev",
+    "dev:fast": "next dev --port 3000",
     "build": "next build",
     "start": "next start",
+    "lint": "next lint",
     "test": "echo \"Error: no test specified\" && exit 1",
     "db:seed": "tsx prisma/seed.ts",
     "db:generate": "prisma generate",
@@ -30,10 +32,8 @@
   "dependencies": {
     "@auth/prisma-adapter": "^2.10.0",
     "@prisma/client": "^6.11.1",
-    "@thirdweb-dev/chains": "^0.1.120",
+    "@tanstack/react-query": "^4.36.1",
     "@thirdweb-dev/react": "^4.9.4",
-    "@thirdweb-dev/sdk": "^4.0.99",
-    "@thirdweb-dev/wallets": "^2.5.39",
     "axios": "^1.10.0",
     "ethers": "^5.8.0",
     "next": "^15.3.4",
@@ -43,11 +43,12 @@
     "prisma": "^6.11.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "thirdweb": "^5.105.4"
+    "thirdweb": "^5.105.37"
   },
   "devDependencies": {
     "@types/node": "^24.0.4",
     "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
     "eslint": "^9.29.0",
     "prettier": "^3.6.0",
     "tsx": "^4.20.4",

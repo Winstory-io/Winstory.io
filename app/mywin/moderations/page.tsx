@@ -1,7 +1,7 @@
 "use client";
 
+import { useAddress } from '@thirdweb-dev/react';
 import { useState, useEffect } from 'react';
-import { useActiveAccount } from 'thirdweb/react';
 
 interface Moderation {
   id: string;
@@ -17,11 +17,11 @@ interface Moderation {
 }
 
 export default function MyModerationsPage() {
-  const account = useActiveAccount();
+  const account = useAddress();
   const [moderations, setModerations] = useState<Moderation[]>([]);
 
   useEffect(() => {
-    if (account && account.address) {
+    if (account) {
       // TODO: Fetch user moderations from blockchain/database based on actual user behavior
       // This will be replaced with real API calls to get:
       // - Content moderated by this user
@@ -68,7 +68,7 @@ export default function MyModerationsPage() {
   const averageAlignment = moderations.reduce((sum, mod) => sum + mod.alignment, 0) / totalVotes;
 
   // Si pas d'adresse, afficher un message de chargement au lieu de rediriger
-  if (!account || !account.address) {
+  if (!account) {
     return (
       <div style={{ 
         minHeight: '100vh', 

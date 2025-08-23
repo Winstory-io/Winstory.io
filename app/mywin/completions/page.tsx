@@ -1,7 +1,7 @@
 "use client";
 
+import { useAddress } from '@thirdweb-dev/react';
 import { useState, useEffect } from 'react';
-import { useActiveAccount } from 'thirdweb/react';
 
 interface Completion {
   id: string;
@@ -22,11 +22,11 @@ interface Completion {
 }
 
 export default function MyCompletionsPage() {
-  const account = useActiveAccount();
+  const account = useAddress();
   const [completions, setCompletions] = useState<Completion[]>([]);
 
   useEffect(() => {
-    if (account && account.address) {
+    if (account) {
       // TODO: Fetch user completions from blockchain/database based on actual user behavior
       // This will be replaced with real API calls to get:
       // - Campaigns completed by this user
@@ -58,7 +58,7 @@ export default function MyCompletionsPage() {
   };
 
   // Si pas d'adresse, afficher un message de chargement
-  if (!account || !account.address) {
+  if (!account) {
     return (
       <div style={{ 
         minHeight: '100vh', 

@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test ROI 50% Logic - Winstory (Corrigé)</title>
+    <style>
+        body {
+            background: #000;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            margin: 0;
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .logic-test {
+            background: #111;
+            border: 2px solid #00C46C;
+            border-radius: 20px;
+            padding: 32px;
+            margin-bottom: 24px;
+        }
+        .test-section {
+            background: rgba(0, 196, 108, 0.1);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(0, 196, 108, 0.3);
+        }
+        .test-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #00C46C;
+            margin-bottom: 16px;
+        }
+        .test-case {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            border-left: 4px solid #00C46C;
+        }
+        .test-case h4 {
+            color: #00C46C;
+            margin-top: 0;
+            margin-bottom: 8px;
+        }
+        .test-result {
+            font-family: monospace;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 8px;
+            border-radius: 4px;
+            margin-top: 8px;
+        }
+        .formula-box {
+            background: rgba(255, 214, 0, 0.1);
+            border: 1px solid rgba(255, 214, 0, 0.3);
+            border-radius: 12px;
+            padding: 16px;
+            margin: 16px 0;
+            font-family: monospace;
+        }
+        .formula-title {
+            color: #FFD600;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .flow-diagram {
+            background: rgba(0, 196, 108, 0.1);
+            border: 1px solid rgba(0, 196, 108, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .flow-title {
+            color: #00C46C;
+            font-weight: 700;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+        .flow-item {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 12px;
+            margin: 8px 0;
+            border-left: 4px solid #FFD600;
+        }
+        .highlight {
+            color: #00C46C;
+            font-weight: 700;
+        }
+        .warning {
+            color: #F31260;
+            font-weight: 700;
+        }
+        .info {
+            color: #FFD600;
+            font-weight: 700;
+        }
+        .slider-container {
+            margin: 20px 0;
+        }
+        .slider {
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: linear-gradient(90deg, #00C46C 0%, #FFD600 50%, #F31260 100%);
+            outline: none;
+            cursor: pointer;
+        }
+        .slider-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+            font-size: 12px;
+            color: #666;
+        }
+        .roi-display {
+            background: rgba(0, 196, 108, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(0, 196, 108, 0.3);
+            text-align: center;
+            margin-top: 20px;
+        }
+        .info-box {
+            background: rgba(255, 214, 0, 0.1);
+            border: 1px solid rgba(255, 214, 0, 0.3);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+        .info-box h3 {
+            color: #FFD600;
+            margin-top: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <div class="info-box">
+            <h3>🧪 Test de la Logique ROI 50% - Winstory (Corrigé)</h3>
+            <p>Ce test vérifie la logique corrigée avec la distinction claire entre les deux flux de paiement Winstory.</p>
+        </div>
+
+        <!-- Explication des flux de paiement -->
+        <div class="flow-diagram">
+            <div class="flow-title">💰 FLUX DE PAIEMENT WINSTORY - DISTINCTION CLAIRE</div>
+            
+            <div class="flow-item">
+                <strong>🔄 FLUX 1 : MINT Initial (B2C/AgencyB2C → Winstory)</strong><br/>
+                • <span class="warning">51%</span> → Modérateurs<br/>
+                • <span class="info">49%</span> → Winstory
+            </div>
+            
+            <div class="flow-item">
+                <strong>🔄 FLUX 2 : Completions Payantes (Compléteur → Winstory)</strong><br/>
+                • <span class="highlight">50%</span> → Entreprise initiale B2C/AgencyB2C ← <strong>VOTRE ROI</strong><br/>
+                • <span class="warning">40%</span> → Modérateurs<br/>
+                • <span class="info">10%</span> → Winstory
+            </div>
+        </div>
+
+        <!-- Test de la logique -->
+        <div class="logic-test">
+            <div class="test-title">🔍 Test de la Logique ROI 50% (Completions)</div>
+            
+            <!-- Exemple concret -->
+            <div class="test-section">
+                <h4>📊 Exemple Concret : Configuration Test</h4>
+                <div class="formula-box">
+                    <div class="formula-title">Configuration de Test :</div>
+                    • Unit Value: $100.00<br/>
+                    • Max Completions: 50<br/>
+                    • Investment (MINT): $1500 (base $1000 + AI $500)
+                </div>
+            </div>
+
+            <div class="test-section">
+                <h4>🎯 Scénarios de Test avec la Logique 50% (Completions)</h4>
+                
+                <div class="test-case">
+                    <h4>✅ Scénario 1: 0% Completions</h4>
+                    <p><strong>Logique attendue:</strong> Aucune completion = Aucun retour, juste l'investissement initial</p>
+                    <div class="test-result">
+                        Investment: $1500<br/>
+                        Total Fees Collected: $0.00<br/>
+                        Recovered (50%): $0.00<br/>
+                        <strong>Affichage: "Investment: $1500" (pas "ROI")</strong>
+                    </div>
+                </div>
+
+                <div class="test-case">
+                    <h4>✅ Scénario 2: 1% Completions (1 completion sur 50)</h4>
+                    <p><strong>Logique attendue:</strong> 1 completion = 1 × $100 = $100 total, dont 50% pour B2C</p>
+                    <div class="test-result">
+                        Investment: $1500<br/>
+                        Total Fees Collected: $100.00 (1 × $100)<br/>
+                        Recovered (50%): $50.00<br/>
+                        <strong>Affichage: "ROI: $1550"</strong>
+                    </div>
+                </div>
+
+                <div class="test-case">
+                    <h4>✅ Scénario 3: 50% Completions (25 sur 50)</h4>
+                    <p><strong>Logique attendue:</strong> 25 completions = 25 × $100 = $2500 total, dont 50% pour B2C</p>
+                    <div class="test-result">
+                        Investment: $1500<br/>
+                        Total Fees Collected: $2500.00 (25 × $100)<br/>
+                        Recovered (50%): $1250.00<br/>
+                        <strong>Affichage: "ROI: $2750"</strong>
+                    </div>
+                </div>
+
+                <div class="test-case">
+                    <h4>✅ Scénario 4: 100% Completions (50 sur 50)</h4>
+                    <p><strong>Logique attendue:</strong> 50 completions = 50 × $100 = $5000 total, dont 50% pour B2C</p>
+                    <div class="test-result">
+                        Investment: $1500<br/>
+                        Total Fees Collected: $5000.00 (50 × $100)<br/>
+                        Recovered (50%): $2500.00<br/>
+                        <strong>Affichage: "ROI: $4000"</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Formule de calcul -->
+            <div class="test-section">
+                <h4>🧮 Formule de Calcul Corrigée (50%)</h4>
+                <div class="formula-box">
+                    <div class="formula-title">Formule Winstory pour Completions :</div>
+                    <strong>Recovered = (Unit Value × Completion Rate × Max Completions) × 50%</strong><br/><br/>
+                    
+                    <strong>Exemple avec 25% de completion :</strong><br/>
+                    • Unit Value: $100<br/>
+                    • Completion Rate: 25%<br/>
+                    • Max Completions: 50<br/>
+                    • Total Fees: $100 × 25% × 50 = $1250<br/>
+                    • <span class="highlight">Recovered (50%): $1250 × 50% = $625.00</span><br/>
+                    • ROI: $1500 + $625.00 = <span class="highlight">$2125.00</span>
+                </div>
+            </div>
+
+            <!-- Jauge interactive de test -->
+            <div class="test-section">
+                <h4>🎮 Test de la Jauge Interactive avec Logique 50%</h4>
+                <p>Déplacez le slider pour tester la logique en temps réel :</p>
+                
+                <div class="slider-container">
+                    <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        value="25"
+                        class="slider"
+                        oninput="testROI50PercentLogic(this.value)"
+                    />
+                    <div class="slider-labels">
+                        <span>0%</span>
+                        <span>25%</span>
+                        <span>50%</span>
+                        <span>75%</span>
+                        <span>100%</span>
+                    </div>
+                </div>
+
+                <!-- Affichage du test -->
+                <div class="roi-display">
+                    <div style="font-size: 14px; color: #ccc; margin-bottom: 8px;">
+                        Current Completion Rate: <span style="color: #00C46C; font-weight: 600;" id="completionRate">25%</span>
+                    </div>
+                    <div style="font-size: 16px; color: #ccc; margin-bottom: 8px;">
+                        Total Fees Collected: <span style="color: #00C46C; font-weight: 600;" id="totalFees">$1250.00</span>
+                    </div>
+                    <div style="font-size: 16px; color: #ccc; margin-bottom: 12px;">
+                        Recovered (50%): <span style="color: #00C46C; font-weight: 600;" id="recovered">$625.00</span>
+                    </div>
+                    <div style="font-size: 24px; font-weight: 700; color: #00C46C;" id="roiDisplay">
+                        ROI: $2125.00
+                    </div>
+                </div>
+            </div>
+
+            <!-- Répartition des 50% vs 50% -->
+            <div class="test-section">
+                <h4>💰 Répartition Winstory : 50% vs 50% (Completions)</h4>
+                <div class="formula-box">
+                    <div class="formula-title">Pour chaque completion de $100 :</div>
+                    • <span class="highlight">$50.00 (50%)</span> → Entreprise B2C ← <strong>VOTRE ROI</strong><br/>
+                    • <span class="warning">$40.00 (40%)</span> → Modérateurs<br/>
+                    • <span class="info">$10.00 (10%)</span> → Plateforme Winstory<br/><br/>
+                    
+                    <strong>Pourquoi cette répartition ?</strong><br/>
+                    • <span class="highlight">50%</span> : Votre récompense pour avoir créé la campagne<br/>
+                    • <span class="warning">40%</span> : Coût de la modération et validation<br/>
+                    • <span class="info">10%</span> : Coût de la plateforme et infrastructure
+                </div>
+            </div>
+        </div>
+
+        <!-- Résumé des corrections -->
+        <div class="info-box">
+            <h3>✅ Corrections Appliquées</h3>
+            <ul>
+                <li><strong>Logique corrigée :</strong> ROI basé sur 50% des frais de completion (pas 51%)</li>
+                <li><strong>Distinction claire :</strong> Deux flux de paiement séparés (MINT vs Completions)</li>
+                <li><strong>Formule exacte :</strong> (Unit Value × Completion Rate × Max Completions) × 50%</li>
+                <li><strong>Terminologie claire :</strong> "Recovered (50% of fees)" pour les completions</li>
+                <li><strong>Explication complète :</strong> Distinction MINT (51% mods, 49% Winstory) vs Completions (50% B2C, 40% mods, 10% Winstory)</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Données de test
+        const baseMintCost = 1000;
+        const aiOptionCost = 500;
+        const actualMintCost = baseMintCost + aiOptionCost;
+        const unitValue = 100;
+        const maxCompletions = 50;
+
+        function testROI50PercentLogic(value) {
+            const completionRate = parseInt(value);
+            const totalFees = unitValue * (completionRate / 100) * maxCompletions;
+            const recovered = totalFees * 0.50; // 50% pour l'entreprise B2C
+            const roi = actualMintCost + recovered;
+            
+            // Mettre à jour l'affichage
+            document.getElementById('completionRate').textContent = completionRate + '%';
+            document.getElementById('totalFees').textContent = '$' + totalFees.toFixed(2);
+            document.getElementById('recovered').textContent = '$' + recovered.toFixed(2);
+            
+            // Affichage conditionnel selon la logique corrigée
+            if (completionRate === 0) {
+                document.getElementById('roiDisplay').innerHTML = '<span>Investment: $' + actualMintCost.toFixed(2) + '</span>';
+            } else {
+                document.getElementById('roiDisplay').innerHTML = '<span>ROI: $' + roi.toFixed(2) + '</span>';
+            }
+        }
+
+        // Initialisation
+        testROI50PercentLogic(25);
+    </script>
+</body>
+</html> 

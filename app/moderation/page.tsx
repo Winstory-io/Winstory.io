@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useActiveAccount } from 'thirdweb/react';
+import { useAddress } from '@thirdweb-dev/react';
 import WalletConnect from '../../components/WalletConnect';
 import ModeratorHeader, { CloseButton } from '../../components/ModeratorHeader';
 import ModerationBubbles from '../../components/ModerationBubbles';
@@ -21,7 +21,7 @@ import { ModerationCampaign, getUICreatorType, getUICampaignType } from '../../l
 const ModerationPage = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const account = useActiveAccount();
+  const address = useAddress();
   
   // Récupérer l'ID de campagne et les paramètres depuis l'URL
   const campaignId = searchParams.get('campaignId');
@@ -135,7 +135,6 @@ const ModerationPage = () => {
     isLoading, 
     error, 
     availableCampaigns,
-    moderatorUsedScores, // Scores utilisés par le modérateur actuel
     submitModerationDecision, 
     submitCompletionScore,
     checkCampaignsAvailability,
@@ -160,7 +159,7 @@ const ModerationPage = () => {
 
   // Charger la campagne quand campaignId est présent dans l'URL
   useEffect(() => {
-    if (campaignId && account?.address && !currentSession) {
+    if (campaignId && address && !currentSession) {
       console.log('Loading campaign from URL:', campaignId);
       setIsLoadingCampaign(true);
       
@@ -169,11 +168,11 @@ const ModerationPage = () => {
         setIsLoadingCampaign(false);
       });
     }
-  }, [campaignId, account?.address, currentSession, fetchCampaignById]);
+  }, [campaignId, address, currentSession, fetchCampaignById]);
 
   // Fonction pour charger automatiquement la première campagne disponible
   const loadFirstAvailableCampaign = async () => {
-    if (!account?.address) return;
+    if (!address) return;
     
     try {
       setIsLoadingCampaign(true);
@@ -338,11 +337,11 @@ const ModerationPage = () => {
     isLoading, 
     error, 
     currentSession, 
-    account: !!account?.address 
+          address: !!address 
   });
 
   // VÉRIFIER L'AUTHENTIFICATION EN PREMIER
-  if (!account?.address) {
+  if (!address) {
     return (
       <div className={styles.moderationBg}>
         <div style={{
@@ -683,7 +682,7 @@ const ModerationPage = () => {
       );
     } else {
       // Si pas de session et pas en chargement, essayer de charger la campagne
-      if (account?.address) {
+              if (address) {
         fetchCampaignById(campaignId);
       }
       return (
@@ -704,7 +703,7 @@ const ModerationPage = () => {
             color: '#FFD600',
             fontSize: '18px'
           }}>
-            {account?.address ? 'Loading campaign...' : 'Please connect your wallet'}
+            {address ? 'Loading campaign...' : 'Please connect your wallet'}
           </div>
         </div>
       );
@@ -714,7 +713,7 @@ const ModerationPage = () => {
   // Si pas de campaignId, charger automatiquement la première campagne disponible
 
   // Si pas de session en cours, charger automatiquement la première campagne disponible
-  if (!currentSession && !isLoading && account?.address) {
+  if (!currentSession && !isLoading && address) {
     loadFirstAvailableCampaign();
     return (
       <div className={styles.moderationBg}>
@@ -1027,7 +1026,7 @@ const ModerationPage = () => {
         isOpen={showScoringModal}
         onClose={() => setShowScoringModal(false)}
         onConfirm={handleCompletionScore}
-        usedScores={moderatorUsedScores || []}
+        usedScores={progress.completionScores || []}
         contentType={getUICreatorType(campaign)}
       />
 

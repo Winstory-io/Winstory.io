@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test ROI Logic Fix</title>
+    <style>
+        body {
+            background: #000;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            margin: 0;
+        }
+        .test-container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .logic-test {
+            background: #111;
+            border: 2px solid #00C46C;
+            border-radius: 20px;
+            padding: 32px;
+            margin-bottom: 24px;
+        }
+        .test-section {
+            background: rgba(0, 196, 108, 0.1);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(0, 196, 108, 0.3);
+        }
+        .test-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #00C46C;
+            margin-bottom: 16px;
+        }
+        .test-case {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            border-left: 4px solid #00C46C;
+        }
+        .test-case h4 {
+            color: #00C46C;
+            margin-top: 0;
+            margin-bottom: 8px;
+        }
+        .test-result {
+            font-family: monospace;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 8px;
+            border-radius: 4px;
+            margin-top: 8px;
+        }
+        .slider-container {
+            margin: 20px 0;
+        }
+        .slider {
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: linear-gradient(90deg, #00C46C 0%, #FFD600 50%, #F31260 100%);
+            outline: none;
+            cursor: pointer;
+        }
+        .slider-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+            font-size: 12px;
+            color: #666;
+        }
+        .roi-display {
+            background: rgba(0, 196, 108, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(0, 196, 108, 0.3);
+            text-align: center;
+            margin-top: 20px;
+        }
+        .info-box {
+            background: rgba(255, 214, 0, 0.1);
+            border: 1px solid rgba(255, 214, 0, 0.3);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+        .info-box h3 {
+            color: #FFD600;
+            margin-top: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <div class="info-box">
+            <h3>🧪 Test de la Logique ROI Corrigée</h3>
+            <p>Ce test vérifie que la logique du calcul ROI est maintenant correcte et cohérente.</p>
+        </div>
+
+        <!-- Test de la logique -->
+        <div class="logic-test">
+            <div class="test-title">🔍 Test de la Logique ROI</div>
+            
+            <div class="test-section">
+                <h4>📊 Scénarios de Test</h4>
+                
+                <div class="test-case">
+                    <h4>✅ Scénario 1: 0% Completions</h4>
+                    <p><strong>Logique attendue:</strong> Aucune completion = Aucun ROI, juste l'investissement initial</p>
+                    <div class="test-result">
+                        Investment: $1500 (MINT de base + AI)<br>
+                        Recovered: $0.00<br>
+                        <strong>Affichage: "Investment: $1500" (pas "ROI")</strong>
+                    </div>
+                </div>
+
+                <div class="test-case">
+                    <h4>✅ Scénario 2: 50% Completions</h4>
+                    <p><strong>Logique attendue:</strong> Half completions = Half profits + Investment</p>
+                    <div class="test-result">
+                        Investment: $1500<br>
+                        Recovered: $250.00 (50% de $500)<br>
+                        <strong>Affichage: "ROI: $1750"</strong>
+                    </div>
+                </div>
+
+                <div class="test-case">
+                    <h4>✅ Scénario 3: 100% Completions</h4>
+                    <p><strong>Logique attendue:</strong> Full completions = Full profits + Investment</p>
+                    <div class="test-result">
+                        Investment: $1500<br>
+                        Recovered: $500.00 (100% de $500)<br>
+                        <strong>Affichage: "ROI: $2000"</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Jauge interactive de test -->
+            <div class="test-section">
+                <h4>🎮 Test de la Jauge Interactive</h4>
+                <p>Déplacez le slider pour tester la logique en temps réel :</p>
+                
+                <div class="slider-container">
+                    <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        value="75"
+                        class="slider"
+                        oninput="testROILogic(this.value)"
+                    />
+                    <div class="slider-labels">
+                        <span>0%</span>
+                        <span>25%</span>
+                        <span>50%</span>
+                        <span>75%</span>
+                        <span>100%</span>
+                    </div>
+                </div>
+
+                <!-- Affichage du test -->
+                <div class="roi-display">
+                    <div style="font-size: 14px; color: #ccc; margin-bottom: 8px;">
+                        Current Completion Rate: <span style="color: #00C46C; font-weight: 600;" id="completionRate">75%</span>
+                    </div>
+                    <div style="font-size: 16px; color: #ccc; margin-bottom: 12px;">
+                        Recovered: <span style="color: #00C46C; font-weight: 600;" id="recovered">$375.00</span>
+                    </div>
+                    <div style="font-size: 24px; font-weight: 700; color: #00C46C;" id="roiDisplay">
+                        ROI: $1875.00
+                    </div>
+                </div>
+            </div>
+
+            <!-- Explication de la terminologie -->
+            <div class="test-section">
+                <h4>💡 Terminologie Clarifiée</h4>
+                <div style="background: rgba(0, 196, 108, 0.1); border-radius: 8px; padding: 12px; border: 1px solid rgba(0, 196, 108, 0.2); font-size: 12px; color: #00C46C;">
+                    <strong>💡 Key Terms:</strong><br/>
+                    • <strong>Investment:</strong> Your initial MINT cost (always $1500)<br/>
+                    • <strong>Recovered:</strong> Amount earned from completions<br/>
+                    • <strong>ROI:</strong> Investment + Recovered (only when completions > 0%)
+                </div>
+            </div>
+        </div>
+
+        <!-- Résumé des corrections -->
+        <div class="info-box">
+            <h3>✅ Corrections Appliquées</h3>
+            <ul>
+                <li><strong>Logique corrigée :</strong> À 0% completion, affichage "Investment" au lieu de "ROI"</li>
+                <li><strong>Terminologie claire :</strong> Distinction entre Investment, Recovered et ROI</li>
+                <li><strong>Cohérence :</strong> Le ROI n'existe que quand il y a des completions</li>
+                <li><strong>Interface améliorée :</strong> Affichage conditionnel selon le taux de completion</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Données de test
+        const baseMintCost = 1000;
+        const aiOptionCost = 500;
+        const actualMintCost = baseMintCost + aiOptionCost;
+        const netProfit = 500;
+
+        function testROILogic(value) {
+            const completionRate = parseInt(value);
+            const recovered = (netProfit * completionRate / 100);
+            const roi = actualMintCost + recovered;
+            
+            // Mettre à jour l'affichage
+            document.getElementById('completionRate').textContent = completionRate + '%';
+            document.getElementById('recovered').textContent = '$' + recovered.toFixed(2);
+            
+            // Affichage conditionnel selon la logique corrigée
+            if (completionRate === 0) {
+                document.getElementById('roiDisplay').innerHTML = '<span>Investment: $' + actualMintCost.toFixed(2) + '</span>';
+            } else {
+                document.getElementById('roiDisplay').innerHTML = '<span>ROI: $' + roi.toFixed(2) + '</span>';
+            }
+        }
+
+        // Initialisation
+        testROILogic(75);
+    </script>
+</body>
+</html> 

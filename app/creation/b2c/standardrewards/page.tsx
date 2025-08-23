@@ -4,18 +4,13 @@ import RewardsHeader from './RewardsHeader';
 import RewardsOptions from './RewardsOptions';
 import styles from './Rewards.module.css';
 import ErrorBoundary from '@/components/ErrorBoundary';
-import { useActiveAccount } from "thirdweb/react";
+import { useAddress } from "@thirdweb-dev/react";
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from 'next/navigation';
-import { ConnectButton } from "thirdweb/react";
-import { createThirdwebClient } from "thirdweb";
-
-const client = createThirdwebClient({
-  clientId: "4ddc5eed2e073e550a7307845d10f348",
-});
+import { ConnectWallet } from "@thirdweb-dev/react";
 
 export default function StandardRewardsPage() {
-  const account = useActiveAccount();
+  const account = useAddress(); // Utilise useAddress au lieu de useActiveAccount
   const router = useRouter();
   const [showDisconnectMenu, setShowDisconnectMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -56,37 +51,46 @@ export default function StandardRewardsPage() {
   }, [showDisconnectMenu]);
 
   // If no wallet connected, show connection screen
-  if (!account || !account.address) {
+  if (!account) {
     return (
-      <div style={{ 
-        minHeight: '100vh', 
-        background: '#000', 
+      <div style={{
+        minHeight: '100vh',
+        background: '#000',
         color: '#fff',
+        fontFamily: 'Inter, sans-serif',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
         padding: '24px'
       }}>
-        <h1 style={{ 
-          fontSize: '2.5rem', 
-          fontWeight: 700, 
-          color: '#FFD600', 
-          marginBottom: '24px',
-          textAlign: 'center'
-        }}>
-          Standard Rewards Configuration
-        </h1>
-        <p style={{ 
-          fontSize: '1.2rem', 
-          color: '#fff', 
-          marginBottom: '32px',
+        <div style={{
+          background: '#181818',
+          border: '2px solid #FFD600',
+          borderRadius: '16px',
+          padding: '32px',
           textAlign: 'center',
-          maxWidth: '600px'
+          maxWidth: '400px',
+          width: '100%'
         }}>
-          Connect your wallet to configure rewards for your campaign completers.
-        </p>
-        <ConnectButton client={client} />
+          <h2 style={{
+            color: '#FFD600',
+            marginBottom: '24px',
+            fontSize: '24px',
+            fontWeight: '700'
+          }}>
+            Wallet Connection Required
+          </h2>
+          <p style={{
+            color: '#fff',
+            marginBottom: '32px',
+            fontSize: '16px',
+            lineHeight: '1.6'
+          }}>
+            Please connect your wallet to access the rewards configuration.
+          </p>
+          <ConnectWallet />
+        </div>
       </div>
     );
   }
@@ -138,16 +142,16 @@ export default function StandardRewardsPage() {
                     borderRadius: '50%',
                     animation: 'pulse 2s infinite'
                   }} />
-                  {truncateAddress(account.address)}
-                  <span style={{ 
-                    fontSize: '12px', 
+                  {truncateAddress(account)}
+                  <span style={{
+                    fontSize: '12px',
                     transition: 'transform 0.3s ease',
                     transform: showDisconnectMenu ? 'rotate(180deg)' : 'rotate(0deg)'
                   }}>
                     ▼
                   </span>
                 </button>
-                
+
                 {/* Disconnect Menu */}
                 {showDisconnectMenu && (
                   <div style={{
@@ -178,7 +182,7 @@ export default function StandardRewardsPage() {
                       color: '#999',
                       fontFamily: 'monospace'
                     }}>
-                      {account.address}
+                      {account}
                     </div>
                     <button
                       onClick={handleForceDisconnect}

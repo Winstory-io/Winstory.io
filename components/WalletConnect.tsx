@@ -3,9 +3,6 @@
 import { ConnectButton, useActiveAccount } from "thirdweb/react";
 import { ThirdwebProvider } from "thirdweb/react";
 import { createThirdwebClient } from "thirdweb";
-import { defineChain } from "thirdweb/chains";
-import { inAppWallet } from "thirdweb/wallets";
-import { walletConnect } from "thirdweb/wallets";
 import { useEffect, useState } from "react";
 import ThirdwebEmailAuth from "./ThirdwebEmailAuth";
 
@@ -64,7 +61,6 @@ function WalletConnectContent({ isEmailLogin = false, isWalletLogin = false, isB
 
     // Handle email login success
     const [pendingEmail, setPendingEmail] = useState<string | null>(null);
-    const [pendingWallet, setPendingWallet] = useState<string | null>(null);
     const handleEmailLogin = (data: { email: string; walletAddress: string }) => {
         setEmailConnected(true);
         setPendingEmail(data.email);
@@ -199,6 +195,10 @@ function WalletConnectContent({ isEmailLogin = false, isWalletLogin = false, isB
 }
 
 export default function WalletConnect(props: WalletConnectProps) {
-    return <WalletConnectContent {...props} />;
+    return (
+        <ThirdwebProvider>
+            <WalletConnectContent {...props} />
+        </ThirdwebProvider>
+    );
 }
 

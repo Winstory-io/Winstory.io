@@ -1,8 +1,8 @@
 'use client';
 
+import { useAddress } from '@thirdweb-dev/react';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useActiveAccount } from 'thirdweb/react';
 
 interface Campaign {
   id: string;
@@ -19,11 +19,11 @@ interface Campaign {
 
 export default function MyCreationsPage() {
   const router = useRouter();
-  const account = useActiveAccount();
+  const account = useAddress();
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
 
   useEffect(() => {
-    if (account && account.address) {
+    if (account) {
       // TODO: Fetch user campaigns from blockchain/database based on actual user behavior
       // This will be replaced with real API calls to get:
       // - Campaigns created by this user
@@ -58,7 +58,7 @@ export default function MyCreationsPage() {
   };
 
   // Si pas d'adresse, afficher un message de chargement au lieu de rediriger
-  if (!account || !account.address) {
+  if (!account) {
     return (
       <div style={{ 
         minHeight: '100vh', 

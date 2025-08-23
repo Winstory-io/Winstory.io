@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useActiveAccount } from 'thirdweb/react';
+import { useAddress } from '@thirdweb-dev/react';
 import { ModerationCampaign, ModerationProgress, ModerationSession } from '../types';
 
 export const useModeration = () => {
-  const account = useActiveAccount();
+  const account = useAddress(); // Utilise useAddress au lieu de useActiveAccount
   const [currentSession, setCurrentSession] = useState<ModerationSession | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -48,7 +48,7 @@ export const useModeration = () => {
 
   // Fonction pour récupérer les scores utilisés par le modérateur actuel pour une campagne
   const fetchModeratorUsedScores = useCallback(async (campaignId: string) => {
-    if (!account?.address || !campaignId) {
+    if (!account || !campaignId) {
       setModeratorUsedScores([]);
       return [];
     }
@@ -57,7 +57,7 @@ export const useModeration = () => {
       console.log('🔍 Récupération des scores utilisés pour la campagne:', campaignId);
       
       const response = await fetch(
-        `/api/moderation/moderator-scores?campaignId=${campaignId}&moderatorWallet=${account.address}`
+        `/api/moderation/moderator-scores?campaignId=${campaignId}&moderatorWallet=${account}`
       );
       
       if (response.ok) {
@@ -78,7 +78,7 @@ export const useModeration = () => {
       setModeratorUsedScores([]);
       return [];
     }
-  }, [account?.address]);
+  }, [account]);
 
   // Fonction pour récupérer une campagne spécifique
   const fetchCampaignById = useCallback(async (campaignId: string) => {
@@ -101,7 +101,7 @@ export const useModeration = () => {
         const session: ModerationSession = {
           id: `session_${campaign.id}`,
           campaignId: campaign.id,
-          moderatorWallet: account?.address || '',
+          moderatorWallet: account || '',
           isEligible: true,
           startedAt: new Date(),
           campaign: campaign as any, // Utiliser any pour éviter les conflits de type
@@ -128,7 +128,7 @@ export const useModeration = () => {
       setIsLoading(false); // S'assurer que isLoading est mis à false même en cas d'erreur
       return null;
     }
-  }, [account?.address, fetchModeratorUsedScores]);
+  }, [account, fetchModeratorUsedScores]);
 
   // Fonction pour vérifier la disponibilité des campagnes par type
   const checkCampaignsAvailability = useCallback(async () => {
@@ -191,7 +191,7 @@ export const useModeration = () => {
 
   // Fonction pour soumettre un score de complétion avec validation par modérateur
   const submitCompletionScore = useCallback(async (score: number, completionId?: string) => {
-    if (!currentSession || !account?.address) return false;
+    if (!currentSession || !account) return false;
 
     try {
       // Vérifier localement si le score est déjà utilisé
@@ -208,7 +208,7 @@ export const useModeration = () => {
         },
         body: JSON.stringify({
           campaignId: currentSession.id,
-          moderatorWallet: account.address,
+          moderatorWallet: account,
           score,
           completionId,
         }),
@@ -243,14 +243,14 @@ export const useModeration = () => {
       console.error('Failed to submit completion score:', err);
       return false;
     }
-  }, [currentSession, account?.address, moderatorUsedScores]);
+  }, [currentSession, account, moderatorUsedScores]);
 
   // Charger les campagnes disponibles au montage du composant
   useEffect(() => {
-    if (account?.address) {
+    if (account) {
       checkCampaignsAvailability();
     }
-  }, [account?.address]);
+  }, [account]);
 
   // Charger automatiquement la campagne quand campaignId change
   useEffect(() => {
@@ -260,10 +260,10 @@ export const useModeration = () => {
       const type = urlParams.get('type');
       const subtype = urlParams.get('subtype');
       
-      if (campaignId && account?.address) {
+      if (campaignId && account) {
         console.log('Loading campaign from URL:', campaignId, 'type:', type, 'subtype:', subtype);
         await fetchCampaignById(campaignId);
-      } else if (account?.address && type && subtype) {
+      } else if (account && type && subtype) {
         // Si pas de campaignId spécifique, charger la première campagne disponible pour ce type/sous-type
         console.log('No specific campaignId, loading first available for:', type, subtype);
         const campaigns = await fetchAvailableCampaigns(
@@ -282,10 +282,10 @@ export const useModeration = () => {
     };
 
     // Charger immédiatement si on a déjà un account
-    if (account?.address) {
+    if (account) {
       loadCampaignFromUrl();
     }
-  }, [account?.address, fetchCampaignById, fetchAvailableCampaigns]);
+  }, [account, fetchCampaignById, fetchAvailableCampaigns]);
 
   // Charger aussi quand l'URL change (pour les navigations)
   useEffect(() => {
@@ -295,10 +295,10 @@ export const useModeration = () => {
       const type = urlParams.get('type');
       const subtype = urlParams.get('subtype');
       
-      if (campaignId && account?.address) {
+      if (campaignId && account) {
         console.log('URL changed, loading campaign:', campaignId);
         fetchCampaignById(campaignId);
-      } else if (account?.address && type && subtype && !campaignId) {
+      } else if (account && type && subtype && !campaignId) {
         // Charger la première campagne disponible pour ce type/sous-type
         console.log('URL changed, loading first available for:', type, subtype);
         fetchAvailableCampaigns(
@@ -323,11 +323,11 @@ export const useModeration = () => {
     handleUrlChange();
 
     return () => window.removeEventListener('popstate', handleUrlChange);
-  }, [account?.address, fetchCampaignById, fetchAvailableCampaigns]);
+  }, [account, fetchCampaignById, fetchAvailableCampaigns]);
 
   // Fonction utilitaire pour charger une campagne selon les critères
   const loadCampaignForCriteria = useCallback(async (type: string, subtype: string) => {
-    if (!account?.address) return null;
+    if (!account) return null;
     
     try {
       console.log('Loading campaign for criteria:', type, subtype);
@@ -355,7 +355,7 @@ export const useModeration = () => {
       setCurrentSession(null);
       return null;
     }
-  }, [account?.address, fetchAvailableCampaigns, fetchCampaignById]);
+  }, [account, fetchAvailableCampaigns, fetchCampaignById]);
 
   // Charger la campagne au montage si on a un campaignId dans l'URL
   useEffect(() => {
@@ -365,15 +365,15 @@ export const useModeration = () => {
       const type = urlParams.get('type');
       const subtype = urlParams.get('subtype');
       
-      if (campaignId && account?.address && !currentSession) {
+      if (campaignId && account && !currentSession) {
         console.log('Initial load, campaign ID found:', campaignId);
         fetchCampaignById(campaignId);
-      } else if (!campaignId && type && subtype && account?.address && !currentSession) {
+      } else if (!campaignId && type && subtype && account && !currentSession) {
         console.log('Initial load, no campaign ID, loading for:', type, subtype);
         loadCampaignForCriteria(type, subtype);
       }
     }
-  }, [account?.address, currentSession, fetchCampaignById, loadCampaignForCriteria]);
+  }, [account, currentSession, fetchCampaignById, loadCampaignForCriteria]);
 
   return {
     currentSession,

@@ -1,5 +1,6 @@
 import { createThirdwebClient } from "thirdweb";
+import { thirdwebConfig } from "./config/thirdweb-config";
 
 export const client = createThirdwebClient({
-  clientId: "4ddc5eed2e073e550a7307845d10f348",
+  clientId: thirdwebConfig.clientId,
 }); 

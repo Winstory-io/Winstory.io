@@ -69,7 +69,7 @@ export default function B2CLoginPage() {
   }, [router]);
 
   // Function to call after successful login
-  const handleLoginSuccess = (data) => {
+  const handleLoginSuccess = (data: { email: string; walletAddress: string }) => {
     // data: { email, walletAddress }
     if (!data || !data.email || !data.walletAddress) return;
     const domain = data.email.split('@')[1] || '';
@@ -161,8 +161,8 @@ export default function B2CLoginPage() {
                 <li>Receive a one-time verification code by email</li>
                 <li>Validate your code within 15 minutes</li>
                 <li>A secure wallet will automatically be created and linked to your verified email address (via account abstraction).</li>
-                <li>If your company already has its own wallet, you’ll be able to connect it later.</li>
-                <li>Once your professional account is verified, you’ll be automatically redirected to continue your campaign setup</li>
+                <li>If your company already has its own wallet, you'll be able to connect it later.</li>
+                <li>Once your professional account is verified, you'll be automatically redirected to continue your campaign setup</li>
               </ul>
             </div>
             <div style={{ width: '100%', marginBottom: 18 }}>
@@ -219,11 +219,6 @@ export default function B2CLoginPage() {
           onLoginSuccess={handleLoginSuccess}
           onLogout={handleLogout}
         />
-        {/* <LoginButton
-          icon={<span role="img" aria-label="wallet">💳</span>}
-          text="With your Web.3 Wallet"
-          optional
-        /> */}
       </div>
     </div>
   );

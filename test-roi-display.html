@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test ROI Display</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #000;
+            color: #fff;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #333;
+            border-radius: 8px;
+        }
+        .roi-display {
+            background: rgba(0, 196, 108, 0.12);
+            border: 1px solid rgba(0, 196, 108, 0.4);
+            border-radius: 16px;
+            padding: 16px 20px;
+            margin: 16px 0;
+            text-align: center;
+            box-shadow: 0 4px 16px rgba(0, 196, 108, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        .roi-display::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(0, 196, 108, 0.6), transparent);
+        }
+        .roi-display::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(0, 196, 108, 0.6), transparent);
+        }
+        .roi-title {
+            color: #00C46C;
+            font-weight: 700;
+            font-size: 16px;
+            margin-bottom: 4px;
+        }
+        .roi-amount {
+            color: #00C46C;
+            font-weight: 700;
+            font-size: 20px;
+        }
+        .roi-description {
+            color: #00C46C;
+            font-size: 12px;
+            margin-top: 4px;
+            opacity: 0.8;
+        }
+        button {
+            background: #18C964;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        input {
+            background: #333;
+            color: #fff;
+            border: 1px solid #555;
+            padding: 8px;
+            border-radius: 4px;
+            margin: 5px;
+        }
+        .test-data {
+            background: #222;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test de l'affichage du ROI</h1>
+    
+    <div class="test-section">
+        <h2>Configuration des données ROI</h2>
+        <div>
+            <label>Unit Value ($):</label>
+            <input type="number" id="unitValue" value="5.00" step="0.01">
+        </div>
+        <div>
+            <label>Net Profit ($):</label>
+            <input type="number" id="netProfit" value="500" step="1">
+        </div>
+        <div>
+            <label>Max Completions:</label>
+            <input type="number" id="maxCompletions" value="100" step="1">
+        </div>
+        <div>
+            <label>
+                <input type="checkbox" id="aiOption"> Winstory creates the film (+$500)
+            </label>
+        </div>
+        <div>
+            <label>
+                <input type="checkbox" id="noReward"> No Reward
+            </label>
+        </div>
+        <button onclick="updateROIData()">Mettre à jour les données ROI</button>
+        <button onclick="clearROIData()">Effacer les données ROI</button>
+    </div>
+
+    <div class="test-section">
+        <h2>Données actuelles dans localStorage</h2>
+        <div id="currentData" class="test-data">
+            Aucune donnée
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>Affichage du ROI (simulation)</h2>
+        <div id="roiDisplay" style="display: none;">
+            <div class="roi-display">
+                <div class="roi-title">If 100% Completions:</div>
+                <div class="roi-amount" id="roiAmount">Total ROI: $0</div>
+                <div class="roi-description">MINT + Net Profits</div>
+            </div>
+        </div>
+        <div id="noRoiMessage" style="display: none; color: #888; text-align: center; padding: 20px;">
+            Aucun ROI à afficher (pas de récompenses configurées)
+        </div>
+    </div>
+
+    <script>
+        // Simuler le comportement du composant PricingBubbles
+        function updateROIData() {
+            const unitValue = parseFloat(document.getElementById('unitValue').value) || 0;
+            const netProfit = parseFloat(document.getElementById('netProfit').value) || 0;
+            const maxCompletions = parseInt(document.getElementById('maxCompletions').value) || 0;
+            const aiOption = document.getElementById('aiOption').checked;
+            const noReward = document.getElementById('noReward').checked;
+
+            const roiData = {
+                unitValue: unitValue,
+                netProfit: netProfit,
+                maxCompletions: maxCompletions,
+                isFreeReward: false,
+                noReward: noReward
+            };
+
+            localStorage.setItem('roiData', JSON.stringify(roiData));
+            updateDisplay();
+        }
+
+        function clearROIData() {
+            localStorage.removeItem('roiData');
+            updateDisplay();
+        }
+
+        function updateDisplay() {
+            const storedRoiData = localStorage.getItem('roiData');
+            const currentDataDiv = document.getElementById('currentData');
+            const roiDisplayDiv = document.getElementById('roiDisplay');
+            const noRoiMessageDiv = document.getElementById('noRoiMessage');
+            const aiOption = document.getElementById('aiOption').checked;
+
+            if (storedRoiData) {
+                try {
+                    const roiData = JSON.parse(storedRoiData);
+                    const baseMintCost = 1000;
+                    const aiOptionCost = aiOption ? 500 : 0;
+                    const actualMintCost = baseMintCost + aiOptionCost;
+                    
+                    currentDataDiv.innerHTML = `
+                        <strong>ROI Data:</strong><br>
+                        Unit Value: $${roiData.unitValue}<br>
+                        Net Profit: $${roiData.netProfit}<br>
+                        Max Completions: ${roiData.maxCompletions}<br>
+                        AI Option: ${aiOption ? 'Yes (+$500)' : 'No'}<br>
+                        Actual MINT Cost: $${actualMintCost}<br>
+                        No Reward: ${roiData.noReward}<br>
+                        Is Free Reward: ${roiData.isFreeReward}
+                    `;
+
+                    // Vérifier si on doit afficher le ROI
+                    const hasRewards = roiData && !roiData.noReward && (roiData.unitValue > 0 || roiData.netProfit > 0);
+                    
+                    if (hasRewards) {
+                        const totalROI = actualMintCost + (roiData.netProfit || 0);
+                        document.getElementById('roiAmount').textContent = `Total ROI: $${totalROI.toFixed(2)}`;
+                        roiDisplayDiv.style.display = 'block';
+                        noRoiMessageDiv.style.display = 'none';
+                    } else {
+                        roiDisplayDiv.style.display = 'none';
+                        noRoiMessageDiv.style.display = 'block';
+                    }
+                } catch (e) {
+                    currentDataDiv.innerHTML = 'Erreur de parsing des données';
+                    roiDisplayDiv.style.display = 'none';
+                    noRoiMessageDiv.style.display = 'block';
+                }
+            } else {
+                currentDataDiv.innerHTML = 'Aucune donnée ROI trouvée';
+                roiDisplayDiv.style.display = 'none';
+                noRoiMessageDiv.style.display = 'block';
+            }
+        }
+
+        // Initialiser l'affichage au chargement
+        window.onload = function() {
+            updateDisplay();
+        };
+
+        // Mettre à jour l'affichage quand localStorage change
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'roiData') {
+                updateDisplay();
+            }
+        });
+    </script>
+</body>
+</html> 
