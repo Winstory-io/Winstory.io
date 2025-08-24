@@ -1,6 +1,3 @@
 {
-  "/welcome/page": "app/welcome/page.js",
-  "/completion/login/page": "app/completion/login/page.js",
-  "/completion/page": "app/completion/page.js",
-  "/moderation/page": "app/moderation/page.js"
+  "/test-b2c-component/page": "app/test-b2c-component/page.js"
 }

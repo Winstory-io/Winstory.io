@@ -45,7 +45,7 @@ export default function Home() {
 
   // Réinitialiser l'état de déconnexion forcée si un nouveau compte se connecte
   useEffect(() => {
-    if (account && account.address) {
+    if (account) {
       setIsForceDisconnected(false);
     }
   }, [account]);
@@ -68,7 +68,7 @@ export default function Home() {
   }, [showDisconnectMenu]);
 
   // Déterminer si le wallet est connecté (compte en compte la déconnexion forcée)
-  const isWalletConnected = account && account.address && !isForceDisconnected;
+  const isWalletConnected = account && !isForceDisconnected;
 
   return (
     <div
@@ -162,7 +162,7 @@ export default function Home() {
                 borderRadius: '50%',
                 animation: 'pulse 2s infinite'
               }} />
-              {truncateAddress(account.address)}
+              {truncateAddress(account)}
               <span style={{ 
                 fontSize: '12px', 
                 transition: 'transform 0.3s ease',
@@ -207,7 +207,9 @@ export default function Home() {
                   gap: '8px'
                 }}>
                   <ConnectWallet 
-                    onDisconnect={handleForceDisconnect}
+                    onConnect={() => {
+                      // Handle connect if needed
+                    }}
                   />
                 </div>
               </div>

@@ -38,7 +38,7 @@ const AgencyB2CPage = () => {
 
     const handleNext = () => {
         if (isFormValid) {
-            router.push('/creation/agencyb2c/yourwinstory');
+            router.push('/creation/agencyb2c/yourinformations');
         }
     };
   const styles: { [key: string]: React.CSSProperties } = {

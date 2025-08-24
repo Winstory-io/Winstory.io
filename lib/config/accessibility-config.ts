@@ -10,7 +10,9 @@ export const accessibilityConfig = {
     'component to be accessible for screen reader users',
     'radix-ui.com/primitives/docs/components/dialog',
     'If you want to hide the DialogTitle',
-    'you can wrap it with our VisuallyHidden component'
+    'you can wrap it with our VisuallyHidden component',
+    'Failed to auto connect wallet',
+    'Failed to auto connect to the wallet'
   ],
   
   // Add ARIA labels for thirdweb components
