@@ -12,7 +12,15 @@ export const accessibilityConfig = {
     'If you want to hide the DialogTitle',
     'you can wrap it with our VisuallyHidden component',
     'Failed to auto connect wallet',
-    'Failed to auto connect to the wallet'
+    'Failed to auto connect to the wallet',
+    'Failed to auto connect to the wallet.',
+    'Failed to auto connect wallet.',
+    'Failed to auto connect',
+    'auto connect wallet',
+    'auto connect to wallet',
+    'wallet connection failed',
+    'wallet auto connect',
+    'wallet auto-connect'
   ],
   
   // Add ARIA labels for thirdweb components
