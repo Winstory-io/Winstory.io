@@ -2,7 +2,7 @@
 
 import { ConnectButton, useConnect } from "thirdweb/react";
 import { inAppWallet } from "thirdweb/wallets";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { preAuthenticate } from "thirdweb/wallets/in-app";
 import { client } from "@/lib/thirdwebClient";
 
@@ -24,6 +24,20 @@ export default function ThirdwebEmailAuth({
     const [message, setMessage] = useState('');
     const [isConnected, setIsConnected] = useState(false);
     const { connect } = useConnect();
+
+    // Vérifier si l'utilisateur est déjà connecté au montage
+    useEffect(() => {
+        const user = localStorage.getItem('user');
+        const walletAddress = localStorage.getItem('walletAddress');
+        
+        if (user && walletAddress) {
+            const userData = JSON.parse(user);
+            setIsConnected(true);
+            setMessage('Already connected!');
+            // Appeler onSuccess immédiatement si déjà connecté
+            onSuccess?.({ email: userData.email, walletAddress });
+        }
+    }, [onSuccess]);
 
     const validateProfessionalEmail = (email: string): { valid: boolean; message: string } => {
         const personalDomains = [
@@ -90,23 +104,37 @@ export default function ThirdwebEmailAuth({
 
         try {
             // Vérifier le code et se connecter
-            await connect(async () => {
-                const wallet = inAppWallet();
-                await wallet.connect({
+            const wallet = await connect(async () => {
+                const walletInstance = inAppWallet();
+                await walletInstance.connect({
                     client,
                     strategy: "email",
                     email,
                     verificationCode,
                 });
-                return wallet;
+                return walletInstance;
             });
 
-            setMessage('Login successful!');
-            setEmail('');
-            setVerificationCode('');
-            setIsCodeSent(false);
-            setIsConnected(true);
-            onSuccess?.({ email, walletAddress: 'connected' });
+            // Récupérer l'adresse du wallet
+            const walletAddress = wallet.getAccount()?.address;
+
+            if (walletAddress) {
+                // Sauvegarder dans localStorage
+                localStorage.setItem('user', JSON.stringify({ email }));
+                localStorage.setItem('company', JSON.stringify({ name: email.split('@')[1] || '' }));
+                localStorage.setItem('walletAddress', walletAddress);
+
+                setMessage('Login successful!');
+                setEmail('');
+                setVerificationCode('');
+                setIsCodeSent(false);
+                setIsConnected(true);
+                
+                // Appeler onSuccess avec les vraies données
+                onSuccess?.({ email, walletAddress });
+            } else {
+                throw new Error('Failed to get wallet address');
+            }
         } catch (error) {
             const errorMessage = 'Invalid verification code or connection error';
             setMessage(errorMessage);

@@ -15,6 +15,9 @@ const nextConfig = {
     optimizePackageImports: ['thirdweb', '@thirdweb-dev/react'],
   },
   
+  // Externaliser certains packages côté serveur
+  serverExternalPackages: ['@magic-ext/oauth', 'magic-sdk', '@magic-ext/react-native-bare-oauth'],
+  
   webpack: (config, { isServer, dev }) => {
     // Configuration pour thirdweb
     config.resolve.fallback = {
@@ -37,7 +40,6 @@ const nextConfig = {
       querystring: false,
     };
 
-    // Configuration spécifique pour thirdweb
     if (!isServer) {
       config.resolve.fallback = {
         ...config.resolve.fallback,
@@ -45,11 +47,30 @@ const nextConfig = {
       };
     }
 
-    // Ajouter des alias pour thirdweb
+    // Neutraliser COMPLÈTEMENT Magic SDK et ses extensions
     config.resolve.alias = {
       ...config.resolve.alias,
-      'process': 'process/browser',
+      process: 'process/browser',
+      // Remplacer Magic SDK par des modules vides
+      'magic-sdk': false,
+      '@magic-ext/oauth': false,
+      '@magic-ext/oauth/dist/es/index.mjs': false,
+      '@magic-ext/oauth/dist/es/core': false,
+      '@magic-ext/oauth/core': false,
+      '@magic-ext/react-native-bare-oauth': false,
+      '@magic-ext/react-native-expo-oauth': false,
+      // Neutraliser tous les wallets Magic dans Thirdweb
+      '@thirdweb-dev/wallets/evm/wallets/magic': false,
+      '@thirdweb-dev/wallets/evm/connectors/magic': false,
     };
+
+    // Remplacer les imports Magic par des modules vides
+    config.module = config.module || {};
+    config.module.rules = config.module.rules || [];
+    config.module.rules.push({
+      test: /magic-sdk|@magic-ext/,
+      use: 'null-loader'
+    });
 
     // Optimisations pour le développement
     if (dev) {
@@ -64,7 +85,6 @@ const nextConfig = {
     return config;
   },
   
-  // Configuration pour les images externes
   images: {
     domains: ['localhost'],
     remotePatterns: [
@@ -75,7 +95,6 @@ const nextConfig = {
     ],
   },
   
-  // Configuration pour le développement
   onDemandEntries: {
     maxInactiveAge: 25 * 1000,
     pagesBufferLength: 2,

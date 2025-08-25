@@ -1,7 +1,15 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { accessibilityConfig } from '@/lib/config/accessibility-config';
 
 export function useAccessibilityFix() {
+  // Mémoriser la liste des warnings pour éviter les changements de dépendances
+  const warningsToSuppress = useMemo(() => [
+    ...accessibilityConfig.suppressWarnings,
+    'Failed to auto connect',
+    'wallet',
+    'Wallet'
+  ], []);
+
   useEffect(() => {
     // Store original console methods
     const originalError = console.error;
@@ -12,12 +20,9 @@ export function useAccessibilityFix() {
       const message = args[0];
       
       // Check if this is a warning we want to suppress
-      if (typeof message === 'string' && accessibilityConfig.suppressWarnings.some(warning => 
+      if (typeof message === 'string' && warningsToSuppress.some(warning => 
         message.includes(warning) || 
-        message.toLowerCase().includes(warning.toLowerCase()) ||
-        message.includes('Failed to auto connect') ||
-        message.includes('wallet') ||
-        message.includes('Wallet')
+        message.toLowerCase().includes(warning.toLowerCase())
       )) {
         // Suppress the warning
         return;
@@ -32,12 +37,9 @@ export function useAccessibilityFix() {
       const message = args[0];
       
       // Check if this is a warning we want to suppress
-      if (typeof message === 'string' && accessibilityConfig.suppressWarnings.some(warning => 
+      if (typeof message === 'string' && warningsToSuppress.some(warning => 
         message.includes(warning) || 
-        message.toLowerCase().includes(warning.toLowerCase()) ||
-        message.includes('Failed to auto connect') ||
-        message.includes('wallet') ||
-        message.includes('Wallet')
+        message.toLowerCase().includes(warning.toLowerCase())
       )) {
         // Suppress the warning
         return;
@@ -52,16 +54,13 @@ export function useAccessibilityFix() {
       console.error = originalError;
       console.warn = originalWarn;
     };
-  }, []);
+  }, [warningsToSuppress]);
 
   // Return a function to manually suppress specific warnings
   const suppressWarning = (message: string) => {
-    if (accessibilityConfig.suppressWarnings.some(warning => 
+    if (warningsToSuppress.some(warning => 
       message.includes(warning) || 
-      message.toLowerCase().includes(warning.toLowerCase()) ||
-      message.includes('Failed to auto connect') ||
-      message.includes('wallet') ||
-      message.includes('Wallet')
+      message.toLowerCase().includes(warning.toLowerCase())
     )) {
       return true; // Warning should be suppressed
     }

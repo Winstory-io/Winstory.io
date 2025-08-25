@@ -1,6 +1,6 @@
 "use client";
 
-import { useAddress } from '@thirdweb-dev/react';
+import { useActiveAccount } from 'thirdweb/react';
 import { useState, useEffect, useCallback } from 'react';
 import WalletConnect from '@/components/WalletConnect';
 import { useRouter } from 'next/navigation';
@@ -16,7 +16,7 @@ interface DashboardStats {
 }
 
 export default function MyWinPage() {
-  const account = useAddress();
+  const account = useActiveAccount();
   const [isConnected, setIsConnected] = useState(false);
   const [stats, setStats] = useState<DashboardStats>({
     creations: 0,

@@ -20,7 +20,10 @@ export const accessibilityConfig = {
     'auto connect to wallet',
     'wallet connection failed',
     'wallet auto connect',
-    'wallet auto-connect'
+    'wallet auto-connect',
+    '[next-auth][error][CLIENT_FETCH_ERROR]',
+    'next-auth.js.org/errors#client_fetch_error',
+    'Failed to fetch'
   ],
   
   // Add ARIA labels for thirdweb components

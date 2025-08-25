@@ -1,9 +1,15 @@
 "use client";
 
-import { useAddress, ConnectWallet } from '@thirdweb-dev/react';
+import { useActiveAccount, ConnectButton } from 'thirdweb/react';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
+import Image from 'next/image';
 import WalletConnect from '@/components/WalletConnect';
+import { createThirdwebClient } from "thirdweb";
+
+const client = createThirdwebClient({
+  clientId: "4ddc5eed2e073e550a7307845d10f348",
+});
 
 export default function MyWinLayout({
   children,
@@ -12,7 +18,7 @@ export default function MyWinLayout({
 }) {
   const router = useRouter();
   const pathname = usePathname();
-  const account = useAddress();
+  const account = useActiveAccount();
   const [showDisconnectMenu, setShowDisconnectMenu] = useState(false);
   const [isForceDisconnected, setIsForceDisconnected] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -28,31 +34,18 @@ export default function MyWinLayout({
   };
 
   const handleForceDisconnect = () => {
-    // Marquer comme forcément déconnecté
     setIsForceDisconnected(true);
-    
-    // Fermer le menu
     setShowDisconnectMenu(false);
-    
-    // Rediriger vers la page welcome
     router.push('/welcome');
   };
 
   const handleLogout = () => {
-    // Rediriger vers la page welcome après déconnexion
     router.push('/welcome');
   };
 
   const toggleMenu = () => {
     setShowDisconnectMenu(!showDisconnectMenu);
   };
-
-  // Réinitialiser l'état de déconnexion forcée si un nouveau compte se connecte
-  useEffect(() => {
-    if (account) {
-      setIsForceDisconnected(false);
-    }
-  }, [account]);
 
   // Fermer le menu si on clique en dehors
   useEffect(() => {
@@ -70,6 +63,20 @@ export default function MyWinLayout({
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [showDisconnectMenu]);
+
+  // Réinitialiser l'état de déconnexion forcée si un nouveau compte se connecte
+  useEffect(() => {
+    if (account) {
+      setIsForceDisconnected(false);
+    }
+  }, [account]);
+
+  // Rediriger vers /welcome quand le wallet se déconnecte
+  useEffect(() => {
+    if (!account && !isForceDisconnected) {
+      router.push('/welcome');
+    }
+  }, [account, isForceDisconnected, router]);
 
   // Si pas de compte connecté OU si déconnexion forcée, afficher l'écran d'authentification
   if (!account || isForceDisconnected) {
@@ -213,7 +220,7 @@ export default function MyWinLayout({
             </button>
           </div>
 
-          {/* Wallet Address Display with Disconnect Menu */}
+          {/* Wallet Address Display */}
           <div style={{ position: 'relative' }} ref={menuRef}>
             <button
               onClick={toggleMenu}
@@ -239,7 +246,7 @@ export default function MyWinLayout({
                 borderRadius: '50%',
                 animation: 'pulse 2s infinite'
               }} />
-              {truncateAddress(account)}
+              {truncateAddress(account.address)}
               <span style={{ 
                 fontSize: '12px', 
                 transition: 'transform 0.3s ease',
@@ -249,7 +256,7 @@ export default function MyWinLayout({
               </span>
             </button>
             
-            {/* Disconnect Menu */}
+            {/* Simple Disconnect Menu */}
             {showDisconnectMenu && (
               <div
                 style={{
@@ -260,27 +267,31 @@ export default function MyWinLayout({
                   background: 'rgba(0, 0, 0, 0.95)',
                   border: '2px solid #00FF00',
                   borderRadius: '12px',
-                  padding: '8px 0',
+                  padding: '16px',
                   minWidth: '200px',
                   zIndex: 1000,
-                  boxShadow: '0 4px 20px rgba(0, 255, 0, 0.3)'
+                  boxShadow: '0 4px 20px rgba(0, 255, 0, 0.3)',
+                  textAlign: 'center'
                 }}
               >
                 <div style={{
-                  width: '100%',
-                  padding: '12px 16px',
                   fontSize: '14px',
-                  fontWeight: 600,
                   color: '#00FF00',
-                  textAlign: 'center',
-                  borderBottom: '1px solid rgba(0, 255, 0, 0.3)',
-                  marginBottom: '8px'
+                  marginBottom: '12px'
                 }}>
-                  Connected
+                  Wallet Connected
                 </div>
-                <div style={{ padding: '0 8px' }}>
-                  <ConnectWallet 
-                    onDisconnect={handleForceDisconnect}
+                <div style={{
+                  fontSize: '12px',
+                  color: '#999',
+                  marginBottom: '16px'
+                }}>
+                  {account.address}
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                  <ConnectButton 
+                    client={client}
+                    theme="dark"
                   />
                 </div>
               </div>

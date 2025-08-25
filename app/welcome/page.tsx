@@ -9,12 +9,18 @@ import ExplorerIcon from '@/components/icons/ExplorerIcon';
 import { useRouter } from 'next/navigation';
 import { useWalletAddress } from '@/lib/hooks/useWalletConnection';
 import { clearUserCache } from '@/lib/utils';
-import { useAddress, ConnectWallet } from '@thirdweb-dev/react';
+import { useActiveAccount } from 'thirdweb/react';
+import { ConnectButton } from 'thirdweb/react';
+import { createThirdwebClient } from "thirdweb";
+
+const client = createThirdwebClient({
+  clientId: "4ddc5eed2e073e550a7307845d10f348",
+});
 
 export default function Home() {
   const router = useRouter();
   const walletAddress = useWalletAddress();
-  const account = useAddress(); // Utilise useAddress au lieu de useActiveAccount
+  const account = useActiveAccount();
   const [showDisconnectMenu, setShowDisconnectMenu] = useState(false);
   const [isForceDisconnected, setIsForceDisconnected] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -162,7 +168,7 @@ export default function Home() {
                 borderRadius: '50%',
                 animation: 'pulse 2s infinite'
               }} />
-              {truncateAddress(account)}
+              {truncateAddress(account.address)}
               <span style={{ 
                 fontSize: '12px', 
                 transition: 'transform 0.3s ease',
@@ -206,10 +212,9 @@ export default function Home() {
                   alignItems: 'center',
                   gap: '8px'
                 }}>
-                  <ConnectWallet 
-                    onConnect={() => {
-                      // Handle connect if needed
-                    }}
+                  <ConnectButton 
+                    client={client}
+                    theme="dark"
                   />
                 </div>
               </div>
