@@ -89,44 +89,9 @@ export default function MyWinPage() {
     // setStats(userStats);
   }, []);
 
+  // Si pas connecté, laisser le layout afficher l'écran d'authentification
   if (!isConnected) {
-    return (
-      <div style={{ 
-        minHeight: '100vh', 
-        width: '100vw', 
-        background: '#000', 
-        color: '#00FF00',
-        fontFamily: 'Inter, sans-serif',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        position: 'relative'
-      }}>
-        <div style={{ textAlign: 'center', maxWidth: '600px', padding: '0 24px' }}>
-          <h1 style={{ 
-            fontSize: '48px', 
-            fontWeight: 900, 
-            marginBottom: '24px',
-            color: '#00FF00'
-          }}>
-            My Win Dashboard
-          </h1>
-          <p style={{ 
-            fontSize: '18px', 
-            color: '#fff', 
-            marginBottom: '48px',
-            lineHeight: '1.6'
-          }}>
-            Connect your wallet to access your personal dashboard and track your progress, earnings, and achievements.
-          </p>
-          <WalletConnect 
-            isBothLogin={true} 
-            onLoginSuccess={handleLoginSuccess}
-          />
-        </div>
-      </div>
-    );
+    return null;
   }
 
   return (

@@ -1,6 +1,4 @@
 {
-  "/api/auth/b2c-verification/route": "app/api/auth/b2c-verification/route.js",
-  "/creation/agencyb2c/login/page": "app/creation/agencyb2c/login/page.js",
   "/creation/agencyb2c/yourinformations/page": "app/creation/agencyb2c/yourinformations/page.js",
   "/creation/agencyb2c/yourwinstory/page": "app/creation/agencyb2c/yourwinstory/page.js"
 }

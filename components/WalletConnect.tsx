@@ -3,7 +3,6 @@
 import { ConnectButton, useActiveAccount } from "thirdweb/react";
 import { createThirdwebClient } from "thirdweb";
 import { useEffect, useState } from "react";
-import ThirdwebEmailAuth from "./ThirdwebEmailAuth";
 
 const client = createThirdwebClient({
   clientId: "4ddc5eed2e073e550a7307845d10f348",
@@ -17,7 +16,7 @@ interface WalletConnectProps {
     onLogout?: () => void;
 }
 
-function WalletConnectContent({ isEmailLogin = false, isWalletLogin = false, isBothLogin = false, onLoginSuccess, onLogout }: WalletConnectProps) {
+function WalletConnectContent({ isEmailLogin = false, isWalletLogin = false, isBothLogin = false, onLoginSuccess }: WalletConnectProps) {
     const [mounted, setMounted] = useState(false);
     const account = useActiveAccount();
 
@@ -35,16 +34,11 @@ function WalletConnectContent({ isEmailLogin = false, isWalletLogin = false, isB
     }, [account, onLoginSuccess]);
 
     if (!mounted) {
-        return <div>Loading...</div>;
+        return <div />;
     }
 
-    // Si c'est uniquement pour l'email login (B2C flow)
-    if (isEmailLogin) {
-        return <ThirdwebEmailAuth title="Login with professional email" onSuccess={onLoginSuccess} />;
-    }
-
-    // Pour les autres cas (wallet login ou both login)
-    if (isBothLogin || isWalletLogin) {
+    // Unifier l'expérience: un seul bouton Thirdweb avec wallets web3 et méthodes in-app par défaut
+    if (isBothLogin || isWalletLogin || isEmailLogin) {
         return (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                 <ConnectButton 

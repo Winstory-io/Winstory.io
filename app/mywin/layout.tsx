@@ -73,7 +73,9 @@ export default function MyWinLayout({
 
   // Rediriger vers /welcome quand le wallet se déconnecte
   useEffect(() => {
-    if (!account && !isForceDisconnected) {
+    // Ne rediriger que si l'utilisateur était précédemment connecté et se déconnecte
+    // Pas de redirection automatique au premier chargement
+    if (!account && !isForceDisconnected && account !== undefined) {
       router.push('/welcome');
     }
   }, [account, isForceDisconnected, router]);

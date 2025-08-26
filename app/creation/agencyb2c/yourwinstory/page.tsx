@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 const GreenArrowButton = ({ onClick, disabled }: { onClick: () => void, disabled: boolean }) => (
@@ -43,6 +43,19 @@ export default function YourWinstoryAgencyB2C() {
   const [touched, setTouched] = useState({ title: false, story: false, guideline: false });
   const [error, setError] = useState<{title?: string, story?: string, guideline?: string}>({});
   const [showModal, setShowModal] = useState(false);
+
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem('user') || 'null');
+    if (!user?.email) {
+      router.replace('/creation/agencyb2c/login');
+      return;
+    }
+    const b2cClient = JSON.parse(localStorage.getItem('b2cClient') || 'null');
+    if (!b2cClient?.verified) {
+      router.replace('/creation/agencyb2c/yourinformations');
+      return;
+    }
+  }, [router]);
 
   const isTitleValid = !!title.trim();
   const isStoryValid = !!story.trim();

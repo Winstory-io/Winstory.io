@@ -22,33 +22,54 @@ export default function AgencyB2CYourInformations() {
     const [message, setMessage] = useState("");
     const [showTooltip, setShowTooltip] = useState(false);
     const [isRedirecting, setIsRedirecting] = useState(false);
+    const [verificationSucceeded, setVerificationSucceeded] = useState(false);
 
     useEffect(() => {
-        // Récupérer les informations de l'agence depuis le localStorage
+        // Gate: require agency login first
         const userData = JSON.parse(localStorage.getItem("user") || 'null');
-        const companyData = JSON.parse(localStorage.getItem("company") || 'null');
-        
-        if (userData?.email) {
-            setAgencyEmail(userData.email);
-            // Extraire le nom de domaine de l'email pour l'agence
-            const domain = userData.email.split('@')[1];
-            setAgencyName(`@${domain}`);
+        if (!userData?.email) {
+            router.replace('/creation/agencyb2c/login');
+            return;
         }
-        
+
+        // Always start fresh on this step: clear any previous B2C state
+        localStorage.removeItem('b2cClient');
+        localStorage.removeItem('agencyB2CContext');
+
+        const companyData = JSON.parse(localStorage.getItem("company") || 'null');
+        setAgencyEmail(userData.email);
+        const domain = userData.email.split('@')[1];
+        setAgencyName(`@${domain}`);
+
         if (companyData?.name) {
             setAgencyName(`@${companyData.name}`);
         }
-    }, []);
 
-    // Redirection automatique après vérification réussie
+        // Reset form fields explicitly
+        setB2cCompanyName('');
+        setB2cContactEmail('');
+        setVerificationCode('');
+        setIsCodeSent(false);
+        setMessage('');
+        setVerificationSucceeded(false);
+    }, [router]);
+
+    // Redirect only after a fresh verification has just succeeded
     useEffect(() => {
-        if (message.includes("successful") && !isRedirecting) {
+        if (verificationSucceeded && !isRedirecting) {
             setIsRedirecting(true);
+            // Save combined info for the next steps
+            const combined = {
+                agency: { name: agencyName, email: agencyEmail },
+                b2c: { companyName: b2cCompanyName, contactEmail: b2cContactEmail, verified: true }
+            };
+            localStorage.setItem('agencyB2CContext', JSON.stringify(combined));
+            localStorage.setItem('b2cClient', JSON.stringify(combined.b2c));
             setTimeout(() => {
                 router.push('/creation/agencyb2c/yourwinstory');
-            }, 2000); // 2 secondes de délai pour laisser voir le message de succès
+            }, 800);
         }
-    }, [message, router, isRedirecting]);
+    }, [verificationSucceeded, isRedirecting, router, agencyName, agencyEmail, b2cCompanyName, b2cContactEmail]);
 
     const validateProfessionalEmail = (email: string): { valid: boolean; message: string } => {
         const personalDomains = [
@@ -141,12 +162,8 @@ export default function AgencyB2CYourInformations() {
 
             if (data.success) {
                 setMessage("Verification successful! B2C client confirmed.");
-                // Sauvegarder les informations validées
-                localStorage.setItem("b2cClient", JSON.stringify({
-                    companyName: b2cCompanyName,
-                    contactEmail: b2cContactEmail,
-                    verified: true
-                }));
+                // Mark fresh success (will trigger redirect)
+                setVerificationSucceeded(true);
             } else {
                 setMessage(data.message || "Incorrect verification code");
             }
@@ -344,18 +361,22 @@ export default function AgencyB2CYourInformations() {
                                 background: 'none',
                                 color: '#FFD600',
                                 fontSize: 18,
-                                marginBottom: 16,
+                                marginBottom: 8,
                                 boxSizing: 'border-box',
                                 textAlign: 'center',
                                 letterSpacing: 2
                             }}
                         />
+                        <div style={{ color: '#aaa', fontSize: 12, marginBottom: 16, textAlign: 'center' }}>
+                            Ask your B2C client for the code they received by email.
+                        </div>
                         <div style={{ display: 'flex', gap: 12 }}>
                             <button
                                 onClick={() => {
                                     setIsCodeSent(false);
                                     setVerificationCode('');
                                     setMessage('');
+                                    setVerificationSucceeded(false);
                                 }}
                                 disabled={isVerifying}
                                 style={{
@@ -398,23 +419,34 @@ export default function AgencyB2CYourInformations() {
             {/* Message Display */}
             {message && (
                 <div style={{
-                    padding: 12,
-                    borderRadius: 6,
-                    marginBottom: 16,
-                    background: message.includes('sent') || message.includes('successful') ? '#2e7d32' : '#d32f2f',
-                    color: '#fff',
+                    maxWidth: 500,
+                    width: '90vw',
+                    background: message.includes('successful') ? '#173c2a' : '#3c1717',
+                    border: `2px solid ${message.includes('successful') ? '#18C964' : '#FF2D2D'}`,
+                    color: message.includes('successful') ? '#18C964' : '#FF2D2D',
+                    borderRadius: 12,
+                    padding: 16,
                     textAlign: 'center',
-                    maxWidth: 400,
-                    width: '90vw'
+                    fontWeight: 700,
+                    marginBottom: 24
                 }}>
                     {message}
-                    {message.includes('successful') && (
-                        <div style={{ marginTop: 8, fontSize: 14, opacity: 0.9 }}>
-                            Redirecting to next step...
-                        </div>
-                    )}
                 </div>
             )}
+
+            {/* Continue Button */}
+            <button
+                onClick={() => router.push('/welcome')}
+                style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#FF2D2D',
+                    cursor: 'pointer',
+                    marginBottom: 24
+                }}
+            >
+                Cancel
+            </button>
         </div>
     );
 } 

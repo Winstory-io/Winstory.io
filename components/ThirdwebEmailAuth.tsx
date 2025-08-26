@@ -27,15 +27,19 @@ export default function ThirdwebEmailAuth({
 
     // Vérifier si l'utilisateur est déjà connecté au montage
     useEffect(() => {
-        const user = localStorage.getItem('user');
-        const walletAddress = localStorage.getItem('walletAddress');
-        
-        if (user && walletAddress) {
-            const userData = JSON.parse(user);
-            setIsConnected(true);
-            setMessage('Already connected!');
-            // Appeler onSuccess immédiatement si déjà connecté
-            onSuccess?.({ email: userData.email, walletAddress });
+        try {
+            const user = localStorage.getItem('user');
+            const walletAddress = localStorage.getItem('walletAddress');
+            
+            if (user && walletAddress) {
+                const userData = JSON.parse(user);
+                setIsConnected(true);
+                setMessage('Already connected!');
+                // Appeler onSuccess immédiatement si déjà connecté
+                onSuccess?.({ email: userData.email, walletAddress });
+            }
+        } catch (error) {
+            console.error('Error checking localStorage:', error);
         }
     }, [onSuccess]);
 
@@ -85,7 +89,8 @@ export default function ThirdwebEmailAuth({
             setIsCodeSent(true);
             setMessage('Verification code sent! Check your email.');
         } catch (error) {
-            const errorMessage = 'Error sending verification code';
+            console.error('Pre-authentication error:', error);
+            const errorMessage = 'Error sending verification code. Please try again.';
             setMessage(errorMessage);
             onError?.(errorMessage);
         } finally {
@@ -136,7 +141,8 @@ export default function ThirdwebEmailAuth({
                 throw new Error('Failed to get wallet address');
             }
         } catch (error) {
-            const errorMessage = 'Invalid verification code or connection error';
+            console.error('Login error:', error);
+            const errorMessage = 'Invalid verification code or connection error. Please try again.';
             setMessage(errorMessage);
             onError?.(errorMessage);
         } finally {
