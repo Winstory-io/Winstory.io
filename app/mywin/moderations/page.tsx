@@ -1,6 +1,6 @@
 "use client";
 
-import { useAddress } from '@thirdweb-dev/react';
+import { useActiveAccount } from 'thirdweb/react';
 import { useState, useEffect } from 'react';
 
 interface Moderation {
@@ -17,7 +17,8 @@ interface Moderation {
 }
 
 export default function MyModerationsPage() {
-  const account = useAddress();
+  const account = useActiveAccount();
+  const walletAddress = account?.address;
   const [moderations, setModerations] = useState<Moderation[]>([]);
 
   useEffect(() => {

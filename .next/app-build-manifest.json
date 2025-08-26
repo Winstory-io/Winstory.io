@@ -25,25 +25,52 @@
       "static/chunks/main-app.js",
       "static/chunks/app/creation/youare/page.js"
     ],
-    "/creation/agencyb2c/login/page": [
+    "/creation/b2c/login/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/creation/agencyb2c/login/page.js"
+      "static/chunks/app/creation/b2c/login/page.js"
     ],
-    "/creation/agencyb2c/yourinformations/page": [
+    "/creation/b2c/yourinformations/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/creation/agencyb2c/yourinformations/page.js"
+      "static/chunks/app/creation/b2c/yourinformations/page.js"
     ],
-    "/creation/agencyb2c/yourwinstory/page": [
+    "/creation/b2c/yourwinstory/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/creation/agencyb2c/yourwinstory/page.js"
+      "static/chunks/app/creation/b2c/yourwinstory/page.js"
     ],
-    "/api/auth/b2c-verification/route": [
+    "/creation/b2c/yourfilm/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/api/auth/b2c-verification/route.js"
+      "static/chunks/app/creation/b2c/yourfilm/page.js"
+    ],
+    "/creation/b2c/rewardsornot/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/creation/b2c/rewardsornot/page.js"
+    ],
+    "/creation/b2c/standardrewards/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/creation/b2c/standardrewards/page.css",
+      "static/chunks/app/creation/b2c/standardrewards/page.js"
+    ],
+    "/creation/b2c/premiumrewards/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/creation/b2c/premiumrewards/page.css",
+      "static/chunks/app/creation/b2c/premiumrewards/page.js"
+    ],
+    "/creation/b2c/recap/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/creation/b2c/recap/page.js"
+    ],
+    "/creation/b2c/mint/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/creation/b2c/mint/page.js"
     ]
   }
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useAddress } from '@thirdweb-dev/react';
+import { useActiveAccount } from 'thirdweb/react';
 import { useState, useEffect } from 'react';
 
 interface Completion {
@@ -22,7 +22,8 @@ interface Completion {
 }
 
 export default function MyCompletionsPage() {
-  const account = useAddress();
+  const account = useActiveAccount();
+  const walletAddress = account?.address;
   const [completions, setCompletions] = useState<Completion[]>([]);
 
   useEffect(() => {

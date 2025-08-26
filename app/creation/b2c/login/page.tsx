@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect, useRef } from 'react';
 import LoginButton from '@/components/LoginButton';
-import WalletConnect from '@/components/WalletConnect';
+import ThirdwebEmailAuth from '@/components/ThirdwebEmailAuth';
 import { useRouter } from 'next/navigation';
 
 export default function B2CLoginPage() {
@@ -214,10 +214,10 @@ export default function B2CLoginPage() {
       )}
 
       <div style={{ width: '100%', maxWidth: 400, margin: '0 auto', marginTop: 32, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 24 }}>
-        <WalletConnect
-          isEmailLogin={true}
-          onLoginSuccess={handleLoginSuccess}
-          onLogout={handleLogout}
+        <ThirdwebEmailAuth
+          title="Professional Email Authentication"
+          onSuccess={handleLoginSuccess}
+          onError={(error) => console.error('Login error:', error)}
         />
       </div>
     </div>

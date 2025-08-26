@@ -4,7 +4,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import styles from './Rewards.module.css';
 import { getAddressValidationError, getDecimalsNote } from '../../../../lib/blockchain';
 import { useRealTimeBalance } from '../../../../lib/hooks/useWalletBalance';
-import { useAddress } from "@thirdweb-dev/react";
+import { useActiveAccount } from "thirdweb/react";
 import { useRouter } from 'next/navigation';
 import { validateContract } from '../../../../lib/blockchain-rpc';
 
@@ -32,8 +32,8 @@ export default function ItemRewardConfig({ onClose }: { onClose: () => void }) {
   const [isCheckingBalance, setIsCheckingBalance] = useState<boolean>(false);
 
   // Wallet connection
-  const account = useAddress();
-  const walletAddress = account;
+  const account = useActiveAccount();
+  const walletAddress = account?.address;
   const contractAddressRef = useRef<HTMLInputElement>(null);
 
   // Real-time balance monitoring with wallet address
@@ -221,7 +221,7 @@ export default function ItemRewardConfig({ onClose }: { onClose: () => void }) {
             marginBottom: 12,
             fontSize: 12
           }}>
-            <span style={{ color: '#00C46C', fontWeight: 600 }}>✅ Connected:</span> {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
+            <span style={{ color: '#00C46C', fontWeight: 600 }}>✅ Connected:</span> {walletAddress?.slice(0, 6)}...{walletAddress?.slice(-4)}
           </div>
         )}
         

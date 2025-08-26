@@ -4,7 +4,7 @@ import { useEffect, useState, useRef, ChangeEvent } from 'react';
 import styles from './Rewards.module.css'; // Adjust the path as needed
 import { getAddressValidationError, getDecimalsNote } from '../../../../lib/blockchain';
 import { useRealTimeBalance } from '../../../../lib/hooks/useWalletBalance';
-import { useAddress } from "@thirdweb-dev/react";
+import { useActiveAccount } from "thirdweb/react";
 import { useRouter } from 'next/navigation';
 import { validateContract } from '../../../../lib/blockchain-rpc';
 import { saveUnifiedRewardConfig } from '../../../../lib/rewards-manager';
@@ -31,10 +31,10 @@ export default function TokenRewardConfig({ onClose }: { onClose: () => void }) 
   const [isConfirmed, setIsConfirmed] = useState<boolean>(false);
   const [isCheckingBalance, setIsCheckingBalance] = useState<boolean>(false);
 
-  // Wallet connection
-  const account = useAddress();
-  const walletAddress = account;
-  const contractAddressRef = useRef<HTMLInputElement>(null);
+      // Wallet connection
+    const account = useActiveAccount();
+    const walletAddress = account?.address;
+    const contractAddressRef = useRef<HTMLInputElement>(null);
 
   // Real-time balance monitoring with wallet address
   const { balance: walletBalance, isLoading: balanceLoading, error: balanceError } = useRealTimeBalance(
@@ -223,7 +223,7 @@ export default function TokenRewardConfig({ onClose }: { onClose: () => void }) 
             marginBottom: 12,
             fontSize: 12
           }}>
-            <span style={{ color: '#00C46C', fontWeight: 600 }}>✅ Connected:</span> {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
+            <span style={{ color: '#00C46C', fontWeight: 600 }}>✅ Connected:</span> {walletAddress?.slice(0, 6)}...{walletAddress?.slice(-4)}
           </div>
         )}
         

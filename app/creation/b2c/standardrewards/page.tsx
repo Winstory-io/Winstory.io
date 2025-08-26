@@ -4,13 +4,23 @@ import RewardsHeader from './RewardsHeader';
 import RewardsOptions from './RewardsOptions';
 import styles from './Rewards.module.css';
 import ErrorBoundary from '@/components/ErrorBoundary';
-import { useAddress } from "@thirdweb-dev/react";
-import { useEffect, useState, useRef } from "react";
+import { getAddressValidationError, getDecimalsNote } from '../../../../lib/blockchain';
+import { useRealTimeBalance } from '../../../../lib/hooks/useWalletBalance';
+import { useActiveAccount } from "thirdweb/react";
 import { useRouter } from 'next/navigation';
-import { ConnectWallet } from "@thirdweb-dev/react";
+import { validateContract } from '../../../../lib/blockchain-rpc';
+import { ItemInfo } from '../../../../lib/blockchain-rpc';
+import { ConnectButton } from "thirdweb/react";
+import { createThirdwebClient } from "thirdweb";
+import { useEffect, useState, useRef } from "react";
+
+const client = createThirdwebClient({
+  clientId: "4ddc5eed2e073e550a7307845d10f348",
+});
 
 export default function StandardRewardsPage() {
-  const account = useAddress(); // Utilise useAddress au lieu de useActiveAccount
+  const account = useActiveAccount();
+  const walletAddress = account?.address;
   const router = useRouter();
   const [showDisconnectMenu, setShowDisconnectMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -89,7 +99,7 @@ export default function StandardRewardsPage() {
           }}>
             Please connect your wallet to access the rewards configuration.
           </p>
-          <ConnectWallet />
+          <ConnectButton client={client} theme="dark" />
         </div>
       </div>
     );
@@ -142,7 +152,7 @@ export default function StandardRewardsPage() {
                     borderRadius: '50%',
                     animation: 'pulse 2s infinite'
                   }} />
-                  {truncateAddress(account)}
+                  {truncateAddress(walletAddress || '')}
                   <span style={{
                     fontSize: '12px',
                     transition: 'transform 0.3s ease',
@@ -182,7 +192,7 @@ export default function StandardRewardsPage() {
                       color: '#999',
                       fontFamily: 'monospace'
                     }}>
-                      {account}
+                      {walletAddress}
                     </div>
                     <button
                       onClick={handleForceDisconnect}

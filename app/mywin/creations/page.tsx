@@ -1,6 +1,6 @@
 'use client';
 
-import { useAddress } from '@thirdweb-dev/react';
+import { useActiveAccount } from 'thirdweb/react';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
@@ -19,7 +19,8 @@ interface Campaign {
 
 export default function MyCreationsPage() {
   const router = useRouter();
-  const account = useAddress();
+  const account = useActiveAccount();
+  const walletAddress = account?.address;
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
 
   useEffect(() => {

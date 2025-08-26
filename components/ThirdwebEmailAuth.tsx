@@ -1,10 +1,13 @@
 "use client";
 
-import { ConnectButton, useConnect } from "thirdweb/react";
-import { inAppWallet } from "thirdweb/wallets";
 import { useState, useEffect } from "react";
-import { preAuthenticate } from "thirdweb/wallets/in-app";
-import { client } from "@/lib/thirdwebClient";
+import dynamic from 'next/dynamic';
+
+// Import dynamique de Thirdweb pour éviter les problèmes de chunks
+const ConnectButton = dynamic(
+  () => import("thirdweb/react").then((mod) => mod.ConnectButton),
+  { ssr: false, loading: () => <div>Loading...</div> }
+);
 
 interface ThirdwebEmailAuthProps {
     title?: string;
@@ -23,7 +26,24 @@ export default function ThirdwebEmailAuth({
     const [isCodeSent, setIsCodeSent] = useState(false);
     const [message, setMessage] = useState('');
     const [isConnected, setIsConnected] = useState(false);
-    const { connect } = useConnect();
+    const [thirdwebClient, setThirdwebClient] = useState<any>(null);
+
+    // Initialiser Thirdweb de manière dynamique
+    useEffect(() => {
+        const initThirdweb = async () => {
+            try {
+                const { createThirdwebClient } = await import("thirdweb");
+                const client = createThirdwebClient({
+                    clientId: "4ddc5eed2e073e550a7307845d10f348",
+                });
+                setThirdwebClient(client);
+            } catch (error) {
+                console.error('Failed to initialize Thirdweb:', error);
+                setMessage('Failed to initialize wallet system. Please refresh the page.');
+            }
+        };
+        initThirdweb();
+    }, []);
 
     // Vérifier si l'utilisateur est déjà connecté au montage
     useEffect(() => {
@@ -75,13 +95,20 @@ export default function ThirdwebEmailAuth({
             return;
         }
 
+        if (!thirdwebClient) {
+            setMessage('Wallet system not ready. Please wait...');
+            return;
+        }
+
         setIsLoading(true);
         setMessage('');
 
         try {
-            // Envoyer le code de vérification
+            // Utiliser Thirdweb pour l'authentification par email
+            const { preAuthenticate } = await import("thirdweb/wallets/in-app");
+            
             await preAuthenticate({
-                client,
+                client: thirdwebClient,
                 strategy: "email",
                 email,
             });
@@ -104,24 +131,30 @@ export default function ThirdwebEmailAuth({
             return;
         }
 
+        if (!thirdwebClient) {
+            setMessage('Wallet system not ready. Please wait...');
+            return;
+        }
+
         setIsLoading(true);
         setMessage('');
 
         try {
-            // Vérifier le code et se connecter
-            const wallet = await connect(async () => {
-                const walletInstance = inAppWallet();
-                await walletInstance.connect({
-                    client,
-                    strategy: "email",
-                    email,
-                    verificationCode,
-                });
-                return walletInstance;
+            // Utiliser Thirdweb pour la connexion
+            const { inAppWallet } = await import("thirdweb/wallets");
+            const { useConnect } = await import("thirdweb/react");
+            
+            const walletInstance = inAppWallet();
+            await walletInstance.connect({
+                client: thirdwebClient,
+                strategy: "email",
+                email,
+                verificationCode,
             });
 
             // Récupérer l'adresse du wallet
-            const walletAddress = wallet.getAccount()?.address;
+            const account = walletInstance.getAccount();
+            const walletAddress = account?.address;
 
             if (walletAddress) {
                 // Sauvegarder dans localStorage
@@ -171,7 +204,7 @@ export default function ThirdwebEmailAuth({
         setMessage('');
     };
 
-    // Si connecté, afficher le ConnectButton thirdweb
+    // Si connecté, afficher le message de succès sans ConnectButton
     if (isConnected) {
         return (
             <div style={{
@@ -204,7 +237,16 @@ export default function ThirdwebEmailAuth({
                 }}>
                     Login successful!
                 </div>
-                <ConnectButton client={client} />
+                <div style={{
+                    padding: 12,
+                    borderRadius: 6,
+                    background: '#2e7d32',
+                    color: '#fff',
+                    textAlign: 'center',
+                    fontSize: 14
+                }}>
+                    Redirecting to your dashboard...
+                </div>
             </div>
         );
     }
@@ -267,21 +309,21 @@ export default function ThirdwebEmailAuth({
 
                         <button
                             type="submit"
-                            disabled={isLoading}
+                            disabled={isLoading || !thirdwebClient}
                             style={{
                                 width: '100%',
                                 padding: 12,
-                                background: '#FFD600',
+                                background: thirdwebClient ? '#FFD600' : '#666',
                                 color: '#000',
                                 border: 'none',
                                 borderRadius: 6,
                                 fontSize: 16,
                                 fontWeight: 'bold',
-                                cursor: isLoading ? 'not-allowed' : 'pointer',
-                                opacity: isLoading ? 0.6 : 1
+                                cursor: (isLoading || !thirdwebClient) ? 'not-allowed' : 'pointer',
+                                opacity: (isLoading || !thirdwebClient) ? 0.6 : 1
                             }}
                         >
-                            {isLoading ? 'Sending...' : 'Send verification code'}
+                            {!thirdwebClient ? 'Initializing...' : isLoading ? 'Sending...' : 'Send verification code'}
                         </button>
                     </div>
                 ) : (
