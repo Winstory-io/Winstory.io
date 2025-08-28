@@ -3,6 +3,14 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 
+// Croix rouge réutilisable (même style que les autres pages)
+const CloseIcon = ({ onClick, size = 32 }: { onClick: () => void; size?: number }) => (
+  <svg onClick={onClick} width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ cursor: 'pointer', position: 'absolute', top: 32, right: 32, zIndex: 100 }}>
+    <path d="M18 6L6 18" stroke="#F31260" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M6 6L18 18" stroke="#F31260" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
 const BriefcaseIcon = () => (
   <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginRight: 16 }}>
     <rect x="8" y="16" width="32" height="20" rx="3" stroke="#FFD600" strokeWidth="2"/>
@@ -149,6 +157,7 @@ export default function RewardsOrNot({ isAgencyB2C = false }: RewardsOrNotProps)
   const [noReward, setNoReward] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [preferWinstory, setPreferWinstory] = useState(false);
+  const [showExitModal, setShowExitModal] = useState(false);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -453,6 +462,9 @@ export default function RewardsOrNot({ isAgencyB2C = false }: RewardsOrNotProps)
 
   return (
     <div style={{ minHeight: '100vh', background: '#000', color: 'white', fontFamily: 'Inter, sans-serif', padding: 40, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      {/* Croix rouge en haut à droite */}
+      <CloseIcon onClick={() => setShowExitModal(true)} size={32} />
+      
       <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 60, textAlign: 'center', position: 'relative' }}>
         <Image src="/company.svg" alt="Company" width={96} height={96} style={{ marginRight: 16 }} />
         <h1 style={{ fontSize: 32, fontWeight: 700, margin: 0 }}>Rewards or not ?</h1>
@@ -464,6 +476,85 @@ export default function RewardsOrNot({ isAgencyB2C = false }: RewardsOrNotProps)
           <Image src="/tooltip.svg" alt="Info" width={36} height={36} />
         </span>
       </header>
+
+      {/* Modal de confirmation pour quitter */}
+      {showExitModal && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+            background: 'rgba(0,0,0,0.7)',
+            zIndex: 3000,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+          onClick={() => setShowExitModal(false)}
+        >
+          <div
+            style={{
+              background: '#181818',
+              border: '3px solid #FF2D2D',
+              color: '#FF2D2D',
+              padding: 40,
+              borderRadius: 20,
+              minWidth: 340,
+              maxWidth: '90vw',
+              boxShadow: '0 0 32px #FF2D2D55',
+              textAlign: 'center',
+              position: 'relative',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 24,
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{ fontWeight: 700, fontSize: 28, color: '#FF2D2D', marginBottom: 8 }}>Leave Process ?</div>
+            <div style={{ color: '#FF2D2D', background: '#000', border: '2px solid #FF2D2D', borderRadius: 12, padding: 18, fontSize: 18, fontWeight: 500, marginBottom: 12 }}>
+              You're about to leave this creation process.<br/>Your current progress won't be saved.
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: 16 }}>
+                <button
+                  onClick={() => setShowExitModal(false)}
+                  style={{
+                    background: '#444',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: 12,
+                    padding: '14px 32px',
+                    fontWeight: 700,
+                    fontSize: 18,
+                    cursor: 'pointer',
+                    transition: 'background 0.2s',
+                  }}
+                >
+                  Stay here
+                </button>
+                <button
+                  onClick={() => router.push('/welcome')}
+                  style={{
+                    background: '#FF2D2D',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: 12,
+                    padding: '14px 32px',
+                    fontWeight: 700,
+                    fontSize: 18,
+                    cursor: 'pointer',
+                    boxShadow: '0 2px 12px #FF2D2D55',
+                    transition: 'background 0.2s',
+                  }}
+                >
+                  Confirm & leave
+                </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showModal && (
         <div
           style={{

@@ -80,6 +80,9 @@ const nextConfig = {
         removeEmptyChunks: false,
         splitChunks: false,
       };
+
+      // Désactiver le cache persistant sur disque (évite les erreurs PackFileCacheStrategy)
+      config.cache = { type: 'memory' };
     }
 
     return config;

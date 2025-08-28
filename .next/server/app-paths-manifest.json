@@ -1,5 +1,5 @@
 {
-  "/creation/b2c/recap/page": "app/creation/b2c/recap/page.js",
-  "/creation/b2c/mint/page": "app/creation/b2c/mint/page.js",
-  "/creation/b2c/premiumrewards/page": "app/creation/b2c/premiumrewards/page.js"
+  "/creation/agencyb2c/standardrewards/page": "app/creation/agencyb2c/standardrewards/page.js",
+  "/creation/agencyb2c/rewardsornot/page": "app/creation/agencyb2c/rewardsornot/page.js",
+  "/creation/agencyb2c/yourwinstory/page": "app/creation/agencyb2c/yourwinstory/page.js"
 }
