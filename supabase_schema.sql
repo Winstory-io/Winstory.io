@@ -1,5 +1,5 @@
 -- =====================================================
--- SCHEMA SUPABASE COMPLET POUR WINSTORY.IO
+-- SCHEMA SUPABASE POUR WINSTORY.IO
 -- =====================================================
 -- Ce script crée toutes les tables nécessaires pour les workflows :
 -- - Creation (B2C, AgencyB2C, Individual)
@@ -228,6 +228,103 @@ CREATE TYPE blockchain_validation_type AS ENUM (
   'super_moderation_override' -- Override par super modérateur
 );
 
+-- Nouveaux enums pour les fonctionnalités manquantes
+-- Rôles utilisateur
+CREATE TYPE user_role AS ENUM (
+  'creator',
+  'completer',
+  'moderator',
+  'super_moderator',
+  'winstory_admin'
+);
+
+-- Statuts KYC
+CREATE TYPE kyc_status AS ENUM (
+  'pending',
+  'verified',
+  'rejected',
+  'expired'
+);
+
+-- Types de vérification
+CREATE TYPE verification_type AS ENUM (
+  'email',
+  'phone',
+  'wallet_signature',
+  'identity_document'
+);
+
+-- Statuts de livraison des récompenses
+CREATE TYPE fulfillment_status AS ENUM (
+  'pending',
+  'processing',
+  'shipped',
+  'delivered',
+  'returned',
+  'failed'
+);
+
+-- Statuts de minting NFT
+CREATE TYPE minting_status AS ENUM (
+  'pending',
+  'minting',
+  'minted',
+  'failed',
+  'retry'
+);
+
+-- Statuts de paiement
+CREATE TYPE payment_status AS ENUM (
+  'pending',
+  'completed',
+  'failed',
+  'refunded',
+  'chargeback'
+);
+
+-- Types de notifications
+CREATE TYPE notification_channel AS ENUM (
+  'email',
+  'sms',
+  'discord',
+  'webhook',
+  'in_app'
+);
+
+-- Types de politiques
+CREATE TYPE policy_type AS ENUM (
+  'terms_of_service',
+  'privacy_policy',
+  'cookie_policy',
+  'data_retention'
+);
+
+-- Types de consentement
+CREATE TYPE consent_purpose AS ENUM (
+  'marketing',
+  'analytics',
+  'essential',
+  'third_party'
+);
+
+-- Types de coûts
+CREATE TYPE cost_category AS ENUM (
+  'storage',
+  'transcoding',
+  'gas_fees',
+  'processor_fees',
+  'fulfillment'
+);
+
+-- Types de réputation IP
+CREATE TYPE ip_reputation_score AS ENUM (
+  'excellent',
+  'good',
+  'neutral',
+  'poor',
+  'blocked'
+);
+
 -- =====================================================
 -- 2. TABLES D'AUTHENTIFICATION (NEXTAUTH)
 -- =====================================================
@@ -306,6 +403,50 @@ CREATE TABLE wallet_sessions (
   network TEXT NOT NULL,
   chain_id INTEGER,
   expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- =====================================================
+-- 2C. TABLES D'IDENTITÉ, RÔLES ET KYC (NOUVELLES)
+-- =====================================================
+
+-- Rôles utilisateur par wallet
+CREATE TABLE user_roles (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+  wallet_address TEXT NOT NULL,
+  role user_role NOT NULL,
+  campaign_id TEXT REFERENCES campaigns(id) ON DELETE CASCADE,
+  is_active BOOLEAN DEFAULT TRUE,
+  granted_by TEXT, -- Wallet qui a accordé le rôle
+  granted_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  expires_at TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Vérification KYC légère
+CREATE TABLE kyc_verifications (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+  wallet_address TEXT NOT NULL,
+  verification_type verification_type NOT NULL,
+  verification_data TEXT, -- Données de vérification (email, phone, etc.)
+  kyc_status kyc_status DEFAULT 'pending',
+  verified_at TIMESTAMP WITH TIME ZONE,
+  expires_at TIMESTAMP WITH TIME ZONE,
+  rejection_reason TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Signatures de message pour preuve de propriété de wallet
+CREATE TABLE wallet_signatures (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+  wallet_address TEXT NOT NULL,
+  nonce TEXT NOT NULL,
+  message TEXT NOT NULL,
+  signature TEXT NOT NULL,
+  verified_at TIMESTAMP WITH TIME ZONE,
+  expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+  is_valid BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -564,6 +705,167 @@ CREATE TABLE performance_multipliers (
 );
 
 -- =====================================================
+-- 4E. TABLES DE SUIVI DES RÉCOMPENSES (NOUVELLES)
+-- =====================================================
+
+-- Livraison des accès digitaux
+CREATE TABLE digital_access_deliveries (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+  completion_id TEXT NOT NULL REFERENCES completions(id) ON DELETE CASCADE,
+  digital_reward_id TEXT NOT NULL REFERENCES digital_access_rewards(id) ON DELETE CASCADE,
+  access_code TEXT,
+  access_link TEXT,
+  file_url TEXT,
+  file_hash TEXT,
+  redeemed_at TIMESTAMP WITH TIME ZONE,
+  expires_at TIMESTAMP WITH TIME ZONE,
+  is_redeemed BOOLEAN DEFAULT FALSE,
+  redemption_ip TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Livraison des accès physiques
+CREATE TABLE physical_access_deliveries (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+  completion_id TEXT NOT NULL REFERENCES completions(id) ON DELETE CASCADE,
+  physical_reward_id TEXT NOT NULL REFERENCES physical_access_rewards(id) ON DELETE CASCADE,
+  shipping_address JSONB, -- Adresse de livraison complète
+  fulfillment_status fulfillment_status DEFAULT 'pending',
+  tracking_number TEXT,
+  shipping_carrier TEXT,
+  estimated_delivery DATE,
+  delivered_at TIMESTAMP WITH TIME ZONE,
+  return_reason TEXT,
+  return_tracking TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Jobs de fulfillment des récompenses physiques
+CREATE TABLE reward_fulfillment_jobs (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+  physical_delivery_id TEXT NOT NULL REFERENCES physical_access_deliveries(id) ON DELETE CASCADE,
+  job_type TEXT NOT NULL CHECK (job_type IN ('shipping', 'tracking_update', 'delivery_confirmation', 'return_processing')),
+  status TEXT DEFAULT 'pending',
+  assigned_to TEXT,
+  priority TEXT DEFAULT 'normal',
+  due_date TIMESTAMP WITH TIME ZONE,
+  completed_at TIMESTAMP WITH TIME ZONE,
+  notes TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Assignation des NFTs/Items par completion
+CREATE TABLE completion_nft_assignments (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+  completion_id TEXT NOT NULL REFERENCES completions(id) ON DELETE CASCADE,
+  item_reward_id TEXT NOT NULL REFERENCES item_rewards(id) ON DELETE CASCADE,
+  minting_status minting_status DEFAULT 'pending',
+  token_id TEXT,
+  contract_address TEXT,
+  transaction_hash TEXT,
+  gas_used DECIMAL(20,8),
+  gas_price DECIMAL(20,8),
+  minting_cost DECIMAL(20,8),
+  retry_count INTEGER DEFAULT 0,
+  max_retries INTEGER DEFAULT 3,
+  error_message TEXT,
+  minted_at TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Règles d'éligibilité premium/standard
+CREATE TABLE reward_eligibility_rules (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+  campaign_id TEXT NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
+  reward_tier reward_tier NOT NULL,
+  eligibility_type TEXT NOT NULL CHECK (eligibility_type IN ('top3', 'score_threshold', 'ranking_window', 'completion_order')),
+  threshold_value DECIMAL(10,2),
+  ranking_window_hours INTEGER,
+  max_eligible_completions INTEGER,
+  is_active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- =====================================================
+-- 4D. TABLES D'ORGANISATIONS ET RELATIONS B2C/AGENCY (NOUVELLES)
+-- =====================================================
+
+-- Entreprises B2C
+CREATE TABLE companies (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+  company_name TEXT NOT NULL,
+  legal_name TEXT,
+  vat_number TEXT,
+  country TEXT NOT NULL,
+  address TEXT,
+  contact_email TEXT,
+  contact_phone TEXT,
+  website TEXT,
+  industry TEXT,
+  is_verified BOOLEAN DEFAULT FALSE,
+  verification_documents JSONB,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Agences B2C
+CREATE TABLE agencies (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+  agency_name TEXT NOT NULL,
+  legal_name TEXT,
+  vat_number TEXT,
+  country TEXT NOT NULL,
+  address TEXT,
+  contact_email TEXT,
+  contact_phone TEXT,
+  website TEXT,
+  services TEXT[],
+  is_verified BOOLEAN DEFAULT FALSE,
+  verification_documents JSONB,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Relations agence-client (une agence gère plusieurs entreprises)
+CREATE TABLE agency_clients (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+  agency_id TEXT NOT NULL REFERENCES agencies(id) ON DELETE CASCADE,
+  company_id TEXT NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  relationship_type TEXT DEFAULT 'client',
+  contract_start_date DATE,
+  contract_end_date DATE,
+  commission_rate DECIMAL(5,2),
+  is_active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Configuration des prix et options de campagne (persistance localStorage)
+CREATE TABLE campaign_pricing_configs (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+  campaign_id TEXT NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
+  unit_value DECIMAL(20,8),
+  net_profit DECIMAL(20,8),
+  max_completions INTEGER,
+  is_free_reward BOOLEAN DEFAULT FALSE,
+  no_reward BOOLEAN DEFAULT FALSE,
+  base_mint DECIMAL(10,2) DEFAULT 1000,
+  ai_option BOOLEAN DEFAULT FALSE,
+  ai_option_price DECIMAL(10,2) DEFAULT 500,
+  no_rewards_price DECIMAL(10,2) DEFAULT 1000,
+  total_price DECIMAL(10,2),
+  config_hash TEXT, -- Hash de la configuration pour éviter les doublons
+  is_finalized BOOLEAN DEFAULT FALSE, -- Configuré après paiement
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- =====================================================
 -- 5. TABLES DE MODERATION
 -- =====================================================
 
@@ -678,6 +980,51 @@ CREATE TABLE moderator_stakes (
   rewards_earned DECIMAL(20,8) DEFAULT 0,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- =====================================================
+-- 5C. TABLES DE STAKING AVANCÉ ET JUSTIFICATION (NOUVELLES)
+-- =====================================================
+
+-- Configuration du staking par campagne
+CREATE TABLE staking_configuration (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+  campaign_id TEXT NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
+  staking_currency TEXT DEFAULT 'USDC', -- USDC au début, puis WINC
+  min_stake_amount DECIMAL(20,8),
+  max_stake_amount DECIMAL(20,8),
+  lock_period_days INTEGER, -- Durée minimale du lock
+  reward_multiplier DECIMAL(5,2) DEFAULT 1.0,
+  slash_percentage DECIMAL(5,2) DEFAULT 0, -- Pourcentage de pénalité
+  slash_conditions JSONB, -- Conditions de pénalité
+  is_active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Justifications des votes de modération (V.1: simple, V.2: détaillé)
+CREATE TABLE moderation_vote_justifications (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+  vote_id TEXT NOT NULL REFERENCES moderation_votes(id) ON DELETE CASCADE,
+  justification_text TEXT, -- V.1: optionnel, V.2: obligatoire
+  confidence_level INTEGER CHECK (confidence_level >= 1 AND confidence_level <= 5),
+  decision_factors TEXT[], -- Facteurs qui ont influencé la décision
+  is_public BOOLEAN DEFAULT FALSE, -- Visible par les autres modérateurs
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Historique des changements de staking
+CREATE TABLE staking_history (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+  moderator_wallet TEXT NOT NULL,
+  campaign_id TEXT NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
+  action_type TEXT NOT NULL CHECK (action_type IN ('stake', 'unstake', 'lock', 'unlock', 'slash', 'reward')),
+  amount DECIMAL(20,8) NOT NULL,
+  previous_balance DECIMAL(20,8),
+  new_balance DECIMAL(20,8),
+  transaction_hash TEXT,
+  reason TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- =====================================================
@@ -798,6 +1145,58 @@ CREATE TABLE completion_deadlines (
   deadline_calculation_formula TEXT, -- Formule pour calculer la deadline basée sur le price pool
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- =====================================================
+-- 6D. TABLES DE SUIVI DES CONTENUS ET COMPLÉTIONS (NOUVELLES)
+-- =====================================================
+
+-- Métadonnées des vidéos de complétion
+CREATE TABLE completion_content_metadata (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+  completion_id TEXT NOT NULL REFERENCES completions(id) ON DELETE CASCADE,
+  storage_provider TEXT NOT NULL, -- Pinata, S3, etc.
+  content_cid TEXT, -- IPFS CID
+  content_hash TEXT, -- Hash du contenu
+  file_size BIGINT,
+  duration_seconds INTEGER,
+  resolution TEXT,
+  format TEXT,
+  transcode_status TEXT DEFAULT 'pending',
+  transcode_job_id TEXT,
+  thumbnail_url TEXT,
+  thumbnail_hash TEXT,
+  content_moderation_flags TEXT[], -- NSFW, copyright, etc.
+  moderation_score DECIMAL(5,2),
+  is_approved_for_use BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Tentatives de complétion (pour éviter le re-mint)
+CREATE TABLE completion_attempts (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+  campaign_id TEXT NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
+  completer_wallet TEXT NOT NULL,
+  attempt_number INTEGER DEFAULT 1,
+  previous_completion_id TEXT REFERENCES completions(id) ON DELETE SET NULL,
+  status TEXT DEFAULT 'in_progress',
+  started_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  completed_at TIMESTAMP WITH TIME ZONE,
+  is_current_attempt BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Scores de modération par completion (empêcher la réutilisation)
+CREATE TABLE completion_moderation_scores (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+  completion_id TEXT NOT NULL REFERENCES completions(id) ON DELETE CASCADE,
+  moderator_wallet TEXT NOT NULL,
+  score INTEGER CHECK (score >= 0 AND score <= 100),
+  score_hash TEXT UNIQUE NOT NULL, -- Hash du score pour empêcher la réutilisation
+  is_used BOOLEAN DEFAULT FALSE,
+  used_in_campaign_id TEXT REFERENCES campaigns(id) ON DELETE CASCADE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- =====================================================
@@ -1009,6 +1408,68 @@ CREATE TABLE deployed_contracts (
   is_active BOOLEAN DEFAULT TRUE,
   deployment_notes TEXT, -- Notes sur le déploiement et la configuration
   deployed_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- =====================================================
+-- 8C. TABLES D'INTÉGRATION BLOCKCHAIN AVANCÉE (NOUVELLES)
+-- =====================================================
+
+-- Mapping des réseaux de récompenses par campagne
+CREATE TABLE campaign_reward_networks (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+  campaign_id TEXT NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
+  reward_type reward_type NOT NULL,
+  blockchain_network TEXT NOT NULL, -- Toutes les blockchains supportées
+  contract_address TEXT,
+  token_standard token_standard,
+  is_active BOOLEAN DEFAULT TRUE,
+  gas_limit INTEGER,
+  estimated_gas_cost DECIMAL(20,8),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Queue de transactions blockchain
+CREATE TABLE blockchain_transaction_queue (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+  campaign_id TEXT NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
+  transaction_type TEXT NOT NULL CHECK (transaction_type IN ('reward_distribution', 'nft_mint', 'staking', 'governance')),
+  target_wallet TEXT NOT NULL,
+  amount DECIMAL(20,8),
+  token_address TEXT,
+  network TEXT NOT NULL,
+  gas_limit INTEGER,
+  gas_price DECIMAL(20,8),
+  priority INTEGER DEFAULT 1,
+  status TEXT DEFAULT 'pending',
+  retry_count INTEGER DEFAULT 0,
+  max_retries INTEGER DEFAULT 3,
+  next_retry_at TIMESTAMP WITH TIME ZONE,
+  transaction_hash TEXT,
+  idempotency_key TEXT UNIQUE NOT NULL,
+  error_message TEXT,
+  processed_at TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Receipts on-chain pour vérification/audit
+CREATE TABLE blockchain_transaction_receipts (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+  transaction_queue_id TEXT NOT NULL REFERENCES blockchain_transaction_queue(id) ON DELETE CASCADE,
+  transaction_hash TEXT NOT NULL,
+  network TEXT NOT NULL,
+  block_number BIGINT,
+  block_hash TEXT,
+  gas_used DECIMAL(20,8),
+  gas_price DECIMAL(20,8),
+  total_gas_cost DECIMAL(20,8),
+  status TEXT NOT NULL CHECK (status IN ('success', 'failed', 'reverted')),
+  logs JSONB, -- Logs décodés de la transaction
+  events JSONB, -- Événements émis par le smart contract
+  error_data JSONB, -- Données d'erreur si échec
+  confirmed_at TIMESTAMP WITH TIME ZONE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -1474,8 +1935,7 @@ COMMENT ON TABLE user_performance_tracking IS 'Suivi des performances utilisateu
 COMMENT ON TABLE workflow_states IS 'États et transitions de workflow avec données JSON';
 COMMENT ON TABLE system_notifications IS 'Notifications système avec priorités et expiration';
 COMMENT ON TABLE blockchain_networks IS 'Configuration des réseaux blockchain supportés';
-COMMENT ON TABLE deployed_contracts IS 'Smart contracts déployés avec vérification et ABI';
-COMMENT ON TABLE payment_processors IS 'Configuration des processeurs de paiement (Stripe, PayPal, etc.) avec frais et pays supportés';
+COMMENT ON TABLE deployed_contracts IS 'Smart contracts déployés (à configurer ultérieurement)';
 
 -- =====================================================
 -- 12C. COMMENTAIRES POUR LES NOUVELLES TABLES DE DÉTECTION ET SUPERVISION
@@ -1494,5 +1954,622 @@ COMMENT ON TABLE blockchain_networks IS 'Configuration des réseaux (Base: MINT 
 COMMENT ON TABLE deployed_contracts IS 'Smart contracts déployés (à configurer ultérieurement)';
 
 -- =====================================================
+-- 4F. TABLES DE WEBHOOKS, REMBOURSEMENTS ET FACTURATION (NOUVELLES)
+-- =====================================================
+
+-- Webhook events des processeurs de paiement
+CREATE TABLE payment_webhook_events (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+  processor_id TEXT NOT NULL REFERENCES payment_processors(id) ON DELETE CASCADE,
+  webhook_id TEXT UNIQUE NOT NULL,
+  event_type TEXT NOT NULL CHECK (event_type IN ('paid', 'failed', 'refunded', 'chargeback')),
+  payment_id TEXT,
+  amount DECIMAL(10,2),
+  currency TEXT,
+  status TEXT,
+  raw_data JSONB, -- Données brutes du webhook
+  processed BOOLEAN DEFAULT FALSE,
+  processed_at TIMESTAMP WITH TIME ZONE,
+  error_message TEXT,
+  retry_count INTEGER DEFAULT 0,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Remboursements et chargebacks
+CREATE TABLE payment_refunds (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+  mint_payment_id TEXT NOT NULL REFERENCES mint_payments(id) ON DELETE CASCADE,
+  refund_amount DECIMAL(10,2) NOT NULL,
+  refund_reason TEXT NOT NULL,
+  processor_refund_id TEXT,
+  refund_status TEXT DEFAULT 'pending',
+  processed_at TIMESTAMP WITH TIME ZONE,
+  chargeback_reason TEXT,
+  chargeback_amount DECIMAL(10,2),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Facturation B2B
+CREATE TABLE invoices (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+  invoice_number TEXT UNIQUE NOT NULL,
+  campaign_id TEXT NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
+  company_id TEXT REFERENCES companies(id) ON DELETE SET NULL,
+  agency_id TEXT REFERENCES agencies(id) ON DELETE SET NULL,
+  invoice_date DATE NOT NULL,
+  due_date DATE NOT NULL,
+  subtotal DECIMAL(10,2) NOT NULL,
+  tax_rate DECIMAL(5,4) DEFAULT 0,
+  tax_amount DECIMAL(10,2) DEFAULT 0,
+  total_amount DECIMAL(10,2) NOT NULL,
+  currency TEXT DEFAULT 'USD',
+  vat_id TEXT,
+  billing_address JSONB,
+  pdf_url TEXT,
+  is_paid BOOLEAN DEFAULT FALSE,
+  paid_at TIMESTAMP WITH TIME ZONE,
+  payment_method payment_method,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Lignes de facture
+CREATE TABLE invoice_line_items (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+  invoice_id TEXT NOT NULL REFERENCES invoices(id) ON DELETE CASCADE,
+  description TEXT NOT NULL,
+  quantity INTEGER DEFAULT 1,
+  unit_price DECIMAL(10,2) NOT NULL,
+  total_price DECIMAL(10,2) NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- =====================================================
 -- SCHEMA TERMINÉ - PRÊT POUR SUPABASE
 -- ===================================================== 
+
+-- Suivi des performances utilisateur
+CREATE TABLE user_performance_tracking (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+  user_wallet TEXT NOT NULL,
+  campaign_id TEXT NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
+  activity_type user_activity_type NOT NULL,
+  performance_score DECIMAL(5,2),
+  time_spent_minutes INTEGER,
+  success_rate DECIMAL(5,2),
+  recorded_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- =====================================================
+-- 6D. TABLES D'ANALYTICS ROI ET ANTI-SPAM (NOUVELLES)
+-- =====================================================
+
+-- Snapshots ROI pour calculs reproscriptibles
+CREATE TABLE roi_snapshots (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+  campaign_id TEXT NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
+  snapshot_timestamp TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  total_spend DECIMAL(20,8) NOT NULL, -- Prix du MINT initial
+  total_earned DECIMAL(20,8) NOT NULL, -- Ensemble des complétions mintées
+  roi_percentage DECIMAL(5,2) NOT NULL, -- 50% du prix payé par completeur
+  completions_count INTEGER DEFAULT 0,
+  average_completion_price DECIMAL(20,8),
+  roi_data JSONB, -- Données détaillées du calcul
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Rate limits et anti-spam
+CREATE TABLE rate_limits (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+  identifier TEXT NOT NULL, -- IP, wallet, email
+  identifier_type TEXT NOT NULL CHECK (identifier_type IN ('ip', 'wallet', 'email')),
+  action_type TEXT NOT NULL CHECK (action_type IN ('completion', 'moderation', 'staking', 'login')),
+  attempts_count INTEGER DEFAULT 1,
+  max_attempts INTEGER DEFAULT 1, -- 1 completion par wallet
+  window_start TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  window_end TIMESTAMP WITH TIME ZONE,
+  is_blocked BOOLEAN DEFAULT FALSE,
+  blocked_until TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Réputation IP pour détection de comportements suspects
+CREATE TABLE ip_reputation (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+  ip_address TEXT NOT NULL UNIQUE,
+  reputation_score ip_reputation_score DEFAULT 'neutral',
+  score_value INTEGER DEFAULT 50,
+  suspicious_activities INTEGER DEFAULT 0,
+  last_activity TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  is_blocked BOOLEAN DEFAULT FALSE,
+  blocked_reason TEXT,
+  blocked_until TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Historique des activités par IP
+CREATE TABLE ip_activity_log (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+  ip_address TEXT NOT NULL,
+  activity_type TEXT NOT NULL,
+  user_agent TEXT,
+  campaign_id TEXT REFERENCES campaigns(id) ON DELETE SET NULL,
+  wallet_address TEXT,
+  success BOOLEAN,
+  risk_score DECIMAL(5,2),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- =====================================================
+-- 7D. TABLES DE NOTIFICATIONS ET COMMUNICATION (NOUVELLES)
+-- =====================================================
+
+-- Canaux de notification configurés par utilisateur
+CREATE TABLE user_notification_channels (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+  user_wallet TEXT NOT NULL,
+  channel_type notification_channel NOT NULL,
+  channel_value TEXT NOT NULL, -- email, phone, discord webhook, etc.
+  is_active BOOLEAN DEFAULT TRUE,
+  preferences JSONB, -- Préférences de notification
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Logs des messages envoyés
+CREATE TABLE notification_message_logs (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+  notification_id TEXT NOT NULL REFERENCES system_notifications(id) ON DELETE CASCADE,
+  channel_type notification_channel NOT NULL,
+  recipient TEXT NOT NULL,
+  message_content TEXT NOT NULL,
+  status TEXT DEFAULT 'sent',
+  sent_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  delivered_at TIMESTAMP WITH TIME ZONE,
+  error_message TEXT,
+  retry_count INTEGER DEFAULT 0,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Templates de notifications multilingues
+CREATE TABLE notification_templates (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+  template_key TEXT NOT NULL UNIQUE,
+  template_name TEXT NOT NULL,
+  subject TEXT,
+  message_template TEXT NOT NULL,
+  variables TEXT[], -- Variables disponibles dans le template
+  locale TEXT DEFAULT 'en',
+  is_active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Traductions des templates
+CREATE TABLE notification_template_translations (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+  template_id TEXT NOT NULL REFERENCES notification_templates(id) ON DELETE CASCADE,
+  locale TEXT NOT NULL,
+  subject TEXT,
+  message_template TEXT NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(template_id, locale)
+);
+
+-- =====================================================
+-- 7E. TABLES D'INTERNATIONALISATION ET CONFORMITÉ (NOUVELLES)
+-- =====================================================
+
+-- Locales et langues supportées
+CREATE TABLE supported_locales (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+  locale_code TEXT NOT NULL UNIQUE, -- en, fr, es, de, etc.
+  language_name TEXT NOT NULL,
+  native_name TEXT NOT NULL,
+  is_active BOOLEAN DEFAULT TRUE,
+  is_default BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Traductions des contenus de campagne
+CREATE TABLE campaign_translations (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+  campaign_id TEXT NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
+  locale TEXT NOT NULL,
+  title TEXT,
+  description TEXT,
+  guidelines TEXT,
+  starting_story TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(campaign_id, locale)
+);
+
+-- Consentements RGPD
+CREATE TABLE user_consents (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+  user_wallet TEXT NOT NULL,
+  consent_purpose consent_purpose NOT NULL,
+  consent_version TEXT NOT NULL,
+  is_granted BOOLEAN NOT NULL,
+  granted_at TIMESTAMP WITH TIME ZONE,
+  revoked_at TIMESTAMP WITH TIME ZONE,
+  ip_address TEXT,
+  user_agent TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Politiques de rétention des données
+CREATE TABLE data_retention_policies (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+  data_type TEXT NOT NULL, -- user_data, campaign_data, completion_data, etc.
+  retention_period_days INTEGER NOT NULL,
+  deletion_strategy TEXT DEFAULT 'soft_delete',
+  is_active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Acceptation des CGU/Privacy
+CREATE TABLE policy_acceptances (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+  user_wallet TEXT NOT NULL,
+  policy_type policy_type NOT NULL,
+  policy_version TEXT NOT NULL,
+  accepted_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  ip_address TEXT,
+  user_agent TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Versions des politiques
+CREATE TABLE policy_versions (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+  policy_type policy_type NOT NULL,
+  version TEXT NOT NULL,
+  effective_date DATE NOT NULL,
+  content_url TEXT,
+  is_active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(policy_type, version)
+);
+
+-- =====================================================
+-- 7F. TABLES DE PERFORMANCE ET COÛTS (NOUVELLES)
+-- =====================================================
+
+-- Coûts détaillés par campagne
+CREATE TABLE campaign_costs (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+  campaign_id TEXT NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
+  cost_category cost_category NOT NULL,
+  cost_amount DECIMAL(20,8) NOT NULL,
+  cost_currency TEXT DEFAULT 'USD',
+  cost_details JSONB, -- Détails du coût
+  billing_period TEXT, -- hourly, daily, monthly, one_time
+  incurred_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  is_billed BOOLEAN DEFAULT FALSE,
+  invoice_id TEXT REFERENCES invoices(id) ON DELETE SET NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Métriques de performance système
+CREATE TABLE system_performance_metrics (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+  metric_name TEXT NOT NULL,
+  metric_value DECIMAL(20,8),
+  metric_unit TEXT,
+  metric_period metric_period DEFAULT 'hourly',
+  recorded_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  metadata JSONB, -- Métadonnées supplémentaires
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Monitoring des ressources
+CREATE TABLE resource_monitoring (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+  resource_type TEXT NOT NULL, -- storage, bandwidth, compute, database
+  resource_name TEXT NOT NULL,
+  current_usage DECIMAL(20,8),
+  max_capacity DECIMAL(20,8),
+  usage_percentage DECIMAL(5,2),
+  alert_threshold DECIMAL(5,2) DEFAULT 80,
+  is_alert_triggered BOOLEAN DEFAULT FALSE,
+  recorded_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Logs d'erreurs système
+CREATE TABLE system_error_logs (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+  error_type TEXT NOT NULL,
+  error_message TEXT NOT NULL,
+  stack_trace TEXT,
+  user_wallet TEXT,
+  campaign_id TEXT REFERENCES campaigns(id) ON DELETE SET NULL,
+  ip_address TEXT,
+  user_agent TEXT,
+  severity TEXT CHECK (severity IN ('low', 'medium', 'high', 'critical')),
+  is_resolved BOOLEAN DEFAULT FALSE,
+  resolved_at TIMESTAMP WITH TIME ZONE,
+  resolution_notes TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- =====================================================
+-- SCHEMA SUPABASE COMPLET - PRÊT POUR IMPLÉMENTATION
+-- =====================================================
+
+-- Index sur les analytics ROI et détection
+CREATE INDEX idx_campaign_analytics_roi ON campaign_analytics((roi_data->>'roi_percentage'));
+CREATE INDEX idx_campaign_analytics_suspicious ON campaign_analytics((suspicious_patterns));
+CREATE INDEX idx_campaign_analytics_behavior ON campaign_analytics((moderation_behavior_analysis->>'risk_score'));
+
+-- =====================================================
+-- 9D. INDEX POUR LES NOUVELLES TABLES AJOUTÉES
+-- =====================================================
+
+-- Index sur les rôles utilisateur
+CREATE INDEX idx_user_roles_wallet ON user_roles(wallet_address);
+CREATE INDEX idx_user_roles_role ON user_roles(role);
+CREATE INDEX idx_user_roles_campaign ON user_roles(campaign_id);
+CREATE INDEX idx_user_roles_active ON user_roles(is_active);
+
+-- Index sur les vérifications KYC
+CREATE INDEX idx_kyc_verifications_wallet ON kyc_verifications(wallet_address);
+CREATE INDEX idx_kyc_verifications_type ON kyc_verifications(verification_type);
+CREATE INDEX idx_kyc_verifications_status ON kyc_verifications(kyc_status);
+
+-- Index sur les signatures de wallet
+CREATE INDEX idx_wallet_signatures_address ON wallet_signatures(wallet_address);
+CREATE INDEX idx_wallet_signatures_nonce ON wallet_signatures(nonce);
+CREATE INDEX idx_wallet_signatures_valid ON wallet_signatures(is_valid);
+
+-- Index sur les entreprises et agences
+CREATE INDEX idx_companies_name ON companies(company_name);
+CREATE INDEX idx_companies_vat ON companies(vat_number);
+CREATE INDEX idx_companies_country ON companies(country);
+CREATE INDEX idx_agencies_name ON agencies(agency_name);
+CREATE INDEX idx_agencies_vat ON agencies(vat_number);
+
+-- Index sur les relations agence-client
+CREATE INDEX idx_agency_clients_agency ON agency_clients(agency_id);
+CREATE INDEX idx_agency_clients_company ON agency_clients(company_id);
+CREATE INDEX idx_agency_clients_active ON agency_clients(is_active);
+
+-- Index sur la configuration des prix
+CREATE INDEX idx_campaign_pricing_configs_campaign ON campaign_pricing_configs(campaign_id);
+CREATE INDEX idx_campaign_pricing_configs_finalized ON campaign_pricing_configs(is_finalized);
+CREATE INDEX idx_campaign_pricing_configs_hash ON campaign_pricing_configs(config_hash);
+
+-- Index sur les livraisons de récompenses
+CREATE INDEX idx_digital_access_deliveries_completion ON digital_access_deliveries(completion_id);
+CREATE INDEX idx_digital_access_deliveries_redeemed ON digital_access_deliveries(is_redeemed);
+CREATE INDEX idx_physical_access_deliveries_completion ON physical_access_deliveries(completion_id);
+CREATE INDEX idx_physical_access_deliveries_status ON physical_access_deliveries(fulfillment_status);
+
+-- Index sur les jobs de fulfillment
+CREATE INDEX idx_reward_fulfillment_jobs_delivery ON reward_fulfillment_jobs(physical_delivery_id);
+CREATE INDEX idx_reward_fulfillment_jobs_type ON reward_fulfillment_jobs(job_type);
+CREATE INDEX idx_reward_fulfillment_jobs_status ON reward_fulfillment_jobs(status);
+
+-- Index sur les assignations NFT
+CREATE INDEX idx_completion_nft_assignments_completion ON completion_nft_assignments(completion_id);
+CREATE INDEX idx_completion_nft_assignments_status ON completion_nft_assignments(minting_status);
+CREATE INDEX idx_completion_nft_assignments_retry ON completion_nft_assignments(retry_count);
+
+-- Index sur les règles d'éligibilité
+CREATE INDEX idx_reward_eligibility_rules_campaign ON reward_eligibility_rules(campaign_id);
+CREATE INDEX idx_reward_eligibility_rules_tier ON reward_eligibility_rules(reward_tier);
+CREATE INDEX idx_reward_eligibility_rules_type ON reward_eligibility_rules(eligibility_type);
+
+-- Index sur les métadonnées de contenu
+CREATE INDEX idx_completion_content_metadata_completion ON completion_content_metadata(completion_id);
+CREATE INDEX idx_completion_content_metadata_provider ON completion_content_metadata(storage_provider);
+CREATE INDEX idx_completion_content_metadata_transcode ON completion_content_metadata(transcode_status);
+
+-- Index sur les tentatives de complétion
+CREATE INDEX idx_completion_attempts_campaign ON completion_attempts(campaign_id);
+CREATE INDEX idx_completion_attempts_wallet ON completion_attempts(completer_wallet);
+CREATE INDEX idx_completion_attempts_current ON completion_attempts(is_current_attempt);
+
+-- Index sur les scores de modération
+CREATE INDEX idx_completion_moderation_scores_completion ON completion_moderation_scores(completion_id);
+CREATE INDEX idx_completion_moderation_scores_moderator ON completion_moderation_scores(moderator_wallet);
+CREATE INDEX idx_completion_moderation_scores_used ON completion_moderation_scores(is_used);
+
+-- Index sur la configuration du staking
+CREATE INDEX idx_staking_configuration_campaign ON staking_configuration(campaign_id);
+CREATE INDEX idx_staking_configuration_currency ON staking_configuration(staking_currency);
+CREATE INDEX idx_staking_configuration_active ON staking_configuration(is_active);
+
+-- Index sur les justifications des votes
+CREATE INDEX idx_moderation_vote_justifications_vote ON moderation_vote_justifications(vote_id);
+CREATE INDEX idx_moderation_vote_justifications_public ON moderation_vote_justifications(is_public);
+
+-- Index sur l'historique du staking
+CREATE INDEX idx_staking_history_wallet ON staking_history(moderator_wallet);
+CREATE INDEX idx_staking_history_campaign ON staking_history(campaign_id);
+CREATE INDEX idx_staking_history_type ON staking_history(action_type);
+
+-- Index sur les webhooks de paiement
+CREATE INDEX idx_payment_webhook_events_processor ON payment_webhook_events(processor_id);
+CREATE INDEX idx_payment_webhook_events_type ON payment_webhook_events(event_type);
+CREATE INDEX idx_payment_webhook_events_processed ON payment_webhook_events(processed);
+
+-- Index sur les remboursements
+CREATE INDEX idx_payment_refunds_payment ON payment_refunds(mint_payment_id);
+CREATE INDEX idx_payment_refunds_status ON payment_refunds(refund_status);
+
+-- Index sur les factures
+CREATE INDEX idx_invoices_campaign ON invoices(campaign_id);
+CREATE INDEX idx_invoices_company ON invoices(company_id);
+CREATE INDEX idx_invoices_agency ON invoices(agency_id);
+CREATE INDEX idx_invoices_number ON invoices(invoice_number);
+CREATE INDEX idx_invoices_paid ON invoices(is_paid);
+
+-- Index sur les lignes de facture
+CREATE INDEX idx_invoice_line_items_invoice ON invoice_line_items(invoice_id);
+
+-- Index sur les réseaux de récompenses
+CREATE INDEX idx_campaign_reward_networks_campaign ON campaign_reward_networks(campaign_id);
+CREATE INDEX idx_campaign_reward_networks_type ON campaign_reward_networks(reward_type);
+CREATE INDEX idx_campaign_reward_networks_network ON campaign_reward_networks(blockchain_network);
+
+-- Index sur la queue de transactions
+CREATE INDEX idx_blockchain_transaction_queue_campaign ON blockchain_transaction_queue(campaign_id);
+CREATE INDEX idx_blockchain_transaction_queue_type ON blockchain_transaction_queue(transaction_type);
+CREATE INDEX idx_blockchain_transaction_queue_status ON blockchain_transaction_queue(status);
+CREATE INDEX idx_blockchain_transaction_queue_priority ON blockchain_transaction_queue(priority);
+CREATE INDEX idx_blockchain_transaction_queue_idempotency ON blockchain_transaction_queue(idempotency_key);
+
+-- Index sur les receipts blockchain
+CREATE INDEX idx_blockchain_transaction_receipts_queue ON blockchain_transaction_receipts(transaction_queue_id);
+CREATE INDEX idx_blockchain_transaction_receipts_hash ON blockchain_transaction_receipts(transaction_hash);
+CREATE INDEX idx_blockchain_transaction_receipts_status ON blockchain_transaction_receipts(status);
+
+-- Index sur les snapshots ROI
+CREATE INDEX idx_roi_snapshots_campaign ON roi_snapshots(campaign_id);
+CREATE INDEX idx_roi_snapshots_timestamp ON roi_snapshots(snapshot_timestamp);
+CREATE INDEX idx_roi_snapshots_percentage ON roi_snapshots(roi_percentage);
+
+-- Index sur les rate limits
+CREATE INDEX idx_rate_limits_identifier ON rate_limits(identifier);
+CREATE INDEX idx_rate_limits_type ON rate_limits(identifier_type);
+CREATE INDEX idx_rate_limits_action ON rate_limits(action_type);
+CREATE INDEX idx_rate_limits_blocked ON rate_limits(is_blocked);
+
+-- Index sur la réputation IP
+CREATE INDEX idx_ip_reputation_address ON ip_reputation(ip_address);
+CREATE INDEX idx_ip_reputation_score ON ip_reputation(reputation_score);
+CREATE INDEX idx_ip_reputation_blocked ON ip_reputation(is_blocked);
+
+-- Index sur les logs d'activité IP
+CREATE INDEX idx_ip_activity_log_address ON ip_activity_log(ip_address);
+CREATE INDEX idx_ip_activity_log_type ON ip_activity_log(activity_type);
+CREATE INDEX idx_ip_activity_log_timestamp ON ip_activity_log(created_at);
+
+-- Index sur les canaux de notification
+CREATE INDEX idx_user_notification_channels_wallet ON user_notification_channels(user_wallet);
+CREATE INDEX idx_user_notification_channels_type ON user_notification_channels(channel_type);
+CREATE INDEX idx_user_notification_channels_active ON user_notification_channels(is_active);
+
+-- Index sur les logs de messages
+CREATE INDEX idx_notification_message_logs_notification ON notification_message_logs(notification_id);
+CREATE INDEX idx_notification_message_logs_channel ON notification_message_logs(channel_type);
+CREATE INDEX idx_notification_message_logs_status ON notification_message_logs(status);
+
+-- Index sur les templates de notification
+CREATE INDEX idx_notification_templates_key ON notification_templates(template_key);
+CREATE INDEX idx_notification_templates_locale ON notification_templates(locale);
+CREATE INDEX idx_notification_templates_active ON notification_templates(is_active);
+
+-- Index sur les traductions de templates
+CREATE INDEX idx_notification_template_translations_template ON notification_template_translations(template_id);
+CREATE INDEX idx_notification_template_translations_locale ON notification_template_translations(locale);
+
+-- Index sur les locales supportées
+CREATE INDEX idx_supported_locales_code ON supported_locales(locale_code);
+CREATE INDEX idx_supported_locales_active ON supported_locales(is_active);
+CREATE INDEX idx_supported_locales_default ON supported_locales(is_default);
+
+-- Index sur les traductions de campagnes
+CREATE INDEX idx_campaign_translations_campaign ON campaign_translations(campaign_id);
+CREATE INDEX idx_campaign_translations_locale ON campaign_translations(locale);
+
+-- Index sur les consentements utilisateur
+CREATE INDEX idx_user_consents_wallet ON user_consents(user_wallet);
+CREATE INDEX idx_user_consents_purpose ON user_consents(consent_purpose);
+CREATE INDEX idx_user_consents_granted ON user_consents(is_granted);
+
+-- Index sur les politiques de rétention
+CREATE INDEX idx_data_retention_policies_type ON data_retention_policies(data_type);
+CREATE INDEX idx_data_retention_policies_active ON data_retention_policies(is_active);
+
+-- Index sur les acceptations de politiques
+CREATE INDEX idx_policy_acceptances_wallet ON policy_acceptances(user_wallet);
+CREATE INDEX idx_policy_acceptances_type ON policy_acceptances(policy_type);
+CREATE INDEX idx_policy_acceptances_version ON policy_acceptances(policy_version);
+
+-- Index sur les versions de politiques
+CREATE INDEX idx_policy_versions_type ON policy_versions(policy_type);
+CREATE INDEX idx_policy_versions_active ON policy_versions(is_active);
+
+-- Index sur les coûts de campagne
+CREATE INDEX idx_campaign_costs_campaign ON campaign_costs(campaign_id);
+CREATE INDEX idx_campaign_costs_category ON campaign_costs(cost_category);
+CREATE INDEX idx_campaign_costs_billed ON campaign_costs(is_billed);
+
+-- Index sur les métriques de performance
+CREATE INDEX idx_system_performance_metrics_name ON system_performance_metrics(metric_name);
+CREATE INDEX idx_system_performance_metrics_period ON system_performance_metrics(metric_period);
+
+-- Index sur le monitoring des ressources
+CREATE INDEX idx_resource_monitoring_type ON resource_monitoring(resource_type);
+CREATE INDEX idx_resource_monitoring_name ON resource_monitoring(resource_name);
+CREATE INDEX idx_resource_monitoring_alert ON resource_monitoring(is_alert_triggered);
+
+-- Index sur les logs d'erreurs système
+CREATE INDEX idx_system_error_logs_type ON system_error_logs(error_type);
+CREATE INDEX idx_system_error_logs_severity ON system_error_logs(severity);
+CREATE INDEX idx_system_error_logs_resolved ON system_error_logs(is_resolved);
+
+-- =====================================================
+-- 10D. TRIGGERS POUR TOUTES LES NOUVELLES TABLES
+-- =====================================================
+
+-- Triggers pour les tables d'identité et rôles
+CREATE TRIGGER update_kyc_verifications_updated_at BEFORE UPDATE ON kyc_verifications FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- Triggers pour les tables d'organisations
+CREATE TRIGGER update_companies_updated_at BEFORE UPDATE ON companies FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_agencies_updated_at BEFORE UPDATE ON agencies FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_agency_clients_updated_at BEFORE UPDATE ON agency_clients FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_campaign_pricing_configs_updated_at BEFORE UPDATE ON campaign_pricing_configs FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- Triggers pour les tables de récompenses
+CREATE TRIGGER update_digital_access_deliveries_updated_at BEFORE UPDATE ON digital_access_deliveries FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_physical_access_deliveries_updated_at BEFORE UPDATE ON physical_access_deliveries FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_reward_fulfillment_jobs_updated_at BEFORE UPDATE ON reward_fulfillment_jobs FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_completion_nft_assignments_updated_at BEFORE UPDATE ON completion_nft_assignments FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_reward_eligibility_rules_updated_at BEFORE UPDATE ON reward_eligibility_rules FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- Triggers pour les tables de contenu
+CREATE TRIGGER update_completion_content_metadata_updated_at BEFORE UPDATE ON completion_content_metadata FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- Triggers pour les tables de staking
+CREATE TRIGGER update_staking_configuration_updated_at BEFORE UPDATE ON staking_configuration FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- Triggers pour les tables de paiements
+CREATE TRIGGER update_payment_webhook_events_updated_at BEFORE UPDATE ON payment_webhook_events FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_payment_refunds_updated_at BEFORE UPDATE ON payment_refunds FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_invoices_updated_at BEFORE UPDATE ON invoices FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- Triggers pour les tables blockchain
+CREATE TRIGGER update_campaign_reward_networks_updated_at BEFORE UPDATE ON campaign_reward_networks FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_blockchain_transaction_queue_updated_at BEFORE UPDATE ON blockchain_transaction_queue FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- Triggers pour les tables d'analytics
+CREATE TRIGGER update_roi_snapshots_updated_at BEFORE UPDATE ON roi_snapshots FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_rate_limits_updated_at BEFORE UPDATE ON rate_limits FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_ip_reputation_updated_at BEFORE UPDATE ON ip_reputation FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- Triggers pour les tables de notifications
+CREATE TRIGGER update_user_notification_channels_updated_at BEFORE UPDATE ON user_notification_channels FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_notification_templates_updated_at BEFORE UPDATE ON notification_templates FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_notification_template_translations_updated_at BEFORE UPDATE ON notification_template_translations FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- Triggers pour les tables d'internationalisation
+CREATE TRIGGER update_campaign_translations_updated_at BEFORE UPDATE ON campaign_translations FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_user_consents_updated_at BEFORE UPDATE ON user_consents FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_data_retention_policies_updated_at BEFORE UPDATE ON data_retention_policies FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- Triggers pour les tables de performance
+CREATE TRIGGER update_campaign_costs_updated_at BEFORE UPDATE ON campaign_costs FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
