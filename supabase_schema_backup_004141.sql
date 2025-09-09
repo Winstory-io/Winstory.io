@@ -2487,3 +2487,4 @@ CREATE TRIGGER update_user_consents_updated_at BEFORE UPDATE ON user_consents FO
 CREATE TRIGGER update_data_retention_policies_updated_at BEFORE UPDATE ON data_retention_policies FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Triggers pour les tables de performance
+CREATE TRIGGER update_campaign_costs_updated_at BEFORE UPDATE ON campaign_costs FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();

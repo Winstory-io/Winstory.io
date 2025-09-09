@@ -10,12 +10,6 @@
       "static/chunks/main-app.js",
       "static/chunks/app/page.js"
     ],
-    "/creation/agencyb2c/standardrewards/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/css/app/creation/agencyb2c/standardrewards/page.css",
-      "static/chunks/app/creation/agencyb2c/standardrewards/page.js"
-    ],
     "/welcome/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
@@ -30,6 +24,31 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/api/auth/[...nextauth]/route.js"
+    ],
+    "/mywin/layout": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/mywin/layout.js"
+    ],
+    "/mywin/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/mywin/page.js"
+    ],
+    "/mywin/creations/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/mywin/creations/page.js"
+    ],
+    "/mywin/moderations/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/mywin/moderations/page.js"
+    ],
+    "/mywin/completions/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/mywin/completions/page.js"
     ]
   }
 }
