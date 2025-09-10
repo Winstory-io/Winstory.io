@@ -1685,8 +1685,8 @@ CREATE TRIGGER update_payment_processors_updated_at BEFORE UPDATE ON payment_pro
 -- 11. VUES UTILES POUR LES WORKFLOWS
 -- =====================================================
 
--- Vue des campagnes avec toutes les informations
-CREATE VIEW campaigns_full AS
+-- Correction de la vue campaigns_full
+CREATE OR REPLACE VIEW campaigns_full AS
 SELECT 
   c.*,
   ci.company_name,
@@ -1706,14 +1706,14 @@ SELECT
   cpc.no_reward,
   cpc.base_mint,
   cpc.ai_option,
-  mp.stakers_required,
-  mp.stakers,
-  mp.staked_amount,
-  mp.mint_price,
+  mp.total_stakers as stakers_required,
+  mp.active_stakers as stakers,
+  mp.staking_pool_total as staked_amount,
+  cpc.base_mint as mint_price,
   mp.valid_votes,
   mp.refuse_votes,
   mp.total_votes,
-  mp.average_score
+  mp.current_score as average_score
 FROM campaigns c
 LEFT JOIN creator_infos ci ON c.id = ci.campaign_id
 LEFT JOIN campaign_contents cc ON c.id = cc.campaign_id
@@ -1721,8 +1721,8 @@ LEFT JOIN campaign_metadata cm ON c.id = cm.campaign_id
 LEFT JOIN campaign_pricing_configs cpc ON c.id = cpc.campaign_id
 LEFT JOIN moderation_progress mp ON c.id = mp.campaign_id;
 
--- Vue des récompenses consolidées
-CREATE VIEW rewards_summary AS
+-- Correction de la vue rewards_summary
+CREATE OR REPLACE VIEW rewards_summary AS
 SELECT 
   c.id as campaign_id,
   c.title as campaign_title,
@@ -1731,8 +1731,8 @@ SELECT
   tr.reward_tier,
   tr.token_name,
   tr.blockchain,
-  tr.amount_per_user,
-  tr.total_amount
+  tr.amount_per_user::TEXT as amount_per_user,  -- Convertir numeric en text
+  tr.total_amount::TEXT as total_amount          -- Convertir numeric en text
 FROM campaigns c
 JOIN token_rewards tr ON c.id = tr.campaign_id
 UNION ALL
@@ -1744,8 +1744,8 @@ SELECT
   ir.reward_tier,
   ir.item_name,
   ir.blockchain,
-  ir.amount_per_user::TEXT as amount_per_user,
-  ir.total_amount::TEXT as total_amount
+  ir.amount_per_user::TEXT as amount_per_user,   -- Déjà en text
+  ir.total_amount::TEXT as total_amount          -- Déjà en text
 FROM campaigns c
 JOIN item_rewards ir ON c.id = ir.campaign_id
 UNION ALL
@@ -1802,10 +1802,24 @@ LEFT JOIN completion_validation_conditions cvc ON co.id = cvc.completion_id
 LEFT JOIN completion_moderation_scores mcs ON co.id = mcs.completion_id
 GROUP BY co.id, c.title, c.creator_type, cvc.condition_1_stakers_voted, cvc.condition_2_staking_pool_exceeds_unit_value, cvc.condition_3_majority_ratio_met, cvc.all_conditions_met, cvc.stakers_count, cvc.staking_pool_amount, cvc.unit_value, cvc.valid_votes_count, cvc.refuse_votes_count, cvc.majority_ratio, cvc.validation_timestamp;
 
--- Vue des complétions validées prêtes pour récompenses
-CREATE VIEW validated_completions_for_rewards AS
+-- Vue des complétions validées prêtes pour récompenses (CORRIGÉE)
+CREATE OR REPLACE VIEW validated_completions_for_rewards AS
 SELECT 
-  co.*,
+  co.id,
+  co.original_campaign_id,
+  co.completer_wallet,
+  co.title,
+  co.video_url,
+  co.thumbnail_url,
+  co.status,
+  co.score_avg,
+  co.roi_earned,
+  co.validation_status,
+  co.validation_conditions_met,
+  co.validation_date,
+  co.rejection_reason,
+  co.created_at,
+  co.updated_at,
   c.title as campaign_title,
   c.creator_type,
   cvc.validation_timestamp,
@@ -1822,13 +1836,26 @@ WHERE cvc.all_conditions_met = TRUE
   AND co.validation_status = 'validated'
 GROUP BY co.id, c.title, c.creator_type, cvc.validation_timestamp, cvc.stakers_count, cvc.majority_ratio;
 
--- Vue des complétions rejetées
-CREATE VIEW rejected_completions AS
+--- Vue des complétions rejetées (CORRIGÉE)
+CREATE OR REPLACE VIEW rejected_completions AS
 SELECT 
-  co.*,
+  co.id,
+  co.original_campaign_id,
+  co.completer_wallet,
+  co.title,
+  co.video_url,
+  co.thumbnail_url,
+  co.status,
+  co.score_avg,
+  co.roi_earned,
+  co.validation_status,
+  co.validation_conditions_met,
+  co.validation_date,
+  co.rejection_reason,  -- On garde rejection_reason une seule fois
+  co.created_at,
+  co.updated_at,
   c.title as campaign_title,
   c.creator_type,
-  cvc.rejection_reason,
   cvc.validation_timestamp,
   cvc.stakers_count,
   cvc.valid_votes_count,
@@ -1839,7 +1866,7 @@ JOIN campaigns c ON co.original_campaign_id = c.id
 LEFT JOIN completion_validation_conditions cvc ON co.id = cvc.completion_id
 WHERE co.status = 'rejected' 
   OR (cvc.all_conditions_met = TRUE AND cvc.valid_votes_count < cvc.refuse_votes_count);
-
+  
 -- =====================================================
 -- 12. COMMENTAIRES ET DOCUMENTATION
 -- =====================================================
