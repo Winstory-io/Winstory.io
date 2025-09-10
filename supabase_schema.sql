@@ -1866,7 +1866,7 @@ JOIN campaigns c ON co.original_campaign_id = c.id
 LEFT JOIN completion_validation_conditions cvc ON co.id = cvc.completion_id
 WHERE co.status = 'rejected' 
   OR (cvc.all_conditions_met = TRUE AND cvc.valid_votes_count < cvc.refuse_votes_count);
-  
+
 -- =====================================================
 -- 12. COMMENTAIRES ET DOCUMENTATION
 -- =====================================================
@@ -2258,7 +2258,6 @@ CREATE TABLE system_error_logs (
 -- 9D. INDEX POUR LES NOUVELLES TABLES AJOUTÉES
 -- =====================================================
 
--- Index sur les rôles utilisateur
 CREATE INDEX IF NOT EXISTS idx_user_roles_wallet ON user_roles(wallet_address);
 CREATE INDEX IF NOT EXISTS idx_user_roles_role ON user_roles(role);
 CREATE INDEX IF NOT EXISTS idx_user_roles_campaign ON user_roles(campaign_id);
@@ -2288,8 +2287,6 @@ CREATE INDEX IF NOT EXISTS idx_agency_clients_active ON agency_clients(is_active
 
 -- Index sur la configuration des prix
 CREATE INDEX IF NOT EXISTS idx_campaign_pricing_configs_campaign ON campaign_pricing_configs(campaign_id);
-CREATE INDEX IF NOT EXISTS idx_campaign_pricing_configs_finalized ON campaign_pricing_configs(is_finalized);
-CREATE INDEX IF NOT EXISTS idx_campaign_pricing_configs_hash ON campaign_pricing_configs(config_hash);
 
 -- Index sur les livraisons de récompenses
 CREATE INDEX IF NOT EXISTS idx_digital_access_deliveries_completion ON digital_access_deliveries(completion_id);
@@ -2379,8 +2376,7 @@ CREATE INDEX IF NOT EXISTS idx_blockchain_transaction_receipts_status ON blockch
 
 -- Index sur les snapshots ROI
 CREATE INDEX IF NOT EXISTS idx_roi_snapshots_campaign ON roi_snapshots(campaign_id);
-CREATE INDEX IF NOT EXISTS idx_roi_snapshots_timestamp ON roi_snapshots(snapshot_timestamp);
-CREATE INDEX IF NOT EXISTS idx_roi_snapshots_percentage ON roi_snapshots(roi_percentage);
+CREATE INDEX IF NOT EXISTS idx_roi_snapshots_timestamp ON roi_snapshots(recorded_at);
 
 -- Index sur les rate limits
 CREATE INDEX IF NOT EXISTS idx_rate_limits_identifier ON rate_limits(identifier);
@@ -2468,49 +2464,89 @@ CREATE INDEX IF NOT EXISTS idx_system_error_logs_resolved ON system_error_logs(i
 -- =====================================================
 
 -- Triggers pour les tables d'identité et rôles
+DROP TRIGGER IF EXISTS update_kyc_verifications_updated_at ON kyc_verifications;
 CREATE TRIGGER update_kyc_verifications_updated_at BEFORE UPDATE ON kyc_verifications FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Triggers pour les tables d'organisations
+DROP TRIGGER IF EXISTS update_companies_updated_at ON companies;
 CREATE TRIGGER update_companies_updated_at BEFORE UPDATE ON companies FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_agencies_updated_at ON agencies;
 CREATE TRIGGER update_agencies_updated_at BEFORE UPDATE ON agencies FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_agency_clients_updated_at ON agency_clients;
 CREATE TRIGGER update_agency_clients_updated_at BEFORE UPDATE ON agency_clients FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_campaign_pricing_configs_updated_at ON campaign_pricing_configs;
 CREATE TRIGGER update_campaign_pricing_configs_updated_at BEFORE UPDATE ON campaign_pricing_configs FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Triggers pour les tables de récompenses
+DROP TRIGGER IF EXISTS update_digital_access_deliveries_updated_at ON digital_access_deliveries;
 CREATE TRIGGER update_digital_access_deliveries_updated_at BEFORE UPDATE ON digital_access_deliveries FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_physical_access_deliveries_updated_at ON physical_access_deliveries;
 CREATE TRIGGER update_physical_access_deliveries_updated_at BEFORE UPDATE ON physical_access_deliveries FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_reward_fulfillment_jobs_updated_at ON reward_fulfillment_jobs;
 CREATE TRIGGER update_reward_fulfillment_jobs_updated_at BEFORE UPDATE ON reward_fulfillment_jobs FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_completion_nft_assignments_updated_at ON completion_nft_assignments;
 CREATE TRIGGER update_completion_nft_assignments_updated_at BEFORE UPDATE ON completion_nft_assignments FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_reward_eligibility_rules_updated_at ON reward_eligibility_rules;
 CREATE TRIGGER update_reward_eligibility_rules_updated_at BEFORE UPDATE ON reward_eligibility_rules FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Triggers pour les tables de contenu
+DROP TRIGGER IF EXISTS update_completion_content_metadata_updated_at ON completion_content_metadata;
 CREATE TRIGGER update_completion_content_metadata_updated_at BEFORE UPDATE ON completion_content_metadata FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Triggers pour les tables de staking
+DROP TRIGGER IF EXISTS update_staking_configuration_updated_at ON staking_configuration;
 CREATE TRIGGER update_staking_configuration_updated_at BEFORE UPDATE ON staking_configuration FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Triggers pour les tables de paiements
+DROP TRIGGER IF EXISTS update_payment_webhook_events_updated_at ON payment_webhook_events;
 CREATE TRIGGER update_payment_webhook_events_updated_at BEFORE UPDATE ON payment_webhook_events FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_payment_refunds_updated_at ON payment_refunds;
 CREATE TRIGGER update_payment_refunds_updated_at BEFORE UPDATE ON payment_refunds FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_invoices_updated_at ON invoices;
 CREATE TRIGGER update_invoices_updated_at BEFORE UPDATE ON invoices FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Triggers pour les tables blockchain
+DROP TRIGGER IF EXISTS update_campaign_reward_networks_updated_at ON campaign_reward_networks;
 CREATE TRIGGER update_campaign_reward_networks_updated_at BEFORE UPDATE ON campaign_reward_networks FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_blockchain_transaction_queue_updated_at ON blockchain_transaction_queue;
 CREATE TRIGGER update_blockchain_transaction_queue_updated_at BEFORE UPDATE ON blockchain_transaction_queue FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Triggers pour les tables d'analytics
+DROP TRIGGER IF EXISTS update_roi_snapshots_updated_at ON roi_snapshots;
 CREATE TRIGGER update_roi_snapshots_updated_at BEFORE UPDATE ON roi_snapshots FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_rate_limits_updated_at ON rate_limits;
 CREATE TRIGGER update_rate_limits_updated_at BEFORE UPDATE ON rate_limits FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_ip_reputation_updated_at ON ip_reputation;
 CREATE TRIGGER update_ip_reputation_updated_at BEFORE UPDATE ON ip_reputation FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Triggers pour les tables de notifications
+DROP TRIGGER IF EXISTS update_user_notification_channels_updated_at ON user_notification_channels;
 CREATE TRIGGER update_user_notification_channels_updated_at BEFORE UPDATE ON user_notification_channels FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_notification_templates_updated_at ON notification_templates;
 CREATE TRIGGER update_notification_templates_updated_at BEFORE UPDATE ON notification_templates FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_notification_template_translations_updated_at ON notification_template_translations;
 CREATE TRIGGER update_notification_template_translations_updated_at BEFORE UPDATE ON notification_template_translations FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Triggers pour les tables d'internationalisation
+DROP TRIGGER IF EXISTS update_campaign_translations_updated_at ON campaign_translations;
 CREATE TRIGGER update_campaign_translations_updated_at BEFORE UPDATE ON campaign_translations FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-CREATE TRIGGER update_user_consents_updated_at BEFORE UPDATE ON user_consents FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-CREATE TRIGGER update_data_retention_policies_updated_at BEFORE UPDATE ON data_retention_policies FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
--- Triggers pour les tables de performance
+DROP TRIGGER IF EXISTS update_user_consents_updated_at ON user_consents;
+CREATE TRIGGER update_user_consents_updated_at BEFORE UPDATE ON user_consents FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_data_retention_policies_updated_at ON data_retention_policies;
+CREATE TRIGGER update_data_retention_policies_updated_at BEFORE UPDATE ON data_retention_policies FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
