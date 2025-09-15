@@ -1,9 +1,11 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import styles from './Rewards.module.css';
 
 export default function PhysicalExclusiveAccessConfig({ onClose }: { onClose: () => void }) {
+  const router = useRouter();
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [accessName, setAccessName] = useState('');
   const [accessDescription, setAccessDescription] = useState('');
@@ -16,6 +18,28 @@ export default function PhysicalExclusiveAccessConfig({ onClose }: { onClose: ()
   const [blockchain, setBlockchain] = useState('Ethereum');
 
   const canComplete = accessName && accessDescription && eventDate && eventTime && eventLocation;
+
+  const handleCompleteConfiguration = () => {
+    if (!canComplete) return;
+    
+    // Sauvegarder la configuration dans le localStorage
+    const config = {
+      accessName,
+      accessDescription,
+      eventDate,
+      eventTime,
+      eventLocation,
+      maxAccesses,
+      contractAddress,
+      tokenId,
+      blockchain
+    };
+    
+    localStorage.setItem('standardPhysicalAccessReward', JSON.stringify(config));
+    
+    // Naviguer vers la page des récompenses Premium
+    router.push('/creation/b2c/premiumrewards');
+  };
 
   return (
     <div className={styles.modalOverlay} onClick={onClose}>
@@ -278,7 +302,7 @@ export default function PhysicalExclusiveAccessConfig({ onClose }: { onClose: ()
 
         {/* Complete Configuration Button */}
         <button
-          onClick={onClose}
+          onClick={handleCompleteConfiguration}
           disabled={!canComplete}
           style={{
             width: '100%',

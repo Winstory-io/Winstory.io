@@ -2550,3 +2550,160 @@ CREATE TRIGGER update_user_consents_updated_at BEFORE UPDATE ON user_consents FO
 
 DROP TRIGGER IF EXISTS update_data_retention_policies_updated_at ON data_retention_policies;
 CREATE TRIGGER update_data_retention_policies_updated_at BEFORE UPDATE ON data_retention_policies FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+-- =====================================================
+-- 11. HYBRID MODERATION (50/50 votes + stake)
+-- =====================================================
+
+-- 11A) Colonnes pour les totaux de stake par camp + scores hybrides dans moderation_progress
+DO $$
+BEGIN
+    -- Ajout des colonnes avec gestion d'erreurs
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'moderation_progress' AND column_name = 'stake_yes_total') THEN
+        ALTER TABLE moderation_progress ADD COLUMN stake_yes_total DECIMAL(20,8) DEFAULT 0;
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'moderation_progress' AND column_name = 'stake_no_total') THEN
+        ALTER TABLE moderation_progress ADD COLUMN stake_no_total DECIMAL(20,8) DEFAULT 0;
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'moderation_progress' AND column_name = 'score_yes_hybrid') THEN
+        ALTER TABLE moderation_progress ADD COLUMN score_yes_hybrid NUMERIC(18,16) DEFAULT 0;
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'moderation_progress' AND column_name = 'score_no_hybrid') THEN
+        ALTER TABLE moderation_progress ADD COLUMN score_no_hybrid NUMERIC(18,16) DEFAULT 0;
+    END IF;
+END $$;
+
+-- 11B) Enum pour l'auto resolve policy et colonne associée
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'auto_resolve_policy') THEN
+        CREATE TYPE auto_resolve_policy AS ENUM ('escalate', 'extend', 'auto_reject', 'auto_accept');
+    END IF;
+END $$;
+
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'moderation_progress' AND column_name = 'resolve_policy') THEN
+        ALTER TABLE moderation_progress ADD COLUMN resolve_policy auto_resolve_policy DEFAULT 'escalate';
+    END IF;
+END $$;
+
+-- 11C) Index pour accélérer les agrégations
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_moderation_votes_campaign') THEN
+        CREATE INDEX idx_moderation_votes_campaign ON moderation_votes(campaign_id);
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_moderation_votes_campaign_decision') THEN
+        CREATE INDEX idx_moderation_votes_campaign_decision ON moderation_votes(campaign_id, vote_decision);
+    END IF;
+END $$;
+
+-- 11D) Vue d'agrégation: votes, stakes par camp et scores hybrides 50/50
+CREATE OR REPLACE VIEW moderation_vote_aggregates AS
+SELECT
+  mv.campaign_id,
+  COUNT(*) FILTER (WHERE mv.vote_decision = 'approve')::INTEGER AS valid_votes,
+  COUNT(*) FILTER (WHERE mv.vote_decision = 'reject')::INTEGER AS refuse_votes,
+  COUNT(*)::INTEGER AS total_votes,
+  COALESCE(SUM(mv.staked_amount) FILTER (WHERE mv.vote_decision = 'approve'), 0)::DECIMAL(20,8) AS stake_yes_total,
+  COALESCE(SUM(mv.staked_amount) FILTER (WHERE mv.vote_decision = 'reject'), 0)::DECIMAL(20,8) AS stake_no_total,
+  -- Poids démocratiques
+  CASE WHEN COUNT(*) > 0
+    THEN (COUNT(*) FILTER (WHERE mv.vote_decision = 'approve'))::NUMERIC / COUNT(*)::NUMERIC
+    ELSE 0 END AS dem_yes,
+  CASE WHEN COUNT(*) > 0
+    THEN (COUNT(*) FILTER (WHERE mv.vote_decision = 'reject'))::NUMERIC / COUNT(*)::NUMERIC
+    ELSE 0 END AS dem_no,
+  -- Poids ploutocratiques
+  CASE WHEN COALESCE(SUM(mv.staked_amount),0) > 0
+       THEN COALESCE(SUM(mv.staked_amount) FILTER (WHERE mv.vote_decision = 'approve'),0)::NUMERIC / SUM(mv.staked_amount)::NUMERIC
+       ELSE 0 END AS pluto_yes,
+  CASE WHEN COALESCE(SUM(mv.staked_amount),0) > 0
+       THEN COALESCE(SUM(mv.staked_amount) FILTER (WHERE mv.vote_decision = 'reject'),0)::NUMERIC / SUM(mv.staked_amount)::NUMERIC
+       ELSE 0 END AS pluto_no,
+  -- Scores hybrides 50/50
+  0.5 * (CASE WHEN COUNT(*) > 0
+              THEN (COUNT(*) FILTER (WHERE mv.vote_decision = 'approve'))::NUMERIC / COUNT(*)::NUMERIC
+              ELSE 0 END)
+  + 0.5 * (CASE WHEN COALESCE(SUM(mv.staked_amount),0) > 0
+                THEN COALESCE(SUM(mv.staked_amount) FILTER (WHERE mv.vote_decision = 'approve'),0)::NUMERIC / SUM(mv.staked_amount)::NUMERIC
+                ELSE 0 END) AS score_yes_hybrid,
+  0.5 * (CASE WHEN COUNT(*) > 0
+              THEN (COUNT(*) FILTER (WHERE mv.vote_decision = 'reject'))::NUMERIC / COUNT(*)::NUMERIC
+              ELSE 0 END)
+  + 0.5 * (CASE WHEN COALESCE(SUM(mv.staked_amount),0) > 0
+                THEN COALESCE(SUM(mv.staked_amount) FILTER (WHERE mv.vote_decision = 'reject'),0)::NUMERIC / SUM(mv.staked_amount)::NUMERIC
+                ELSE 0 END) AS score_no_hybrid
+FROM moderation_votes mv
+GROUP BY mv.campaign_id;
+
+-- 11E) Fonction de sync pour pousser l'agrégat dans moderation_progress
+CREATE OR REPLACE FUNCTION sync_progress_hybrid_fields(p_campaign_id TEXT)
+RETURNS VOID AS $$
+BEGIN
+  UPDATE moderation_progress mp
+  SET
+    valid_votes = COALESCE(mva.valid_votes, mp.valid_votes),
+    refuse_votes = COALESCE(mva.refuse_votes, mp.refuse_votes),
+    total_votes = COALESCE(mva.total_votes, mp.total_votes),
+    stake_yes_total = COALESCE(mva.stake_yes_total, 0),
+    stake_no_total = COALESCE(mva.stake_no_total, 0),
+    score_yes_hybrid = COALESCE(mva.score_yes_hybrid, 0),
+    score_no_hybrid = COALESCE(mva.score_no_hybrid, 0),
+    updated_at = NOW()
+  FROM moderation_vote_aggregates mva
+  WHERE mp.campaign_id = p_campaign_id
+    AND mva.campaign_id = p_campaign_id;
+END;
+$$ LANGUAGE plpgsql;
+
+-- 11F) Trigger pour sync automatique à chaque changement de vote
+DROP TRIGGER IF EXISTS trg_moderation_vote_change ON moderation_votes;
+
+CREATE OR REPLACE FUNCTION on_moderation_vote_change()
+RETURNS TRIGGER AS $$
+DECLARE
+  cid TEXT;
+BEGIN
+  IF (TG_OP = 'INSERT') THEN
+    cid := NEW.campaign_id;
+  ELSIF (TG_OP = 'UPDATE') THEN
+    cid := NEW.campaign_id;
+  ELSIF (TG_OP = 'DELETE') THEN
+    cid := OLD.campaign_id;
+  END IF;
+
+  PERFORM sync_progress_hybrid_fields(cid);
+  RETURN COALESCE(NEW, OLD);
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_moderation_vote_change
+AFTER INSERT OR UPDATE OR DELETE ON moderation_votes
+FOR EACH ROW EXECUTE FUNCTION on_moderation_vote_change();
+
+-- 11G) Backfill initial pour toutes les campagnes existantes
+DO $$
+DECLARE
+  rec RECORD;
+BEGIN
+  FOR rec IN SELECT DISTINCT campaign_id FROM moderation_votes LOOP
+    PERFORM sync_progress_hybrid_fields(rec.campaign_id);
+  END LOOP;
+  
+  -- Mettre à jour aussi les campagnes sans votes
+  UPDATE moderation_progress mp
+  SET 
+    stake_yes_total = 0,
+    stake_no_total = 0,
+    score_yes_hybrid = 0,
+    score_no_hybrid = 0,
+    updated_at = NOW()
+  WHERE NOT EXISTS (
+    SELECT 1 FROM moderation_votes mv WHERE mv.campaign_id = mp.campaign_id
+  );
+END $$;

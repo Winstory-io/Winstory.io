@@ -38,7 +38,9 @@ export const mockCampaigns = [
       refuseVotes: 0,
       totalVotes: 2,
       averageScore: 0,
-      completionScores: []
+      completionScores: [],
+      stakeYes: 120.0,
+      stakeNo: 30.0
     }
   },
   {
@@ -80,7 +82,9 @@ export const mockCampaigns = [
       refuseVotes: 0,
       totalVotes: 1,
       averageScore: 0,
-      completionScores: []
+      completionScores: [],
+      stakeYes: 80.0,
+      stakeNo: 20.0
     }
   },
   {
@@ -118,10 +122,12 @@ export const mockCampaigns = [
       stakedAmount: 200.0,
       mintPrice: 50.0,
       validVotes: 3,
-      refuseVotes: 0,
-      totalVotes: 3,
-      averageScore: 85,
-      completionScores: [90, 85, 80]
+      refuseVotes: 1,
+      totalVotes: 4,
+      averageScore: 78,
+      completionScores: [],
+      stakeYes: 140.0,
+      stakeNo: 60.0
     },
     // Informations supplémentaires pour les complétions FOR_B2C
     originalCampaignCompanyName: 'Nike Inc.',
@@ -165,7 +171,9 @@ export const mockCampaigns = [
       refuseVotes: 1,
       totalVotes: 3,
       averageScore: 72,
-      completionScores: [75, 70, 71]
+      completionScores: [75, 70, 71],
+      stakeYes: 90.0,
+      stakeNo: 30.0
     },
     // Informations supplémentaires pour les complétions FOR_INDIVIDUALS
     originalCreatorWallet: '0x9876543210987654321098765432109876543210',
@@ -209,7 +217,9 @@ export const mockCampaigns = [
       refuseVotes: 0,
       totalVotes: 0,
       averageScore: 0,
-      completionScores: []
+      completionScores: [],
+      stakeYes: 60.0,
+      stakeNo: 20.0
     }
   },
   {
@@ -250,7 +260,9 @@ export const mockCampaigns = [
       refuseVotes: 0,
       totalVotes: 1,
       averageScore: 0,
-      completionScores: []
+      completionScores: [],
+      stakeYes: 70.0,
+      stakeNo: 20.0
     }
   },
   {
@@ -291,7 +303,9 @@ export const mockCampaigns = [
       refuseVotes: 0,
       totalVotes: 2,
       averageScore: 78,
-      completionScores: [80, 76]
+      completionScores: [80, 76],
+      stakeYes: 120.0,
+      stakeNo: 40.0
     },
     // Informations supplémentaires pour les complétions FOR_B2C
     originalCampaignCompanyName: 'Adidas AG',
@@ -335,7 +349,9 @@ export const mockCampaigns = [
       refuseVotes: 0,
       totalVotes: 1,
       averageScore: 88,
-      completionScores: [88]
+      completionScores: [88],
+      stakeYes: 70.0,
+      stakeNo: 25.0
     },
     // Informations supplémentaires pour les complétions FOR_INDIVIDUALS
     originalCreatorWallet: '0x3456789012345678901234567890123456789012',

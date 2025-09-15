@@ -12,6 +12,8 @@ interface ModerationStatsModalProps {
   averageScore?: number;
   campaignType: 'creation' | 'completion';
   creatorType: 'b2c' | 'agency' | 'individual';
+  stakeYes?: number;
+  stakeNo?: number;
 }
 
 const ModerationStatsModal: React.FC<ModerationStatsModalProps> = ({ 
@@ -25,14 +27,25 @@ const ModerationStatsModal: React.FC<ModerationStatsModalProps> = ({
   totalVotes,
   averageScore,
   campaignType,
-  creatorType
+  creatorType,
+  stakeYes,
+  stakeNo
 }) => {
   if (!isOpen) return null;
 
   const validPercentage = totalVotes > 0 ? Math.round((validVotes / totalVotes) * 100) : 0;
   const refusePercentage = totalVotes > 0 ? Math.round((refuseVotes / totalVotes) * 100) : 0;
-  const requiredRatio = 67; // 2:1 ratio = 67% required for validation
-  const isValidationAchieved = validPercentage >= requiredRatio;
+  // Hybrid 50/50 scoring
+  const yesStake = stakeYes ?? 0;
+  const noStake = stakeNo ?? 0;
+  const totalStakeSides = yesStake + noStake;
+  const demYes = totalVotes > 0 ? validVotes / totalVotes : 0;
+  const demNo = totalVotes > 0 ? refuseVotes / totalVotes : 0;
+  const plutoYes = totalStakeSides > 0 ? yesStake / totalStakeSides : 0;
+  const plutoNo = totalStakeSides > 0 ? noStake / totalStakeSides : 0;
+  const scoreYes = (demYes + plutoYes) / 2;
+  const scoreNo = (demNo + plutoNo) / 2;
+  const isValidationAchieved = (scoreYes >= 2 * scoreNo) || (scoreNo >= 2 * scoreYes);
 
   const formatAmount = (amount: number) => {
     if (amount >= 1000000) return `${(amount / 1000000).toFixed(1)}M`;
@@ -257,7 +270,7 @@ const ModerationStatsModal: React.FC<ModerationStatsModalProps> = ({
                 color: isValidationAchieved ? '#00FF00' : '#FF6B6B',
                 fontWeight: '600'
               }}>
-                {isValidationAchieved ? '✅ 2:1 ratio achieved' : `⚠️ Need ${requiredRatio}% for validation`}
+                {isValidationAchieved ? '✅ Hybrid 2:1 threshold reached' : '⚠️ Below Hybrid 2:1 threshold'}
               </div>
             </div>
           </div>

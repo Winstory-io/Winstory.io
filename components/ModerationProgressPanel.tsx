@@ -12,6 +12,8 @@ interface ModerationProgressPanelProps {
   creatorType?: 'b2c' | 'agency' | 'individual';
   style?: React.CSSProperties;
   onClick?: () => void;
+  stakeYes?: number;
+  stakeNo?: number;
 }
 
 const ModerationProgressPanel: React.FC<ModerationProgressPanelProps> = ({
@@ -25,12 +27,23 @@ const ModerationProgressPanel: React.FC<ModerationProgressPanelProps> = ({
   campaignType,
   creatorType,
   style,
-  onClick
+  onClick,
+  stakeYes,
+  stakeNo
 }) => {
   // Calculs pour les 3 conditions de validation
   const condition1Met = totalVotes >= 22; // 22 modérateurs minimum ont voté
   const condition2Met = stakedAmount >= mintPrice; // $WINC Staked > MINT price
-  const condition3Met = (validVotes >= 2 * refuseVotes) || (refuseVotes >= 2 * validVotes); // 2:1 ratio minimum
+
+  // Hybrid 50/50 score calculation
+  const totalStakeSides = (stakeYes ?? 0) + (stakeNo ?? 0);
+  const demYes = totalVotes > 0 ? validVotes / totalVotes : 0;
+  const demNo = totalVotes > 0 ? refuseVotes / totalVotes : 0;
+  const plutoYes = totalStakeSides > 0 ? (stakeYes ?? 0) / totalStakeSides : 0;
+  const plutoNo = totalStakeSides > 0 ? (stakeNo ?? 0) / totalStakeSides : 0;
+  const scoreYes = (demYes + plutoYes) / 2;
+  const scoreNo = (demNo + plutoNo) / 2;
+  const condition3Met = (scoreYes >= 2 * scoreNo) || (scoreNo >= 2 * scoreYes);
 
   // Calcul du pourcentage de remplissage pour le score
   const getScoreFillPercentage = (score: number) => {
@@ -211,7 +224,7 @@ const ModerationProgressPanel: React.FC<ModerationProgressPanelProps> = ({
               color: '#FFD600',
               textAlign: 'center'
             }}>
-              2:1 ratio minimum Valid/Refuse
+              Hybrid 50/50: score ≥ 2:1 (Yes vs No)
             </div>
             <div style={{
               display: 'flex',
@@ -221,11 +234,11 @@ const ModerationProgressPanel: React.FC<ModerationProgressPanelProps> = ({
             }}>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                 <span style={{ fontSize: '10px', color: '#999', marginBottom: '2px' }}>Valid</span>
-                <span style={{ color: '#00FF00', fontSize: '16px', fontWeight: 'bold' }}>{validVotes}</span>
+                <span style={{ color: '#00FF00', fontSize: '16px', fontWeight: 'bold' }}>{Math.round(scoreYes * 100)}%</span>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                 <span style={{ fontSize: '10px', color: '#999', marginBottom: '2px' }}>Refuse</span>
-                <span style={{ color: '#FF0000', fontSize: '16px', fontWeight: 'bold' }}>{refuseVotes}</span>
+                <span style={{ color: '#FF0000', fontSize: '16px', fontWeight: 'bold' }}>{Math.round(scoreNo * 100)}%</span>
               </div>
             </div>
             <div style={{
@@ -234,7 +247,7 @@ const ModerationProgressPanel: React.FC<ModerationProgressPanelProps> = ({
               textAlign: 'center',
               fontStyle: 'italic'
             }}>
-              {condition3Met ? '✅ Condition 3 met!' : 'Ratio 2:1 not met'}
+              {condition3Met ? '✅ Threshold reached (2:1)' : 'Below 2:1 threshold'}
             </div>
           </div>
 
@@ -350,7 +363,7 @@ const ModerationProgressPanel: React.FC<ModerationProgressPanelProps> = ({
               fontSize: '11px', // Augmenté de 10px à 11px
               color: condition3Met ? '#00FF00' : '#999'
             }}>
-              <span>2:1 ratio</span>
+              <span>Hybrid 2:1</span>
               <span>{condition3Met ? '✅' : '❌'}</span>
             </div>
           </div>

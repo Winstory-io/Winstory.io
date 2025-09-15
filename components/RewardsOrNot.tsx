@@ -639,11 +639,11 @@ export default function RewardsOrNot({ isAgencyB2C = false }: RewardsOrNotProps)
               <ul style={{ margin: '8px 0 8px 18px' }}>
                 <li>✅ At least 22 stakers voted</li>
                 <li>✅ The staking pool exceeds the Unit Value</li>
-                <li>✅ 2:1 majority votes YES</li>
+                <li>✅ Hybrid threshold reached (2:1 by 50% votes + 50% stake)</li>
               </ul>
               These same 3/3 conditions apply for both :
               <ul style={{ margin: '8px 0 8px 18px' }}>
-                <li>Your Initial Story to be available<br/>(At least 22 stakers voted + Staking pool &gt; your MINT price + 2:1 majority votes YES)</li>
+                <li>Your Initial Story to be available<br/>(At least 22 stakers voted + Staking pool &gt; your MINT price + Hybrid 2:1 threshold reached)</li>
                 <li>All community Completions</li>
               </ul>
             </div>

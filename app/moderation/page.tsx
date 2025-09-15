@@ -595,6 +595,8 @@ const ModerationPage = () => {
                 averageScore={progress.averageScore}
                 campaignType={mapCampaignType(getUICampaignType(campaign))}
                 creatorType={getUICreatorType(campaign)}
+                stakeYes={progress.stakeYes}
+                stakeNo={progress.stakeNo}
                 onClick={() => setShowStatsModal(true)}
                 style={{
                   justifyContent: 'flex-start',
@@ -653,6 +655,8 @@ const ModerationPage = () => {
             averageScore={progress.averageScore}
             campaignType={mapCampaignType(getUICampaignType(campaign))}
             creatorType={getUICreatorType(campaign)}
+            stakeYes={progress.stakeYes}
+            stakeNo={progress.stakeNo}
           />
         </div>
       );
@@ -977,6 +981,8 @@ const ModerationPage = () => {
             averageScore={progress.averageScore}
             campaignType={mapCampaignType(getUICampaignType(campaign))}
             creatorType={getUICreatorType(campaign)}
+            stakeYes={progress.stakeYes}
+            stakeNo={progress.stakeNo}
             onClick={() => setShowStatsModal(true)}
           />
           
@@ -1051,6 +1057,8 @@ const ModerationPage = () => {
         averageScore={progress.averageScore}
         campaignType={mapCampaignType(getUICampaignType(campaign))}
         creatorType={getUICreatorType(campaign)}
+        stakeYes={progress.stakeYes}
+        stakeNo={progress.stakeNo}
       />
     </div>
   );

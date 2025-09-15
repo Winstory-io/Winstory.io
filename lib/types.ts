@@ -64,6 +64,8 @@ export interface ModerationProgress {
   totalVotes: number;
   averageScore: number;
   completionScores: number[];
+  stakeYes?: number;
+  stakeNo?: number;
 }
 
 export interface ModerationSession {
@@ -179,6 +181,8 @@ export interface ModerationProgress {
   totalVotes: number;
   averageScore: number;
   completionScores: number[];
+  stakeYes?: number;
+  stakeNo?: number;
 }
 
 export interface ModerationSession {
