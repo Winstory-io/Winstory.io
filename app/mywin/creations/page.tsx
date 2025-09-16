@@ -1,8 +1,17 @@
-'use client';
+"use client";
 
 import { useActiveAccount } from 'thirdweb/react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
+import DevControls from '@/components/DevControls';
+
+// Lazy load client-only components
+const ActiveCampaignDashboard = dynamic(() => import('../../../components/ActiveCampaignDashboard'), { ssr: false });
+const ValidatedCampaignDashboard = dynamic(() => import('../../../components/ValidatedCampaignDashboard'), { ssr: false });
+
+// Helper to detect validated state from ActiveCampaignDashboard
+import { computeValidationState } from '../../../components/ActiveCampaignDashboard';
 
 interface Campaign {
   id: string;
@@ -22,43 +31,43 @@ export default function MyCreationsPage() {
   const account = useActiveAccount();
   const walletAddress = account?.address;
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [activeTab, setActiveTab] = useState<'active' | 'previous' | 'universe'>('active');
+  const [activeInitialProgress, setActiveInitialProgress] = useState<any | null>(null);
+  const [devForceValidated, setDevForceValidated] = useState(false);
 
   useEffect(() => {
     if (account) {
-      // TODO: Fetch user campaigns from blockchain/database based on actual user behavior
-      // This will be replaced with real API calls to get:
-      // - Campaigns created by this user
-      // - Real completion progress, scores, rewards, and ROI data
-      // - Actual campaign status and performance metrics
-      
-      // For now, initialize with empty array - will be populated with real data
       setCampaigns([]);
-      
-      // TODO: Implement real data fetching:
-      // const userCampaigns = await fetchUserCampaignsFromBlockchain(account.address);
-      // setCampaigns(userCampaigns);
     }
   }, [account]);
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active': return '#00FF00';
-      case 'completed': return '#FFD600';
-      case 'paused': return '#FF6B6B';
-      default: return '#fff';
-    }
-  };
+  // Simulate reading current active initial campaign progress from mock for conditional swap to validated dashboard
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const data = await import('../../../lib/mockData');
+        const firstInitial = (data.mockCampaigns as any[]).find((c) => c.type === 'INITIAL');
+        if (mounted) setActiveInitialProgress(firstInitial?.progress || null);
+      } catch {}
+    })();
+    return () => { mounted = false; };
+  }, []);
 
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'active': return 'Active';
-      case 'completed': return 'Completed';
-      case 'paused': return 'Paused';
-      default: return 'Unknown';
-    }
-  };
+  const isValidated = useMemo(() => {
+    if (devForceValidated) return true;
+    if (!activeInitialProgress) return false;
+    const s = computeValidationState(activeInitialProgress);
+    return s.allOk;
+  }, [activeInitialProgress, devForceValidated]);
 
-  // Si pas d'adresse, afficher un message de chargement au lieu de rediriger
+  const separatorStyle = {
+    height: 1,
+    width: '100%',
+    background: 'linear-gradient(90deg, rgba(255,214,0,0.9), rgba(255,255,255,0.5))'
+  } as React.CSSProperties;
+
+  // Loading state while wallet connects
   if (!account) {
     return (
       <div style={{ 
@@ -90,173 +99,59 @@ export default function MyCreationsPage() {
       background: '#000', 
       color: '#00FF00',
       fontFamily: 'Inter, sans-serif',
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      position: 'relative'
+      display: 'grid',
+      gridTemplateColumns: '260px 1fr',
+      gap: 24,
+      alignItems: 'start',
+      paddingTop: 16,
+      paddingLeft: 16,
+      paddingRight: 16
     }}>
-      {/* Header */}
-      <div style={{ 
-        marginTop: '24px', 
-        textAlign: 'center', 
-        marginBottom: '48px' 
-      }}>
-        <h1 style={{ 
-          fontSize: '48px', 
-          fontWeight: 900, 
-          marginBottom: '16px' 
-        }}>
-          My Creations
-        </h1>
-        <p style={{ 
-          fontSize: '18px', 
-          color: '#fff' 
-        }}>
-          Track your campaign progress and performance
-        </p>
+      {/* Left sidebar mini-menu */}
+      <div style={{ position: 'sticky', top: 16 }}>
+        <div style={{ color: activeTab === 'active' ? '#18C964' : '#C0C0C0', fontWeight: 900, fontSize: 18, cursor: 'pointer' }} onClick={() => setActiveTab('active')}>Active Campaign</div>
+        <div style={separatorStyle} />
+        <div style={{ marginTop: 10, color: activeTab === 'previous' ? '#18C964' : '#C0C0C0', fontWeight: 900, fontSize: 18, cursor: 'pointer' }} onClick={() => setActiveTab('previous')}>Previous Campaign(s)</div>
+        <div style={separatorStyle} />
+        <div style={{ marginTop: 10, color: activeTab === 'universe' ? '#18C964' : '#C0C0C0', fontWeight: 900, fontSize: 18, cursor: 'pointer' }} onClick={() => setActiveTab('universe')}>Your Universe x Winstory</div>
+        <div style={separatorStyle} />
       </div>
 
-      {/* Campaigns List */}
-      <div style={{ 
-        display: 'flex', 
-        flexDirection: 'column', 
-        gap: '24px', 
-        maxWidth: '1000px', 
-        width: '90vw', 
-        marginBottom: '48px' 
-      }}>
-        {campaigns.map((campaign) => (
-          <div
-            key={campaign.id}
-            style={{
-              background: 'rgba(0, 255, 0, 0.05)',
-              border: '2px solid #00FF00',
-              borderRadius: 16,
-              padding: 32,
-              cursor: 'pointer',
-              transition: 'all 0.3s ease',
-            }}
-            onClick={() => router.push(`/mywin/creations/${campaign.id}`)}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(0, 255, 0, 0.1)';
-              e.currentTarget.style.transform = 'translateY(-4px)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'rgba(0, 255, 0, 0.05)';
-              e.currentTarget.style.transform = 'translateY(0)';
-            }}
-          >
-            {/* Header Row */}
-            <div style={{ 
-              display: 'flex', 
-              justifyContent: 'space-between', 
-              alignItems: 'flex-start', 
-              marginBottom: '16px' 
-            }}>
-              <div style={{ flex: 1 }}>
-                <h3 style={{ 
-                  fontSize: '24px', 
-                  fontWeight: 700, 
-                  marginBottom: '8px',
-                  color: '#00FF00'
-                }}>
-                  {campaign.title}
-                </h3>
-                <p style={{ 
-                  color: '#fff', 
-                  marginBottom: '12px',
-                  lineHeight: '1.5'
-                }}>
-                  {campaign.description}
-                </p>
-                <div style={{ 
-                  display: 'flex', 
-                  gap: '16px', 
-                  alignItems: 'center',
-                  fontSize: '14px',
-                  color: '#ccc'
-                }}>
-                  <span>Created: {campaign.creationDate}</span>
-                  <span style={{ 
-                    color: getStatusColor(campaign.status),
-                    fontWeight: 600
-                  }}>
-                    {getStatusText(campaign.status)}
-                  </span>
-                </div>
-              </div>
-            </div>
+      {/* Right content area */}
+      <div style={{ width: '100%', maxWidth: 1400, justifySelf: 'center', position: 'relative' }}>
+        {activeTab === 'active' && (
+          isValidated ? (
+            <ValidatedCampaignDashboard 
+              forceValidated={devForceValidated}
+              onForceValidated={setDevForceValidated}
+            />
+          ) : (
+            <ActiveCampaignDashboard />
+          )
+        )}
 
-            {/* Progress Bar */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ 
-                display: 'flex', 
-                justifyContent: 'space-between', 
-                marginBottom: '8px',
-                fontSize: '14px',
-                color: '#fff'
-              }}>
-                <span>MINT Progress</span>
-                <span>{campaign.currentCompletions}/{campaign.targetCompletions} ({Math.round((campaign.currentCompletions / campaign.targetCompletions) * 100)}%)</span>
-              </div>
-              <div style={{ 
-                background: 'rgba(255, 255, 255, 0.1)', 
-                borderRadius: '8px', 
-                height: '8px',
-                overflow: 'hidden'
-              }}>
-                <div style={{ 
-                  background: '#00FF00', 
-                  height: '100%', 
-                  width: `${(campaign.currentCompletions / campaign.targetCompletions) * 100}%`,
-                  transition: 'width 0.3s ease'
-                }} />
-              </div>
-            </div>
-
-            {/* Stats Grid */}
-            <div style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', 
-              gap: '16px' 
-            }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '20px', fontWeight: 700, color: '#FFD600' }}>
-                  {campaign.averageScore}/10
-                </div>
-                <div style={{ fontSize: '12px', color: '#ccc' }}>Avg Score</div>
-              </div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '20px', fontWeight: 700, color: '#FFD600' }}>
-                  {campaign.rewardsDistributed}
-                </div>
-                <div style={{ fontSize: '12px', color: '#ccc' }}>$WINC Distributed</div>
-              </div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '20px', fontWeight: 700, color: '#FFD600' }}>
-                  {campaign.roi}%
-                </div>
-                <div style={{ fontSize: '12px', color: '#ccc' }}>ROI</div>
-              </div>
-            </div>
+        {activeTab === 'previous' && (
+          <div style={{ color: '#fff', textAlign: 'center', paddingTop: 40 }}>
+            <h2 style={{ fontSize: 36, fontWeight: 800, marginBottom: 8 }}>Previous Campaign(s)</h2>
+            <p style={{ color: '#C0C0C0' }}>Coming soon</p>
           </div>
-        ))}
-      </div>
+        )}
 
-      {campaigns.length === 0 && (
-        <div style={{ 
-          textAlign: 'center', 
-          color: '#fff',
-          marginTop: '48px'
-        }}>
-          <p style={{ fontSize: '18px', marginBottom: '24px' }}>
-            You haven't created any campaigns yet.
-          </p>
-          <p style={{ fontSize: '16px', color: '#ccc' }}>
-            Start creating campaigns to track your progress here.
-          </p>
-        </div>
-      )}
+        {activeTab === 'universe' && (
+          <div style={{ color: '#fff', textAlign: 'center', paddingTop: 40 }}>
+            <h2 style={{ fontSize: 36, fontWeight: 800, marginBottom: 8 }}>Your Universe x Winstory</h2>
+            <p style={{ color: '#C0C0C0' }}>Coming soon</p>
+          </div>
+        )}
+
+        {/* Dev Controls page-level: seulement quand NON validé pour forcer l'accès */}
+        {!isValidated && (
+          <DevControls 
+            onForceValidated={setDevForceValidated}
+            forceValidated={devForceValidated}
+          />
+        )}
+      </div>
     </div>
   );
-} 
+}
