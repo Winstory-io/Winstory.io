@@ -107,11 +107,19 @@ export default function MyCreationsPage() {
       paddingLeft: 16,
       paddingRight: 16
     }}>
-      {/* Left sidebar mini-menu */}
-      <div style={{ position: 'sticky', top: 16 }}>
-        <div style={{ color: activeTab === 'active' ? '#18C964' : '#C0C0C0', fontWeight: 900, fontSize: 18, cursor: 'pointer' }} onClick={() => setActiveTab('active')}>Active Campaign</div>
+      {/* Left sidebar mini-menu - repositioned to center vertically */}
+      <div style={{ 
+        position: 'sticky', 
+        top: '50%', 
+        transform: 'translateY(-50%)',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        height: 'fit-content'
+      }}>
+        <div style={{ color: activeTab === 'active' ? '#18C964' : '#C0C0C0', fontWeight: 900, fontSize: 18, cursor: 'pointer', marginBottom: 10 }} onClick={() => setActiveTab('active')}>Active Campaign</div>
         <div style={separatorStyle} />
-        <div style={{ marginTop: 10, color: activeTab === 'previous' ? '#18C964' : '#C0C0C0', fontWeight: 900, fontSize: 18, cursor: 'pointer' }} onClick={() => setActiveTab('previous')}>Previous Campaign(s)</div>
+        <div style={{ marginTop: 10, marginBottom: 10, color: activeTab === 'previous' ? '#18C964' : '#C0C0C0', fontWeight: 900, fontSize: 18, cursor: 'pointer' }} onClick={() => setActiveTab('previous')}>Previous Campaign(s)</div>
         <div style={separatorStyle} />
         <div style={{ marginTop: 10, color: activeTab === 'universe' ? '#18C964' : '#C0C0C0', fontWeight: 900, fontSize: 18, cursor: 'pointer' }} onClick={() => setActiveTab('universe')}>Your Universe x Winstory</div>
         <div style={separatorStyle} />

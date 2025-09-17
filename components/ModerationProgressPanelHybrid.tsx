@@ -253,7 +253,7 @@ const ModerationProgressPanelHybrid: React.FC<ModerationProgressPanelHybridProps
             alignItems: 'center',
             fontSize: '14px'
           }}>
-            <span style={{ color: '#CCCCCC' }}>Pool > MINT:</span>
+            <span style={{ color: '#CCCCCC' }}>Pool &gt; MINT:</span>
             <span style={{ 
               color: condition2Met ? '#00FF00' : '#FF0000',
               fontWeight: 'bold'

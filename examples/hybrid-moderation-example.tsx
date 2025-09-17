@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
+import { ContentType, ParticipantData } from '../lib/moderation-engine';
 import { 
   useHybridModeration, 
-  ContentType, 
-  ParticipantData 
+  
+  
 } from '@/lib/hooks/useHybridModeration';
 import ModerationProgressPanelHybrid from '@/components/ModerationProgressPanelHybrid';
 

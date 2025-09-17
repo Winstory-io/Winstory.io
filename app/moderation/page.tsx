@@ -1,6 +1,5 @@
-'use client';
-import React, { useState, useEffect, useRef } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+'use client';'use client';
+import React, { useState, useEffect, useRef } from 'react';import { useRouter, useSearchParams } from 'next/navigation';
 import { useActiveAccount } from 'thirdweb/react';
 import WalletConnect from '../../components/WalletConnect';
 import ModeratorHeader, { CloseButton } from '../../components/ModeratorHeader';
