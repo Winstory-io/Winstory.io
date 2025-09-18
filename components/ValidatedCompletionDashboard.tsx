@@ -1,0 +1,509 @@
+"use client";
+
+import { useEffect, useMemo, useState } from 'react';
+import { useActiveAccount } from 'thirdweb/react';
+import RadarChart from './RadarChart';
+import RadarChartModal from './RadarChartModal';
+
+interface ModeratorScore {
+  stakerId: string;
+  stakerName: string;
+  score: number; // 0-100
+}
+
+interface ValidatedCompletion {
+  id: string;
+  campaignTitle: string;
+  completionTitle: string;
+  moderatorScores: ModeratorScore[];
+  averageScore: number;
+  ranking: number; // User's rank
+  totalCompletions: number; // Total number of MINT completions for this campaign
+  isTopThree: boolean; // Whether user is in top 3
+  standardRewards: string[];
+  premiumRewards?: string[];
+  campaignEndStatus: 'finished' | 'in_progress';
+  campaignEndTime?: number; // Timestamp for campaign end
+  stakedAmount: number; // Amount staked by moderators
+  mintPrice: number; // Required staking amount
+}
+
+interface ValidatedCompletionDashboardProps {
+  forceValidated?: boolean;
+  onForceValidated?: (enabled: boolean) => void;
+  // Dev controls for dynamic data
+  devCompletionData?: {
+    moderatorScores?: ModeratorScore[]; // Individual moderator configurations
+    ranking?: number;
+    totalCompletions?: number;
+    stakedAmount?: number;
+    mintPrice?: number;
+    isTopThree?: boolean;
+    campaignEndTime?: number;
+  };
+}
+
+// Format countdown timer
+function formatCountdown(msRemaining: number): string {
+  if (msRemaining <= 0) return 'FINISHED';
+  
+  const totalSeconds = Math.floor(msRemaining / 1000);
+  const days = Math.floor(totalSeconds / (24 * 3600));
+  const hours = Math.floor((totalSeconds % (24 * 3600)) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  
+  if (days > 0) {
+    return `${days}d ${hours.toString().padStart(2, '0')}h ${minutes.toString().padStart(2, '0')}m`;
+  }
+  return `${hours.toString().padStart(2, '0')}h ${minutes.toString().padStart(2, '0')}m`;
+}
+
+export default function ValidatedCompletionDashboard({ 
+  forceValidated, 
+  onForceValidated,
+  devCompletionData
+}: ValidatedCompletionDashboardProps) {
+  const account = useActiveAccount();
+  const [completion, setCompletion] = useState<ValidatedCompletion | null>(null);
+  const [showRadarModal, setShowRadarModal] = useState(false);
+  const [now, setNow] = useState(Date.now());
+
+  // Update current time every second for countdown
+  useEffect(() => {
+    const interval = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    if (account) {
+      // Use dev controls data or defaults
+      const ranking = devCompletionData?.ranking || 1;
+      const totalCompletions = devCompletionData?.totalCompletions || 524;
+      const stakedAmount = devCompletionData?.stakedAmount || 80; // Less than mint price by default
+      const mintPrice = devCompletionData?.mintPrice || 100;
+      const isTopThree = devCompletionData?.isTopThree ?? (ranking <= 3);
+      const campaignEndTime = devCompletionData?.campaignEndTime || (Date.now() + 2 * 24 * 60 * 60 * 1000); // 2 days from now
+
+      // Use configured moderator scores or default ones
+      const moderatorScores = devCompletionData?.moderatorScores || [
+        { stakerId: '1', stakerName: 'Staker 1', score: 92 },
+        { stakerId: '2', stakerName: 'Staker 2', score: 95 },
+        { stakerId: '3', stakerName: 'Staker 3', score: 88 },
+        { stakerId: '4', stakerName: 'Staker 4', score: 91 },
+        { stakerId: '5', stakerName: 'Staker 5', score: 87 },
+        { stakerId: '6', stakerName: 'Staker 6', score: 94 },
+        { stakerId: '7', stakerName: 'Staker 7', score: 89 },
+        { stakerId: '8', stakerName: 'Staker 8', score: 93 },
+        { stakerId: '9', stakerName: 'Staker 9', score: 90 },
+        { stakerId: '10', stakerName: 'Staker 10', score: 86 },
+        { stakerId: '11', stakerName: 'Staker 11', score: 88 },
+        { stakerId: '12', stakerName: 'Staker 12', score: 92 },
+        { stakerId: '13', stakerName: 'Staker 13', score: 85 },
+        { stakerId: '14', stakerName: 'Staker 14', score: 96 },
+        { stakerId: '15', stakerName: 'Staker 15', score: 91 },
+        { stakerId: '16', stakerName: 'Staker 16', score: 89 },
+        { stakerId: '17', stakerName: 'Staker 17', score: 93 },
+        { stakerId: '18', stakerName: 'Staker 18', score: 87 },
+        { stakerId: '19', stakerName: 'Staker 19', score: 94 },
+        { stakerId: '20', stakerName: 'Staker 20', score: 90 },
+        { stakerId: '21', stakerName: 'Staker 21', score: 88 }
+      ];
+
+      const actualAverage = Math.round(moderatorScores.reduce((sum, mod) => sum + mod.score, 0) / moderatorScores.length);
+
+      const mockCompletion: ValidatedCompletion = {
+        id: '1',
+        campaignTitle: 'Amazing Brand Campaign',
+        completionTitle: 'My Creative Video Completion',
+        moderatorScores,
+        averageScore: actualAverage, // Use calculated average
+        ranking,
+        totalCompletions,
+        isTopThree,
+        standardRewards: ['Digital NFT Certificate', 'Brand Merchandise'],
+        premiumRewards: isTopThree ? ['Exclusive Brand Partnership', '$500 USDT Prize'] : undefined,
+        campaignEndStatus: campaignEndTime <= now ? 'finished' : 'in_progress',
+        campaignEndTime,
+        stakedAmount,
+        mintPrice
+      };
+
+      setCompletion(mockCompletion);
+    }
+  }, [account, devCompletionData, now]);
+
+  const validationStatus = useMemo(() => {
+    if (!completion) return null;
+    
+    const numModerators = completion.moderatorScores.length;
+    const validVotes = completion.moderatorScores.filter(s => s.score >= 50).length;
+    const refuseVotes = completion.moderatorScores.filter(s => s.score < 50).length;
+    
+    // Check requirements
+    const minVotesOk = numModerators >= 22; // Need exactly 22 or more
+    const stakingOk = completion.stakedAmount >= completion.mintPrice;
+    const majorityOk = validVotes >= refuseVotes && (refuseVotes === 0 ? validVotes >= 2 : validVotes / refuseVotes >= 2);
+    
+    return {
+      minVotesOk,
+      stakingOk,
+      majorityOk,
+      allValidated: minVotesOk && stakingOk && majorityOk,
+      validVotes,
+      refuseVotes,
+      numModerators
+    };
+  }, [completion]);
+
+  // Calculate remaining time
+  const remainingTime = useMemo(() => {
+    if (!completion?.campaignEndTime) return 'FINISHED';
+    return formatCountdown(completion.campaignEndTime - now);
+  }, [completion?.campaignEndTime, now]);
+
+  if (!completion) {
+    return (
+      <div style={{ 
+        width: '100%', 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center',
+        paddingTop: 80,
+        color: '#C0C0C0',
+        fontSize: 18
+      }}>
+        Loading completion data...
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ width: '100%', maxWidth: 1400 }}>
+      {/* Header */}
+      <div style={{ textAlign: 'center', marginBottom: 24 }}> {/* Reduced margin */}
+        <h1 style={{ 
+          color: validationStatus?.allValidated ? '#18C964' : '#FFD600', 
+          fontSize: 38, // Reduced from 42
+          fontWeight: 900, 
+          marginBottom: 8 
+        }}>
+          {validationStatus?.allValidated 
+            ? 'Moderators validated and scored your Completion !'
+            : 'Moderation Completion in progress'
+          }
+        </h1>
+        <p style={{ 
+          color: validationStatus?.allValidated ? '#18C964' : '#FFD600', 
+          fontSize: 16, // Reduced from 18
+          fontWeight: 600,
+          margin: 0
+        }}>
+          {validationStatus?.allValidated 
+            ? `Congratulations on respecting the Moderation rules ! ${completion.ranking <= 3 ? `You are the N°${completion.ranking}` : ''}`
+            : 'Waiting for validation requirements to be met'
+          }
+        </p>
+      </div>
+
+      {/* Campaign info */}
+      <div style={{ textAlign: 'center', marginBottom: 24 }}> {/* Reduced margin */}
+        <div style={{ color: '#FFD600', fontSize: 14, fontWeight: 600, marginBottom: 4 }}> {/* Reduced font */}
+          Campaign :
+        </div>
+        <h2 style={{ color: '#FFFFFF', fontSize: 20, fontWeight: 800, margin: 0 }}> {/* Reduced font */}
+          {completion.campaignTitle}
+        </h2>
+      </div>
+
+      {/* Main content grid - REDUCED LEFT PANEL, BIGGER RADAR */}
+      <div style={{ 
+        display: 'grid', 
+        gridTemplateColumns: '280px 500px 280px', // Reduced left from 1fr to 280px, increased radar from 400px to 500px
+        gap: 32, 
+        alignItems: 'start',
+        marginBottom: 24 // Reduced margin
+      }}>
+        {/* Left: Requirements - REDUCED SIZE */}
+        <div style={{ justifySelf: 'end' }}>
+          <div style={{ 
+            color: '#FFFFFF', 
+            fontSize: 16, // Reduced from 20
+            fontWeight: 800, 
+            marginBottom: 12 // Reduced from 16
+          }}>
+            3 Requirements for Completion
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}> {/* Reduced gap */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}> {/* Reduced gap */}
+              <div style={{ 
+                width: 16, // Reduced from 22
+                height: 16, 
+                borderRadius: '50%', 
+                background: validationStatus?.minVotesOk ? '#18C964' : '#444',
+                border: `1px solid ${validationStatus?.minVotesOk ? '#18C964' : '#FFD600'}` // Reduced border
+              }} />
+              <span style={{ color: validationStatus?.minVotesOk ? '#18C964' : '#FFD600', fontSize: 14 }}> {/* Reduced font */}
+                🌟 Min 22 Stakers votes
+              </span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{ 
+                width: 16, 
+                height: 16, 
+                borderRadius: '50%', 
+                background: validationStatus?.stakingOk ? '#18C964' : '#444',
+                border: `1px solid ${validationStatus?.stakingOk ? '#18C964' : '#FFD600'}`
+              }} />
+              <span style={{ color: validationStatus?.stakingOk ? '#18C964' : '#FFD600', fontSize: 14 }}>
+                ✅ Pool Staking &gt; Price $
+              </span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{ 
+                width: 16, 
+                height: 16, 
+                borderRadius: '50%', 
+                background: validationStatus?.majorityOk ? '#18C964' : '#444',
+                border: `1px solid ${validationStatus?.majorityOk ? '#18C964' : '#FFD600'}`
+              }} />
+              <span style={{ color: validationStatus?.majorityOk ? '#18C964' : '#FFD600', fontSize: 14 }}>
+                ✅ Majority ≥ 2
+              </span>
+            </div>
+          </div>
+
+          {/* Completion Moderation Status - REDUCED SIZE */}
+          <div style={{ 
+            marginTop: 16, // Reduced from 24
+            padding: 12, // Reduced from 16
+            background: validationStatus?.allValidated 
+              ? 'rgba(24, 201, 100, 0.1)' 
+              : 'rgba(255, 214, 0, 0.1)',
+            border: `1px solid ${validationStatus?.allValidated ? '#18C964' : '#FFD600'}`, // Reduced border
+            borderRadius: 8 // Reduced from 12
+          }}>
+            <div style={{ 
+              color: validationStatus?.allValidated ? '#18C964' : '#FFD600', 
+              fontSize: 13, // Reduced from 16
+              fontWeight: 800, 
+              marginBottom: 6 // Reduced from 8
+            }}>
+              Completion Moderation<br/>by {validationStatus?.numModerators} Stakers
+            </div>
+            <div style={{ color: '#18C964', fontSize: 15, fontWeight: 700 }}> {/* Reduced from 18 */}
+              {validationStatus?.validVotes} Validated
+            </div>
+            <div style={{ color: '#FF3B30', fontSize: 15, fontWeight: 700, marginTop: 2 }}> {/* Reduced from 4 */}
+              {validationStatus?.refuseVotes} Refused
+            </div>
+          </div>
+
+          {/* Average Score Display - New compact section */}
+          <div style={{ 
+            marginTop: 12,
+            padding: 10,
+            background: 'rgba(255, 214, 0, 0.1)',
+            border: '1px solid #FFD600',
+            borderRadius: 8,
+            textAlign: 'center'
+          }}>
+            <div style={{ 
+              color: '#FFD600', 
+              fontSize: 11, 
+              fontWeight: 700, 
+              marginBottom: 4
+            }}>
+              Average Score
+            </div>
+            <div style={{ 
+              color: '#FFFFFF', 
+              fontSize: 18, 
+              fontWeight: 900 
+            }}>
+              {completion.averageScore} / 100
+            </div>
+          </div>
+        </div>
+
+        {/* Center: Radar Chart - BIGGER SIZE */}
+        <div style={{ justifySelf: 'center' }}>
+          <RadarChart 
+            moderatorScores={completion.moderatorScores}
+            size={500} // Increased from 400
+            showLabels={true}
+            isClickable={true}
+            onClick={() => setShowRadarModal(true)}
+          />
+        </div>
+
+        {/* Right: Time and Status */}
+        <div style={{ justifySelf: 'start' }}>
+          <div style={{ 
+            marginBottom: 16, // Reduced from 24
+            padding: 12, // Reduced from 16
+            background: 'rgba(0, 0, 0, 0.5)',
+            borderRadius: 8, // Reduced from 12
+            border: '1px solid #333'
+          }}>
+            <div style={{ color: '#C0C0C0', fontSize: 14, marginBottom: 6 }}> {/* Reduced sizes */}
+              Time before End of Campaign :
+            </div>
+            <div style={{ 
+              color: remainingTime === 'FINISHED' ? '#18C964' : '#FFD600', 
+              fontSize: 20, // Reduced from 24
+              fontWeight: 900 
+            }}>
+              {remainingTime}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* SINGLE LINE LAYOUT - Score, Ranking, Rewards */}
+      {validationStatus?.allValidated && (
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          gap: 16,
+          marginBottom: 16,
+          flexWrap: 'wrap' // Allow wrapping on smaller screens
+        }}>
+          {/* Average Score */}
+          <div style={{
+            background: 'rgba(255, 214, 0, 0.1)',
+            border: '2px solid #FFD600',
+            borderRadius: 10,
+            padding: '8px 16px',
+            textAlign: 'center',
+            minWidth: '120px'
+          }}>
+            <div style={{ color: '#FFD600', fontSize: 12, fontWeight: 800, marginBottom: 2 }}>
+              Average Score
+            </div>
+            <div style={{ color: '#FFFFFF', fontSize: 24, fontWeight: 900 }}>
+              {completion.averageScore} / 100
+            </div>
+          </div>
+
+          {/* Your Rank */}
+          <div style={{
+            background: 'rgba(24, 201, 100, 0.1)',
+            border: '2px solid #18C964',
+            borderRadius: 10,
+            padding: '8px 16px',
+            textAlign: 'center',
+            minWidth: '140px'
+          }}>
+            <div style={{ color: '#18C964', fontSize: 12, fontWeight: 800, marginBottom: 2 }}>
+              🏆 Your Rank
+            </div>
+            <div style={{ color: '#FFD600', fontSize: 20, fontWeight: 900 }}>
+              #{completion.ranking}/{completion.totalCompletions}
+            </div>
+          </div>
+
+          {/* Rewards Message */}
+          <div style={{
+            background: 'rgba(255, 255, 255, 0.05)',
+            border: '2px solid #C0C0C0',
+            borderRadius: 10,
+            padding: '8px 16px',
+            textAlign: 'center',
+            minWidth: '180px'
+          }}>
+            <div style={{ 
+              color: completion.isTopThree ? '#FFD600' : '#18C964', 
+              fontSize: 12, 
+              fontWeight: 800,
+              marginBottom: 2
+            }}>
+              You receive
+            </div>
+            <div style={{ color: '#FFFFFF', fontSize: 14, fontWeight: 700 }}>
+              {completion.isTopThree 
+                ? 'Standard + Premium' 
+                : 'Standard Rewards'
+              }
+            </div>
+          </div>
+
+          {/* Standard Rewards */}
+          <div style={{
+            background: 'rgba(24, 201, 100, 0.1)',
+            border: '1px solid #18C964',
+            borderRadius: 8,
+            padding: '6px 12px',
+            textAlign: 'center',
+            minWidth: '120px'
+          }}>
+            <div style={{ color: '#18C964', fontSize: 11, fontWeight: 800, marginBottom: 4 }}>
+              Standard
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              {completion.standardRewards.slice(0, 2).map((reward, index) => (
+                <div 
+                  key={index}
+                  style={{
+                    background: '#18C964',
+                    color: '#000',
+                    padding: '2px 6px',
+                    borderRadius: 10,
+                    fontSize: 10,
+                    fontWeight: 600
+                  }}
+                >
+                  {reward.length > 15 ? reward.substring(0, 12) + '...' : reward}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Premium Rewards (only if top 3) */}
+          {completion.isTopThree && completion.premiumRewards && (
+            <div style={{
+              background: 'rgba(255, 214, 0, 0.1)',
+              border: '1px solid #FFD600',
+              borderRadius: 8,
+              padding: '6px 12px',
+              textAlign: 'center',
+              minWidth: '120px'
+            }}>
+              <div style={{ color: '#FFD600', fontSize: 11, fontWeight: 800, marginBottom: 4 }}>
+                Premium
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                {completion.premiumRewards.slice(0, 2).map((reward, index) => (
+                  <div 
+                    key={index}
+                    style={{
+                      background: '#FFD600',
+                      color: '#000',
+                      padding: '2px 6px',
+                      borderRadius: 10,
+                      fontSize: 10,
+                      fontWeight: 600
+                    }}
+                  >
+                    {reward.length > 15 ? reward.substring(0, 12) + '...' : reward}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Radar Chart Modal */}
+      <RadarChartModal
+        isOpen={showRadarModal}
+        onClose={() => setShowRadarModal(false)}
+        moderatorScores={completion.moderatorScores}
+        campaignTitle={completion.campaignTitle}
+        averageScore={completion.averageScore}
+        ranking={completion.ranking}
+        totalCompletions={completion.totalCompletions}
+      />
+    </div>
+  );
+} 

@@ -63,7 +63,7 @@ export default function MyCreationsPage() {
 
   const separatorStyle = {
     height: 1,
-    width: '100%',
+    width: '85%', // Reduced width to end around the "y" of "Winstory"
     background: 'linear-gradient(90deg, rgba(255,214,0,0.9), rgba(255,255,255,0.5))'
   } as React.CSSProperties;
 
@@ -100,7 +100,7 @@ export default function MyCreationsPage() {
       color: '#00FF00',
       fontFamily: 'Inter, sans-serif',
       display: 'grid',
-      gridTemplateColumns: '260px 1fr',
+      gridTemplateColumns: '220px 1fr', // Reduced from 260px to 220px to give more space to chart
       gap: 24,
       alignItems: 'start',
       paddingTop: 16,
@@ -117,11 +117,36 @@ export default function MyCreationsPage() {
         justifyContent: 'center',
         height: 'fit-content'
       }}>
-        <div style={{ color: activeTab === 'active' ? '#18C964' : '#C0C0C0', fontWeight: 900, fontSize: 18, cursor: 'pointer', marginBottom: 10 }} onClick={() => setActiveTab('active')}>Active Campaign</div>
+        <div style={{ 
+          color: activeTab === 'active' ? '#18C964' : '#C0C0C0', 
+          fontWeight: 900, 
+          fontSize: 16, // Reduced from 18 to 16
+          cursor: 'pointer', 
+          marginBottom: 10 
+        }} onClick={() => setActiveTab('active')}>
+          Active Campaign
+        </div>
         <div style={separatorStyle} />
-        <div style={{ marginTop: 10, marginBottom: 10, color: activeTab === 'previous' ? '#18C964' : '#C0C0C0', fontWeight: 900, fontSize: 18, cursor: 'pointer' }} onClick={() => setActiveTab('previous')}>Previous Campaign(s)</div>
+        <div style={{ 
+          marginTop: 10, 
+          marginBottom: 10, 
+          color: activeTab === 'previous' ? '#18C964' : '#C0C0C0', 
+          fontWeight: 900, 
+          fontSize: 16, // Reduced from 18 to 16
+          cursor: 'pointer' 
+        }} onClick={() => setActiveTab('previous')}>
+          Previous Campaign(s)
+        </div>
         <div style={separatorStyle} />
-        <div style={{ marginTop: 10, color: activeTab === 'universe' ? '#18C964' : '#C0C0C0', fontWeight: 900, fontSize: 18, cursor: 'pointer' }} onClick={() => setActiveTab('universe')}>Your Universe x Winstory</div>
+        <div style={{ 
+          marginTop: 10, 
+          color: activeTab === 'universe' ? '#18C964' : '#C0C0C0', 
+          fontWeight: 900, 
+          fontSize: 16, // Reduced from 18 to 16
+          cursor: 'pointer' 
+        }} onClick={() => setActiveTab('universe')}>
+          Your Universe x Winstory
+        </div>
         <div style={separatorStyle} />
       </div>
 

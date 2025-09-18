@@ -29,24 +29,188 @@ function formatCountdown(msRemaining: number) {
 	return `${hours}h ${minutes}m ${seconds}s`;
 }
 
-// Smooth cubic bezier path for line chart
-function buildSmoothPath(points: CompletionPoint[], width: number, height: number, padding: {left:number;right:number;top:number;bottom:number}, maxX: number, maxY: number) {
+// Enhanced chart modal component with day navigation
+function ChartModal({ isOpen, onClose, points, maxY, maxX, currentPoint, yAxisLabel, isROI, type, currentDay, setCurrentDay, validatedPoints, currentValidatedPoint }: {
+  isOpen: boolean;
+  onClose: () => void;
+  points: CompletionPoint[];
+  maxY: number;
+  maxX: number;
+  currentPoint?: CompletionPoint;
+  yAxisLabel: string;
+  isROI?: boolean;
+  type: 'mint' | 'roi' | 'rewards';
+  currentDay: number;
+  setCurrentDay: (day: number) => void;
+  validatedPoints?: CompletionPoint[];
+  currentValidatedPoint?: CompletionPoint;
+}) {
+  if (!isOpen) return null;
+
+  // Calculate total days (168h = 7 days)
+  const totalDays = Math.ceil(maxX / 24);
+  const daysArray = Array.from({ length: totalDays }, (_, i) => i + 1);
+
+  // Filter points for current 24h period
+  const dayStartHour = (currentDay - 1) * 24;
+  const dayEndHour = currentDay * 24;
+  
+  const currentDayPoints = points.filter(p => 
+    p.x >= dayStartHour && p.x <= dayEndHour
+  ); // Keep original x coordinates (24h, 48h, 72h, etc.)
+
+  const currentDayValidatedPoints = validatedPoints?.filter(p => 
+    p.x >= dayStartHour && p.x <= dayEndHour
+  ) || [];
+
+  // Current point for this day
+  const currentDayPoint = currentPoint && currentPoint.x >= dayStartHour && currentPoint.x <= dayEndHour 
+    ? currentPoint
+    : undefined;
+
+  const currentDayValidatedPoint = currentValidatedPoint && currentValidatedPoint.x >= dayStartHour && currentValidatedPoint.x <= dayEndHour 
+    ? currentValidatedPoint
+    : undefined;
+
+  return (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: 'rgba(0, 0, 0, 0.95)',
+      zIndex: 1000,
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: 20
+    }}>
+      <div style={{
+        backgroundColor: '#000',
+        borderRadius: 16,
+        padding: 24,
+        maxWidth: '95vw',
+        maxHeight: '95vh',
+        border: '2px solid #18C964'
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+          <h3 style={{ color: '#18C964', fontSize: 24, fontWeight: 800, margin: 0 }}>
+            {type === 'mint' ? 'MINT Completion' : type === 'roi' ? 'R.O.I.' : 'Rewards'} - Day {currentDay} Detailed View (24h)
+          </h3>
+          <button
+            onClick={onClose}
+            style={{
+              background: 'transparent',
+              border: '2px solid #FF4444',
+              color: '#FF4444',
+              borderRadius: 8,
+              padding: '8px 16px',
+              fontWeight: 800,
+              cursor: 'pointer'
+            }}
+          >
+            ✕ Close
+          </button>
+        </div>
+        
+        {/* Day navigation */}
+        <div style={{ 
+          display: 'flex', 
+          gap: 8, 
+          marginBottom: 16, 
+          justifyContent: 'center',
+          flexWrap: 'wrap'
+        }}>
+          {daysArray.map(day => (
+            <button
+              key={day}
+              onClick={() => setCurrentDay(day)}
+              style={{
+                background: day === currentDay ? '#18C964' : 'transparent',
+                border: `2px solid ${day === currentDay ? '#18C964' : '#555'}`,
+                color: day === currentDay ? '#000' : '#18C964',
+                borderRadius: 8,
+                padding: '6px 12px',
+                fontWeight: 800,
+                cursor: 'pointer',
+                fontSize: 14,
+                minWidth: '60px'
+              }}
+            >
+              Day {day}
+            </button>
+          ))}
+        </div>
+        
+        {/* Enhanced larger chart with current day's 24h view */}
+        {currentDayPoints.length > 0 ? (
+          type === 'rewards' ? (
+            <DualLineChart 
+              mintPoints={currentDayPoints}
+              validatedPoints={currentDayValidatedPoints} 
+              maxY={maxY} 
+              maxX={dayStartHour + 24}
+              currentMintPoint={currentDayPoint}
+              currentValidatedPoint={currentDayValidatedPoint}
+              yAxisLabel={yAxisLabel}
+              isEnhanced={true}
+              dayStartHour={dayStartHour}
+            />
+          ) : (
+            <ModernLineChart 
+              points={currentDayPoints} 
+              maxY={maxY} 
+              maxX={dayStartHour + 24} // Scale X axis to current day end (24h, 48h, 72h, etc.)
+              currentPoint={currentDayPoint}
+              yAxisLabel={yAxisLabel}
+              isROI={isROI}
+              isEnhanced={true}
+              dayStartHour={dayStartHour} // Pass day start for proper X axis labels
+            />
+          )
+        ) : (
+          <div style={{
+            width: 1200,
+            height: 600,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            border: '2px dashed #333',
+            borderRadius: 8,
+            color: '#C0C0C0'
+          }}>
+            <div style={{ fontSize: 48, marginBottom: 16, opacity: 0.5 }}>📊</div>
+            <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>No data for Day {currentDay}</div>
+            <div style={{ fontSize: 14, opacity: 0.7 }}>Data will appear as the campaign progresses</div>
+          </div>
+        )}
+        
+        <div style={{ marginTop: 16, color: '#C0C0C0', fontSize: 14, textAlign: 'center' }}>
+          Navigate between days to explore detailed 24h periods • Enhanced precision view
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Linear path for line chart (no curves)
+function buildLinearPath(points: CompletionPoint[], width: number, height: number, padding: {left:number;right:number;top:number;bottom:number}, maxX: number, maxY: number, xOffset: number = 0) {
 	const innerW = width - padding.left - padding.right;
 	const innerH = height - padding.top - padding.bottom;
-	const toX = (x: number) => padding.left + (Math.min(x, maxX) / maxX) * innerW;
+	const toX = (x: number) => padding.left + (Math.min(Math.max(x - xOffset, 0), maxX) / maxX) * innerW;
 	const toY = (y: number) => padding.top + innerH - (Math.min(y, maxY) / maxY) * innerH;
 	if (points.length === 0) return '';
 	let d = `M ${toX(points[0].x)} ${toY(points[0].y)}`;
 	for (let i = 1; i < points.length; i++) {
-		const p0 = points[i - 1];
-		const p1 = points[i];
-		const cx = (toX(p0.x) + toX(p1.x)) / 2;
-		d += ` C ${cx} ${toY(p0.y)}, ${cx} ${toY(p1.y)}, ${toX(p1.x)} ${toY(p1.y)}`;
+		d += ` L ${toX(points[i].x)} ${toY(points[i].y)}`;
 	}
 	return d;
 }
 
-function ModernLineChart({ points, maxY, maxX, showDeficit = false, deficitThreshold = 0, currentPoint, yAxisLabel, isROI = false }: { 
+function ModernLineChart({ points, maxY, maxX, showDeficit = false, deficitThreshold = 0, currentPoint, yAxisLabel, isROI = false, isEnhanced = false, onChartClick, dayStartHour = 0 }: { 
   points: CompletionPoint[]; 
   maxY: number; 
   maxX: number; 
@@ -55,24 +219,44 @@ function ModernLineChart({ points, maxY, maxX, showDeficit = false, deficitThres
   currentPoint?: CompletionPoint;
   yAxisLabel: string;
   isROI?: boolean;
+  isEnhanced?: boolean;
+  onChartClick?: () => void;
+  dayStartHour?: number;
 }) {
-	const width = 820;
-	const height = 240;
-	const padding = { left: 60, right: 16, top: 10, bottom: 28 }; // Increased left padding for Y-axis labels
+	// Enhanced dimensions for detailed view
+	const width = isEnhanced ? 1200 : 820;
+	const height = isEnhanced ? 600 : 280; // Increased height as requested
+	const padding = { left: 60, right: 16, top: 10, bottom: 28 };
 	const innerW = width - padding.left - padding.right;
 	const innerH = height - padding.top - padding.bottom;
-	const toX = (x: number) => padding.left + (Math.min(x, maxX) / maxX) * innerW;
+	// For enhanced view with day navigation, use day-specific range
+	const xRange = isEnhanced ? 24 : maxX; // 24h range for enhanced view, full range for standard view
+	const xOffset = isEnhanced ? dayStartHour : 0; // Starting point for enhanced view
+	const toX = (x: number) => padding.left + (Math.min(Math.max(x - xOffset, 0), xRange) / xRange) * innerW;
 	const toY = (y: number) => padding.top + innerH - (Math.min(y, maxY) / maxY) * innerH;
 
-	const d = buildSmoothPath(points, width, height, padding, maxX, maxY);
+	// Use consistent X range for path building
+	const pathMaxX = isEnhanced ? xRange : maxX;
+	const pathXOffset = isEnhanced ? dayStartHour : 0;
+	const d = buildLinearPath(points, width, height, padding, pathMaxX, maxY, pathXOffset);
 
-	const xTicks = [0, 24, 48, 72, 96, 120, 144, 168];
+	const xTicks = isEnhanced ? 
+		Array.from({ length: 13 }, (_, i) => dayStartHour + i * 2) :  // 24h detailed view from day start
+		[0, 24, 48, 72, 96, 120, 144, 168]; // Standard 168h view
 	
 	// Y-axis ticks based on maxY
 	const yTicks = [0, maxY * 0.25, maxY * 0.5, maxY * 0.75, maxY];
 	
 	return (
-		<svg width={width} height={height} style={{ background: 'transparent' }}>
+		<svg 
+			width={width} 
+			height={height} 
+			style={{ 
+				background: 'transparent', 
+				cursor: !isEnhanced && onChartClick ? 'pointer' : 'default' 
+			}}
+			onClick={!isEnhanced && onChartClick ? onChartClick : undefined}
+		>
 			{/* Y-axis label */}
 			<text 
 				x={15} 
@@ -104,7 +288,9 @@ function ModernLineChart({ points, maxY, maxX, showDeficit = false, deficitThres
 			{xTicks.map((h) => (
 				<g key={h}>
 					<line x1={toX(h)} y1={padding.top} x2={toX(h)} y2={height - padding.bottom} stroke="#0f0f0f" />
-					<text x={toX(h)} y={height - 8} fill="#C0C0C0" fontSize={10} textAnchor="middle">{h === 0 ? 'Launch' : `${h}h`}</text>
+					<text x={toX(h)} y={height - 8} fill="#C0C0C0" fontSize={10} textAnchor="middle">
+						{h === 0 ? 'Launch' : `${h}h`}
+					</text>
 				</g>
 			))}
 
@@ -122,7 +308,9 @@ function ModernLineChart({ points, maxY, maxX, showDeficit = false, deficitThres
 			)}
 
 			{/* area under curve */}
-			<path d={`${d} L ${toX(points[points.length - 1].x)} ${toY(0)} L ${toX(points[0].x)} ${toY(0)} Z`} fill="url(#gArea)" opacity={0.35} />
+			{points.length > 0 && (
+				<path d={`${d} L ${toX(points[points.length - 1].x)} ${toY(0)} L ${toX(points[0].x)} ${toY(0)} Z`} fill="url(#gArea)" opacity={0.35} />
+			)}
 			<defs>
 				<linearGradient id="gArea" x1="0" y1="0" x2="0" y2="1">
 					<stop offset="0%" stopColor="#18C964" stopOpacity="0.35" />
@@ -130,8 +318,8 @@ function ModernLineChart({ points, maxY, maxX, showDeficit = false, deficitThres
 				</linearGradient>
 			</defs>
 
-			{/* line */}
-			<path d={d} fill="none" stroke="#18C964" strokeWidth={3} />
+			{/* Thinner line as requested */}
+			<path d={d} fill="none" stroke="#18C964" strokeWidth={2} />
 			
 			{/* current point - positioned at actual current time */}
 			{currentPoint && (
@@ -141,6 +329,160 @@ function ModernLineChart({ points, maxY, maxX, showDeficit = false, deficitThres
 					r={4} 
 					fill="#18C964" 
 				/>
+			)}
+			
+			{/* Click indicator for enhanced view */}
+			{!isEnhanced && onChartClick && (
+				<text x={width - 20} y={20} fill="#FFD600" fontSize={12} textAnchor="end">
+					🔍 Click to expand
+				</text>
+			)}
+		</svg>
+	);
+}
+
+// Dual line chart for Rewards (MINT vs Validated)
+function DualLineChart({ mintPoints, validatedPoints, maxY, maxX, currentMintPoint, currentValidatedPoint, yAxisLabel, isEnhanced = false, onChartClick, dayStartHour = 0 }: { 
+  mintPoints: CompletionPoint[]; 
+  validatedPoints: CompletionPoint[];
+  maxY: number; 
+  maxX: number; 
+  currentMintPoint?: CompletionPoint;
+  currentValidatedPoint?: CompletionPoint;
+  yAxisLabel: string;
+  isEnhanced?: boolean;
+  onChartClick?: () => void;
+  dayStartHour?: number;
+}) {
+	// Enhanced dimensions for detailed view
+	const width = isEnhanced ? 1200 : 820;
+	const height = isEnhanced ? 600 : 280;
+	const padding = { left: 60, right: 16, top: 10, bottom: 28 };
+	const innerW = width - padding.left - padding.right;
+	const innerH = height - padding.top - padding.bottom;
+	// For enhanced view with day navigation, use day-specific range
+	const xRange = isEnhanced ? 24 : maxX;
+	const xOffset = isEnhanced ? dayStartHour : 0;
+	const toX = (x: number) => padding.left + (Math.min(Math.max(x - xOffset, 0), xRange) / xRange) * innerW;
+	const toY = (y: number) => padding.top + innerH - (Math.min(y, maxY) / maxY) * innerH;
+
+	// Use consistent X range for path building
+	const pathMaxX = isEnhanced ? xRange : maxX;
+	const pathXOffset = isEnhanced ? dayStartHour : 0;
+	const mintPath = buildLinearPath(mintPoints, width, height, padding, pathMaxX, maxY, pathXOffset);
+	const validatedPath = buildLinearPath(validatedPoints, width, height, padding, pathMaxX, maxY, pathXOffset);
+
+	const xTicks = isEnhanced ? 
+		Array.from({ length: 13 }, (_, i) => dayStartHour + i * 2) :
+		[0, 24, 48, 72, 96, 120, 144, 168];
+	
+	const yTicks = [0, maxY * 0.25, maxY * 0.5, maxY * 0.75, maxY];
+	
+	return (
+		<svg 
+			width={width} 
+			height={height} 
+			style={{ 
+				background: 'transparent', 
+				cursor: !isEnhanced && onChartClick ? 'pointer' : 'default' 
+			}}
+			onClick={!isEnhanced && onChartClick ? onChartClick : undefined}
+		>
+			{/* Y-axis label */}
+			<text 
+				x={15} 
+				y={height / 2} 
+				fill="#C0C0C0" 
+				fontSize={12} 
+				textAnchor="middle" 
+				dominantBaseline="central"
+				transform={`rotate(-90, 15, ${height / 2})`}
+			>
+				{yAxisLabel}
+			</text>
+
+			{/* horizontal grid */}
+			{yTicks.map((t, i) => (
+				<line key={i} x1={padding.left} y1={toY(t)} x2={width - padding.right} y2={toY(t)} stroke="#141414" />
+			))}
+			
+			{/* Y-axis ticks and labels */}
+			{yTicks.map((t, i) => (
+				<g key={i}>
+					<line x1={padding.left - 5} y1={toY(t)} x2={padding.left} y2={toY(t)} stroke="#333" />
+					<text x={padding.left - 8} y={toY(t)} fill="#FFD600" fontSize={10} textAnchor="end" dominantBaseline="central">
+						{Math.round(t)}
+					</text>
+				</g>
+			))}
+			
+			{/* X-axis grid and labels */}
+			{xTicks.map((h) => (
+				<g key={h}>
+					<line x1={toX(h)} y1={padding.top} x2={toX(h)} y2={height - padding.bottom} stroke="#0f0f0f" />
+					<text x={toX(h)} y={height - 8} fill="#C0C0C0" fontSize={10} textAnchor="middle">
+						{h === 0 ? 'Launch' : `${h}h`}
+					</text>
+				</g>
+			))}
+
+			{/* Areas under curves */}
+			{mintPoints.length > 0 && (
+				<path d={`${mintPath} L ${toX(mintPoints[mintPoints.length - 1].x)} ${toY(0)} L ${toX(mintPoints[0].x)} ${toY(0)} Z`} fill="url(#mintArea)" opacity={0.2} />
+			)}
+			{validatedPoints.length > 0 && (
+				<path d={`${validatedPath} L ${toX(validatedPoints[validatedPoints.length - 1].x)} ${toY(0)} L ${toX(validatedPoints[0].x)} ${toY(0)} Z`} fill="url(#validatedArea)" opacity={0.3} />
+			)}
+			
+			<defs>
+				<linearGradient id="mintArea" x1="0" y1="0" x2="0" y2="1">
+					<stop offset="0%" stopColor="#FFD600" stopOpacity="0.2" />
+					<stop offset="100%" stopColor="#FFD600" stopOpacity="0.05" />
+				</linearGradient>
+				<linearGradient id="validatedArea" x1="0" y1="0" x2="0" y2="1">
+					<stop offset="0%" stopColor="#18C964" stopOpacity="0.3" />
+					<stop offset="100%" stopColor="#18C964" stopOpacity="0.05" />
+				</linearGradient>
+			</defs>
+
+			{/* MINT line (yellow) */}
+			<path d={mintPath} fill="none" stroke="#FFD600" strokeWidth={2} />
+			
+			{/* Validated line (green) */}
+			<path d={validatedPath} fill="none" stroke="#18C964" strokeWidth={2} />
+			
+			{/* Current points */}
+			{currentMintPoint && (
+				<circle 
+					cx={toX(currentMintPoint.x)} 
+					cy={toY(currentMintPoint.y)} 
+					r={4} 
+					fill="#FFD600" 
+				/>
+			)}
+			{currentValidatedPoint && (
+				<circle 
+					cx={toX(currentValidatedPoint.x)} 
+					cy={toY(currentValidatedPoint.y)} 
+					r={4} 
+					fill="#18C964" 
+				/>
+			)}
+			
+			{/* Legend */}
+			<g transform={`translate(${width - 200}, 30)`}>
+				<rect x={0} y={0} width={190} height={50} fill="rgba(0,0,0,0.8)" stroke="#333" strokeWidth={1} rx={4} />
+				<circle cx={15} cy={15} r={4} fill="#FFD600" />
+				<text x={25} y={19} fill="#FFD600" fontSize={12} fontWeight={600}>Total MINT</text>
+				<circle cx={15} cy={35} r={4} fill="#18C964" />
+				<text x={25} y={39} fill="#18C964" fontSize={12} fontWeight={600}>Validated Rewards</text>
+			</g>
+			
+			{/* Click indicator for enhanced view */}
+			{!isEnhanced && onChartClick && (
+				<text x={width - 20} y={20} fill="#FFD600" fontSize={12} textAnchor="end">
+					🔍 Click to expand
+				</text>
 			)}
 		</svg>
 	);
@@ -160,6 +502,10 @@ export default function ValidatedCampaignDashboard({ forceValidated, onForceVali
 	const [endTs, setEndTs] = useState<number>(() => Date.now() + 168 * 3600 * 1000);
 	const [showTextModal, setShowTextModal] = useState(false);
 	const [showVideoModal, setShowVideoModal] = useState(false);
+	const [showChartModal, setShowChartModal] = useState(false);
+	const [chartModalType, setChartModalType] = useState<'mint' | 'roi' | 'rewards'>('mint');
+	const [currentDay, setCurrentDay] = useState(1); // Day navigation for chart modal
+	const [validatedCompletions, setValidatedCompletions] = useState<number>(0); // Number of validated completions (≤ mintCompleted)
 	
 	// Pricing controls - MINT Community to Company is always 50% of MINT Price
 	const [mintPrice, setMintPrice] = useState<number>(25);
@@ -170,6 +516,13 @@ export default function ValidatedCampaignDashboard({ forceValidated, onForceVali
 	useEffect(() => {
 		setMintCommunityToCompany(mintPrice * 0.5);
 	}, [mintPrice]);
+
+	// Ensure validated completions never exceed mintCompleted
+	useEffect(() => {
+		if (validatedCompletions > mintCompleted) {
+			setValidatedCompletions(mintCompleted);
+		}
+	}, [mintCompleted, validatedCompletions]);
 
 	useEffect(() => {
 		const id = setInterval(() => setNow(Date.now()), 1000);
@@ -248,6 +601,36 @@ export default function ValidatedCampaignDashboard({ forceValidated, onForceVali
 		return { x: elapsedH, y: revenue };
 	}, [elapsedH, mintCompleted, mintCommunityToCompany]);
 
+	// Validated completions chart data (always ≤ mintCompleted)
+	const validatedChart = useMemo(() => {
+		const ticks = [0, 24, 48, 72, 96, 120, 144, 168];
+		const pts: CompletionPoint[] = [];
+		
+		// Create points up to the current elapsed time
+		for (let i = 0; i < ticks.length; i++) {
+			const x = ticks[i];
+			if (x <= elapsedH) {
+				const ratio = Math.min(1, x / Math.max(1, elapsedH));
+				const y = Math.round(validatedCompletions * ratio);
+				pts.push({ x, y });
+			}
+		}
+		
+		// Add current point at actual elapsed time for real-time evolution
+		if (elapsedH > 0) {
+			pts.push({ x: elapsedH, y: validatedCompletions });
+			pts.sort((a, b) => a.x - b.x);
+		}
+		
+		return pts;
+	}, [elapsedH, validatedCompletions]);
+
+	// Current validated point at actual elapsed time
+	const currentValidatedPoint = useMemo(() => {
+		if (elapsedH <= 0) return { x: 0, y: 0 };
+		return { x: elapsedH, y: validatedCompletions };
+	}, [elapsedH, validatedCompletions]);
+
 	// Calculate break even point for ROI chart
 	const breakEvenPoint = useMemo(() => {
 		// Break even when revenue equals creation cost
@@ -270,6 +653,20 @@ export default function ValidatedCampaignDashboard({ forceValidated, onForceVali
 		{ key: 'rewards', label: 'Rewards', dim: tab !== 'rewards' },
 	];
 
+	// Handle Community Completions click
+	const handleCommunityCompletionsClick = () => {
+		// Navigate to minted completions view
+		console.log('Navigating to Community Completions - showing minted completions for user interaction');
+		// In a real app, this would navigate to /mywin/community-completions or similar
+		alert('Navigation to Community Completions (minted completions) - Feature coming soon!');
+	};
+
+	// Handle chart click for modal
+	const handleChartClick = (type: 'mint' | 'roi' | 'rewards') => {
+		setChartModalType(type);
+		setShowChartModal(true);
+	};
+
 	const additionalControls = (
 		<div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
 			<label style={{ display: 'grid', gridTemplateColumns: '1fr auto', alignItems: 'center', gap: 8 }}>
@@ -279,6 +676,17 @@ export default function ValidatedCampaignDashboard({ forceValidated, onForceVali
 					value={mintCompleted}
 					min={0}
 					onChange={(e) => setMintCompleted(Math.max(0, Number.isFinite(parseInt(e.target.value)) ? parseInt(e.target.value) : 0))}
+					style={{ width: 90, background: '#111', color: '#fff', border: '1px solid #333', borderRadius: 6, padding: '6px 8px' }}
+				/>
+			</label>
+			<label style={{ display: 'grid', gridTemplateColumns: '1fr auto', alignItems: 'center', gap: 8 }}>
+				<span style={{ fontSize: 13 }}>Validated Completions</span>
+				<input
+					type="number"
+					value={validatedCompletions}
+					min={0}
+					max={mintCompleted}
+					onChange={(e) => setValidatedCompletions(Math.min(mintCompleted, Math.max(0, Number.isFinite(parseInt(e.target.value)) ? parseInt(e.target.value) : 0)))}
 					style={{ width: 90, background: '#111', color: '#fff', border: '1px solid #333', borderRadius: 6, padding: '6px 8px' }}
 				/>
 			</label>
@@ -342,23 +750,45 @@ export default function ValidatedCampaignDashboard({ forceValidated, onForceVali
 	return (
 		<div style={{ width: '100%', maxWidth: 1180 }}>
 			{/* Title row */}
-			<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-				<h2 style={{ color: '#18C964', fontSize: 44, fontWeight: 900 }}>Validated Campaign</h2>
-				<button style={{ 
-					background: 'transparent', 
-					border: '2px solid rgba(255, 214, 0, 0.6)', 
-					color: 'rgba(255, 214, 0, 0.8)', 
-					borderRadius: 12, 
-					padding: '8px 14px', 
-					fontWeight: 800,
-					fontSize: 20
+			<div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24 }}>
+				<h2 style={{ 
+					color: '#18C964', 
+					fontSize: 38, // Reduced from 44 for better spacing
+					fontWeight: 900,
+					margin: 0
 				}}>
+					Validated Campaign
+				</h2>
+				<button 
+					onClick={handleCommunityCompletionsClick}
+					style={{ 
+						background: 'transparent', 
+						border: '1px solid rgba(255, 214, 0, 0.4)', 
+						color: 'rgba(255, 214, 0, 0.7)', 
+						borderRadius: 8, 
+						padding: '8px 14px', 
+						fontWeight: 600,
+						fontSize: 18,
+						cursor: 'pointer',
+						transition: 'all 0.3s ease',
+					}}
+					onMouseEnter={(e) => {
+						e.currentTarget.style.backgroundColor = 'rgba(255, 214, 0, 0.1)';
+						e.currentTarget.style.color = 'rgba(255, 214, 0, 1)';
+						e.currentTarget.style.borderColor = 'rgba(255, 214, 0, 0.8)';
+					}}
+					onMouseLeave={(e) => {
+						e.currentTarget.style.backgroundColor = 'transparent';
+						e.currentTarget.style.color = 'rgba(255, 214, 0, 0.7)';
+						e.currentTarget.style.borderColor = 'rgba(255, 214, 0, 0.4)';
+					}}
+				>
 					Community Completions
 				</button>
 			</div>
 
-			{/* Sub-tabs with carousel effect */}
-			<div style={{ display: 'flex', gap: 26, alignItems: 'center', marginBottom: 6 }}>
+			{/* Sub-tabs with carousel effect - spaced down for better breathing room */}
+			<div style={{ display: 'flex', gap: 26, alignItems: 'center', marginBottom: 24, marginTop: 8 }}>
 				{tabs.map((t: any) => (
 					<button
 						key={t.key}
@@ -368,7 +798,7 @@ export default function ValidatedCampaignDashboard({ forceValidated, onForceVali
 							border: 'none',
 							color: tab === t.key ? '#18C964' : (t.dim ? 'rgba(24,201,100,0.4)' : '#2BAE56'),
 							fontWeight: 900,
-							fontSize: 22,
+							fontSize: 20, // Reduced from 22 for better spacing
 							cursor: 'pointer',
 							position: 'relative',
 							transition: 'all 0.3s ease',
@@ -391,9 +821,9 @@ export default function ValidatedCampaignDashboard({ forceValidated, onForceVali
 				))}
 			</div>
 
-			<div style={{ display: 'grid', gridTemplateColumns: 'minmax(680px, 1fr) 280px', gap: 18, alignItems: 'start' }}>
+			<div style={{ display: 'grid', gridTemplateColumns: 'minmax(680px, 1fr) 280px', gap: 18, alignItems: 'start', marginTop: 16 }}>
 				{/* Chart area */}
-				<div style={{ overflow: 'hidden' }}>
+				<div style={{ overflow: 'hidden', marginBottom: 20 }}>
 					{tab === 'mint' && (
 						<ModernLineChart 
 							points={chart} 
@@ -402,6 +832,7 @@ export default function ValidatedCampaignDashboard({ forceValidated, onForceVali
 							currentPoint={currentPoint}
 							yAxisLabel="MINT Completions"
 							isROI={false}
+							onChartClick={() => handleChartClick('mint')}
 						/>
 					)}
 					{tab === 'roi' && (
@@ -414,26 +845,60 @@ export default function ValidatedCampaignDashboard({ forceValidated, onForceVali
 							currentPoint={currentROIPoint}
 							yAxisLabel="Creator Profit ($)"
 							isROI={true}
+							onChartClick={() => handleChartClick('roi')}
 						/>
 					)}
 					{tab === 'rewards' && (
-						<div style={{ height: 240, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.5)' }}>Rewards à venir</div>
+						<DualLineChart 
+							mintPoints={chart} 
+							validatedPoints={validatedChart}
+							maxY={objective} 
+							maxX={168} 
+							currentMintPoint={currentPoint}
+							currentValidatedPoint={currentValidatedPoint}
+							yAxisLabel="Completions"
+							onChartClick={() => handleChartClick('rewards')}
+						/>
 					)}
 				</div>
 
 				{/* Right info panel (more compact) */}
 				<div>
 					<div style={{ color: '#18C964', fontStyle: 'italic', fontSize: 18, marginBottom: 10 }}>{mockCampaignData.title}</div>
-					<div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+					<div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
 						<button 
 							onClick={() => setShowTextModal(true)}
-							style={{ color: '#18C964', border: '2px solid #18C964', borderRadius: 14, padding: '8px 12px', textDecoration: 'none', textAlign: 'center', fontWeight: 800, background: 'transparent', cursor: 'pointer' }}
+							style={{ 
+								color: '#18C964', 
+								border: '2px solid #18C964', 
+								borderRadius: 14, 
+								padding: '6px 4px', // Reduced horizontal padding for narrower width
+								textDecoration: 'none', 
+								textAlign: 'center', 
+								fontWeight: 800, 
+								background: 'transparent', 
+								cursor: 'pointer',
+								fontSize: 14, // Restored original font size
+								maxWidth: '180px' // Limit button width
+							}}
 						>
 							Your Starting Text
 						</button>
 						<button 
 							onClick={() => setShowVideoModal(true)}
-							style={{ color: '#18C964', border: '2px solid #18C964', borderRadius: 14, padding: '8px 12px', textDecoration: 'none', textAlign: 'center', fontWeight: 800, background: 'transparent', cursor: 'pointer' }}
+							style={{ 
+								color: '#18C964', 
+								border: '2px solid #18C964', 
+								borderRadius: 14, 
+								padding: '6px 4px', // Reduced horizontal padding for narrower width
+								textDecoration: 'none', 
+								textAlign: 'center', 
+								fontWeight: 800, 
+								background: 'transparent', 
+								cursor: 'pointer',
+								fontSize: 14, // Restored original font size
+								maxWidth: '180px' // Limit button width
+							}}
 						>
 							Your Starting A.I. Film
 						</button>
@@ -442,32 +907,57 @@ export default function ValidatedCampaignDashboard({ forceValidated, onForceVali
 					<div style={{ marginTop: 14, color: '#FFD600', fontWeight: 900, fontSize: 20 }}>End of Campaign in</div>
 					<div style={{ color: '#FFFFFF', fontFamily: 'monospace', fontSize: 28, marginTop: 4 }}>{countdown}</div>
 
-					<div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
-						<button style={{ background: 'transparent', border: '2px solid #18C964', color: '#18C964', borderRadius: 14, padding: '6px 10px', fontWeight: 800 }}>Standard Rewards</button>
-						<button style={{ background: 'transparent', border: '2px solid #FFD600', color: '#FFD600', borderRadius: 14, padding: '6px 10px', fontWeight: 800 }}>Premium Rewards</button>
-						<div style={{ color: '#18C964', fontSize: 14 }}><span style={{ color: '#C0C0C0' }}>Value MINT Completion</span> <strong style={{ marginLeft: 6 }}>{mintPrice} $</strong></div>
+					<div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 8 }}>
+						<button style={{ 
+							background: 'transparent', 
+							border: '2px solid #18C964', 
+							color: '#18C964', 
+							borderRadius: 14, 
+							padding: '6px 4px', // Reduced horizontal padding for narrower width
+							fontWeight: 800,
+							fontSize: 14, // Restored original font size
+							maxWidth: '180px' // Limit button width
+						}}>
+							Standard Rewards
+						</button>
+						<button style={{ 
+							background: 'transparent', 
+							border: '2px solid #FFD600', 
+							color: '#FFD600', 
+							borderRadius: 14, 
+							padding: '6px 4px', // Reduced horizontal padding for narrower width
+							fontWeight: 800,
+							fontSize: 14, // Restored original font size
+							maxWidth: '180px' // Limit button width
+						}}>
+							Premium Rewards
+						</button>
+						<div style={{ color: '#18C964', fontSize: 14 }}>
+							<span style={{ color: '#C0C0C0' }}>Value MINT Completion</span> 
+							<strong style={{ marginLeft: 6 }}>{mintPrice} $</strong>
+						</div>
 					</div>
 				</div>
 			</div>
 
 			{/* Bottom metrics and Top 3 */}
-			<div style={{ display: 'grid', gridTemplateColumns: 'minmax(680px, 1fr) 280px', gap: 18, alignItems: 'start', marginTop: 12 }}>
+			<div style={{ display: 'grid', gridTemplateColumns: 'minmax(680px, 1fr) 280px', gap: 18, alignItems: 'start', marginTop: 32 }}>
 				<div style={{ textAlign: 'center' }}>
 					{tab === 'mint' && (
 						<>
-							<div style={{ color: '#2BAE56', fontWeight: 900, fontSize: 14 }}>MINT Completed</div>
-							<div style={{ color: '#18C964', fontWeight: 900, fontSize: 32 }}>{mintCompleted}</div>
-							<div style={{ color: '#FFD600', fontWeight: 900, fontSize: 18, marginTop: 6 }}>{objective}</div>
-							<div style={{ color: '#C0C0C0', fontStyle: 'italic' }}>Your Objective MINT</div>
+							<div style={{ color: '#2BAE56', fontWeight: 900, fontSize: 14, marginBottom: 8 }}>MINT Completed</div>
+							<div style={{ color: '#18C964', fontWeight: 900, fontSize: 32, marginBottom: 12 }}>{mintCompleted}</div>
+							<div style={{ color: '#FFD600', fontWeight: 900, fontSize: 18, marginTop: 6, marginBottom: 4 }}>{objective}</div>
+							<div style={{ color: '#C0C0C0', fontStyle: 'italic', marginBottom: 16 }}>Your Objective MINT</div>
 							<div style={{ marginTop: 6, color: '#18C964', fontWeight: 900, fontSize: 30 }}>{percent} % MINT Completion</div>
 						</>
 					)}
 					{tab === 'roi' && (
 						<>
-							<div style={{ color: '#18C964', fontWeight: 900, fontSize: 18, marginBottom: 8 }}>
+							<div style={{ color: '#18C964', fontWeight: 900, fontSize: 18, marginBottom: 16 }}>
 								{mintCompleted} MINT Completed × {mintCommunityToCompany}€ MINT Community to Company = <span style={{ color: '#FFD600' }}>+ {totalRevenue.toFixed(0)}$</span> on your Wallet connected
 							</div>
-							<div style={{ color: '#C0C0C0', fontSize: 14, marginTop: 8 }}>
+							<div style={{ color: '#C0C0C0', fontSize: 14, marginTop: 8, marginBottom: 12 }}>
 								Break Even Point: <span style={{ color: '#FFD600' }}>${breakEvenPoint}</span>
 							</div>
 							<div style={{ color: totalRevenue >= breakEvenPoint ? '#18C964' : '#FF0000', fontSize: 16, fontWeight: 800, marginTop: 4 }}>
@@ -475,17 +965,42 @@ export default function ValidatedCampaignDashboard({ forceValidated, onForceVali
 							</div>
 						</>
 					)}
+					{tab === 'rewards' && (
+						<>
+							<div style={{ color: '#FFD600', fontWeight: 900, fontSize: 18, marginBottom: 12 }}>
+								Total MINT: <span style={{ color: '#FFD600' }}>{mintCompleted}</span>
+							</div>
+							<div style={{ color: '#18C964', fontWeight: 900, fontSize: 18, marginBottom: 12 }}>
+								Validated Rewards: <span style={{ color: '#18C964' }}>{validatedCompletions}</span>
+							</div>
+							<div style={{ color: '#C0C0C0', fontSize: 14, marginTop: 8, marginBottom: 10 }}>
+								Validation Rate: <span style={{ color: mintCompleted > 0 ? '#FFD600' : '#C0C0C0' }}>
+									{mintCompleted > 0 ? `${Math.round((validatedCompletions / mintCompleted) * 100)}%` : '0%'}
+								</span>
+							</div>
+							<div style={{ color: validatedCompletions < mintCompleted ? '#FF8C00' : '#18C964', fontSize: 14, fontWeight: 600, marginTop: 4 }}>
+								{validatedCompletions < mintCompleted 
+									? `⚠️ ${mintCompleted - validatedCompletions} completions pending validation` 
+									: '✅ All completions validated'
+								}
+							</div>
+						</>
+					)}
 				</div>
 				<div>
-					<div style={{ color: '#C0C0C0', marginBottom: 6 }}>Actual Top 3 Validated</div>
-					<div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+					<div style={{ color: '#C0C0C0', marginBottom: 6, fontSize: 14 }}>Actual Top 3 Validated</div>
+					<div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
 						{mockCampaignData.topCompletions.map((completion, index) => (
 							<div key={completion.rank}>
-								<div style={{ color: index === 0 ? '#FFD600' : index === 1 ? '#C0C0C0' : '#FF8C00', fontWeight: 800 }}>
+								<div style={{ 
+									color: index === 0 ? '#FFD600' : index === 1 ? '#C0C0C0' : '#FF8C00', 
+									fontWeight: 800,
+									fontSize: 13 // Reduced font size as requested
+								}}>
 									{completion.rank === 1 ? '1st' : completion.rank === 2 ? '2nd' : '3rd'} Best Completion
 								</div>
-								<div style={{ color: '#C0C0C0' }}>by {completion.address}</div>
-								<div style={{ color: '#18C964', fontWeight: 800 }}>{completion.score} / 100</div>
+								<div style={{ color: '#C0C0C0', fontSize: 12 }}>by {completion.address}</div>
+								<div style={{ color: '#18C964', fontWeight: 800, fontSize: 13 }}>{completion.score} / 100</div>
 							</div>
 						))}
 					</div>
@@ -504,6 +1019,23 @@ export default function ValidatedCampaignDashboard({ forceValidated, onForceVali
 				onClose={() => setShowVideoModal(false)}
 				title="Your Starting A.I. Film"
 				videoUrl={mockCampaignData.videoUrl}
+			/>
+			
+			{/* Enhanced Chart Modal */}
+			<ChartModal
+				isOpen={showChartModal}
+				onClose={() => setShowChartModal(false)}
+				points={chartModalType === 'mint' || chartModalType === 'rewards' ? chart : roiChart}
+				maxY={chartModalType === 'mint' || chartModalType === 'rewards' ? objective : Math.max(maxPossibleRevenue, breakEvenPoint)}
+				maxX={168}
+				currentPoint={chartModalType === 'mint' || chartModalType === 'rewards' ? currentPoint : currentROIPoint}
+				yAxisLabel={chartModalType === 'mint' || chartModalType === 'rewards' ? "Completions" : "Creator Profit ($)"}
+				isROI={chartModalType === 'roi'}
+				type={chartModalType}
+				currentDay={currentDay}
+				setCurrentDay={setCurrentDay}
+				validatedPoints={chartModalType === 'rewards' ? validatedChart : undefined}
+				currentValidatedPoint={chartModalType === 'rewards' ? currentValidatedPoint : undefined}
 			/>
 
 			{/* Dev controls pour ce dashboard */}

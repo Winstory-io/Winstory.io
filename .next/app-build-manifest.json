@@ -5,6 +5,16 @@
       "static/chunks/main-app.js",
       "static/chunks/app/layout.js"
     ],
+    "/mywin/layout": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/mywin/layout.js"
+    ],
+    "/mywin/creations/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/mywin/creations/page.js"
+    ],
     "/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
@@ -25,20 +35,30 @@
       "static/chunks/main-app.js",
       "static/chunks/app/api/auth/[...nextauth]/route.js"
     ],
-    "/mywin/layout": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/mywin/layout.js"
-    ],
     "/mywin/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/mywin/page.js"
     ],
-    "/mywin/creations/page": [
+    "/mywin/completions/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/mywin/creations/page.js"
+      "static/chunks/app/mywin/completions/page.js"
+    ],
+    "/mywin/moderations/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/mywin/moderations/page.js"
+    ],
+    "/completion/layout": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/completion/layout.js"
+    ],
+    "/completion/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/completion/page.js"
     ]
   }
 }
