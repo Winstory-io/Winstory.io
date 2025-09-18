@@ -139,16 +139,27 @@ export default function ValidatedCompletionDashboard({
     const validVotes = completion.moderatorScores.filter(s => s.score >= 50).length;
     const refuseVotes = completion.moderatorScores.filter(s => s.score < 50).length;
     
-    // Check requirements
+    // Check the 2 requirements for completion
     const minVotesOk = numModerators >= 22; // Need exactly 22 or more
     const stakingOk = completion.stakedAmount >= completion.mintPrice;
-    const majorityOk = validVotes >= refuseVotes && (refuseVotes === 0 ? validVotes >= 2 : validVotes / refuseVotes >= 2);
+    
+    // Once both requirements are met, check majority
+    const requirementsMet = minVotesOk && stakingOk;
+    const majorityRefuses = refuseVotes > validVotes; // More refusals than validations
+    const majorityValidates = validVotes > refuseVotes; // More validations than refusals
+    
+    // Determine completion status
+    const allValidated = requirementsMet && majorityValidates;
+    const isRefused = requirementsMet && majorityRefuses; // Requirements met but majority refuses
     
     return {
       minVotesOk,
       stakingOk,
-      majorityOk,
-      allValidated: minVotesOk && stakingOk && majorityOk,
+      requirementsMet,
+      majorityRefuses,
+      majorityValidates,
+      allValidated,
+      isRefused,
       validVotes,
       refuseVotes,
       numModerators
@@ -182,27 +193,48 @@ export default function ValidatedCompletionDashboard({
       {/* Header */}
       <div style={{ textAlign: 'center', marginBottom: 24 }}> {/* Reduced margin */}
         <h1 style={{ 
-          color: validationStatus?.allValidated ? '#18C964' : '#FFD600', 
+          color: validationStatus?.isRefused ? '#FF3B30' : 
+                 validationStatus?.allValidated ? '#18C964' : '#FFD600', 
           fontSize: 38, // Reduced from 42
           fontWeight: 900, 
           marginBottom: 8 
         }}>
-          {validationStatus?.allValidated 
+          {validationStatus?.isRefused 
+            ? 'Moderators refused your Completion'
+            : validationStatus?.allValidated 
             ? 'Moderators validated and scored your Completion !'
-            : 'Moderation Completion in progress'
+            : validationStatus?.requirementsMet 
+            ? 'Vote in progress - Requirements met'
+            : 'Waiting for requirements to be met'
           }
         </h1>
         <p style={{ 
-          color: validationStatus?.allValidated ? '#18C964' : '#FFD600', 
+          color: validationStatus?.isRefused ? '#FF3B30' : 
+                 validationStatus?.allValidated ? '#18C964' : '#FFD600', 
           fontSize: 16, // Reduced from 18
           fontWeight: 600,
           margin: 0
         }}>
-          {validationStatus?.allValidated 
+          {validationStatus?.isRefused 
+            ? 'Unfortunately, your Completion content has been rejected by the Stakers moderators.'
+            : validationStatus?.allValidated 
             ? `Congratulations on respecting the Moderation rules ! ${completion.ranking <= 3 ? `You are the N°${completion.ranking}` : ''}`
-            : 'Waiting for validation requirements to be met'
+            : validationStatus?.requirementsMet 
+            ? 'Once majority is reached, vote will close automatically'
+            : 'Waiting for minimum votes and staking requirements'
           }
         </p>
+        {validationStatus?.isRefused && (
+          <p style={{ 
+            color: '#FF3B30', 
+            fontSize: 14,
+            fontWeight: 500,
+            margin: '8px 0 0 0',
+            fontStyle: 'italic'
+          }}>
+            It was deemed that the content did not comply with the moderation rules.
+          </p>
+        )}
       </div>
 
       {/* Campaign info */}
@@ -243,7 +275,7 @@ export default function ValidatedCompletionDashboard({
                 border: `1px solid ${validationStatus?.minVotesOk ? '#18C964' : '#FFD600'}` // Reduced border
               }} />
               <span style={{ color: validationStatus?.minVotesOk ? '#18C964' : '#FFD600', fontSize: 14 }}> {/* Reduced font */}
-                🌟 Min 22 Stakers votes
+                Minimum 22 Stakers votes
               </span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -255,7 +287,7 @@ export default function ValidatedCompletionDashboard({
                 border: `1px solid ${validationStatus?.stakingOk ? '#18C964' : '#FFD600'}`
               }} />
               <span style={{ color: validationStatus?.stakingOk ? '#18C964' : '#FFD600', fontSize: 14 }}>
-                ✅ Pool Staking &gt; Price $
+                Pool Staking &gt; Completion Price $
               </span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -263,11 +295,21 @@ export default function ValidatedCompletionDashboard({
                 width: 16, 
                 height: 16, 
                 borderRadius: '50%', 
-                background: validationStatus?.majorityOk ? '#18C964' : '#444',
-                border: `1px solid ${validationStatus?.majorityOk ? '#18C964' : '#FFD600'}`
-              }} />
-              <span style={{ color: validationStatus?.majorityOk ? '#18C964' : '#FFD600', fontSize: 14 }}>
-                ✅ Majority ≥ 2
+                background: validationStatus?.majorityValidates ? '#18C964' : 
+                           validationStatus?.majorityRefuses ? '#FF3B30' : '#444',
+                border: `1px solid ${validationStatus?.majorityValidates ? '#18C964' : 
+                                    validationStatus?.majorityRefuses ? '#FF3B30' : '#FFD600'}`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                {validationStatus?.majorityRefuses && (
+                  <span style={{ color: '#FFFFFF', fontSize: 10, fontWeight: 900 }}>✕</span>
+                )}
+              </div>
+              <span style={{ color: validationStatus?.majorityValidates ? '#18C964' : 
+                                   validationStatus?.majorityRefuses ? '#FF3B30' : '#FFD600', fontSize: 14 }}>
+                Majority Valide / Minority Refuse ≥ 2
               </span>
             </div>
           </div>
@@ -278,17 +320,22 @@ export default function ValidatedCompletionDashboard({
             padding: 12, // Reduced from 16
             background: validationStatus?.allValidated 
               ? 'rgba(24, 201, 100, 0.1)' 
+              : validationStatus?.isRefused 
+              ? 'rgba(255, 59, 48, 0.1)' 
               : 'rgba(255, 214, 0, 0.1)',
-            border: `1px solid ${validationStatus?.allValidated ? '#18C964' : '#FFD600'}`, // Reduced border
+            border: `1px solid ${validationStatus?.allValidated ? '#18C964' : validationStatus?.isRefused ? '#FF3B30' : '#FFD600'}`, // Reduced border
             borderRadius: 8 // Reduced from 12
           }}>
             <div style={{ 
-              color: validationStatus?.allValidated ? '#18C964' : '#FFD600', 
+              color: validationStatus?.allValidated ? '#18C964' : validationStatus?.isRefused ? '#FF3B30' : '#FFD600', 
               fontSize: 13, // Reduced from 16
               fontWeight: 800, 
               marginBottom: 6 // Reduced from 8
             }}>
-              Completion Moderation<br/>by {validationStatus?.numModerators} Stakers
+              {validationStatus?.requirementsMet 
+                ? `Vote Closed - ${validationStatus?.numModerators} Stakers`
+                : `Completion Moderation by ${validationStatus?.numModerators} Stakers`
+              }
             </div>
             <div style={{ color: '#18C964', fontSize: 15, fontWeight: 700 }}> {/* Reduced from 18 */}
               {validationStatus?.validVotes} Validated
@@ -296,6 +343,19 @@ export default function ValidatedCompletionDashboard({
             <div style={{ color: '#FF3B30', fontSize: 15, fontWeight: 700, marginTop: 2 }}> {/* Reduced from 4 */}
               {validationStatus?.refuseVotes} Refused
             </div>
+            {validationStatus?.requirementsMet && (
+              <div style={{ 
+                marginTop: 8,
+                padding: '4px 8px',
+                borderRadius: 4,
+                fontSize: 11,
+                fontWeight: 600,
+                background: validationStatus?.allValidated ? 'rgba(24, 201, 100, 0.2)' : 'rgba(255, 59, 48, 0.2)',
+                color: validationStatus?.allValidated ? '#18C964' : '#FF3B30'
+              }}>
+                {validationStatus?.allValidated ? '✓ Majority Validates' : '✗ Majority Refuses'}
+              </div>
+            )}
           </div>
 
           {/* Average Score Display - New compact section */}

@@ -154,7 +154,7 @@ export default function MyCompletionsPage() {
   };
 
   // Quick preset buttons with sequential numbering
-  const handleSetPreset = (preset: 'default' | 'mixed' | 'high_scores' | 'with_refuses') => {
+  const handleSetPreset = (preset: 'default' | 'mixed' | 'high_scores' | 'with_refuses' | 'refused_completion') => {
     let newModerators: ModeratorScore[] = [];
     
     switch (preset) {
@@ -192,6 +192,16 @@ export default function MyCompletionsPage() {
         // 7 sequential stakers with some refuses (score = 0)
         const refuseScores = [85, 0, 90, 0, 88, 0, 92]; // Some actual refuses (0)
         newModerators = refuseScores.map((score, index) => ({
+          stakerId: (index + 1).toString(),
+          stakerName: `Staker ${index + 1}`,
+          score
+        }));
+        break;
+        
+      case 'refused_completion':
+        // 22 sequential stakers with majority refuses - completion rejected
+        const refusedScores = [30, 25, 40, 35, 20, 30, 45, 25, 35, 40, 20, 30, 25, 40, 35, 45, 30, 25, 55, 60, 65, 70]; // Majority < 50
+        newModerators = refusedScores.map((score, index) => ({
           stakerId: (index + 1).toString(),
           stakerName: `Staker ${index + 1}`,
           score
@@ -502,6 +512,7 @@ export default function MyCompletionsPage() {
                   <button onClick={() => handleSetPreset('mixed')} style={{ background: '#333', color: '#fff', border: '1px solid #555', borderRadius: 4, padding: '2px 6px', fontSize: 10, cursor: 'pointer' }}>7 Mixed</button>
                   <button onClick={() => handleSetPreset('high_scores')} style={{ background: '#333', color: '#fff', border: '1px solid #555', borderRadius: 4, padding: '2px 6px', fontSize: 10, cursor: 'pointer' }}>5 High</button>
                   <button onClick={() => handleSetPreset('with_refuses')} style={{ background: '#333', color: '#fff', border: '1px solid #555', borderRadius: 4, padding: '2px 6px', fontSize: 10, cursor: 'pointer' }}>7 with Refuses</button>
+                  <button onClick={() => handleSetPreset('refused_completion')} style={{ background: '#333', color: '#fff', border: '1px solid #555', borderRadius: 4, padding: '2px 6px', fontSize: 10, cursor: 'pointer' }}>22 Refused</button>
                 </div>
 
                 {/* Add new moderator */}
@@ -593,7 +604,8 @@ export default function MyCompletionsPage() {
 
               <div style={{ fontSize: 11, color: '#666', fontStyle: 'italic', marginTop: 8 }}>
                 💡 Score = 0 = Refused (❌) • Score 1-50 = Medium (🟠) • Score 51-100 = Good (✅)<br/>
-                Need ≥ 22 moderators for validation • Set time = 0 to show "FINISHED"
+                Requirements: ≥ 22 moderators + staking ≥ mint price • Set time = 0 to show "FINISHED"<br/>
+                🔴 Once requirements met: if majority &lt; 50 → Vote closes, Completion REFUSED
               </div>
             </div>
           }
