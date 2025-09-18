@@ -43,61 +43,121 @@ export default function RadarChart({ moderatorScores, size = 400, showLabels = t
   const maxRadius = (size * 0.48); // Increased from 44% to 48% - radar chart closer to staker numbers
   const labelRadius = maxRadius + 35; // Keep same gap - labels stay in same position
   const [hoveredPoint, setHoveredPoint] = useState<HoveredPoint | null>(null);
+  const [hoveredRefusedGroup, setHoveredRefusedGroup] = useState<ModeratorScore[] | null>(null);
 
-  // Generate points for each moderator score
+  // Separate refused moderators (score = 0) and others
+  const refusedModerators = useMemo(() => {
+    return moderatorScores.filter(mod => mod.score === 0);
+  }, [moderatorScores]);
+
+  const validatedModerators = useMemo(() => {
+    return moderatorScores.filter(mod => mod.score > 0);
+  }, [moderatorScores]);
+
+  // Generate points for each moderator score (excluding refused ones - they'll be handled separately)
   const radarPoints = useMemo(() => {
-    const points = moderatorScores.map((moderator, index) => {
-      const angle = (index / moderatorScores.length) * 2 * Math.PI - Math.PI / 2; // Start from top
-      const radius = (moderator.score / 100) * maxRadius;
-      const x = center + Math.cos(angle) * radius;
-      const y = center + Math.sin(angle) * radius;
-      
-      // Label position (outside the radar)
-      const labelX = center + Math.cos(angle) * labelRadius;
-      const labelY = center + Math.sin(angle) * labelRadius;
-      
-      // Determine score category
-      const scoreCategory = getScoreCategory(moderator.score);
-      
-      return {
-        x,
-        y,
-        labelX,
-        labelY,
-        angle,
-        moderator,
-        index,
-        scoreCategory,
-        radius // Store the actual radius for path creation
-      };
+    const points = [];
+    moderatorScores.forEach((moderator, originalIndex) => {
+      // Only create points for validated moderators (score > 0)
+      if (moderator.score > 0) {
+        // Use the original index to maintain position consistency with labels
+        const angle = (originalIndex / moderatorScores.length) * 2 * Math.PI - Math.PI / 2; // Start from top
+        const radius = (moderator.score / 100) * maxRadius;
+        const x = center + Math.cos(angle) * radius;
+        const y = center + Math.sin(angle) * radius;
+        
+        // Label position (outside the radar)
+        const labelX = center + Math.cos(angle) * labelRadius;
+        const labelY = center + Math.sin(angle) * labelRadius;
+        
+        // Determine score category
+        const scoreCategory = getScoreCategory(moderator.score);
+        
+        points.push({
+          x,
+          y,
+          labelX,
+          labelY,
+          angle,
+          moderator,
+          originalIndex, // Store the original index for consistency
+          scoreCategory,
+          radius // Store the actual radius for path creation
+        });
+      }
     });
     return points;
   }, [moderatorScores, center, maxRadius, labelRadius]);
 
-  // Create gradients for each segment between consecutive points
+  // Create gradients for each segment between consecutive validated points
   const segmentGradients = useMemo(() => {
-    return radarPoints.map((point, index) => {
-      const nextIndex = (index + 1) % radarPoints.length;
+    const gradients = [];
+    
+    for (let i = 0; i < radarPoints.length; i++) {
+      const currentPoint = radarPoints[i];
+      const nextIndex = (i + 1) % radarPoints.length;
       const nextPoint = radarPoints[nextIndex];
       
-      const currentCategory = point.scoreCategory;
-      const nextCategory = nextPoint.scoreCategory;
+      // Check if the two points are actually consecutive in the original moderator list
+      const currentOriginalIndex = currentPoint.originalIndex;
+      const nextOriginalIndex = nextPoint.originalIndex;
       
-      let gradientId = `gradient-${index}`;
-      let startColor = getScoreColor(currentCategory);
-      let endColor = getScoreColor(nextCategory);
+      // Calculate if they are consecutive (considering wrap-around)
+      const isConsecutive = 
+        (nextOriginalIndex === currentOriginalIndex + 1) || // Normal consecutive
+        (currentOriginalIndex === moderatorScores.length - 1 && nextOriginalIndex === 0) || // Wrap around case
+        // Check if all moderators between them are also validated (no refused in between)
+        (() => {
+          if (nextOriginalIndex < currentOriginalIndex) {
+            // Wrap around case - check from current to end, then from 0 to next
+            for (let j = currentOriginalIndex + 1; j < moderatorScores.length; j++) {
+              if (moderatorScores[j].score === 0) return false;
+            }
+            for (let j = 0; j < nextOriginalIndex; j++) {
+              if (moderatorScores[j].score === 0) return false;
+            }
+            return true;
+          } else {
+            // Normal case - check all between current and next
+            for (let j = currentOriginalIndex + 1; j < nextOriginalIndex; j++) {
+              if (moderatorScores[j].score === 0) return false;
+            }
+            return true;
+          }
+        })();
       
-      return {
-        id: gradientId,
-        startColor,
-        endColor,
-        x1: point.x,
-        y1: point.y,
-        x2: nextPoint.x,
-        y2: nextPoint.y
-      };
-    });
-  }, [radarPoints]);
+      // Only create gradient if points are truly consecutive
+      if (isConsecutive) {
+        const currentCategory = currentPoint.scoreCategory;
+        const nextCategory = nextPoint.scoreCategory;
+        
+        gradients.push({
+          id: `gradient-${i}`,
+          startColor: getScoreColor(currentCategory),
+          endColor: getScoreColor(nextCategory),
+          x1: currentPoint.x,
+          y1: currentPoint.y,
+          x2: nextPoint.x,
+          y2: nextPoint.y,
+          shouldRender: true
+        });
+      } else {
+        // Create a placeholder gradient but mark it as not to render
+        gradients.push({
+          id: `gradient-${i}`,
+          startColor: '#000000',
+          endColor: '#000000',
+          x1: 0,
+          y1: 0,
+          x2: 0,
+          y2: 0,
+          shouldRender: false
+        });
+      }
+    }
+    
+    return gradients;
+  }, [radarPoints, moderatorScores]);
 
   // Create path segments with individual gradients
   const radarSegments = useMemo(() => {
@@ -106,24 +166,29 @@ export default function RadarChart({ moderatorScores, size = 400, showLabels = t
     return radarPoints.map((point, index) => {
       const nextIndex = (index + 1) % radarPoints.length;
       const nextPoint = radarPoints[nextIndex];
+      const gradient = segmentGradients[index];
       
       return {
         path: `M ${center} ${center} L ${point.x} ${point.y} L ${nextPoint.x} ${nextPoint.y} Z`,
-        gradientId: `gradient-${index}`
+        gradientId: `gradient-${index}`,
+        shouldRender: gradient?.shouldRender || false
       };
     });
-  }, [radarPoints, center]);
+  }, [radarPoints, center, segmentGradients]);
 
   // Create grid circles
   const gridCircles = [0.2, 0.4, 0.6, 0.8, 1.0].map(ratio => ratio * maxRadius);
 
-  // Create grid lines from center to each moderator position
-  const gridLines = radarPoints.map(point => ({
-    x1: center,
-    y1: center,
-    x2: center + Math.cos(point.angle) * maxRadius,
-    y2: center + Math.sin(point.angle) * maxRadius
-  }));
+  // Create grid lines from center to each moderator position (ALL moderators, not just validated ones)
+  const gridLines = moderatorScores.map((_, index) => {
+    const angle = (index / moderatorScores.length) * 2 * Math.PI - Math.PI / 2; // Start from top
+    return {
+      x1: center,
+      y1: center,
+      x2: center + Math.cos(angle) * maxRadius,
+      y2: center + Math.sin(angle) * maxRadius
+    };
+  });
 
   // Calculate average score for external display
   const averageScore = useMemo(() => {
@@ -171,6 +236,7 @@ export default function RadarChart({ moderatorScores, size = 400, showLabels = t
           e.currentTarget.style.transform = 'scale(1)';
         }
         setHoveredPoint(null); // Clear hover when leaving the chart
+        setHoveredRefusedGroup(null); // Clear refused group hover when leaving the chart
       }}
     >
       <svg 
@@ -179,9 +245,9 @@ export default function RadarChart({ moderatorScores, size = 400, showLabels = t
         viewBox={`0 0 ${size + 60} ${size + 80}`} // Enlarged viewBox to give more space for labels
         style={{ position: 'absolute', top: 80, left: 0 }} // Reduced back to 80px since we're giving more space in viewBox
       >
-        {/* Define gradients for each segment */}
+        {/* Define gradients for each segment - only for consecutive segments */}
         <defs>
-          {segmentGradients.map((gradient) => (
+          {segmentGradients.filter(gradient => gradient.shouldRender).map((gradient) => (
             <linearGradient
               key={gradient.id}
               id={gradient.id}
@@ -225,8 +291,8 @@ export default function RadarChart({ moderatorScores, size = 400, showLabels = t
           />
         ))}
 
-        {/* Radar segments with gradients */}
-        {radarSegments.map((segment, index) => {
+        {/* Radar segments with gradients - only for consecutive segments */}
+        {radarSegments.filter(segment => segment.shouldRender).map((segment, index) => {
           // Adjust path coordinates for SVG offset
           const adjustedPath = segment.path
             .replace(/M (\d+\.?\d*) (\d+\.?\d*)/g, (match, x, y) => `M ${parseFloat(x) + 30} ${parseFloat(y) + 40}`)
@@ -241,11 +307,14 @@ export default function RadarChart({ moderatorScores, size = 400, showLabels = t
           );
         })}
 
-        {/* Radar border with gradient strokes */}
+        {/* Radar border with gradient strokes - only for consecutive segments */}
         {radarPoints.map((point, index) => {
           const nextIndex = (index + 1) % radarPoints.length;
           const nextPoint = radarPoints[nextIndex];
           const gradient = segmentGradients[index];
+          
+          // Only render border if the gradient should be rendered (consecutive points)
+          if (!gradient.shouldRender) return null;
           
           return (
             <line
@@ -258,7 +327,7 @@ export default function RadarChart({ moderatorScores, size = 400, showLabels = t
               strokeWidth={2}
             />
           );
-        })}
+        }).filter(Boolean)}
 
         {/* Score points with hover functionality */}
         {radarPoints.map((point, index) => (
@@ -302,6 +371,7 @@ export default function RadarChart({ moderatorScores, size = 400, showLabels = t
                   y: point.y + 40,
                   scoreCategory: point.scoreCategory
                 });
+                setHoveredRefusedGroup(null); // Clear refused group hover
               }}
               onMouseLeave={(e) => {
                 e.stopPropagation(); // Prevent bubbling
@@ -311,45 +381,124 @@ export default function RadarChart({ moderatorScores, size = 400, showLabels = t
           </g>
         ))}
 
-        {/* Labels - only show if not too many moderators */}
-        {shouldShowLabels && radarPoints.map((point, index) => (
-          <g key={`label-${index}`}>
-            {/* Moderator number label - simplified to just the number */}
+        {/* Central refused group point - only show if there are refused moderators */}
+        {refusedModerators.length > 0 && (
+          <g key="refused-group">
+            {/* Enhanced glow effect for refused group */}
+            <circle
+              cx={center + 30}
+              cy={center + 40}
+              r={18 + refusedModerators.length * 2} // Larger glow based on number of refuses
+              fill="rgba(255, 59, 48, 0.4)" // Red glow
+            />
+            
+            {/* Main refused group point */}
+            <circle
+              cx={center + 30}
+              cy={center + 40}
+              r={8 + refusedModerators.length} // Larger point based on number of refuses
+              fill="#FF3B30"
+              stroke="#fff"
+              strokeWidth={4}
+              style={{ 
+                filter: hoveredRefusedGroup ? 'drop-shadow(0 0 12px #FF3B30)' : 'none',
+                transform: hoveredRefusedGroup ? 'scale(1.4)' : 'scale(1)',
+                transformOrigin: `${center + 30}px ${center + 40}px`,
+                transition: 'all 0.2s ease'
+              }}
+            />
+
+            {/* Badge showing number of refuses */}
+            <circle
+              cx={center + 30 + 12}
+              cy={center + 40 - 12}
+              r={8}
+              fill="#FF3B30"
+              stroke="#fff"
+              strokeWidth={2}
+            />
             <text
-              x={point.labelX + 30}
-              y={point.labelY + 40 - (shouldShowScore ? 10 : 3)}
+              x={center + 30 + 12}
+              y={center + 40 - 12}
               textAnchor="middle"
               dominantBaseline="middle"
-              fill="#FFD600"
-              fontSize={moderatorScores.length > 20 ? 12 : 15} // Increased font sizes
-              fontWeight={900} // Maximum boldness
-              style={{ 
-                pointerEvents: 'none',
-                textShadow: '0 0 3px rgba(0,0,0,0.8)' // Add text shadow for better visibility
-              }}
+              fill="#fff"
+              fontSize={10}
+              fontWeight={900}
+              style={{ pointerEvents: 'none' }}
             >
-              {point.moderator.stakerId}
+              {refusedModerators.length}
             </text>
-            {/* Score label - only show if not too many moderators */}
-            {shouldShowScore && (
+
+            {/* Large hover area for refused group */}
+            <circle
+              cx={center + 30}
+              cy={center + 40}
+              r={30} // Large hover area
+              fill="transparent"
+              style={{ cursor: 'pointer' }}
+              onMouseEnter={(e) => {
+                e.stopPropagation();
+                setHoveredRefusedGroup(refusedModerators);
+                setHoveredPoint(null); // Clear individual point hover
+              }}
+              onMouseLeave={(e) => {
+                e.stopPropagation();
+                setHoveredRefusedGroup(null);
+              }}
+            />
+          </g>
+        )}
+
+        {/* Labels - only show if not too many moderators */}
+        {shouldShowLabels && moderatorScores.map((moderator, index) => {
+          // Calculate position for all moderators (including refused ones)
+          const angle = (index / moderatorScores.length) * 2 * Math.PI - Math.PI / 2; // Start from top
+          const labelX = center + Math.cos(angle) * labelRadius;
+          const labelY = center + Math.sin(angle) * labelRadius;
+          
+          const scoreCategory = getScoreCategory(moderator.score);
+          const isRefused = moderator.score === 0;
+          
+          return (
+            <g key={`label-${index}`}>
+              {/* Moderator number label - show for ALL moderators, but in red for refused ones */}
               <text
-                x={point.labelX + 30}
-                y={point.labelY + 40 + 8}
+                x={labelX + 30}
+                y={labelY + 40 - (shouldShowScore && !isRefused ? 10 : 3)}
                 textAnchor="middle"
                 dominantBaseline="middle"
-                fill={getScoreColor(point.scoreCategory)}
-                fontSize={17} // Increased from 16
+                fill={isRefused ? "#FF3B30" : "#FFD600"} // Red for refused, yellow for others
+                fontSize={moderatorScores.length > 20 ? 12 : 15} // Increased font sizes
                 fontWeight={900} // Maximum boldness
                 style={{ 
                   pointerEvents: 'none',
-                  textShadow: '0 0 3px rgba(0,0,0,0.8)' // Add text shadow for better visibility
+                  textShadow: `0 0 3px rgba(0,0,0,0.8)` // Add text shadow for better visibility
                 }}
               >
-                {point.moderator.score}
+                {moderator.stakerId}
               </text>
-            )}
-          </g>
-        ))}
+              {/* Score label - only show for non-refused moderators and if not too many */}
+              {shouldShowScore && !isRefused && (
+                <text
+                  x={labelX + 30}
+                  y={labelY + 40 + 8}
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  fill={getScoreColor(scoreCategory)}
+                  fontSize={17} // Increased from 16
+                  fontWeight={900} // Maximum boldness
+                  style={{ 
+                    pointerEvents: 'none',
+                    textShadow: '0 0 3px rgba(0,0,0,0.8)' // Add text shadow for better visibility
+                  }}
+                >
+                  {moderator.score}
+                </text>
+              )}
+            </g>
+          );
+        })}
       </svg>
 
       {/* Hover Tooltip */}
@@ -368,7 +517,7 @@ export default function RadarChart({ moderatorScores, size = 400, showLabels = t
           whiteSpace: 'nowrap',
           zIndex: 100,
           pointerEvents: 'none',
-          transform: hoveredPoint.x > size - 60 ? 'translateX(-100%)' : 'translateX(0)', // Adjusted for new dimensions
+          transform: hoveredPoint.x > size - 60 ? 'translateX(-100%)' : 'translateX(0)',
           boxShadow: '0 4px 12px rgba(0, 0, 0, 0.5)'
         }}>
           <div style={{ color: '#FFD600', fontSize: 11, marginBottom: 2 }}>
@@ -388,6 +537,58 @@ export default function RadarChart({ moderatorScores, size = 400, showLabels = t
           }}>
             {hoveredPoint.scoreCategory === 'refused' ? '❌ Refused' : 
              hoveredPoint.scoreCategory === 'medium' ? '🟠 Medium' : '✅ Validated'}
+          </div>
+        </div>
+      )}
+
+      {/* Grouped Refused Tooltip */}
+      {hoveredRefusedGroup && (
+        <div style={{
+          position: 'absolute',
+          left: (center + 30) + 15,
+          top: (center + 40) - 60,
+          background: 'rgba(0, 0, 0, 0.95)',
+          border: '2px solid #FF3B30',
+          borderRadius: 8,
+          padding: '8px 12px',
+          color: '#fff',
+          fontSize: 12,
+          fontWeight: 600,
+          zIndex: 100,
+          pointerEvents: 'none',
+          transform: (center + 30) > size - 150 ? 'translateX(-100%)' : 'translateX(0)',
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.5)',
+          maxWidth: '200px'
+        }}>
+          <div style={{ color: '#FF3B30', fontSize: 11, marginBottom: 4, fontWeight: 800 }}>
+            {hoveredRefusedGroup.length} Staker{hoveredRefusedGroup.length > 1 ? 's' : ''} Refused
+          </div>
+          {hoveredRefusedGroup.map((moderator, index) => (
+            <div key={moderator.stakerId} style={{ 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center',
+              marginBottom: index < hoveredRefusedGroup.length - 1 ? 2 : 0,
+              padding: '2px 0'
+            }}>
+              <span style={{ color: '#FFD600', fontSize: 11 }}>
+                Staker {moderator.stakerId}
+              </span>
+              <span style={{ color: '#FF3B30', fontSize: 11, fontWeight: 800 }}>
+                ❌ 0/100
+              </span>
+            </div>
+          ))}
+          <div style={{ 
+            marginTop: 6, 
+            paddingTop: 4, 
+            borderTop: '1px solid rgba(255, 59, 48, 0.3)', 
+            color: '#FF3B30', 
+            fontSize: 10,
+            textAlign: 'center',
+            fontStyle: 'italic'
+          }}>
+            All refused completion
           </div>
         </div>
       )}

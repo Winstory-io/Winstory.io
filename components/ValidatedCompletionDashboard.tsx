@@ -136,8 +136,8 @@ export default function ValidatedCompletionDashboard({
     if (!completion) return null;
     
     const numModerators = completion.moderatorScores.length;
-    const validVotes = completion.moderatorScores.filter(s => s.score >= 50).length;
-    const refuseVotes = completion.moderatorScores.filter(s => s.score < 50).length;
+    const validVotes = completion.moderatorScores.filter(s => s.score > 0).length; // Only score = 0 is refused
+    const refuseVotes = completion.moderatorScores.filter(s => s.score === 0).length; // Only exact 0 is refused
     
     // Check the 2 requirements for completion
     const minVotesOk = numModerators >= 22; // Need exactly 22 or more
@@ -145,8 +145,8 @@ export default function ValidatedCompletionDashboard({
     
     // Once both requirements are met, check majority
     const requirementsMet = minVotesOk && stakingOk;
-    const majorityRefuses = refuseVotes > validVotes; // More refusals than validations
-    const majorityValidates = validVotes > refuseVotes; // More validations than refusals
+    const majorityRefuses = refuseVotes > validVotes; // More refusals (0 scores) than validations (>0 scores)
+    const majorityValidates = validVotes > refuseVotes; // More validations (>0 scores) than refusals (0 scores)
     
     // Determine completion status
     const allValidated = requirementsMet && majorityValidates;

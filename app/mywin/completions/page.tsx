@@ -170,7 +170,7 @@ export default function MyCompletionsPage() {
         
       case 'mixed':
         // 7 sequential stakers with mixed scores
-        const mixedScores = [98, 45, 87, 92, 35, 89, 94]; // Some refuses (45, 35)
+        const mixedScores = [98, 45, 87, 92, 35, 89, 94]; // Mix of good and medium scores (all validated)
         newModerators = mixedScores.map((score, index) => ({
           stakerId: (index + 1).toString(),
           stakerName: `Staker ${index + 1}`,
@@ -199,8 +199,8 @@ export default function MyCompletionsPage() {
         break;
         
       case 'refused_completion':
-        // 22 sequential stakers with majority refuses - completion rejected
-        const refusedScores = [30, 25, 40, 35, 20, 30, 45, 25, 35, 40, 20, 30, 25, 40, 35, 45, 30, 25, 55, 60, 65, 70]; // Majority < 50
+        // 22 sequential stakers with majority refuses (score = 0) - completion rejected
+        const refusedScores = [0, 0, 75, 0, 0, 82, 0, 0, 68, 0, 0, 90, 0, 0, 72, 0, 0, 85, 0, 0, 78, 88]; // Majority = 0 (refused)
         newModerators = refusedScores.map((score, index) => ({
           stakerId: (index + 1).toString(),
           stakerName: `Staker ${index + 1}`,
@@ -603,9 +603,9 @@ export default function MyCompletionsPage() {
               </div>
 
               <div style={{ fontSize: 11, color: '#666', fontStyle: 'italic', marginTop: 8 }}>
-                💡 Score = 0 = Refused (❌) • Score 1-50 = Medium (🟠) • Score 51-100 = Good (✅)<br/>
+                💡 Score = 0 = Refused (❌) • Score 1-50 = Medium (🟠) but VALIDATED • Score 51-100 = Good (✅)<br/>
                 Requirements: ≥ 22 moderators + staking ≥ mint price • Set time = 0 to show "FINISHED"<br/>
-                🔴 Once requirements met: if majority &lt; 50 → Vote closes, Completion REFUSED
+                🔴 Once requirements met: if majority = 0 → Vote closes, Completion REFUSED
               </div>
             </div>
           }
