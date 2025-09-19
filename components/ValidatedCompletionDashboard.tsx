@@ -4,11 +4,13 @@ import { useEffect, useMemo, useState } from 'react';
 import { useActiveAccount } from 'thirdweb/react';
 import RadarChart from './RadarChart';
 import RadarChartModal from './RadarChartModal';
+import { evaluateModeration, ModerationStatus, SCALE } from '../lib/moderation-engine';
 
 interface ModeratorScore {
   stakerId: string;
   stakerName: string;
   score: number; // 0-100
+  stakedAmount: number; // Amount staked by this moderator in WINC
 }
 
 interface ValidatedCompletion {
@@ -86,27 +88,27 @@ export default function ValidatedCompletionDashboard({
 
       // Use configured moderator scores or default ones
       const moderatorScores = devCompletionData?.moderatorScores || [
-        { stakerId: '1', stakerName: 'Staker 1', score: 92 },
-        { stakerId: '2', stakerName: 'Staker 2', score: 95 },
-        { stakerId: '3', stakerName: 'Staker 3', score: 88 },
-        { stakerId: '4', stakerName: 'Staker 4', score: 91 },
-        { stakerId: '5', stakerName: 'Staker 5', score: 87 },
-        { stakerId: '6', stakerName: 'Staker 6', score: 94 },
-        { stakerId: '7', stakerName: 'Staker 7', score: 89 },
-        { stakerId: '8', stakerName: 'Staker 8', score: 93 },
-        { stakerId: '9', stakerName: 'Staker 9', score: 90 },
-        { stakerId: '10', stakerName: 'Staker 10', score: 86 },
-        { stakerId: '11', stakerName: 'Staker 11', score: 88 },
-        { stakerId: '12', stakerName: 'Staker 12', score: 92 },
-        { stakerId: '13', stakerName: 'Staker 13', score: 85 },
-        { stakerId: '14', stakerName: 'Staker 14', score: 96 },
-        { stakerId: '15', stakerName: 'Staker 15', score: 91 },
-        { stakerId: '16', stakerName: 'Staker 16', score: 89 },
-        { stakerId: '17', stakerName: 'Staker 17', score: 93 },
-        { stakerId: '18', stakerName: 'Staker 18', score: 87 },
-        { stakerId: '19', stakerName: 'Staker 19', score: 94 },
-        { stakerId: '20', stakerName: 'Staker 20', score: 90 },
-        { stakerId: '21', stakerName: 'Staker 21', score: 88 }
+        { stakerId: '1', stakerName: 'Staker 1', score: 92, stakedAmount: 1200 },
+        { stakerId: '2', stakerName: 'Staker 2', score: 95, stakedAmount: 800 },
+        { stakerId: '3', stakerName: 'Staker 3', score: 88, stakedAmount: 1500 },
+        { stakerId: '4', stakerName: 'Staker 4', score: 91, stakedAmount: 900 },
+        { stakerId: '5', stakerName: 'Staker 5', score: 87, stakedAmount: 1100 },
+        { stakerId: '6', stakerName: 'Staker 6', score: 94, stakedAmount: 750 },
+        { stakerId: '7', stakerName: 'Staker 7', score: 89, stakedAmount: 1300 },
+        { stakerId: '8', stakerName: 'Staker 8', score: 93, stakedAmount: 850 },
+        { stakerId: '9', stakerName: 'Staker 9', score: 90, stakedAmount: 1000 },
+        { stakerId: '10', stakerName: 'Staker 10', score: 86, stakedAmount: 950 },
+        { stakerId: '11', stakerName: 'Staker 11', score: 88, stakedAmount: 1400 },
+        { stakerId: '12', stakerName: 'Staker 12', score: 92, stakedAmount: 700 },
+        { stakerId: '13', stakerName: 'Staker 13', score: 85, stakedAmount: 1250 },
+        { stakerId: '14', stakerName: 'Staker 14', score: 96, stakedAmount: 600 },
+        { stakerId: '15', stakerName: 'Staker 15', score: 91, stakedAmount: 1350 },
+        { stakerId: '16', stakerName: 'Staker 16', score: 89, stakedAmount: 800 },
+        { stakerId: '17', stakerName: 'Staker 17', score: 93, stakedAmount: 1150 },
+        { stakerId: '18', stakerName: 'Staker 18', score: 87, stakedAmount: 900 },
+        { stakerId: '19', stakerName: 'Staker 19', score: 94, stakedAmount: 1050 },
+        { stakerId: '20', stakerName: 'Staker 20', score: 90, stakedAmount: 750 },
+        { stakerId: '21', stakerName: 'Staker 21', score: 88, stakedAmount: 1200 }
       ];
 
       const actualAverage = Math.round(moderatorScores.reduce((sum, mod) => sum + mod.score, 0) / moderatorScores.length);
@@ -139,30 +141,72 @@ export default function ValidatedCompletionDashboard({
     const validVotes = completion.moderatorScores.filter(s => s.score > 0).length; // Only score = 0 is refused
     const refuseVotes = completion.moderatorScores.filter(s => s.score === 0).length; // Only exact 0 is refused
     
-    // Check the 2 requirements for completion
-    const minVotesOk = numModerators >= 22; // Need exactly 22 or more
-    const stakingOk = completion.stakedAmount >= completion.mintPrice;
+    // Calculate staking amounts for each side using the hybrid system
+    const validatedModerators = completion.moderatorScores.filter(s => s.score > 0);
+    const refusedModerators = completion.moderatorScores.filter(s => s.score === 0);
     
-    // Once both requirements are met, check majority
+    const stakeYes = validatedModerators.reduce((sum, mod) => sum + mod.stakedAmount, 0);
+    const stakeNo = refusedModerators.reduce((sum, mod) => sum + mod.stakedAmount, 0);
+    
+    // Use hybrid moderation engine for evaluation
+    const hybridResult = evaluateModeration(
+      validVotes, // votesYes
+      refuseVotes, // votesNo
+      BigInt(Math.floor(stakeYes * SCALE)), // stakeYes in WINC scaled
+      BigInt(Math.floor(stakeNo * SCALE)), // stakeNo in WINC scaled
+      completion.mintPrice, // mintPriceUSDC
+      Date.now(), // currentTimestamp
+      Date.now() + 7 * 24 * 3600 * 1000, // voteWindowEnd (7 days)
+      BigInt(SCALE) // wincPerUSDC (1 WINC = 1 USDC)
+    );
+    
+    // Extract results from hybrid evaluation
+    const minVotesOk = numModerators >= 22;
+    const stakingOk = completion.stakedAmount >= completion.mintPrice;
     const requirementsMet = minVotesOk && stakingOk;
-    const majorityRefuses = refuseVotes > validVotes; // More refusals (0 scores) than validations (>0 scores)
-    const majorityValidates = validVotes > refuseVotes; // More validations (>0 scores) than refusals (0 scores)
+    
+    // Hybrid ratio calculation for display
+    const hybridScoreYes = Number(hybridResult.scoreYes) / SCALE;
+    const hybridScoreNo = Number(hybridResult.scoreNo) / SCALE;
+    const hybridRatio = hybridScoreNo > 0 ? hybridScoreYes / hybridScoreNo : hybridScoreYes;
+    const hasSufficientRatio = hybridResult.status !== ModerationStatus.EN_COURS;
+    
+    // Vote can close based on hybrid evaluation
+    const voteCanClose = hybridResult.status === ModerationStatus.VALIDATED || 
+                         hybridResult.status === ModerationStatus.REJECTED;
+    
+    const majorityRefuses = hybridResult.status === ModerationStatus.REJECTED;
+    const majorityValidates = hybridResult.status === ModerationStatus.VALIDATED;
+    
+    // Vote continues if requirements met but hybrid system says EN_COURS
+    const voteContinues = requirementsMet && (hybridResult.status === ModerationStatus.EN_COURS);
     
     // Determine completion status
-    const allValidated = requirementsMet && majorityValidates;
-    const isRefused = requirementsMet && majorityRefuses; // Requirements met but majority refuses
+    const allValidated = majorityValidates;
+    const isRefused = majorityRefuses;
     
     return {
       minVotesOk,
       stakingOk,
       requirementsMet,
+      voteCanClose,
+      voteContinues,
       majorityRefuses,
       majorityValidates,
       allValidated,
       isRefused,
       validVotes,
       refuseVotes,
-      numModerators
+      numModerators,
+      majorityRatio: hybridRatio,
+      hasSufficientRatio,
+      majorityCount: Math.max(refuseVotes, validVotes),
+      minorityCount: Math.min(refuseVotes, validVotes),
+      hybridResult, // Expose hybrid results for debugging
+      stakeYes,
+      stakeNo,
+      hybridScoreYes,
+      hybridScoreNo
     };
   }, [completion]);
 
@@ -250,10 +294,11 @@ export default function ValidatedCompletionDashboard({
       {/* Main content grid - REDUCED LEFT PANEL, BIGGER RADAR */}
       <div style={{ 
         display: 'grid', 
-        gridTemplateColumns: '280px 500px 280px', // Reduced left from 1fr to 280px, increased radar from 400px to 500px
-        gap: 32, 
+        gridTemplateColumns: '260px 500px 260px', // Slightly reduced side columns for more breathing room
+        gap: 64, // Increased from 32 to 64 for much better spacing
         alignItems: 'start',
-        marginBottom: 24 // Reduced margin
+        marginBottom: 24,
+        justifyContent: 'center' // Center the entire grid
       }}>
         {/* Left: Requirements - REDUCED SIZE */}
         <div style={{ justifySelf: 'end' }}>
@@ -295,21 +340,16 @@ export default function ValidatedCompletionDashboard({
                 width: 16, 
                 height: 16, 
                 borderRadius: '50%', 
-                background: validationStatus?.majorityValidates ? '#18C964' : 
-                           validationStatus?.majorityRefuses ? '#FF3B30' : '#444',
-                border: `1px solid ${validationStatus?.majorityValidates ? '#18C964' : 
-                                    validationStatus?.majorityRefuses ? '#FF3B30' : '#FFD600'}`,
+                background: validationStatus?.hasSufficientRatio ? '#18C964' : '#444',
+                border: `1px solid ${validationStatus?.hasSufficientRatio ? '#18C964' : '#FFD600'}`,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center'
               }}>
-                {validationStatus?.majorityRefuses && (
-                  <span style={{ color: '#FFFFFF', fontSize: 10, fontWeight: 900 }}>✕</span>
-                )}
+                {/* No cross needed since this only shows if ratio is met or not */}
               </div>
-              <span style={{ color: validationStatus?.majorityValidates ? '#18C964' : 
-                                   validationStatus?.majorityRefuses ? '#FF3B30' : '#FFD600', fontSize: 14 }}>
-                Majority Valide / Minority Refuse ≥ 2
+              <span style={{ color: validationStatus?.hasSufficientRatio ? '#18C964' : '#FFD600', fontSize: 14 }}>
+                Majority / Minority ≥ 2:1 ratio
               </span>
             </div>
           </div>
@@ -332,8 +372,10 @@ export default function ValidatedCompletionDashboard({
               fontWeight: 800, 
               marginBottom: 6 // Reduced from 8
             }}>
-              {validationStatus?.requirementsMet 
+              {validationStatus?.voteCanClose
                 ? `Vote Closed - ${validationStatus?.numModerators} Stakers`
+                : validationStatus?.voteContinues
+                ? `Vote Continues - ${validationStatus?.numModerators} Stakers (Need ≥2:1 ratio)`
                 : `Completion Moderation by ${validationStatus?.numModerators} Stakers`
               }
             </div>
@@ -343,7 +385,7 @@ export default function ValidatedCompletionDashboard({
             <div style={{ color: '#FF3B30', fontSize: 15, fontWeight: 700, marginTop: 2 }}> {/* Reduced from 4 */}
               {validationStatus?.refuseVotes} Refused
             </div>
-            {validationStatus?.requirementsMet && (
+            {validationStatus?.voteCanClose && (
               <div style={{ 
                 marginTop: 8,
                 padding: '4px 8px',
@@ -396,163 +438,137 @@ export default function ValidatedCompletionDashboard({
           />
         </div>
 
-        {/* Right: Time and Status */}
-        <div style={{ justifySelf: 'start' }}>
+        {/* Right: Time, Ranking and Rewards */}
+        <div style={{ justifySelf: 'start', display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {/* Time Section */}
           <div style={{ 
-            marginBottom: 16, // Reduced from 24
-            padding: 12, // Reduced from 16
+            padding: 12,
             background: 'rgba(0, 0, 0, 0.5)',
-            borderRadius: 8, // Reduced from 12
+            borderRadius: 8,
             border: '1px solid #333'
           }}>
-            <div style={{ color: '#C0C0C0', fontSize: 14, marginBottom: 6 }}> {/* Reduced sizes */}
+            <div style={{ color: '#C0C0C0', fontSize: 14, marginBottom: 6 }}>
               Time before End of Campaign :
             </div>
             <div style={{ 
               color: remainingTime === 'FINISHED' ? '#18C964' : '#FFD600', 
-              fontSize: 20, // Reduced from 24
+              fontSize: 20,
               fontWeight: 900 
             }}>
               {remainingTime}
             </div>
           </div>
+
+          {/* Ranking and Rewards - Only show if validated */}
+          {validationStatus?.allValidated && (
+            <>
+              {/* Your Rank */}
+              <div style={{
+                background: 'rgba(24, 201, 100, 0.1)',
+                border: '2px solid #18C964',
+                borderRadius: 10,
+                padding: '12px 16px',
+                textAlign: 'center'
+              }}>
+                <div style={{ color: '#18C964', fontSize: 14, fontWeight: 800, marginBottom: 4 }}>
+                  🏆 Your Rank
+                </div>
+                <div style={{ color: '#FFD600', fontSize: 22, fontWeight: 900 }}>
+                  #{completion.ranking}/{completion.totalCompletions}
+                </div>
+              </div>
+
+              {/* You Receive */}
+              <div style={{
+                background: 'rgba(255, 255, 255, 0.05)',
+                border: '2px solid #C0C0C0',
+                borderRadius: 10,
+                padding: '12px 16px',
+                textAlign: 'center'
+              }}>
+                <div style={{ 
+                  color: completion.isTopThree ? '#FFD600' : '#18C964', 
+                  fontSize: 14, 
+                  fontWeight: 800,
+                  marginBottom: 4
+                }}>
+                  You receive
+                </div>
+                <div style={{ color: '#FFFFFF', fontSize: 16, fontWeight: 700 }}>
+                  {completion.isTopThree 
+                    ? 'Standard + Premium' 
+                    : 'Standard Rewards'
+                  }
+                </div>
+              </div>
+
+              {/* Standard Rewards */}
+              <div style={{
+                background: 'rgba(24, 201, 100, 0.1)',
+                border: '1px solid #18C964',
+                borderRadius: 8,
+                padding: '10px 12px',
+                textAlign: 'center'
+              }}>
+                <div style={{ color: '#18C964', fontSize: 13, fontWeight: 800, marginBottom: 6 }}>
+                  Standard
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  {completion.standardRewards.slice(0, 2).map((reward, index) => (
+                    <div 
+                      key={index}
+                      style={{
+                        background: '#18C964',
+                        color: '#000',
+                        padding: '4px 8px',
+                        borderRadius: 10,
+                        fontSize: 11,
+                        fontWeight: 600
+                      }}
+                    >
+                      {reward.length > 15 ? reward.substring(0, 12) + '...' : reward}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Premium Rewards (only if top 3) */}
+              {completion.isTopThree && completion.premiumRewards && (
+                <div style={{
+                  background: 'rgba(255, 214, 0, 0.1)',
+                  border: '1px solid #FFD600',
+                  borderRadius: 8,
+                  padding: '10px 12px',
+                  textAlign: 'center'
+                }}>
+                  <div style={{ color: '#FFD600', fontSize: 13, fontWeight: 800, marginBottom: 6 }}>
+                    Premium
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                    {completion.premiumRewards.slice(0, 2).map((reward, index) => (
+                      <div 
+                        key={index}
+                        style={{
+                          background: '#FFD600',
+                          color: '#000',
+                          padding: '4px 8px',
+                          borderRadius: 10,
+                          fontSize: 11,
+                          fontWeight: 600
+                        }}
+                      >
+                        {reward.length > 15 ? reward.substring(0, 12) + '...' : reward}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
         </div>
       </div>
 
-      {/* SINGLE LINE LAYOUT - Score, Ranking, Rewards */}
-      {validationStatus?.allValidated && (
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
-          alignItems: 'center', 
-          gap: 16,
-          marginBottom: 16,
-          flexWrap: 'wrap' // Allow wrapping on smaller screens
-        }}>
-          {/* Average Score */}
-          <div style={{
-            background: 'rgba(255, 214, 0, 0.1)',
-            border: '2px solid #FFD600',
-            borderRadius: 10,
-            padding: '8px 16px',
-            textAlign: 'center',
-            minWidth: '120px'
-          }}>
-            <div style={{ color: '#FFD600', fontSize: 12, fontWeight: 800, marginBottom: 2 }}>
-              Average Score
-            </div>
-            <div style={{ color: '#FFFFFF', fontSize: 24, fontWeight: 900 }}>
-              {completion.averageScore} / 100
-            </div>
-          </div>
 
-          {/* Your Rank */}
-          <div style={{
-            background: 'rgba(24, 201, 100, 0.1)',
-            border: '2px solid #18C964',
-            borderRadius: 10,
-            padding: '8px 16px',
-            textAlign: 'center',
-            minWidth: '140px'
-          }}>
-            <div style={{ color: '#18C964', fontSize: 12, fontWeight: 800, marginBottom: 2 }}>
-              🏆 Your Rank
-            </div>
-            <div style={{ color: '#FFD600', fontSize: 20, fontWeight: 900 }}>
-              #{completion.ranking}/{completion.totalCompletions}
-            </div>
-          </div>
-
-          {/* Rewards Message */}
-          <div style={{
-            background: 'rgba(255, 255, 255, 0.05)',
-            border: '2px solid #C0C0C0',
-            borderRadius: 10,
-            padding: '8px 16px',
-            textAlign: 'center',
-            minWidth: '180px'
-          }}>
-            <div style={{ 
-              color: completion.isTopThree ? '#FFD600' : '#18C964', 
-              fontSize: 12, 
-              fontWeight: 800,
-              marginBottom: 2
-            }}>
-              You receive
-            </div>
-            <div style={{ color: '#FFFFFF', fontSize: 14, fontWeight: 700 }}>
-              {completion.isTopThree 
-                ? 'Standard + Premium' 
-                : 'Standard Rewards'
-              }
-            </div>
-          </div>
-
-          {/* Standard Rewards */}
-          <div style={{
-            background: 'rgba(24, 201, 100, 0.1)',
-            border: '1px solid #18C964',
-            borderRadius: 8,
-            padding: '6px 12px',
-            textAlign: 'center',
-            minWidth: '120px'
-          }}>
-            <div style={{ color: '#18C964', fontSize: 11, fontWeight: 800, marginBottom: 4 }}>
-              Standard
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              {completion.standardRewards.slice(0, 2).map((reward, index) => (
-                <div 
-                  key={index}
-                  style={{
-                    background: '#18C964',
-                    color: '#000',
-                    padding: '2px 6px',
-                    borderRadius: 10,
-                    fontSize: 10,
-                    fontWeight: 600
-                  }}
-                >
-                  {reward.length > 15 ? reward.substring(0, 12) + '...' : reward}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Premium Rewards (only if top 3) */}
-          {completion.isTopThree && completion.premiumRewards && (
-            <div style={{
-              background: 'rgba(255, 214, 0, 0.1)',
-              border: '1px solid #FFD600',
-              borderRadius: 8,
-              padding: '6px 12px',
-              textAlign: 'center',
-              minWidth: '120px'
-            }}>
-              <div style={{ color: '#FFD600', fontSize: 11, fontWeight: 800, marginBottom: 4 }}>
-                Premium
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                {completion.premiumRewards.slice(0, 2).map((reward, index) => (
-                  <div 
-                    key={index}
-                    style={{
-                      background: '#FFD600',
-                      color: '#000',
-                      padding: '2px 6px',
-                      borderRadius: 10,
-                      fontSize: 10,
-                      fontWeight: 600
-                    }}
-                  >
-                    {reward.length > 15 ? reward.substring(0, 12) + '...' : reward}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
 
       {/* Radar Chart Modal */}
       <RadarChartModal

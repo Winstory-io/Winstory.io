@@ -25,13 +25,14 @@ interface Completion {
   currentCompletions?: number; // Nombre de complétions actuelles
   usdcRevenue?: number; // Revenus USDC générés par les récompenses payantes
   campaignCreatorType?: 'individual' | 'company'; // Type de créateur de la campagne
-  moderatorScores?: { stakerId: string; stakerName: string; score: number; }[];
+  moderatorScores?: { stakerId: string; stakerName: string; score: number; stakedAmount: number; }[];
 }
 
 interface ModeratorScore {
   stakerId: string;
   stakerName: string;
   score: number;
+  stakedAmount: number;
 }
 
 export default function MyCompletionsPage() {
@@ -51,27 +52,27 @@ export default function MyCompletionsPage() {
 
   // Moderator configuration - Sequential numbering from 1 to N
   const [devModerators, setDevModerators] = useState<ModeratorScore[]>([
-    { stakerId: '1', stakerName: 'Staker 1', score: 92 },
-    { stakerId: '2', stakerName: 'Staker 2', score: 95 },
-    { stakerId: '3', stakerName: 'Staker 3', score: 88 },
-    { stakerId: '4', stakerName: 'Staker 4', score: 91 },
-    { stakerId: '5', stakerName: 'Staker 5', score: 87 },
-    { stakerId: '6', stakerName: 'Staker 6', score: 86 },
-    { stakerId: '7', stakerName: 'Staker 7', score: 91 },
-    { stakerId: '8', stakerName: 'Staker 8', score: 89 },
-    { stakerId: '9', stakerName: 'Staker 9', score: 93 },
-    { stakerId: '10', stakerName: 'Staker 10', score: 94 },
-    { stakerId: '11', stakerName: 'Staker 11', score: 88 },
-    { stakerId: '12', stakerName: 'Staker 12', score: 92 },
-    { stakerId: '13', stakerName: 'Staker 13', score: 85 },
-    { stakerId: '14', stakerName: 'Staker 14', score: 96 },
-    { stakerId: '15', stakerName: 'Staker 15', score: 91 },
-    { stakerId: '16', stakerName: 'Staker 16', score: 89 },
-    { stakerId: '17', stakerName: 'Staker 17', score: 93 },
-    { stakerId: '18', stakerName: 'Staker 18', score: 87 },
-    { stakerId: '19', stakerName: 'Staker 19', score: 94 },
-    { stakerId: '20', stakerName: 'Staker 20', score: 90 },
-    { stakerId: '21', stakerName: 'Staker 21', score: 88 }
+    { stakerId: '1', stakerName: 'Staker 1', score: 92, stakedAmount: 1200 },
+    { stakerId: '2', stakerName: 'Staker 2', score: 95, stakedAmount: 800 },
+    { stakerId: '3', stakerName: 'Staker 3', score: 88, stakedAmount: 1500 },
+    { stakerId: '4', stakerName: 'Staker 4', score: 91, stakedAmount: 900 },
+    { stakerId: '5', stakerName: 'Staker 5', score: 87, stakedAmount: 1100 },
+    { stakerId: '6', stakerName: 'Staker 6', score: 86, stakedAmount: 750 },
+    { stakerId: '7', stakerName: 'Staker 7', score: 91, stakedAmount: 1300 },
+    { stakerId: '8', stakerName: 'Staker 8', score: 89, stakedAmount: 850 },
+    { stakerId: '9', stakerName: 'Staker 9', score: 93, stakedAmount: 1000 },
+    { stakerId: '10', stakerName: 'Staker 10', score: 94, stakedAmount: 950 },
+    { stakerId: '11', stakerName: 'Staker 11', score: 88, stakedAmount: 1400 },
+    { stakerId: '12', stakerName: 'Staker 12', score: 92, stakedAmount: 700 },
+    { stakerId: '13', stakerName: 'Staker 13', score: 85, stakedAmount: 1250 },
+    { stakerId: '14', stakerName: 'Staker 14', score: 96, stakedAmount: 600 },
+    { stakerId: '15', stakerName: 'Staker 15', score: 91, stakedAmount: 1350 },
+    { stakerId: '16', stakerName: 'Staker 16', score: 89, stakedAmount: 800 },
+    { stakerId: '17', stakerName: 'Staker 17', score: 93, stakedAmount: 1150 },
+    { stakerId: '18', stakerName: 'Staker 18', score: 87, stakedAmount: 900 },
+    { stakerId: '19', stakerName: 'Staker 19', score: 94, stakedAmount: 1050 },
+    { stakerId: '20', stakerName: 'Staker 20', score: 90, stakedAmount: 750 },
+    { stakerId: '21', stakerName: 'Staker 21', score: 88, stakedAmount: 1200 }
   ]);
 
   // New moderator inputs
@@ -132,7 +133,8 @@ export default function MyCompletionsPage() {
     const newModerator = {
       stakerId: nextId.toString(),
       stakerName: `Staker ${nextId}`,
-      score: newStakerScore
+      score: newStakerScore,
+      stakedAmount: 1000 // Default staked amount
     };
     
     setDevModerators([...devModerators, newModerator]);
@@ -161,50 +163,60 @@ export default function MyCompletionsPage() {
       case 'default':
         // 22 sequential stakers with good scores
         const goodScores = [92, 95, 88, 91, 87, 94, 89, 93, 90, 86, 88, 92, 85, 96, 91, 89, 93, 87, 94, 90, 88, 92];
+        const defaultStakes = [1200, 800, 1500, 900, 1100, 750, 1300, 850, 1000, 950, 1400, 700, 1250, 600, 1350, 800, 1150, 900, 1050, 750, 1200, 1000];
         newModerators = goodScores.map((score, index) => ({
           stakerId: (index + 1).toString(),
           stakerName: `Staker ${index + 1}`,
-          score
+          score,
+          stakedAmount: defaultStakes[index] || 1000
         }));
         break;
         
       case 'mixed':
         // 7 sequential stakers with mixed scores
         const mixedScores = [98, 45, 87, 92, 35, 89, 94]; // Mix of good and medium scores (all validated)
+        const mixedStakes = [1500, 800, 1200, 900, 600, 1100, 1300];
         newModerators = mixedScores.map((score, index) => ({
           stakerId: (index + 1).toString(),
           stakerName: `Staker ${index + 1}`,
-          score
+          score,
+          stakedAmount: mixedStakes[index] || 1000
         }));
         break;
         
       case 'high_scores':
         // 5 sequential stakers with high scores
         const highScores = [98, 99, 97, 96, 95];
+        const highStakes = [2000, 1800, 1500, 1200, 1000];
         newModerators = highScores.map((score, index) => ({
           stakerId: (index + 1).toString(),
           stakerName: `Staker ${index + 1}`,
-          score
+          score,
+          stakedAmount: highStakes[index] || 1500
         }));
         break;
         
       case 'with_refuses':
         // 7 sequential stakers with some refuses (score = 0)
         const refuseScores = [85, 0, 90, 0, 88, 0, 92]; // Some actual refuses (0)
+        const refuseStakes = [1200, 800, 1500, 600, 1100, 500, 1300]; // Lower stakes for refused stakers
         newModerators = refuseScores.map((score, index) => ({
           stakerId: (index + 1).toString(),
           stakerName: `Staker ${index + 1}`,
-          score
+          score,
+          stakedAmount: refuseStakes[index] || 1000
         }));
         break;
         
       case 'refused_completion':
         // 22 sequential stakers with majority refuses (score = 0) - completion rejected
         const refusedScores = [0, 0, 75, 0, 0, 82, 0, 0, 68, 0, 0, 90, 0, 0, 72, 0, 0, 85, 0, 0, 78, 88]; // Majority = 0 (refused)
+        const refusedStakes = [500, 300, 1200, 400, 600, 1500, 350, 800, 1100, 450, 200, 1800, 550, 700, 1300, 250, 900, 1600, 300, 400, 1000, 1200]; // Lower stakes for refused stakers
         newModerators = refusedScores.map((score, index) => ({
           stakerId: (index + 1).toString(),
           stakerName: `Staker ${index + 1}`,
-          score
+          score,
+          stakedAmount: refusedStakes[index] || 500
         }));
         break;
     }
