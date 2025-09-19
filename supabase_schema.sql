@@ -1932,6 +1932,19 @@ COMMENT ON TABLE blockchain_networks IS 'Configuration des réseaux (Base: MINT 
 COMMENT ON TABLE deployed_contracts IS 'Smart contracts déployés (à configurer ultérieurement)';
 
 -- =====================================================
+-- 12D. COMMENTAIRES POUR LES NOUVELLES TABLES MY WIN
+-- =====================================================
+
+COMMENT ON TABLE user_dashboard_stats IS 'Stats consolidées du dashboard My Win (créations, complétions, modérations, WINC, XP)';
+COMMENT ON TABLE user_moderation_history IS 'Historique complet des modérations par utilisateur avec alignment tracking';
+COMMENT ON TABLE user_completion_history IS 'Historique des complétions par utilisateur avec scores et classements';
+COMMENT ON TABLE user_completion_moderator_scores IS 'Détail des scores attribués par chaque modérateur pour les complétions';
+COMMENT ON TABLE user_earned_rewards IS 'Récompenses gagnées par les utilisateurs (WINC, XP, tokens, NFTs, accès)';
+COMMENT ON TABLE user_achievements IS 'Achievements et badges débloqués par les utilisateurs';
+COMMENT ON TABLE user_level_progression IS 'Historique des montées de niveau utilisateur avec récompenses';
+COMMENT ON TABLE user_recent_activities IS 'Fil d''actualité des activités utilisateur pour My Win dashboard';
+
+-- =====================================================
 -- 4F. TABLES DE WEBHOOKS, REMBOURSEMENTS ET FACTURATION (NOUVELLES)
 -- =====================================================
 
@@ -2002,6 +2015,237 @@ CREATE TABLE invoice_line_items (
   total_price DECIMAL(10,2) NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+-- =====================================================
+-- 13. TABLES MY WIN - DASHBOARD ET TRACKING UTILISATEUR
+-- =====================================================
+
+-- Dashboard stats par utilisateur (My Win page)
+CREATE TABLE user_dashboard_stats (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+  user_wallet TEXT NOT NULL UNIQUE, -- Contrainte unique pour éviter les doublons
+  total_creations INTEGER DEFAULT 0, -- Nombre de campagnes créées
+  total_completions INTEGER DEFAULT 0, -- Nombre de complétions effectuées
+  total_moderations INTEGER DEFAULT 0, -- Nombre de modérations effectuées
+  total_winc_earned DECIMAL(20,8) DEFAULT 0, -- Total WINC gagné
+  total_winc_lost DECIMAL(20,8) DEFAULT 0, -- Total WINC perdu (modérations)
+  total_xp_earned INTEGER DEFAULT 0, -- Total XP accumulé
+  current_level INTEGER DEFAULT 1, -- Niveau actuel
+  last_updated TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Historique détaillé des modérations par utilisateur (My Moderations)
+CREATE TABLE user_moderation_history (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+  user_wallet TEXT NOT NULL,
+  campaign_id TEXT NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
+  completion_id TEXT REFERENCES completions(id) ON DELETE SET NULL,
+  campaign_title TEXT NOT NULL,
+  completion_title TEXT,
+  moderation_date TIMESTAMP WITH TIME ZONE NOT NULL,
+  user_vote moderation_decision NOT NULL, -- 'approve', 'reject', 'abstain'
+  final_result TEXT NOT NULL CHECK (final_result IN ('approved', 'rejected', 'pending')),
+  winc_earned DECIMAL(20,8) DEFAULT 0,
+  winc_lost DECIMAL(20,8) DEFAULT 0,
+  alignment_percentage INTEGER DEFAULT 0, -- % d'alignement avec résultat final
+  staked_amount DECIMAL(20,8) DEFAULT 0,
+  content_url TEXT,
+  vote_weight DECIMAL(5,2) DEFAULT 1.0,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Historique détaillé des complétions par utilisateur (My Completions)
+CREATE TABLE user_completion_history (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+  user_wallet TEXT NOT NULL,
+  campaign_id TEXT NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
+  completion_id TEXT NOT NULL REFERENCES completions(id) ON DELETE CASCADE,
+  campaign_title TEXT NOT NULL,
+  completion_title TEXT NOT NULL,
+  completion_date TIMESTAMP WITH TIME ZONE NOT NULL,
+  status TEXT NOT NULL CHECK (status IN ('completed', 'in_progress', 'in_moderation', 'validated', 'refused')),
+  final_score INTEGER, -- Score moyen sur 100 des modérateurs
+  ranking INTEGER, -- Position dans le classement
+  roi_earned DECIMAL(20,8) DEFAULT 0, -- ROI gagné si top 3
+  standard_reward_description TEXT, -- Description de la récompense standard
+  premium_reward_description TEXT, -- Description de la récompense premium
+  campaign_end_date TIMESTAMP WITH TIME ZONE,
+  completion_target INTEGER, -- Nombre de complétions cibles
+  current_completions INTEGER, -- Nombre de complétions actuelles
+  usdc_revenue DECIMAL(10,2) DEFAULT 0, -- Revenus USDC générés
+  campaign_creator_type TEXT CHECK (campaign_creator_type IN ('individual', 'company', 'agency')),
+  is_top_three BOOLEAN DEFAULT FALSE, -- Si dans le top 3
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Scores détaillés par modérateur pour chaque complétion (My Completions - ModeratorScores)
+CREATE TABLE user_completion_moderator_scores (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+  completion_history_id TEXT NOT NULL REFERENCES user_completion_history(id) ON DELETE CASCADE,
+  completion_id TEXT NOT NULL REFERENCES completions(id) ON DELETE CASCADE,
+  staker_wallet TEXT NOT NULL, -- Wallet du modérateur
+  staker_name TEXT NOT NULL, -- Nom du modérateur (Staker 1, 2, etc.)
+  score INTEGER NOT NULL CHECK (score >= 0 AND score <= 100), -- Score attribué
+  staked_amount DECIMAL(20,8) NOT NULL, -- Montant staké par ce modérateur
+  vote_timestamp TIMESTAMP WITH TIME ZONE,
+  is_refused BOOLEAN DEFAULT FALSE, -- Si score = 0 (refusé)
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Récompenses gagnées par utilisateur (My Win - Rewards tracking)
+CREATE TABLE user_earned_rewards (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+  user_wallet TEXT NOT NULL,
+  campaign_id TEXT NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
+  completion_id TEXT REFERENCES completions(id) ON DELETE SET NULL,
+  reward_source TEXT NOT NULL CHECK (reward_source IN ('creation', 'completion', 'moderation', 'staking', 'top3', 'premium')),
+  reward_type TEXT NOT NULL CHECK (reward_type IN ('winc', 'xp', 'token', 'nft', 'digital_access', 'physical_access')),
+  reward_tier reward_tier,
+  amount DECIMAL(20,8),
+  token_symbol TEXT,
+  blockchain TEXT,
+  contract_address TEXT,
+  token_id TEXT,
+  description TEXT,
+  claim_status TEXT DEFAULT 'pending' CHECK (claim_status IN ('pending', 'claimed', 'failed', 'expired')),
+  claimed_at TIMESTAMP WITH TIME ZONE,
+  claim_tx_hash TEXT,
+  earned_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Achievements et badges utilisateur
+CREATE TABLE user_achievements (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+  user_wallet TEXT NOT NULL,
+  achievement_type TEXT NOT NULL CHECK (achievement_type IN ('first_creation', 'first_completion', 'first_moderation', 'top_creator', 'top_completer', 'top_moderator', 'staking_master', 'winc_millionaire')),
+  achievement_name TEXT NOT NULL,
+  achievement_description TEXT,
+  achievement_icon TEXT,
+  achievement_rarity TEXT CHECK (achievement_rarity IN ('common', 'rare', 'epic', 'legendary')),
+  earned_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  is_displayed BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Progression des niveaux utilisateur
+CREATE TABLE user_level_progression (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+  user_wallet TEXT NOT NULL,
+  previous_level INTEGER DEFAULT 1,
+  new_level INTEGER NOT NULL,
+  xp_at_level_up INTEGER NOT NULL,
+  xp_required_for_next INTEGER NOT NULL,
+  level_up_rewards JSONB, -- Récompenses obtenues au level up
+  level_up_date TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Activités récentes par utilisateur (fil d'actualité My Win)
+CREATE TABLE user_recent_activities (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+  user_wallet TEXT NOT NULL,
+  activity_type TEXT NOT NULL CHECK (activity_type IN ('campaign_created', 'completion_submitted', 'moderation_voted', 'reward_earned', 'level_up', 'achievement_unlocked')),
+  activity_title TEXT NOT NULL,
+  activity_description TEXT,
+  related_campaign_id TEXT REFERENCES campaigns(id) ON DELETE CASCADE,
+  related_completion_id TEXT REFERENCES completions(id) ON DELETE CASCADE,
+  metadata JSONB, -- Données supplémentaires de l'activité
+  is_important BOOLEAN DEFAULT FALSE, -- Si à mettre en avant
+  activity_date TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- =====================================================
+-- 13B. VUES MY WIN POUR AGRÉGATIONS
+-- =====================================================
+
+-- Vue agrégée des stats dashboard par utilisateur
+CREATE OR REPLACE VIEW user_dashboard_stats_aggregated AS
+SELECT 
+  u.wallet_address,
+  COALESCE(creator_stats.creations, 0) as total_creations,
+  COALESCE(completer_stats.completions, 0) as total_completions,
+  COALESCE(moderator_stats.moderations, 0) as total_moderations,
+  COALESCE(winc_stats.total_earned, 0) as total_winc_earned,
+  COALESCE(winc_stats.total_lost, 0) as total_winc_lost,
+  COALESCE(xp_stats.total_xp, 0) as total_xp_earned,
+  COALESCE(xp_stats.current_level, 1) as current_level,
+  NOW() as last_calculated
+FROM user_profiles u
+LEFT JOIN (
+  SELECT creator_wallet, COUNT(*) as creations
+  FROM campaigns c
+  JOIN creator_infos ci ON c.id = ci.campaign_id
+  GROUP BY creator_wallet
+) creator_stats ON u.wallet_address = creator_stats.creator_wallet
+LEFT JOIN (
+  SELECT completer_wallet, COUNT(*) as completions
+  FROM completions
+  GROUP BY completer_wallet
+) completer_stats ON u.wallet_address = completer_stats.completer_wallet
+LEFT JOIN (
+  SELECT moderator_wallet, COUNT(*) as moderations
+  FROM moderation_votes
+  GROUP BY moderator_wallet
+) moderator_stats ON u.wallet_address = moderator_stats.moderator_wallet
+LEFT JOIN (
+  SELECT 
+    user_wallet,
+    SUM(CASE WHEN amount > 0 THEN amount ELSE 0 END) as total_earned,
+    SUM(CASE WHEN amount < 0 THEN ABS(amount) ELSE 0 END) as total_lost
+  FROM user_earned_rewards
+  WHERE reward_type = 'winc'
+  GROUP BY user_wallet
+) winc_stats ON u.wallet_address = winc_stats.user_wallet
+LEFT JOIN (
+  SELECT user_wallet, total_xp, current_level
+  FROM user_xp_progression
+) xp_stats ON u.wallet_address = xp_stats.user_wallet;
+
+-- Vue des modérations avec alignment calculé
+CREATE OR REPLACE VIEW user_moderations_with_alignment AS
+SELECT 
+  umh.*,
+  CASE 
+    WHEN umh.final_result = 'approved' AND umh.user_vote = 'approve' THEN 100
+    WHEN umh.final_result = 'rejected' AND umh.user_vote = 'reject' THEN 100
+    WHEN umh.final_result = 'pending' THEN 50
+    ELSE 0
+  END as calculated_alignment_percentage
+FROM user_moderation_history umh;
+
+-- Vue des complétions avec rewards calculées
+CREATE OR REPLACE VIEW user_completions_with_rewards AS
+SELECT 
+  uch.*,
+  COALESCE(standard_rewards.reward_count, 0) as standard_rewards_count,
+  COALESCE(premium_rewards.reward_count, 0) as premium_rewards_count,
+  COALESCE(total_rewards.total_value, 0) as total_reward_value
+FROM user_completion_history uch
+LEFT JOIN (
+  SELECT completion_id, COUNT(*) as reward_count
+  FROM user_earned_rewards
+  WHERE reward_tier = 'standard'
+  GROUP BY completion_id
+) standard_rewards ON uch.completion_id = standard_rewards.completion_id
+LEFT JOIN (
+  SELECT completion_id, COUNT(*) as reward_count
+  FROM user_earned_rewards
+  WHERE reward_tier = 'premium'
+  GROUP BY completion_id
+) premium_rewards ON uch.completion_id = premium_rewards.completion_id
+LEFT JOIN (
+  SELECT completion_id, SUM(amount) as total_value
+  FROM user_earned_rewards
+  WHERE reward_type IN ('winc', 'token') AND amount IS NOT NULL
+  GROUP BY completion_id
+) total_rewards ON uch.completion_id = total_rewards.completion_id;
 
 -- =====================================================
 -- SCHEMA TERMINÉ - PRÊT POUR SUPABASE
@@ -2460,6 +2704,68 @@ CREATE INDEX IF NOT EXISTS idx_system_error_logs_severity ON system_error_logs(s
 CREATE INDEX IF NOT EXISTS idx_system_error_logs_resolved ON system_error_logs(is_resolved);
 
 -- =====================================================
+-- 9E. INDEX POUR LES NOUVELLES TABLES MY WIN
+-- =====================================================
+
+-- Index sur les stats dashboard utilisateur
+CREATE INDEX IF NOT EXISTS idx_user_dashboard_stats_wallet ON user_dashboard_stats(user_wallet);
+CREATE INDEX IF NOT EXISTS idx_user_dashboard_stats_updated ON user_dashboard_stats(last_updated);
+
+-- Index sur l'historique des modérations utilisateur
+CREATE INDEX IF NOT EXISTS idx_user_moderation_history_wallet ON user_moderation_history(user_wallet);
+CREATE INDEX IF NOT EXISTS idx_user_moderation_history_campaign ON user_moderation_history(campaign_id);
+CREATE INDEX IF NOT EXISTS idx_user_moderation_history_completion ON user_moderation_history(completion_id);
+CREATE INDEX IF NOT EXISTS idx_user_moderation_history_date ON user_moderation_history(moderation_date);
+CREATE INDEX IF NOT EXISTS idx_user_moderation_history_vote ON user_moderation_history(user_vote);
+CREATE INDEX IF NOT EXISTS idx_user_moderation_history_result ON user_moderation_history(final_result);
+CREATE INDEX IF NOT EXISTS idx_user_moderation_history_alignment ON user_moderation_history(alignment_percentage);
+
+-- Index sur l'historique des complétions utilisateur
+CREATE INDEX IF NOT EXISTS idx_user_completion_history_wallet ON user_completion_history(user_wallet);
+CREATE INDEX IF NOT EXISTS idx_user_completion_history_campaign ON user_completion_history(campaign_id);
+CREATE INDEX IF NOT EXISTS idx_user_completion_history_completion ON user_completion_history(completion_id);
+CREATE INDEX IF NOT EXISTS idx_user_completion_history_date ON user_completion_history(completion_date);
+CREATE INDEX IF NOT EXISTS idx_user_completion_history_status ON user_completion_history(status);
+CREATE INDEX IF NOT EXISTS idx_user_completion_history_ranking ON user_completion_history(ranking);
+CREATE INDEX IF NOT EXISTS idx_user_completion_history_top_three ON user_completion_history(is_top_three);
+
+-- Index sur les scores des modérateurs
+CREATE INDEX IF NOT EXISTS idx_user_completion_moderator_scores_completion ON user_completion_moderator_scores(completion_id);
+CREATE INDEX IF NOT EXISTS idx_user_completion_moderator_scores_staker ON user_completion_moderator_scores(staker_wallet);
+CREATE INDEX IF NOT EXISTS idx_user_completion_moderator_scores_score ON user_completion_moderator_scores(score);
+CREATE INDEX IF NOT EXISTS idx_user_completion_moderator_scores_refused ON user_completion_moderator_scores(is_refused);
+
+-- Index sur les récompenses gagnées
+CREATE INDEX IF NOT EXISTS idx_user_earned_rewards_wallet ON user_earned_rewards(user_wallet);
+CREATE INDEX IF NOT EXISTS idx_user_earned_rewards_campaign ON user_earned_rewards(campaign_id);
+CREATE INDEX IF NOT EXISTS idx_user_earned_rewards_completion ON user_earned_rewards(completion_id);
+CREATE INDEX IF NOT EXISTS idx_user_earned_rewards_source ON user_earned_rewards(reward_source);
+CREATE INDEX IF NOT EXISTS idx_user_earned_rewards_type ON user_earned_rewards(reward_type);
+CREATE INDEX IF NOT EXISTS idx_user_earned_rewards_tier ON user_earned_rewards(reward_tier);
+CREATE INDEX IF NOT EXISTS idx_user_earned_rewards_status ON user_earned_rewards(claim_status);
+CREATE INDEX IF NOT EXISTS idx_user_earned_rewards_earned ON user_earned_rewards(earned_at);
+
+-- Index sur les achievements
+CREATE INDEX IF NOT EXISTS idx_user_achievements_wallet ON user_achievements(user_wallet);
+CREATE INDEX IF NOT EXISTS idx_user_achievements_type ON user_achievements(achievement_type);
+CREATE INDEX IF NOT EXISTS idx_user_achievements_rarity ON user_achievements(achievement_rarity);
+CREATE INDEX IF NOT EXISTS idx_user_achievements_earned ON user_achievements(earned_at);
+CREATE INDEX IF NOT EXISTS idx_user_achievements_displayed ON user_achievements(is_displayed);
+
+-- Index sur la progression des niveaux
+CREATE INDEX IF NOT EXISTS idx_user_level_progression_wallet ON user_level_progression(user_wallet);
+CREATE INDEX IF NOT EXISTS idx_user_level_progression_level ON user_level_progression(new_level);
+CREATE INDEX IF NOT EXISTS idx_user_level_progression_date ON user_level_progression(level_up_date);
+
+-- Index sur les activités récentes
+CREATE INDEX IF NOT EXISTS idx_user_recent_activities_wallet ON user_recent_activities(user_wallet);
+CREATE INDEX IF NOT EXISTS idx_user_recent_activities_type ON user_recent_activities(activity_type);
+CREATE INDEX IF NOT EXISTS idx_user_recent_activities_campaign ON user_recent_activities(related_campaign_id);
+CREATE INDEX IF NOT EXISTS idx_user_recent_activities_completion ON user_recent_activities(related_completion_id);
+CREATE INDEX IF NOT EXISTS idx_user_recent_activities_date ON user_recent_activities(activity_date);
+CREATE INDEX IF NOT EXISTS idx_user_recent_activities_important ON user_recent_activities(is_important);
+
+-- =====================================================
 -- 10D. TRIGGERS POUR TOUTES LES NOUVELLES TABLES
 -- =====================================================
 
@@ -2550,6 +2856,23 @@ CREATE TRIGGER update_user_consents_updated_at BEFORE UPDATE ON user_consents FO
 
 DROP TRIGGER IF EXISTS update_data_retention_policies_updated_at ON data_retention_policies;
 CREATE TRIGGER update_data_retention_policies_updated_at BEFORE UPDATE ON data_retention_policies FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- =====================================================
+-- 10E. TRIGGERS POUR LES NOUVELLES TABLES MY WIN
+-- =====================================================
+
+-- Triggers pour les tables My Win avec updated_at
+DROP TRIGGER IF EXISTS update_user_dashboard_stats_updated_at ON user_dashboard_stats;
+CREATE TRIGGER update_user_dashboard_stats_updated_at BEFORE UPDATE ON user_dashboard_stats FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_user_moderation_history_updated_at ON user_moderation_history;
+CREATE TRIGGER update_user_moderation_history_updated_at BEFORE UPDATE ON user_moderation_history FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_user_completion_history_updated_at ON user_completion_history;
+CREATE TRIGGER update_user_completion_history_updated_at BEFORE UPDATE ON user_completion_history FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_user_earned_rewards_updated_at ON user_earned_rewards;
+CREATE TRIGGER update_user_earned_rewards_updated_at BEFORE UPDATE ON user_earned_rewards FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 -- =====================================================
 -- 11. HYBRID MODERATION (50/50 votes + stake)
 -- =====================================================
@@ -2707,3 +3030,286 @@ BEGIN
     SELECT 1 FROM moderation_votes mv WHERE mv.campaign_id = mp.campaign_id
   );
 END $$;
+
+-- =====================================================
+-- 12. FONCTIONS MY WIN - AGRÉGATIONS ET MISE À JOUR AUTOMATIQUE
+-- =====================================================
+
+-- Fonction pour mettre à jour les stats du dashboard d'un utilisateur
+CREATE OR REPLACE FUNCTION update_user_dashboard_stats(p_user_wallet TEXT)
+RETURNS VOID AS $$
+BEGIN
+  INSERT INTO user_dashboard_stats (
+    user_wallet,
+    total_creations,
+    total_completions,
+    total_moderations,
+    total_winc_earned,
+    total_winc_lost,
+    total_xp_earned,
+    current_level,
+    last_updated
+  )
+  SELECT 
+    p_user_wallet,
+    COALESCE(creator_stats.creations, 0),
+    COALESCE(completer_stats.completions, 0),
+    COALESCE(moderator_stats.moderations, 0),
+    COALESCE(winc_stats.total_earned, 0),
+    COALESCE(winc_stats.total_lost, 0),
+    COALESCE(xp_stats.total_xp, 0),
+    COALESCE(xp_stats.current_level, 1),
+    NOW()
+  FROM (SELECT p_user_wallet as wallet_address) base
+  LEFT JOIN (
+    SELECT ci.wallet_address as creator_wallet, COUNT(*) as creations
+    FROM campaigns c
+    JOIN creator_infos ci ON c.id = ci.campaign_id
+    WHERE ci.wallet_address = p_user_wallet
+    GROUP BY ci.wallet_address
+  ) creator_stats ON base.wallet_address = creator_stats.creator_wallet
+  LEFT JOIN (
+    SELECT completer_wallet, COUNT(*) as completions
+    FROM completions
+    WHERE completer_wallet = p_user_wallet
+    GROUP BY completer_wallet
+  ) completer_stats ON base.wallet_address = completer_stats.completer_wallet
+  LEFT JOIN (
+    SELECT moderator_wallet, COUNT(*) as moderations
+    FROM moderation_votes
+    WHERE moderator_wallet = p_user_wallet
+    GROUP BY moderator_wallet
+  ) moderator_stats ON base.wallet_address = moderator_stats.moderator_wallet
+  LEFT JOIN (
+    SELECT 
+      user_wallet,
+      SUM(CASE WHEN amount > 0 THEN amount ELSE 0 END) as total_earned,
+      SUM(CASE WHEN amount < 0 THEN ABS(amount) ELSE 0 END) as total_lost
+    FROM user_earned_rewards
+    WHERE user_wallet = p_user_wallet AND reward_type = 'winc'
+    GROUP BY user_wallet
+  ) winc_stats ON base.wallet_address = winc_stats.user_wallet
+  LEFT JOIN (
+    SELECT user_wallet, total_xp, current_level
+    FROM user_xp_progression
+    WHERE user_wallet = p_user_wallet
+  ) xp_stats ON base.wallet_address = xp_stats.user_wallet
+  ON CONFLICT (user_wallet) 
+  DO UPDATE SET
+    total_creations = EXCLUDED.total_creations,
+    total_completions = EXCLUDED.total_completions,
+    total_moderations = EXCLUDED.total_moderations,
+    total_winc_earned = EXCLUDED.total_winc_earned,
+    total_winc_lost = EXCLUDED.total_winc_lost,
+    total_xp_earned = EXCLUDED.total_xp_earned,
+    current_level = EXCLUDED.current_level,
+    last_updated = EXCLUDED.last_updated,
+    updated_at = NOW();
+END;
+$$ LANGUAGE plpgsql;
+
+-- Fonction pour créer un record d'activité récente
+CREATE OR REPLACE FUNCTION create_user_activity(
+  p_user_wallet TEXT,
+  p_activity_type TEXT,
+  p_activity_title TEXT,
+  p_activity_description TEXT DEFAULT NULL,
+  p_campaign_id TEXT DEFAULT NULL,
+  p_completion_id TEXT DEFAULT NULL,
+  p_metadata JSONB DEFAULT NULL,
+  p_is_important BOOLEAN DEFAULT FALSE
+)
+RETURNS VOID AS $$
+BEGIN
+  INSERT INTO user_recent_activities (
+    user_wallet,
+    activity_type,
+    activity_title,
+    activity_description,
+    related_campaign_id,
+    related_completion_id,
+    metadata,
+    is_important
+  ) VALUES (
+    p_user_wallet,
+    p_activity_type,
+    p_activity_title,
+    p_activity_description,
+    p_campaign_id,
+    p_completion_id,
+    p_metadata,
+    p_is_important
+  );
+  
+  -- Nettoyer les anciennes activités (garder seulement les 100 plus récentes)
+  DELETE FROM user_recent_activities
+  WHERE user_wallet = p_user_wallet
+  AND id NOT IN (
+    SELECT id FROM user_recent_activities
+    WHERE user_wallet = p_user_wallet
+    ORDER BY activity_date DESC
+    LIMIT 100
+  );
+END;
+$$ LANGUAGE plpgsql;
+
+-- Fonction pour attribuer un achievement à un utilisateur
+CREATE OR REPLACE FUNCTION award_user_achievement(
+  p_user_wallet TEXT,
+  p_achievement_type TEXT,
+  p_achievement_name TEXT,
+  p_achievement_description TEXT DEFAULT NULL,
+  p_achievement_icon TEXT DEFAULT NULL,
+  p_achievement_rarity TEXT DEFAULT 'common'
+)
+RETURNS BOOLEAN AS $$
+DECLARE
+  achievement_exists BOOLEAN;
+BEGIN
+  -- Vérifier si l'achievement existe déjà
+  SELECT EXISTS(
+    SELECT 1 FROM user_achievements
+    WHERE user_wallet = p_user_wallet AND achievement_type = p_achievement_type
+  ) INTO achievement_exists;
+  
+  -- Si pas encore obtenu, l'attribuer
+  IF NOT achievement_exists THEN
+    INSERT INTO user_achievements (
+      user_wallet,
+      achievement_type,
+      achievement_name,
+      achievement_description,
+      achievement_icon,
+      achievement_rarity
+    ) VALUES (
+      p_user_wallet,
+      p_achievement_type,
+      p_achievement_name,
+      p_achievement_description,
+      p_achievement_icon,
+      p_achievement_rarity
+    );
+    
+    -- Créer une activité pour l'achievement
+    PERFORM create_user_activity(
+      p_user_wallet,
+      'achievement_unlocked',
+      'Achievement Unlocked: ' || p_achievement_name,
+      p_achievement_description,
+      NULL,
+      NULL,
+      jsonb_build_object('achievement_type', p_achievement_type, 'rarity', p_achievement_rarity),
+      TRUE
+    );
+    
+    RETURN TRUE;
+  END IF;
+  
+  RETURN FALSE;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Triggers automatiques pour mettre à jour les stats dashboard
+
+-- Trigger sur création de campagne
+CREATE OR REPLACE FUNCTION on_campaign_created()
+RETURNS TRIGGER AS $$
+BEGIN
+  -- Mettre à jour les stats du créateur
+  PERFORM update_user_dashboard_stats(
+    (SELECT ci.wallet_address FROM creator_infos ci WHERE ci.campaign_id = NEW.id)
+  );
+  
+  -- Créer une activité
+  PERFORM create_user_activity(
+    (SELECT ci.wallet_address FROM creator_infos ci WHERE ci.campaign_id = NEW.id),
+    'campaign_created',
+    'Campaign Created: ' || NEW.title,
+    'New campaign created and ready for moderation',
+    NEW.id
+  );
+  
+  -- Vérifier achievements
+  PERFORM award_user_achievement(
+    (SELECT ci.wallet_address FROM creator_infos ci WHERE ci.campaign_id = NEW.id),
+    'first_creation',
+    'First Creator',
+    'Created your first campaign on Winstory'
+  );
+  
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_campaign_created ON campaigns;
+CREATE TRIGGER trg_campaign_created
+AFTER INSERT ON campaigns
+FOR EACH ROW EXECUTE FUNCTION on_campaign_created();
+
+-- Trigger sur création de completion
+CREATE OR REPLACE FUNCTION on_completion_created()
+RETURNS TRIGGER AS $$
+BEGIN
+  -- Mettre à jour les stats du completer
+  PERFORM update_user_dashboard_stats(NEW.completer_wallet);
+  
+  -- Créer une activité
+  PERFORM create_user_activity(
+    NEW.completer_wallet,
+    'completion_submitted',
+    'Completion Submitted: ' || NEW.title,
+    'New completion submitted and awaiting moderation',
+    NEW.original_campaign_id,
+    NEW.id
+  );
+  
+  -- Vérifier achievements
+  PERFORM award_user_achievement(
+    NEW.completer_wallet,
+    'first_completion',
+    'First Completer',
+    'Completed your first campaign on Winstory'
+  );
+  
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_completion_created ON completions;
+CREATE TRIGGER trg_completion_created
+AFTER INSERT ON completions
+FOR EACH ROW EXECUTE FUNCTION on_completion_created();
+
+-- Trigger sur vote de modération
+CREATE OR REPLACE FUNCTION on_moderation_vote_created()
+RETURNS TRIGGER AS $$
+BEGIN
+  -- Mettre à jour les stats du modérateur
+  PERFORM update_user_dashboard_stats(NEW.moderator_wallet);
+  
+  -- Créer une activité
+  PERFORM create_user_activity(
+    NEW.moderator_wallet,
+    'moderation_voted',
+    'Moderation Vote Cast',
+    'Voted ' || NEW.vote_decision || ' on campaign moderation',
+    NEW.campaign_id,
+    NEW.completion_id
+  );
+  
+  -- Vérifier achievements
+  PERFORM award_user_achievement(
+    NEW.moderator_wallet,
+    'first_moderation',
+    'First Moderator',
+    'Cast your first moderation vote on Winstory'
+  );
+  
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_moderation_vote_created ON moderation_votes;
+CREATE TRIGGER trg_moderation_vote_created
+AFTER INSERT ON moderation_votes
+FOR EACH ROW EXECUTE FUNCTION on_moderation_vote_created();

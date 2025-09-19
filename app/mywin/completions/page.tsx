@@ -45,10 +45,24 @@ export default function MyCompletionsPage() {
   const [devForceInModeration, setDevForceInModeration] = useState(false);
   const [devRanking, setDevRanking] = useState(1);
   const [devTotalCompletions, setDevTotalCompletions] = useState(524);
-  const [devStakedAmount, setDevStakedAmount] = useState(80); // Less than mint price by default
+  // devStakedAmount removed - now calculated as sum of individual moderator stakes
   const [devMintPrice, setDevMintPrice] = useState(100);
   const [devIsTopThree, setDevIsTopThree] = useState(true);
   const [devCampaignTimeHours, setDevCampaignTimeHours] = useState(48); // Hours remaining
+  
+  // Fixed campaign end time - only changes when devCampaignTimeHours is manually updated
+  const [campaignEndTime, setCampaignEndTime] = useState(() => 
+    Date.now() + (48 * 60 * 60 * 1000) // 48h from now by default
+  );
+
+  // Update campaign end time only when hours are changed manually
+  useEffect(() => {
+    if (devCampaignTimeHours <= 0) {
+      setCampaignEndTime(Date.now() - 1000); // Set to past = finished
+    } else {
+      setCampaignEndTime(Date.now() + (devCampaignTimeHours * 60 * 60 * 1000));
+    }
+  }, [devCampaignTimeHours]);
 
   // Moderator configuration - Sequential numbering from 1 to N
   const [devModerators, setDevModerators] = useState<ModeratorScore[]>([
@@ -115,11 +129,11 @@ export default function MyCompletionsPage() {
     moderatorScores: devModerators,
     ranking: devRanking,
     totalCompletions: devTotalCompletions,
-    stakedAmount: devStakedAmount,
+    stakedAmount: devModerators.reduce((sum, mod) => sum + mod.stakedAmount, 0), // Sum of all moderator stakes
     mintPrice: devMintPrice,
     isTopThree: devIsTopThree,
-    campaignEndTime: devCampaignTimeHours <= 0 ? Date.now() - 1000 : Date.now() + (devCampaignTimeHours * 60 * 60 * 1000)
-  }), [devModerators, devRanking, devTotalCompletions, devStakedAmount, devMintPrice, devIsTopThree, devCampaignTimeHours]);
+    campaignEndTime: campaignEndTime
+  }), [devModerators, devRanking, devTotalCompletions, devMintPrice, devIsTopThree, campaignEndTime]);
 
   // Calculate current average score
   const currentAverageScore = useMemo(() => {
@@ -152,6 +166,13 @@ export default function MyCompletionsPage() {
   const handleUpdateModeratorScore = (stakerId: string, newScore: number) => {
     setDevModerators(devModerators.map(m => 
       m.stakerId === stakerId ? { ...m, score: newScore } : m
+    ));
+  };
+
+  // Update moderator staked amount
+  const handleUpdateModeratorStake = (stakerId: string, newStake: number) => {
+    setDevModerators(devModerators.map(m => 
+      m.stakerId === stakerId ? { ...m, stakedAmount: newStake } : m
     ));
   };
 
@@ -468,14 +489,10 @@ export default function MyCompletionsPage() {
                 </label>
 
                 <label style={{ display: 'grid', gridTemplateColumns: '1fr auto', alignItems: 'center', gap: 8 }}>
-                  <span style={{ fontSize: 13 }}>Staked Amount ($)</span>
-                  <input
-                    type="number"
-                    value={devStakedAmount}
-                    min={0}
-                    onChange={(e) => setDevStakedAmount(Math.max(0, parseInt(e.target.value) || 0))}
-                    style={{ width: 60, background: '#111', color: '#fff', border: '1px solid #333', borderRadius: 4, padding: '4px 6px', fontSize: 12 }}
-                  />
+                  <span style={{ fontSize: 13 }}>Total Staked (auto)</span>
+                  <span style={{ fontSize: 13, color: '#FFD600' }}>
+                    {devModerators.reduce((sum, mod) => sum + mod.stakedAmount, 0)} WINC
+                  </span>
                 </label>
 
                 <label style={{ display: 'grid', gridTemplateColumns: '1fr auto', alignItems: 'center', gap: 8 }}>
@@ -590,6 +607,26 @@ export default function MyCompletionsPage() {
                             textAlign: 'center'
                           }}
                         />
+                        <span style={{ fontSize: 9, color: '#888', minWidth: 35 }}>|</span>
+                        <input
+                          type="number"
+                          value={mod.stakedAmount}
+                          min={0}
+                          max={10000}
+                          onChange={(e) => handleUpdateModeratorStake(mod.stakerId, Math.max(0, parseInt(e.target.value) || 0))}
+                          style={{ 
+                            width: 50, 
+                            background: '#111', 
+                            color: '#FFD600', 
+                            border: '1px solid #333', 
+                            borderRadius: 3, 
+                            padding: '2px 4px', 
+                            fontSize: 10,
+                            textAlign: 'center'
+                          }}
+                          title="Staked amount in WINC"
+                        />
+                        <span style={{ fontSize: 9, color: '#888' }}>WINC</span>
                         <span style={{ fontSize: 10, color: textColor }}>
                           {icon}
                         </span>
@@ -615,9 +652,10 @@ export default function MyCompletionsPage() {
               </div>
 
               <div style={{ fontSize: 11, color: '#666', fontStyle: 'italic', marginTop: 8 }}>
-                💡 Score = 0 = Refused (❌) • Score 1-50 = Medium (🟠) but VALIDATED • Score 51-100 = Good (✅)<br/>
-                Requirements: ≥ 22 moderators + staking ≥ mint price • Set time = 0 to show "FINISHED"<br/>
-                🔴 Once requirements met: if majority = 0 → Vote closes, Completion REFUSED
+                💡 <strong>Hybrid 50/50 System:</strong> Score = 0 = Refused (❌) • Score 1-50 = Medium (🟠) but VALIDATED • Score 51-100 = Good (✅)<br/>
+                🏛️ <strong>Democracy (50%)</strong> + 💰 <strong>Plutocracy (50%)</strong>: Vote weight + Stake weight combined<br/>
+                📊 Requirements: ≥ 22 moderators + total staked ≥ mint price + 2:1 ratio • Individual stake amounts affect hybrid score<br/>
+                🎁 Standard rewards: when 3/3 validated • Premium rewards: only after campaign ends (time = 0)
               </div>
             </div>
           }

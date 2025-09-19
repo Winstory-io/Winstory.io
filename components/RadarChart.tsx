@@ -6,6 +6,7 @@ interface ModeratorScore {
   stakerId: string;
   stakerName: string;
   score: number; // 0-100
+  stakedAmount: number; // Amount staked by this moderator in WINC
 }
 
 interface RadarChartProps {
@@ -526,9 +527,21 @@ export default function RadarChart({ moderatorScores, size = 400, showLabels = t
           <div style={{ 
             color: getScoreColor(hoveredPoint.scoreCategory), 
             fontSize: 14, 
-            fontWeight: 800 
+            fontWeight: 800,
+            marginBottom: 2
           }}>
             {hoveredPoint.moderator.score} / 100
+          </div>
+          <div style={{ 
+            color: '#888', 
+            fontSize: 10, 
+            marginBottom: 3,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 4
+          }}>
+            <span>💰</span>
+            <span style={{ color: '#FFD600' }}>{hoveredPoint.moderator.stakedAmount?.toLocaleString() || 0} WINC</span>
           </div>
           <div style={{ 
             color: getScoreColor(hoveredPoint.scoreCategory), 
@@ -565,18 +578,33 @@ export default function RadarChart({ moderatorScores, size = 400, showLabels = t
           </div>
           {hoveredRefusedGroup.map((moderator, index) => (
             <div key={moderator.stakerId} style={{ 
-              display: 'flex', 
-              justifyContent: 'space-between', 
-              alignItems: 'center',
-              marginBottom: index < hoveredRefusedGroup.length - 1 ? 2 : 0,
-              padding: '2px 0'
+              marginBottom: index < hoveredRefusedGroup.length - 1 ? 6 : 0,
+              padding: '4px 0'
             }}>
-              <span style={{ color: '#FFD600', fontSize: 11 }}>
-                Staker {moderator.stakerId}
-              </span>
-              <span style={{ color: '#FF3B30', fontSize: 11, fontWeight: 800 }}>
-                ❌ 0/100
-              </span>
+              <div style={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center',
+                marginBottom: 2
+              }}>
+                <span style={{ color: '#FFD600', fontSize: 11 }}>
+                  Staker {moderator.stakerId}
+                </span>
+                <span style={{ color: '#FF3B30', fontSize: 11, fontWeight: 800 }}>
+                  ❌ 0/100
+                </span>
+              </div>
+              <div style={{ 
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                gap: 4,
+                fontSize: 10,
+                color: '#888'
+              }}>
+                <span>💰</span>
+                <span style={{ color: '#FFD600' }}>{moderator.stakedAmount?.toLocaleString() || 0} WINC</span>
+              </div>
             </div>
           ))}
           <div style={{ 

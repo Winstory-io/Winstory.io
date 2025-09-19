@@ -160,9 +160,10 @@ export default function ValidatedCompletionDashboard({
       BigInt(SCALE) // wincPerUSDC (1 WINC = 1 USDC)
     );
     
-    // Extract results from hybrid evaluation
+    // Extract results from hybrid evaluation  
     const minVotesOk = numModerators >= 22;
-    const stakingOk = completion.stakedAmount >= completion.mintPrice;
+    const totalStaked = stakeYes + stakeNo; // Total amount staked by all moderators
+    const stakingOk = totalStaked >= completion.mintPrice;
     const requirementsMet = minVotesOk && stakingOk;
     
     // Hybrid ratio calculation for display
@@ -181,9 +182,15 @@ export default function ValidatedCompletionDashboard({
     // Vote continues if requirements met but hybrid system says EN_COURS
     const voteContinues = requirementsMet && (hybridResult.status === ModerationStatus.EN_COURS);
     
-    // Determine completion status
-    const allValidated = majorityValidates;
-    const isRefused = majorityRefuses;
+    // Determine completion status - ALL conditions must be met for validation
+    const allConditionsMet = minVotesOk && stakingOk && hasSufficientRatio;
+    const allValidated = allConditionsMet && majorityValidates;
+    const isRefused = allConditionsMet && majorityRefuses;
+    
+    // Campaign status
+    const campaignEnded = now >= completion.campaignEndTime;
+    const canReceiveStandardRewards = allValidated;
+    const canReceivePremiumRewards = allValidated && campaignEnded;
     
     return {
       minVotesOk,
@@ -206,7 +213,12 @@ export default function ValidatedCompletionDashboard({
       stakeYes,
       stakeNo,
       hybridScoreYes,
-      hybridScoreNo
+      hybridScoreNo,
+      totalStaked,
+      allConditionsMet,
+      campaignEnded,
+      canReceiveStandardRewards,
+      canReceivePremiumRewards
     };
   }, [completion]);
 
@@ -459,8 +471,8 @@ export default function ValidatedCompletionDashboard({
             </div>
           </div>
 
-          {/* Ranking and Rewards - Only show if validated */}
-          {validationStatus?.allValidated && (
+          {/* Ranking and Rewards - Only show if can receive standard rewards */}
+          {validationStatus?.canReceiveStandardRewards && (
             <>
               {/* Your Rank */}
               <div style={{
@@ -487,7 +499,7 @@ export default function ValidatedCompletionDashboard({
                 textAlign: 'center'
               }}>
                 <div style={{ 
-                  color: completion.isTopThree ? '#FFD600' : '#18C964', 
+                  color: validationStatus?.canReceivePremiumRewards && completion.isTopThree ? '#FFD600' : '#18C964', 
                   fontSize: 14, 
                   fontWeight: 800,
                   marginBottom: 4
@@ -495,10 +507,15 @@ export default function ValidatedCompletionDashboard({
                   You receive
                 </div>
                 <div style={{ color: '#FFFFFF', fontSize: 16, fontWeight: 700 }}>
-                  {completion.isTopThree 
+                  {validationStatus?.canReceivePremiumRewards && completion.isTopThree
                     ? 'Standard + Premium' 
                     : 'Standard Rewards'
                   }
+                  {!validationStatus?.campaignEnded && completion.isTopThree && (
+                    <div style={{ color: '#FFD600', fontSize: 12, fontWeight: 400, marginTop: 4, fontStyle: 'italic' }}>
+                      Premium after campaign end
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -532,8 +549,8 @@ export default function ValidatedCompletionDashboard({
                 </div>
               </div>
 
-              {/* Premium Rewards (only if top 3) */}
-              {completion.isTopThree && completion.premiumRewards && (
+              {/* Premium Rewards (only if top 3 AND campaign ended) */}
+              {validationStatus?.canReceivePremiumRewards && completion.isTopThree && completion.premiumRewards && (
                 <div style={{
                   background: 'rgba(255, 214, 0, 0.1)',
                   border: '1px solid #FFD600',
