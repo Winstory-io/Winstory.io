@@ -45,7 +45,7 @@ interface ValidatedCompletionDashboardProps {
   };
 }
 
-// Format countdown timer
+// Format countdown timer with FOMO-inducing seconds
 function formatCountdown(msRemaining: number): string {
   if (msRemaining <= 0) return 'FINISHED';
   
@@ -53,11 +53,12 @@ function formatCountdown(msRemaining: number): string {
   const days = Math.floor(totalSeconds / (24 * 3600));
   const hours = Math.floor((totalSeconds % (24 * 3600)) / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
   
   if (days > 0) {
-    return `${days}d ${hours.toString().padStart(2, '0')}h ${minutes.toString().padStart(2, '0')}m`;
+    return `${days}d ${hours.toString().padStart(2, '0')}h ${minutes.toString().padStart(2, '0')}m ${seconds.toString().padStart(2, '0')}s`;
   }
-  return `${hours.toString().padStart(2, '0')}h ${minutes.toString().padStart(2, '0')}m`;
+  return `${hours.toString().padStart(2, '0')}h ${minutes.toString().padStart(2, '0')}m ${seconds.toString().padStart(2, '0')}s`;
 }
 
 export default function ValidatedCompletionDashboard({ 
@@ -170,7 +171,11 @@ export default function ValidatedCompletionDashboard({
     const hybridScoreYes = Number(hybridResult.scoreYes) / SCALE;
     const hybridScoreNo = Number(hybridResult.scoreNo) / SCALE;
     const hybridRatio = hybridScoreNo > 0 ? hybridScoreYes / hybridScoreNo : hybridScoreYes;
-    const hasSufficientRatio = hybridResult.status !== ModerationStatus.EN_COURS;
+    
+    // Corrected hybrid ratio logic - handle 0 refusés case properly
+    const hasSufficientRatio = refuseVotes === 0 
+      ? validVotes >= 2  // Si aucun refus, minimum 2 validés requis
+      : (hybridScoreNo > 0 ? (hybridScoreYes / hybridScoreNo >= 2) : false); // Sinon ratio hybride ≥ 2:1
     
     // Vote can close based on hybrid evaluation
     const voteCanClose = hybridResult.status === ModerationStatus.VALIDATED || 
@@ -361,7 +366,7 @@ export default function ValidatedCompletionDashboard({
                 {/* No cross needed since this only shows if ratio is met or not */}
               </div>
               <span style={{ color: validationStatus?.hasSufficientRatio ? '#18C964' : '#FFD600', fontSize: 14 }}>
-                Majority / Minority ≥ 2:1 ratio
+                Hybrid (Majority / Minority) ≥ 2
               </span>
             </div>
           </div>
@@ -404,10 +409,10 @@ export default function ValidatedCompletionDashboard({
                 borderRadius: 4,
                 fontSize: 11,
                 fontWeight: 600,
-                background: validationStatus?.allValidated ? 'rgba(24, 201, 100, 0.2)' : 'rgba(255, 59, 48, 0.2)',
-                color: validationStatus?.allValidated ? '#18C964' : '#FF3B30'
+                background: validationStatus?.majorityValidates ? 'rgba(24, 201, 100, 0.2)' : 'rgba(255, 59, 48, 0.2)',
+                color: validationStatus?.majorityValidates ? '#18C964' : '#FF3B30'
               }}>
-                {validationStatus?.allValidated ? '✓ Majority Validates' : '✗ Majority Refuses'}
+                {validationStatus?.majorityValidates ? '✓ Majority Validates' : '✗ Majority Refuses'}
               </div>
             )}
           </div>
@@ -511,11 +516,6 @@ export default function ValidatedCompletionDashboard({
                     ? 'Standard + Premium' 
                     : 'Standard Rewards'
                   }
-                  {!validationStatus?.campaignEnded && completion.isTopThree && (
-                    <div style={{ color: '#FFD600', fontSize: 12, fontWeight: 400, marginTop: 4, fontStyle: 'italic' }}>
-                      Premium after campaign end
-                    </div>
-                  )}
                 </div>
               </div>
 

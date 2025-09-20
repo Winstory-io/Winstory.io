@@ -3,17 +3,57 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useActiveAccount } from 'thirdweb/react';
 import { useRouter } from 'next/navigation';
+import { evaluateModeration, ModerationStatus } from '@/lib/moderation-engine';
 
 export const MIN_REQUIRED_VOTES = 22;
+const SCALE = 1000000000000000000; // 1e18 for WINC precision
 
-export function computeValidationState(progress: { validVotes: number; refuseVotes: number; totalVotes: number; stakedAmount: number; mintPrice: number; }) {
-	const { validVotes, refuseVotes, totalVotes, stakedAmount, mintPrice } = progress;
+export function computeValidationState(progress: { 
+	validVotes: number; 
+	refuseVotes: number; 
+	totalVotes: number; 
+	stakedAmount: number; 
+	mintPrice: number;
+	stakeYes?: number;
+	stakeNo?: number;
+}) {
+	const { validVotes, refuseVotes, totalVotes, stakedAmount, mintPrice, stakeYes = 0, stakeNo = 0 } = progress;
+	
+	// Use the hybrid moderation engine for intrinsic validation
+	const hybridResult = evaluateModeration(
+		validVotes, // votesYes
+		refuseVotes, // votesNo  
+		BigInt(Math.floor(stakeYes * SCALE)), // stakeYes in WINC (scaled)
+		BigInt(Math.floor(stakeNo * SCALE)), // stakeNo in WINC (scaled)
+		mintPrice, // mintPriceUSDC
+		Date.now(), // currentTimestamp
+		Date.now() + 7 * 24 * 3600 * 1000, // voteWindowEnd (7 days)
+		BigInt(SCALE) // wincPerUSDC (1 WINC = 1 USDC)
+	);
+	
+	// Extract hybrid validation results
 	const votesOk = totalVotes >= MIN_REQUIRED_VOTES;
-	const stakingOk = stakedAmount >= Math.max(1, mintPrice);
-	const ratioOk = refuseVotes === 0 ? validVotes >= 2 : validVotes / refuseVotes >= 2;
-	const majorityValid = validVotes >= refuseVotes;
-	const allOk = votesOk && stakingOk && ratioOk && majorityValid;
-	return { votesOk, stakingOk, ratioOk, majorityValid, allOk };
+	const stakingOk = stakedAmount > mintPrice; // Must be greater than MINT price
+	const hybridScoreYes = Number(hybridResult.scoreYes) / SCALE;
+	const hybridScoreNo = Number(hybridResult.scoreNo) / SCALE;
+	const hybridRatio = hybridScoreNo > 0 ? hybridScoreYes / hybridScoreNo : hybridScoreYes;
+	const ratioOk = hybridRatio >= 2.0; // Hybrid 50/50 ratio must be >= 2:1
+	const majorityValid = hybridResult.status === ModerationStatus.VALIDATED || 
+						  (hybridResult.status === ModerationStatus.PENDING_REQUIREMENTS && hybridScoreYes > hybridScoreNo);
+	
+	const allOk = hybridResult.status === ModerationStatus.VALIDATED;
+	
+	return { 
+		votesOk, 
+		stakingOk, 
+		ratioOk, 
+		majorityValid, 
+		allOk,
+		hybridResult,
+		hybridRatio: hybridRatio.toFixed(2),
+		hybridScoreYes: hybridScoreYes.toFixed(3),
+		hybridScoreNo: hybridScoreNo.toFixed(3)
+	};
 }
 
 interface Requirement {
@@ -92,7 +132,7 @@ export default function ActiveCompletionDashboard() {
 		const requirements: Requirement[] = [
 			{ label: `Minimum ${MIN_REQUIRED_VOTES} Stakers moderations votes`, ok: computed.votesOk },
 			{ label: `Pool Staking by Moderators > Completion Price $`, ok: computed.stakingOk },
-			{ label: `Majority Valide / Minority Refuse ≥ 2`, ok: computed.ratioOk },
+			{ label: `Hybrid (Majority / Minority) ≥ 2`, ok: computed.ratioOk },
 		];
 		let title = 'Moderation Completion in progress';
 		if (computed.allOk) title = 'Moderators validated and scored your Completion !';

@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Donut Chart Reactivity</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #000;
+            color: #fff;
+            font-family: Arial, sans-serif;
+        }
+        
+        .dashboard {
+            max-width: 1200px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        
+        .dashboard h1 {
+            color: #FFD600;
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .campaign-content {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            align-items: center;
+            gap: 24px;
+            margin: 40px 0;
+        }
+        
+        .vote-info {
+            color: #FFD600;
+            justify-self: start;
+        }
+        
+        .vote-info .title {
+            font-size: 20px;
+            font-weight: 800;
+            margin-bottom: 10px;
+        }
+        
+        .vote-info .valid {
+            color: #18C964;
+            font-size: 18px;
+            font-weight: 700;
+        }
+        
+        .vote-info .refuse {
+            color: #FF3B30;
+            font-size: 18px;
+            font-weight: 700;
+            margin-top: 6px;
+        }
+        
+        .donut-container {
+            width: 380px;
+            height: 380px;
+            position: relative;
+        }
+        
+        .requirements {
+            justify-self: end;
+        }
+        
+        .requirements .title {
+            color: #FFFFFF;
+            font-size: 20px;
+            font-weight: 800;
+            margin-bottom: 12px;
+        }
+        
+        .requirement {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        
+        .requirement-dot {
+            width: 22px;
+            height: 22px;
+            border-radius: 999px;
+            background: #444;
+            border: 2px solid #FF3B30;
+        }
+        
+        .requirement-dot.ok {
+            background: #18C964;
+            border-color: #18C964;
+        }
+        
+        .requirement-text {
+            color: #FFD600;
+            font-size: 18px;
+        }
+        
+        .requirement-text.ok {
+            color: #18C964;
+        }
+        
+        .controls {
+            position: fixed;
+            right: 20px;
+            top: 20px;
+            width: 300px;
+            background: #0a0a0a;
+            border: 1px solid #6B5A20;
+            border-radius: 12px;
+            padding: 16px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 6px 24px rgba(0,0,0,0.5);
+        }
+        
+        .control-section {
+            margin-bottom: 16px;
+            padding: 12px;
+            background: rgba(255, 214, 0, 0.1);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 214, 0, 0.3);
+        }
+        
+        .control-section h4 {
+            color: #FFD600;
+            margin: 0 0 10px 0;
+            font-size: 14px;
+        }
+        
+        .control-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            font-size: 12px;
+        }
+        
+        input[type="number"] {
+            width: 60px;
+            padding: 4px 8px;
+            background: #111;
+            border: 1px solid #444;
+            border-radius: 4px;
+            color: #fff;
+            font-size: 12px;
+            margin-left: 5px;
+        }
+        
+        .btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            color: #fff;
+            font-size: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-bottom: 4px;
+            width: 100%;
+        }
+        
+        .btn-success { background: #18C964; }
+        .btn-danger { background: #FF3B30; }
+        .btn-secondary { background: #666; }
+        
+        .campaign-title {
+            font-size: 40px;
+            font-weight: 900;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+        
+        .campaign-title.validated { color: #18C964; }
+        .campaign-title.refused { color: #FF3B30; }
+        .campaign-title.progress { color: #FFD600; }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <h1>🍩 Test Donut Chart Reactivity</h1>
+        <p>Les couleurs du donut doivent réagir dynamiquement aux changements des votes</p>
+        
+        <h2 id="campaignTitle" class="campaign-title progress">Moderation Campaign in progress</h2>
+        <p style="color: #C0C0C0; text-align: center; margin-bottom: 20px;">Test Campaign Title</p>
+        
+        <div class="campaign-content">
+            <div class="vote-info">
+                <div class="title">Initial Moderation<br/>by <span id="totalVotesDisplay">2</span> Stakers</div>
+                <div class="valid"><span id="validVotesDisplay">2</span> Validated</div>
+                <div class="refuse"><span id="refuseVotesDisplay">0</span> Refused</div>
+            </div>
+
+            <div class="donut-container" id="donutContainer">
+                <svg width="380" height="380" viewBox="0 0 380 380" id="donutSvg">
+                    <g transform="rotate(-90 190 190)">
+                        <!-- Background circle -->
+                        <circle cx="190" cy="190" r="168" fill="none" stroke="#222" stroke-width="44" />
+                        <!-- Valid votes circle -->
+                        <circle id="validCircle" cx="190" cy="190" r="168" fill="none" stroke="#18C964" stroke-width="44" stroke-linecap="butt" />
+                        <!-- Refuse votes circle -->
+                        <circle id="refuseCircle" cx="190" cy="190" r="168" fill="none" stroke="#FF3B30" stroke-width="44" stroke-linecap="butt" />
+                    </g>
+                </svg>
+            </div>
+
+            <div class="requirements">
+                <div class="title">3 Requirements for Completion availability</div>
+                <div class="requirement">
+                    <div id="votesReqDot" class="requirement-dot"></div>
+                    <span id="votesReqText" class="requirement-text">Minimum 22 Stakers moderations votes</span>
+                </div>
+                <div class="requirement">
+                    <div id="stakingReqDot" class="requirement-dot"></div>
+                    <span id="stakingReqText" class="requirement-text">Pool Staking by Moderators > MINT Price $</span>
+                </div>
+                <div class="requirement">
+                    <div id="ratioReqDot" class="requirement-dot"></div>
+                    <span id="ratioReqText" class="requirement-text">Hybrid (Majority / Minority) ≥ 2</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <strong style="color: #FFD600; font-size: 16px;">Donut Reactivity Test</strong>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="control-section">
+            <h4>Quick Scenarios</h4>
+            <button class="btn btn-success" onclick="setScenario('validated')">✅ Validated (80% valid)</button>
+            <button class="btn btn-danger" onclick="setScenario('refused')">❌ Refused (20% valid)</button>
+            <button class="btn btn-secondary" onclick="setScenario('balanced')">⚖️ Balanced (50/50)</button>
+            <button class="btn btn-secondary" onclick="setScenario('minimal')">🔄 Minimal (2 votes)</button>
+        </div>
+
+        <!-- Vote Controls -->
+        <div class="control-section">
+            <h4>Individual Votes (Watch Donut!)</h4>
+            <div class="control-grid">
+                <label>
+                    Valid Votes:
+                    <input type="number" id="validVotesInput" value="2" min="0" max="50" onchange="updateDonut()">
+                </label>
+                <label>
+                    Refuse Votes:
+                    <input type="number" id="refuseVotesInput" value="0" min="0" max="50" onchange="updateDonut()">
+                </label>
+            </div>
+        </div>
+
+        <!-- Mock data controls -->
+        <div class="control-section">
+            <h4>Requirements (for status)</h4>
+            <div class="control-grid">
+                <label>
+                    Total Staked:
+                    <input type="number" id="totalStaked" value="150" min="0" step="50" onchange="updateRequirements()">
+                </label>
+                <label>
+                    MINT Price:
+                    <input type="number" id="mintPrice" value="1000" min="0" step="50" onchange="updateRequirements()">
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const radius = 168;
+        const circumference = 2 * Math.PI * radius;
+        
+        function updateDonut() {
+            const validVotes = parseInt(document.getElementById('validVotesInput').value) || 0;
+            const refuseVotes = parseInt(document.getElementById('refuseVotesInput').value) || 0;
+            const totalVotes = validVotes + refuseVotes;
+            
+            // Update display values
+            document.getElementById('validVotesDisplay').textContent = validVotes;
+            document.getElementById('refuseVotesDisplay').textContent = refuseVotes;
+            document.getElementById('totalVotesDisplay').textContent = totalVotes;
+            
+            // Calculate percentages
+            const validPct = totalVotes > 0 ? (validVotes / totalVotes) : 0;
+            const refusePct = totalVotes > 0 ? (refuseVotes / totalVotes) : 0;
+            
+            // Calculate arc lengths
+            const validLen = validPct * circumference;
+            const refuseLen = refusePct * circumference;
+            
+            // Update SVG circles
+            const validCircle = document.getElementById('validCircle');
+            const refuseCircle = document.getElementById('refuseCircle');
+            
+            // Set dasharray for valid votes (green)
+            validCircle.setAttribute('stroke-dasharray', `${validLen} ${circumference - validLen}`);
+            validCircle.setAttribute('stroke-dashoffset', '0');
+            
+            // Set dasharray for refuse votes (red), offset by valid votes
+            refuseCircle.setAttribute('stroke-dasharray', `${refuseLen} ${circumference - refuseLen}`);
+            refuseCircle.setAttribute('stroke-dashoffset', `-${validLen}`);
+            
+            // Update title based on results
+            updateStatus(validVotes, refuseVotes, totalVotes);
+            updateRequirements();
+        }
+        
+        function updateStatus(validVotes, refuseVotes, totalVotes) {
+            const titleElement = document.getElementById('campaignTitle');
+            const ratio = refuseVotes > 0 ? validVotes / refuseVotes : validVotes;
+            
+            // Mock requirements check
+            const votesOk = totalVotes >= 22;
+            const stakingOk = parseFloat(document.getElementById('totalStaked').value) > parseFloat(document.getElementById('mintPrice').value);
+            const ratioOk = ratio >= 2;
+            
+            if (votesOk && stakingOk && ratioOk) {
+                titleElement.textContent = '🎉 Moderators validated your Initial Campaign!';
+                titleElement.className = 'campaign-title validated';
+            } else if (!ratioOk && totalVotes > 0 && refuseVotes > 0) {
+                titleElement.textContent = '❌ Moderators refused your Initial Campaign';
+                titleElement.className = 'campaign-title refused';
+            } else {
+                titleElement.textContent = '⏳ Moderation Campaign in progress';
+                titleElement.className = 'campaign-title progress';
+            }
+        }
+        
+        function updateRequirements() {
+            const totalVotes = parseInt(document.getElementById('validVotesInput').value) + parseInt(document.getElementById('refuseVotesInput').value);
+            const totalStaked = parseFloat(document.getElementById('totalStaked').value);
+            const mintPrice = parseFloat(document.getElementById('mintPrice').value);
+            const validVotes = parseInt(document.getElementById('validVotesInput').value);
+            const refuseVotes = parseInt(document.getElementById('refuseVotesInput').value);
+            const ratio = refuseVotes > 0 ? validVotes / refuseVotes : validVotes;
+            
+            // Update requirement indicators
+            const votesOk = totalVotes >= 22;
+            const stakingOk = totalStaked > mintPrice;
+            const ratioOk = ratio >= 2;
+            
+            updateRequirement('votesReq', votesOk);
+            updateRequirement('stakingReq', stakingOk);
+            updateRequirement('ratioReq', ratioOk);
+        }
+        
+        function updateRequirement(prefix, isOk) {
+            const dot = document.getElementById(prefix + 'Dot');
+            const text = document.getElementById(prefix + 'Text');
+            
+            if (isOk) {
+                dot.classList.add('ok');
+                text.classList.add('ok');
+            } else {
+                dot.classList.remove('ok');
+                text.classList.remove('ok');
+            }
+        }
+        
+        function setScenario(scenario) {
+            let validVotes, refuseVotes, totalStaked, mintPrice;
+            
+            switch(scenario) {
+                case 'validated':
+                    validVotes = 24;
+                    refuseVotes = 6;
+                    totalStaked = 2500;
+                    mintPrice = 1000;
+                    break;
+                case 'refused':
+                    validVotes = 5;
+                    refuseVotes = 20;
+                    totalStaked = 800;
+                    mintPrice = 1000;
+                    break;
+                case 'balanced':
+                    validVotes = 15;
+                    refuseVotes = 15;
+                    totalStaked = 1500;
+                    mintPrice = 1000;
+                    break;
+                case 'minimal':
+                default:
+                    validVotes = 2;
+                    refuseVotes = 0;
+                    totalStaked = 150;
+                    mintPrice = 1000;
+                    break;
+            }
+            
+            document.getElementById('validVotesInput').value = validVotes;
+            document.getElementById('refuseVotesInput').value = refuseVotes;
+            document.getElementById('totalStaked').value = totalStaked;
+            document.getElementById('mintPrice').value = mintPrice;
+            
+            updateDonut();
+        }
+        
+        // Initialize
+        updateDonut();
+    </script>
+</body>
+</html> 

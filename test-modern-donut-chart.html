@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Donut Chart - Winstory</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #0c0c0c 0%, #1a1a1a 100%);
+            color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            min-height: 100vh;
+        }
+        
+        .dashboard {
+            max-width: 1400px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        
+        .dashboard h1 {
+            color: #FFD600;
+            font-size: 3rem;
+            font-weight: 900;
+            margin-bottom: 1rem;
+            background: linear-gradient(45deg, #FFD600, #FFA500);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .subtitle {
+            color: #9CA3AF;
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .campaign-section {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 40px;
+            margin: 40px 0;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+        
+        .campaign-title {
+            font-size: 2.5rem;
+            font-weight: 900;
+            text-align: center;
+            margin-bottom: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .campaign-title.validated { 
+            color: #22C55E;
+            text-shadow: 0 0 20px rgba(34, 197, 94, 0.3);
+        }
+        .campaign-title.refused { 
+            color: #EF4444;
+            text-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
+        }
+        .campaign-title.progress { 
+            color: #FFD600;
+            text-shadow: 0 0 20px rgba(255, 214, 0, 0.3);
+        }
+        
+        .campaign-content {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            align-items: center;
+            gap: 60px;
+            margin: 60px 0;
+        }
+        
+        .vote-info {
+            color: #FFD600;
+            justify-self: start;
+        }
+        
+        .vote-info .title {
+            font-size: 24px;
+            font-weight: 800;
+            margin-bottom: 20px;
+            background: linear-gradient(45deg, #FFD600, #FFA500);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .vote-stat {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 16px 0;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            backdrop-filter: blur(5px);
+        }
+        
+        .vote-stat.valid {
+            color: #22C55E;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+        
+        .vote-stat.refuse {
+            color: #EF4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+        
+        .vote-icon {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        
+        .vote-icon.valid {
+            background: linear-gradient(45deg, #22C55E, #16A34A);
+            box-shadow: 0 0 10px rgba(34, 197, 94, 0.5);
+        }
+        
+        .vote-icon.refuse {
+            background: linear-gradient(45deg, #EF4444, #DC2626);
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+        }
+        
+        .requirements {
+            justify-self: end;
+        }
+        
+        .requirements .title {
+            color: #FFFFFF;
+            font-size: 24px;
+            font-weight: 800;
+            margin-bottom: 24px;
+        }
+        
+        .requirement {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 16px;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .requirement:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+        
+        .requirement-dot {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #374151;
+            border: 2px solid #EF4444;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .requirement-dot::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #EF4444;
+            transform: translate(-50%, -50%);
+            transition: all 0.3s ease;
+        }
+        
+        .requirement-dot.ok {
+            background: linear-gradient(45deg, #22C55E, #16A34A);
+            border-color: #22C55E;
+            box-shadow: 0 0 15px rgba(34, 197, 94, 0.4);
+        }
+        
+        .requirement-dot.ok::after {
+            background: #FFFFFF;
+            width: 6px;
+            height: 3px;
+            border-radius: 1px;
+            transform: translate(-50%, -50%) rotate(45deg);
+            border-bottom: 2px solid #FFFFFF;
+            border-right: 2px solid #FFFFFF;
+            border-top: none;
+            border-left: none;
+        }
+        
+        .requirement-text {
+            color: #FFD600;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .requirement-text.ok {
+            color: #22C55E;
+        }
+        
+        .controls {
+            position: fixed;
+            right: 20px;
+            top: 20px;
+            width: 320px;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(107, 90, 32, 0.6);
+            border-radius: 20px;
+            padding: 20px;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+        }
+        
+        .control-section {
+            margin-bottom: 20px;
+            padding: 16px;
+            background: rgba(255, 214, 0, 0.1);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 214, 0, 0.3);
+        }
+        
+        .control-section h4 {
+            color: #FFD600;
+            margin: 0 0 12px 0;
+            font-size: 16px;
+            font-weight: 700;
+        }
+        
+        .control-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            font-size: 13px;
+        }
+        
+        input[type="number"] {
+            width: 70px;
+            padding: 8px 12px;
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 13px;
+            margin-left: 5px;
+            transition: all 0.3s ease;
+        }
+        
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #FFD600;
+            box-shadow: 0 0 10px rgba(255, 214, 0, 0.3);
+        }
+        
+        .btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 8px;
+            width: 100%;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+        
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        
+        .btn-success { 
+            background: linear-gradient(45deg, #22C55E, #16A34A);
+            box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
+        }
+        
+        .btn-danger { 
+            background: linear-gradient(45deg, #EF4444, #DC2626);
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+        }
+        
+        .btn-secondary { 
+            background: linear-gradient(45deg, #6B7280, #4B5563);
+            box-shadow: 0 4px 15px rgba(107, 114, 128, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <h1>🍩 Modern Donut Chart</h1>
+        <p class="subtitle">Design moderne avec gradients, animations fluides et espacements élégants</p>
+        
+        <div class="campaign-section">
+            <h2 id="campaignTitle" class="campaign-title progress">Moderation Campaign in progress</h2>
+            <p style="color: #9CA3AF; text-align: center; margin-bottom: 30px;">Nike Running Challenge</p>
+            
+            <div class="campaign-content">
+                <div class="vote-info">
+                    <div class="title">Initial Moderation<br/>by <span id="totalVotesDisplay">2</span> Stakers</div>
+                    <div class="vote-stat valid">
+                        <div class="vote-icon valid"></div>
+                        <span><strong id="validVotesDisplay">2</strong> Validated</span>
+                    </div>
+                    <div class="vote-stat refuse">
+                        <div class="vote-icon refuse"></div>
+                        <span><strong id="refuseVotesDisplay">0</strong> Refused</span>
+                    </div>
+                </div>
+
+                <div id="donutContainer" style="position: relative;">
+                    <svg width="380" height="380" viewBox="0 0 380 380" id="donutSvg">
+                        <defs>
+                            <!-- Gradients modernes -->
+                            <linearGradient id="validGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" stop-color="#22C55E" />
+                                <stop offset="50%" stop-color="#16A34A" />
+                                <stop offset="100%" stop-color="#15803D" />
+                            </linearGradient>
+                            <linearGradient id="refuseGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" stop-color="#EF4444" />
+                                <stop offset="50%" stop-color="#DC2626" />
+                                <stop offset="100%" stop-color="#B91C1C" />
+                            </linearGradient>
+                            <linearGradient id="backgroundGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" stop-color="#374151" />
+                                <stop offset="100%" stop-color="#1F2937" />
+                            </linearGradient>
+                            <!-- Effets de glow -->
+                            <filter id="glow">
+                                <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                                <feMerge> 
+                                    <feMergeNode in="coloredBlur"/>
+                                    <feMergeNode in="SourceGraphic"/>
+                                </feMerge>
+                            </filter>
+                        </defs>
+                        <g transform="rotate(-90 190 190)">
+                            <!-- Cercle de fond -->
+                            <circle 
+                                cx="190" 
+                                cy="190" 
+                                r="166" 
+                                fill="none" 
+                                stroke="url(#backgroundGradient)" 
+                                stroke-width="48"
+                                opacity="0.15"
+                            />
+                            
+                            <!-- Segment des votes validés -->
+                            <circle 
+                                id="validCircle"
+                                cx="190" 
+                                cy="190" 
+                                r="166" 
+                                fill="none" 
+                                stroke="url(#validGradient)" 
+                                stroke-width="48" 
+                                stroke-linecap="round"
+                                filter="url(#glow)"
+                                style="transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);"
+                            />
+                            
+                            <!-- Segment des votes refusés -->
+                            <circle 
+                                id="refuseCircle"
+                                cx="190" 
+                                cy="190" 
+                                r="166" 
+                                fill="none" 
+                                stroke="url(#refuseGradient)" 
+                                stroke-width="48" 
+                                stroke-linecap="round"
+                                filter="url(#glow)"
+                                style="transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);"
+                            />
+                        </g>
+                    </svg>
+                    
+                    <!-- Centre du donut avec informations -->
+                    <div style="
+                        position: absolute;
+                        top: 50%;
+                        left: 50%;
+                        transform: translate(-50%, -50%);
+                        text-align: center;
+                        pointer-events: none;
+                    ">
+                        <div id="totalVotesCenter" style="
+                            font-size: 48px;
+                            font-weight: 900;
+                            text-shadow: 0 0 10px rgba(0,0,0,0.5);
+                            margin-bottom: 4px;
+                            transition: all 0.3s ease;
+                        ">2</div>
+                        <div style="
+                            font-size: 14px;
+                            color: #9CA3AF;
+                            font-weight: 600;
+                            text-transform: uppercase;
+                            letter-spacing: 0.5px;
+                        ">Total Votes</div>
+                        <div id="percentageDisplay" style="
+                            font-size: 12px;
+                            color: #6B7280;
+                            margin-top: 8px;
+                        ">100% / 0%</div>
+                    </div>
+                </div>
+
+                <div class="requirements">
+                    <div class="title">3 Requirements for Completion availability</div>
+                    <div class="requirement">
+                        <div id="votesReqDot" class="requirement-dot"></div>
+                        <span id="votesReqText" class="requirement-text">Minimum 22 Stakers moderations votes</span>
+                    </div>
+                    <div class="requirement">
+                        <div id="stakingReqDot" class="requirement-dot"></div>
+                        <span id="stakingReqText" class="requirement-text">Pool Staking by Moderators > MINT Price $</span>
+                    </div>
+                    <div class="requirement">
+                        <div id="ratioReqDot" class="requirement-dot"></div>
+                        <span id="ratioReqText" class="requirement-text">Hybrid (Majority / Minority) ≥ 2</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <strong style="color: #FFD600; font-size: 18px;">🎨 Modern Controls</strong>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="control-section">
+            <h4>✨ Quick Scenarios</h4>
+            <button class="btn btn-success" onclick="setScenario('validated')">✅ Validated (80% valid)</button>
+            <button class="btn btn-danger" onclick="setScenario('refused')">❌ Refused (20% valid)</button>
+            <button class="btn btn-secondary" onclick="setScenario('balanced')">⚖️ Balanced (50/50)</button>
+            <button class="btn btn-secondary" onclick="setScenario('minimal')">🔄 Minimal (2 votes)</button>
+        </div>
+
+        <!-- Vote Controls -->
+        <div class="control-section">
+            <h4>🗳️ Individual Votes</h4>
+            <div class="control-grid">
+                <label>
+                    Valid Votes:
+                    <input type="number" id="validVotesInput" value="2" min="0" max="50" onchange="updateDonut()">
+                </label>
+                <label>
+                    Refuse Votes:
+                    <input type="number" id="refuseVotesInput" value="0" min="0" max="50" onchange="updateDonut()">
+                </label>
+            </div>
+        </div>
+
+        <!-- Mock data controls -->
+        <div class="control-section">
+            <h4>📊 Requirements</h4>
+            <div class="control-grid">
+                <label>
+                    Total Staked:
+                    <input type="number" id="totalStaked" value="150" min="0" step="50" onchange="updateRequirements()">
+                </label>
+                <label>
+                    MINT Price:
+                    <input type="number" id="mintPrice" value="1000" min="0" step="50" onchange="updateRequirements()">
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const radius = 166;
+        const circumference = 2 * Math.PI * radius;
+        
+        function updateDonut() {
+            const validVotes = parseInt(document.getElementById('validVotesInput').value) || 0;
+            const refuseVotes = parseInt(document.getElementById('refuseVotesInput').value) || 0;
+            const totalVotes = validVotes + refuseVotes;
+            
+            // Update display values
+            document.getElementById('validVotesDisplay').textContent = validVotes;
+            document.getElementById('refuseVotesDisplay').textContent = refuseVotes;
+            document.getElementById('totalVotesDisplay').textContent = totalVotes;
+            document.getElementById('totalVotesCenter').textContent = totalVotes;
+            
+            // Calculate percentages
+            const validPct = totalVotes > 0 ? (validVotes / totalVotes) : 0;
+            const refusePct = totalVotes > 0 ? (refuseVotes / totalVotes) : 0;
+            
+            // Update percentage display
+            document.getElementById('percentageDisplay').textContent = 
+                totalVotes > 0 ? `${(validPct * 100).toFixed(0)}% / ${(refusePct * 100).toFixed(0)}%` : '0% / 0%';
+            
+            // Add small gap between segments to prevent angular artifacts
+            const gap = totalVotes > 0 ? Math.min(8, circumference * 0.02) : 0;
+            const validLen = totalVotes > 0 ? Math.max(0, validPct * circumference - gap/2) : 0;
+            const refuseLen = totalVotes > 0 ? Math.max(0, refusePct * circumference - gap/2) : 0;
+            
+            // Calculate offsets with spacing
+            const validOffset = 0;
+            const refuseOffset = -(validLen + gap);
+            
+            // Update SVG circles
+            const validCircle = document.getElementById('validCircle');
+            const refuseCircle = document.getElementById('refuseCircle');
+            
+            // Update valid votes circle
+            if (validLen > 0) {
+                validCircle.setAttribute('stroke-dasharray', `${validLen} ${circumference - validLen}`);
+                validCircle.setAttribute('stroke-dashoffset', validOffset);
+                validCircle.style.opacity = '1';
+            } else {
+                validCircle.style.opacity = '0';
+            }
+            
+            // Update refuse votes circle  
+            if (refuseLen > 0) {
+                refuseCircle.setAttribute('stroke-dasharray', `${refuseLen} ${circumference - refuseLen}`);
+                refuseCircle.setAttribute('stroke-dashoffset', refuseOffset);
+                refuseCircle.style.opacity = '1';
+            } else {
+                refuseCircle.style.opacity = '0';
+            }
+            
+            // Update center color based on majority
+            const centerElement = document.getElementById('totalVotesCenter');
+            if (totalVotes > 0) {
+                if (validPct > refusePct) {
+                    centerElement.style.color = '#22C55E';
+                } else if (validPct < refusePct) {
+                    centerElement.style.color = '#EF4444';
+                } else {
+                    centerElement.style.color = '#FFD600';
+                }
+            } else {
+                centerElement.style.color = '#666';
+            }
+            
+            // Update title based on results
+            updateStatus(validVotes, refuseVotes, totalVotes);
+            updateRequirements();
+        }
+        
+        function updateStatus(validVotes, refuseVotes, totalVotes) {
+            const titleElement = document.getElementById('campaignTitle');
+            const ratio = refuseVotes > 0 ? validVotes / refuseVotes : validVotes;
+            
+            // Mock requirements check
+            const votesOk = totalVotes >= 22;
+            const stakingOk = parseFloat(document.getElementById('totalStaked').value) > parseFloat(document.getElementById('mintPrice').value);
+            const ratioOk = ratio >= 2;
+            
+            if (votesOk && stakingOk && ratioOk) {
+                titleElement.textContent = '🎉 Moderators validated your Initial Campaign!';
+                titleElement.className = 'campaign-title validated';
+            } else if (!ratioOk && totalVotes > 0 && refuseVotes > 0) {
+                titleElement.textContent = '❌ Moderators refused your Initial Campaign';
+                titleElement.className = 'campaign-title refused';
+            } else {
+                titleElement.textContent = '⏳ Moderation Campaign in progress';
+                titleElement.className = 'campaign-title progress';
+            }
+        }
+        
+        function updateRequirements() {
+            const totalVotes = parseInt(document.getElementById('validVotesInput').value) + parseInt(document.getElementById('refuseVotesInput').value);
+            const totalStaked = parseFloat(document.getElementById('totalStaked').value);
+            const mintPrice = parseFloat(document.getElementById('mintPrice').value);
+            const validVotes = parseInt(document.getElementById('validVotesInput').value);
+            const refuseVotes = parseInt(document.getElementById('refuseVotesInput').value);
+            const ratio = refuseVotes > 0 ? validVotes / refuseVotes : validVotes;
+            
+            // Update requirement indicators
+            const votesOk = totalVotes >= 22;
+            const stakingOk = totalStaked > mintPrice;
+            const ratioOk = ratio >= 2;
+            
+            updateRequirement('votesReq', votesOk);
+            updateRequirement('stakingReq', stakingOk);
+            updateRequirement('ratioReq', ratioOk);
+        }
+        
+        function updateRequirement(prefix, isOk) {
+            const dot = document.getElementById(prefix + 'Dot');
+            const text = document.getElementById(prefix + 'Text');
+            
+            if (isOk) {
+                dot.classList.add('ok');
+                text.classList.add('ok');
+            } else {
+                dot.classList.remove('ok');
+                text.classList.remove('ok');
+            }
+        }
+        
+        function setScenario(scenario) {
+            let validVotes, refuseVotes, totalStaked, mintPrice;
+            
+            switch(scenario) {
+                case 'validated':
+                    validVotes = 24;
+                    refuseVotes = 6;
+                    totalStaked = 2500;
+                    mintPrice = 1000;
+                    break;
+                case 'refused':
+                    validVotes = 5;
+                    refuseVotes = 20;
+                    totalStaked = 800;
+                    mintPrice = 1000;
+                    break;
+                case 'balanced':
+                    validVotes = 15;
+                    refuseVotes = 15;
+                    totalStaked = 1500;
+                    mintPrice = 1000;
+                    break;
+                case 'minimal':
+                default:
+                    validVotes = 2;
+                    refuseVotes = 0;
+                    totalStaked = 150;
+                    mintPrice = 1000;
+                    break;
+            }
+            
+            document.getElementById('validVotesInput').value = validVotes;
+            document.getElementById('refuseVotesInput').value = refuseVotes;
+            document.getElementById('totalStaked').value = totalStaked;
+            document.getElementById('mintPrice').value = mintPrice;
+            
+            updateDonut();
+        }
+        
+        // Initialize
+        updateDonut();
+    </script>
+</body>
+</html> 

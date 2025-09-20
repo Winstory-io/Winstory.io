@@ -2,17 +2,57 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useActiveAccount } from 'thirdweb/react';
+import { evaluateModeration, ModerationStatus } from '@/lib/moderation-engine';
 
 export const MIN_REQUIRED_VOTES = 22;
+const SCALE = 1000000000000000000; // 1e18 for WINC precision
 
-export function computeValidationState(progress: { validVotes: number; refuseVotes: number; totalVotes: number; stakedAmount: number; mintPrice: number; }) {
-	const { validVotes, refuseVotes, totalVotes, stakedAmount, mintPrice } = progress;
+export function computeValidationState(progress: { 
+	validVotes: number; 
+	refuseVotes: number; 
+	totalVotes: number; 
+	stakedAmount: number; 
+	mintPrice: number;
+	stakeYes?: number;
+	stakeNo?: number;
+}) {
+	const { validVotes, refuseVotes, totalVotes, stakedAmount, mintPrice, stakeYes = 0, stakeNo = 0 } = progress;
+	
+	// Use the hybrid moderation engine for intrinsic validation
+	const hybridResult = evaluateModeration(
+		validVotes, // votesYes
+		refuseVotes, // votesNo  
+		BigInt(Math.floor(stakeYes * SCALE)), // stakeYes in WINC (scaled)
+		BigInt(Math.floor(stakeNo * SCALE)), // stakeNo in WINC (scaled)
+		mintPrice, // mintPriceUSDC
+		Date.now(), // currentTimestamp
+		Date.now() + 7 * 24 * 3600 * 1000, // voteWindowEnd (7 days)
+		BigInt(SCALE) // wincPerUSDC (1 WINC = 1 USDC)
+	);
+	
+	// Extract hybrid validation results
 	const votesOk = totalVotes >= MIN_REQUIRED_VOTES;
-	const stakingOk = stakedAmount >= Math.max(1, mintPrice);
-	const ratioOk = refuseVotes === 0 ? validVotes >= 2 : validVotes / refuseVotes >= 2;
-	const majorityValid = validVotes >= refuseVotes;
-	const allOk = votesOk && stakingOk && ratioOk && majorityValid;
-	return { votesOk, stakingOk, ratioOk, majorityValid, allOk };
+	const stakingOk = stakedAmount > mintPrice; // Must be greater than MINT price
+	const hybridScoreYes = Number(hybridResult.scoreYes) / SCALE;
+	const hybridScoreNo = Number(hybridResult.scoreNo) / SCALE;
+	const hybridRatio = hybridScoreNo > 0 ? hybridScoreYes / hybridScoreNo : hybridScoreYes;
+	const ratioOk = hybridRatio >= 2.0; // Hybrid 50/50 ratio must be >= 2:1
+	const majorityValid = hybridResult.status === ModerationStatus.VALIDATED || 
+						  (hybridResult.status === ModerationStatus.PENDING_REQUIREMENTS && hybridScoreYes > hybridScoreNo);
+	
+	const allOk = hybridResult.status === ModerationStatus.VALIDATED;
+	
+	return { 
+		votesOk, 
+		stakingOk, 
+		ratioOk, 
+		majorityValid, 
+		allOk,
+		hybridResult,
+		hybridRatio: hybridRatio.toFixed(2),
+		hybridScoreYes: hybridScoreYes.toFixed(3),
+		hybridScoreNo: hybridScoreNo.toFixed(3)
+	};
 }
 
 interface Requirement {
@@ -42,21 +82,145 @@ function DonutChart({ valid, refuse }: { valid: number; refuse: number }) {
 	const refusePct = total > 0 ? (refuse / total) * 100 : 0;
 
 	const size = 380;
-	const stroke = 44;
+	const stroke = 48;
 	const radius = (size - stroke) / 2;
 	const circumference = 2 * Math.PI * radius;
-	const validLen = (validPct / 100) * circumference;
-	const refuseLen = (refusePct / 100) * circumference;
+	
+	// Ajouter un petit espacement entre les segments pour éviter les angles étranges
+	const gap = total > 0 ? Math.min(8, circumference * 0.02) : 0;
+	const validLen = total > 0 ? Math.max(0, (validPct / 100) * circumference - gap/2) : 0;
+	const refuseLen = total > 0 ? Math.max(0, (refusePct / 100) * circumference - gap/2) : 0;
+
+	// Calculer les positions des segments avec espacement
+	const validOffset = 0;
+	const refuseOffset = -(validLen + gap);
 
 	return (
 		<div style={{ width: size, height: size, position: 'relative' }}>
 			<svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+				<defs>
+					{/* Gradients modernes */}
+					<linearGradient id="validGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+						<stop offset="0%" stopColor="#22C55E" />
+						<stop offset="50%" stopColor="#16A34A" />
+						<stop offset="100%" stopColor="#15803D" />
+					</linearGradient>
+					<linearGradient id="refuseGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+						<stop offset="0%" stopColor="#EF4444" />
+						<stop offset="50%" stopColor="#DC2626" />
+						<stop offset="100%" stopColor="#B91C1C" />
+					</linearGradient>
+					{/* Ombres et effets de glow */}
+					<filter id="glow">
+						<feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+						<feMerge> 
+							<feMergeNode in="coloredBlur"/>
+							<feMergeNode in="SourceGraphic"/>
+						</feMerge>
+					</filter>
+					<filter id="shadow">
+						<feDropShadow dx="0" dy="0" stdDeviation="4" floodColor="rgba(0,0,0,0.3)"/>
+					</filter>
+				</defs>
 				<g transform={`rotate(-90 ${size / 2} ${size / 2})`}>
-					<circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="#222" strokeWidth={stroke} />
-					<circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="#18C964" strokeWidth={stroke} strokeDasharray={`${validLen} ${circumference - validLen}`} strokeLinecap="butt" />
-					<circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="#FF3B30" strokeWidth={stroke} strokeDasharray={`${refuseLen} ${circumference - refuseLen}`} strokeDashoffset={-validLen} strokeLinecap="butt" />
+					{/* Cercle de fond avec effet moderne */}
+					<circle 
+						cx={size / 2} 
+						cy={size / 2} 
+						r={radius} 
+						fill="none" 
+						stroke="url(#backgroundGradient)" 
+						strokeWidth={stroke}
+						opacity="0.15"
+					/>
+					
+					{/* Segment des votes validés */}
+					{validLen > 0 && (
+						<circle 
+							cx={size / 2} 
+							cy={size / 2} 
+							r={radius} 
+							fill="none" 
+							stroke="url(#validGradient)" 
+							strokeWidth={stroke} 
+							strokeDasharray={`${validLen} ${circumference - validLen}`} 
+							strokeDashoffset={validOffset}
+							strokeLinecap="round"
+							filter="url(#glow)"
+							style={{
+								transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+								transformOrigin: 'center'
+							}}
+						/>
+					)}
+					
+					{/* Segment des votes refusés */}
+					{refuseLen > 0 && (
+						<circle 
+							cx={size / 2} 
+							cy={size / 2} 
+							r={radius} 
+							fill="none" 
+							stroke="url(#refuseGradient)" 
+							strokeWidth={stroke} 
+							strokeDasharray={`${refuseLen} ${circumference - refuseLen}`} 
+							strokeDashoffset={refuseOffset}
+							strokeLinecap="round"
+							filter="url(#glow)"
+							style={{
+								transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+								transformOrigin: 'center'
+							}}
+						/>
+					)}
 				</g>
+				
+				{/* Gradients pour le fond */}
+				<defs>
+					<linearGradient id="backgroundGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+						<stop offset="0%" stopColor="#374151" />
+						<stop offset="100%" stopColor="#1F2937" />
+					</linearGradient>
+				</defs>
 			</svg>
+			
+			{/* Centre du donut avec informations */}
+			<div style={{
+				position: 'absolute',
+				top: '50%',
+				left: '50%',
+				transform: 'translate(-50%, -50%)',
+				textAlign: 'center',
+				pointerEvents: 'none'
+			}}>
+				<div style={{
+					fontSize: '48px',
+					fontWeight: '900',
+					color: total > 0 ? (validPct > refusePct ? '#22C55E' : validPct < refusePct ? '#EF4444' : '#FFD600') : '#666',
+					textShadow: '0 0 10px rgba(0,0,0,0.5)',
+					marginBottom: '4px'
+				}}>
+					{total}
+				</div>
+				<div style={{
+					fontSize: '14px',
+					color: '#9CA3AF',
+					fontWeight: '600',
+					textTransform: 'uppercase',
+					letterSpacing: '0.5px'
+				}}>
+					Total Votes
+				</div>
+				{total > 0 && (
+					<div style={{
+						fontSize: '12px',
+						color: '#6B7280',
+						marginTop: '8px'
+					}}>
+						{validPct.toFixed(0)}% / {refusePct.toFixed(0)}%
+					</div>
+				)}
+			</div>
 		</div>
 	);
 }
@@ -70,7 +234,11 @@ function RequirementItem({ label, ok }: Requirement) {
 	);
 }
 
-export default function ActiveCampaignDashboard() {
+interface ActiveCampaignDashboardProps {
+	externalProgressData?: any;
+}
+
+export default function ActiveCampaignDashboard({ externalProgressData }: ActiveCampaignDashboardProps) {
 	const account = useActiveAccount();
 	const [campaign, setCampaign] = useState<CampaignLike | null>(null);
 
@@ -92,18 +260,20 @@ export default function ActiveCampaignDashboard() {
 
 	const stats = useMemo(() => {
 		if (!campaign) return null;
-		const { validVotes, refuseVotes, totalVotes } = campaign.progress;
-		const computed = computeValidationState(campaign.progress);
+		// Use external progress data if available, otherwise use campaign's own progress
+		const progressData = externalProgressData || campaign.progress;
+		const { validVotes, refuseVotes, totalVotes } = progressData;
+		const computed = computeValidationState(progressData);
 		const requirements: Requirement[] = [
 			{ label: `Minimum ${MIN_REQUIRED_VOTES} Stakers moderations votes`, ok: computed.votesOk },
 			{ label: `Pool Staking by Moderators > MINT Price $`, ok: computed.stakingOk },
-			{ label: `Majority Valide / Minority Refuse ≥ 2`, ok: computed.ratioOk },
+			{ label: `Hybrid (Majority / Minority) ≥ 2`, ok: computed.ratioOk },
 		];
 		let title = 'Moderation Campaign in progress';
 		if (computed.allOk) title = 'Moderators validated your Initial Campaign !';
-		else if (!computed.majorityValid && totalVotes > 0) title = 'Moderators refused your Initial Campaign';
+		else if (computed.hybridResult.status === 'REJECTED') title = 'Moderators refused your Initial Campaign';
 		return { requirements, title, validVotes, refuseVotes, totalVotes, computed };
-	}, [campaign]);
+	}, [campaign, externalProgressData]);
 
 	if (!campaign) {
 		return (
@@ -116,7 +286,7 @@ export default function ActiveCampaignDashboard() {
 
 	return (
 		<div style={{ width: '100%', maxWidth: 1200 }}>
-			<h2 style={{ color: stats?.title.includes('refused') ? '#FF3B30' : '#FFD600', fontSize: 40, fontWeight: 900, textAlign: 'center', marginBottom: 8 }}>{stats?.title}</h2>
+			<h2 style={{ color: stats?.computed.hybridResult.status === 'REJECTED' ? '#FF3B30' : '#FFD600', fontSize: 40, fontWeight: 900, textAlign: 'center', marginBottom: 8 }}>{stats?.title}</h2>
 			<p style={{ color: '#C0C0C0', textAlign: 'center', marginBottom: 20 }}>Title</p>
 
 			<div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: 24 }}>
@@ -136,7 +306,7 @@ export default function ActiveCampaignDashboard() {
 				</div>
 			</div>
 
-			{stats && stats.title.includes('refused') && (
+			{stats && stats.computed.hybridResult.status === 'REJECTED' && (
 				<p style={{ marginTop: 20, textAlign: 'center', color: '#FF3B30', fontSize: 16 }}>
 					Unfortunately, your Initial content has been rejected by the Stakers moderators. It was deemed that the content did not comply with the moderation rules.
 				</p>

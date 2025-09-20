@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Système de Validation Hybride 50/50</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #0c0c0c 0%, #1a1a1a 100%);
+            color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: #FFD600;
+            font-size: 2.5rem;
+            font-weight: 900;
+            margin-bottom: 1rem;
+            text-align: center;
+            background: linear-gradient(45deg, #FFD600, #FFA500);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .subtitle {
+            color: #9CA3AF;
+            text-align: center;
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin: 40px 0;
+        }
+        
+        .method-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+        
+        .method-card.old {
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+        
+        .method-card.new {
+            border-color: rgba(34, 197, 94, 0.3);
+        }
+        
+        .method-title {
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .method-title.old {
+            color: #EF4444;
+        }
+        
+        .method-title.new {
+            color: #22C55E;
+        }
+        
+        .controls {
+            position: fixed;
+            right: 20px;
+            top: 20px;
+            width: 350px;
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(107, 90, 32, 0.6);
+            border-radius: 20px;
+            padding: 20px;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+        }
+        
+        .control-section {
+            margin-bottom: 20px;
+            padding: 16px;
+            background: rgba(255, 214, 0, 0.1);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 214, 0, 0.3);
+        }
+        
+        .control-section h4 {
+            color: #FFD600;
+            margin: 0 0 12px 0;
+            font-size: 16px;
+            font-weight: 700;
+        }
+        
+        .input-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        label {
+            font-size: 12px;
+            color: #C0C0C0;
+        }
+        
+        input[type="number"] {
+            width: 100%;
+            padding: 8px 10px;
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            color: #fff;
+            font-size: 13px;
+            margin-top: 4px;
+        }
+        
+        .result-box {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 8px 0;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+        }
+        
+        .metric-label {
+            font-weight: 600;
+        }
+        
+        .metric-value {
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-weight: 700;
+        }
+        
+        .status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            margin-left: 10px;
+        }
+        
+        .status.validated {
+            background: rgba(34, 197, 94, 0.2);
+            color: #22C55E;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+        
+        .status.refused {
+            background: rgba(239, 68, 68, 0.2);
+            color: #EF4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+        
+        .status.pending {
+            background: rgba(255, 214, 0, 0.2);
+            color: #FFD600;
+            border: 1px solid rgba(255, 214, 0, 0.3);
+        }
+        
+        .highlight {
+            background: rgba(255, 214, 0, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #FFD600;
+            margin: 15px 0;
+        }
+        
+        .formula {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 13px;
+            margin: 10px 0;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 5px 0;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-success { background: linear-gradient(45deg, #22C55E, #16A34A); }
+        .btn-danger { background: linear-gradient(45deg, #EF4444, #DC2626); }
+        .btn-warning { background: linear-gradient(45deg, #F59E0B, #D97706); }
+        
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚖️ Test Système de Validation Hybride</h1>
+        <p class="subtitle">Comparaison entre l'ancien système de ratio simple et le nouveau modèle hybride 50/50</p>
+        
+        <div class="comparison-grid">
+            <!-- Ancien système -->
+            <div class="method-card old">
+                <div class="method-title old">
+                    ❌ Ancien Système (Ratio Simple)
+                </div>
+                <p>Logique simpliste basée uniquement sur le nombre de votes :</p>
+                <div class="formula">
+ratio = validVotes / refuseVotes
+validé si ratio >= 2.0
+                </div>
+                <div class="highlight">
+                    <strong>Problème :</strong> Ne prend pas en compte l'importance économique des stakers (montants stakés).
+                </div>
+                
+                <div class="result-box">
+                    <h4>Résultats Ancien Système :</h4>
+                    <div class="metric">
+                        <span class="metric-label">Ratio Simple :</span>
+                        <span class="metric-value" id="oldRatio">2.00</span>
+                        <span class="status" id="oldStatus">PENDING</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Logique :</span>
+                        <span class="metric-value">Votes uniquement</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Nouveau système -->
+            <div class="method-card new">
+                <div class="method-title new">
+                    ✅ Nouveau Système (Hybride 50/50)
+                </div>
+                <p>Modèle sophistiqué combinant démocratie et ploutocratie :</p>
+                <div class="formula">
+demScore = validVotes / totalVotes
+plutoScore = stakeYes / totalStake
+hybridScore = (demScore + plutoScore) / 2
+validé si hybridRatio >= 2.0
+                </div>
+                <div class="highlight">
+                    <strong>Avantage :</strong> Prend en compte à la fois le nombre de votes (50%) et les montants stakés (50%).
+                </div>
+                
+                <div class="result-box">
+                    <h4>Résultats Système Hybride :</h4>
+                    <div class="metric">
+                        <span class="metric-label">Score Démocratie :</span>
+                        <span class="metric-value" id="demScore">0.500</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Score Ploutocratie :</span>
+                        <span class="metric-value" id="plutoScore">0.500</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Ratio Hybride :</span>
+                        <span class="metric-value" id="hybridRatio">2.00</span>
+                        <span class="status" id="hybridStatus">PENDING</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Logique :</span>
+                        <span class="metric-value">Votes + Stakes</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div style="margin-top: 40px;">
+            <h2 style="color: #FFD600;">🎯 Scénarios de Test</h2>
+            <p>Testez différents scénarios pour voir la différence entre les deux systèmes :</p>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+                <button class="btn btn-success" onclick="setScenario('rich_minority')">💰 Minorité Riche</button>
+                <button class="btn btn-danger" onclick="setScenario('poor_majority')">👥 Majorité Pauvre</button>
+                <button class="btn btn-warning" onclick="setScenario('balanced')">⚖️ Équilibré</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <div style="text-align: center; margin-bottom: 20px;">
+            <strong style="color: #FFD600; font-size: 18px;">🧪 Contrôles de Test</strong>
+        </div>
+
+        <div class="control-section">
+            <h4>🗳️ Votes des Stakers</h4>
+            <div class="input-group">
+                <label>
+                    Votes Valid:
+                    <input type="number" id="validVotes" value="15" min="0" onchange="calculate()">
+                </label>
+                <label>
+                    Votes Refuse:
+                    <input type="number" id="refuseVotes" value="7" min="0" onchange="calculate()">
+                </label>
+            </div>
+        </div>
+
+        <div class="control-section">
+            <h4>💰 Montants Stakés</h4>
+            <div class="input-group">
+                <label>
+                    Stake YES ($):
+                    <input type="number" id="stakeYes" value="800" min="0" step="50" onchange="calculate()">
+                </label>
+                <label>
+                    Stake NO ($):
+                    <input type="number" id="stakeNo" value="1200" min="0" step="50" onchange="calculate()">
+                </label>
+            </div>
+        </div>
+
+        <div class="control-section">
+            <h4>⚙️ Paramètres</h4>
+            <div class="input-group">
+                <label>
+                    Total Staked ($):
+                    <input type="number" id="totalStaked" value="2000" min="0" step="50" onchange="calculate()">
+                </label>
+                <label>
+                    MINT Price ($):
+                    <input type="number" id="mintPrice" value="1000" min="0" step="50" onchange="calculate()">
+                </label>
+            </div>
+        </div>
+
+        <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 10px; margin-top: 20px;">
+            <h5 style="color: #FFD600; margin: 0 0 10px 0;">📊 Status Global:</h5>
+            <div id="globalStatus" style="font-size: 14px; color: #C0C0C0;">
+                Mise à jour en cours...
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function calculate() {
+            const validVotes = parseInt(document.getElementById('validVotes').value) || 0;
+            const refuseVotes = parseInt(document.getElementById('refuseVotes').value) || 0;
+            const stakeYes = parseFloat(document.getElementById('stakeYes').value) || 0;
+            const stakeNo = parseFloat(document.getElementById('stakeNo').value) || 0;
+            const totalStaked = parseFloat(document.getElementById('totalStaked').value) || 0;
+            const mintPrice = parseFloat(document.getElementById('mintPrice').value) || 0;
+            
+            const totalVotes = validVotes + refuseVotes;
+            const totalStake = stakeYes + stakeNo;
+            
+            // Ancien système (ratio simple)
+            const oldRatio = refuseVotes > 0 ? validVotes / refuseVotes : validVotes;
+            const oldValid = oldRatio >= 2.0 && totalVotes >= 22 && totalStaked > mintPrice;
+            
+            // Nouveau système (hybride 50/50)
+            const demYes = totalVotes > 0 ? validVotes / totalVotes : 0;
+            const demNo = totalVotes > 0 ? refuseVotes / totalVotes : 0;
+            const plutoYes = totalStake > 0 ? stakeYes / totalStake : 0;
+            const plutoNo = totalStake > 0 ? stakeNo / totalStake : 0;
+            
+            const hybridScoreYes = (demYes + plutoYes) / 2;
+            const hybridScoreNo = (demNo + plutoNo) / 2;
+            const hybridRatio = hybridScoreNo > 0 ? hybridScoreYes / hybridScoreNo : hybridScoreYes;
+            const hybridValid = hybridRatio >= 2.0 && totalVotes >= 22 && totalStaked > mintPrice;
+            
+            // Update display - Ancien système
+            document.getElementById('oldRatio').textContent = oldRatio.toFixed(2);
+            const oldStatusEl = document.getElementById('oldStatus');
+            if (oldValid) {
+                oldStatusEl.textContent = 'VALIDÉ';
+                oldStatusEl.className = 'status validated';
+            } else if (oldRatio < 2.0) {
+                oldStatusEl.textContent = 'REFUSÉ';
+                oldStatusEl.className = 'status refused';
+            } else {
+                oldStatusEl.textContent = 'EN COURS';
+                oldStatusEl.className = 'status pending';
+            }
+            
+            // Update display - Nouveau système
+            document.getElementById('demScore').textContent = demYes.toFixed(3);
+            document.getElementById('plutoScore').textContent = plutoYes.toFixed(3);
+            document.getElementById('hybridRatio').textContent = hybridRatio.toFixed(2);
+            
+            const hybridStatusEl = document.getElementById('hybridStatus');
+            if (hybridValid) {
+                hybridStatusEl.textContent = 'VALIDÉ';
+                hybridStatusEl.className = 'status validated';
+            } else if (hybridRatio < 2.0) {
+                hybridStatusEl.textContent = 'REFUSÉ';  
+                hybridStatusEl.className = 'status refused';
+            } else {
+                hybridStatusEl.textContent = 'EN COURS';
+                hybridStatusEl.className = 'status pending';
+            }
+            
+            // Global status
+            const globalStatus = document.getElementById('globalStatus');
+            let statusText = '';
+            statusText += `Votes OK: ${totalVotes >= 22 ? '✅' : '❌'} (${totalVotes}/22)\n`;
+            statusText += `Staking OK: ${totalStaked > mintPrice ? '✅' : '❌'} ($${totalStaked} > $${mintPrice})\n`;
+            statusText += `Différence: ${oldValid !== hybridValid ? '⚠️ SYSTÈMES DIFFÉRENTS!' : '✅ Cohérence'}`;
+            
+            globalStatus.textContent = statusText;
+        }
+        
+        function setScenario(scenario) {
+            let validVotes, refuseVotes, stakeYes, stakeNo, totalStaked, mintPrice;
+            
+            switch(scenario) {
+                case 'rich_minority':
+                    // Peu de votes valides mais beaucoup d'argent staké en faveur
+                    validVotes = 8;
+                    refuseVotes = 15; 
+                    stakeYes = 1800;
+                    stakeNo = 200;
+                    totalStaked = 2000;
+                    mintPrice = 1000;
+                    break;
+                case 'poor_majority':
+                    // Beaucoup de votes valides mais peu d'argent staké
+                    validVotes = 18;
+                    refuseVotes = 5;
+                    stakeYes = 300;
+                    stakeNo = 1700;
+                    totalStaked = 2000;
+                    mintPrice = 1000;
+                    break;
+                case 'balanced':
+                default:
+                    // Scénario équilibré
+                    validVotes = 15;
+                    refuseVotes = 7;
+                    stakeYes = 1200;
+                    stakeNo = 800;
+                    totalStaked = 2000;
+                    mintPrice = 1000;
+                    break;
+            }
+            
+            document.getElementById('validVotes').value = validVotes;
+            document.getElementById('refuseVotes').value = refuseVotes;
+            document.getElementById('stakeYes').value = stakeYes;
+            document.getElementById('stakeNo').value = stakeNo;
+            document.getElementById('totalStaked').value = totalStaked;
+            document.getElementById('mintPrice').value = mintPrice;
+            
+            calculate();
+        }
+        
+        // Initialize
+        calculate();
+    </script>
+</body>
+</html> 

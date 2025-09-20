@@ -5,6 +5,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import DevControls from '@/components/DevControls';
+import EnhancedModerationDevControls from '@/components/EnhancedModerationDevControls';
 
 // Lazy load client-only components
 const ActiveCampaignDashboard = dynamic(() => import('../../../components/ActiveCampaignDashboard'), { ssr: false });
@@ -34,6 +35,7 @@ export default function MyCreationsPage() {
   const [activeTab, setActiveTab] = useState<'active' | 'previous' | 'universe'>('active');
   const [activeInitialProgress, setActiveInitialProgress] = useState<any | null>(null);
   const [devForceValidated, setDevForceValidated] = useState(false);
+  const [devModerationData, setDevModerationData] = useState<any | null>(null);
 
   useEffect(() => {
     if (account) {
@@ -48,18 +50,30 @@ export default function MyCreationsPage() {
       try {
         const data = await import('../../../lib/mockData');
         const firstInitial = (data.mockCampaigns as any[]).find((c) => c.type === 'INITIAL');
-        if (mounted) setActiveInitialProgress(firstInitial?.progress || null);
+        if (mounted) {
+          const progress = firstInitial?.progress || null;
+          setActiveInitialProgress(progress);
+        }
       } catch {}
     })();
     return () => { mounted = false; };
   }, []);
 
+  // Initialize dev moderation data when activeInitialProgress is available
+  useEffect(() => {
+    if (activeInitialProgress && !devModerationData) {
+      setDevModerationData(activeInitialProgress);
+    }
+  }, [activeInitialProgress, devModerationData]);
+
   const isValidated = useMemo(() => {
     if (devForceValidated) return true;
-    if (!activeInitialProgress) return false;
-    const s = computeValidationState(activeInitialProgress);
+    // Use dev-modified data if available, otherwise fall back to original data
+    const progressData = devModerationData || activeInitialProgress;
+    if (!progressData) return false;
+    const s = computeValidationState(progressData);
     return s.allOk;
-  }, [activeInitialProgress, devForceValidated]);
+  }, [activeInitialProgress, devForceValidated, devModerationData]);
 
   const separatorStyle = {
     height: 1,
@@ -159,7 +173,9 @@ export default function MyCreationsPage() {
               onForceValidated={setDevForceValidated}
             />
           ) : (
-            <ActiveCampaignDashboard />
+            <ActiveCampaignDashboard 
+              externalProgressData={devModerationData}
+            />
           )
         )}
 
@@ -182,6 +198,12 @@ export default function MyCreationsPage() {
           <DevControls 
             onForceValidated={setDevForceValidated}
             forceValidated={devForceValidated}
+            additionalControls={
+              <EnhancedModerationDevControls
+                initialProgress={devModerationData || activeInitialProgress}
+                onProgressChange={setDevModerationData}
+              />
+            }
           />
         )}
       </div>

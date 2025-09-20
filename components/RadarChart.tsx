@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useRef } from 'react';
 
 interface ModeratorScore {
   stakerId: string;
@@ -45,6 +45,7 @@ export default function RadarChart({ moderatorScores, size = 400, showLabels = t
   const labelRadius = maxRadius + 35; // Keep same gap - labels stay in same position
   const [hoveredPoint, setHoveredPoint] = useState<HoveredPoint | null>(null);
   const [hoveredRefusedGroup, setHoveredRefusedGroup] = useState<ModeratorScore[] | null>(null);
+  const radarContainerRef = useRef<HTMLDivElement>(null);
 
   // Separate refused moderators (score = 0) and others
   const refusedModerators = useMemo(() => {
@@ -219,6 +220,7 @@ export default function RadarChart({ moderatorScores, size = 400, showLabels = t
 
   return (
     <div 
+      ref={radarContainerRef}
       style={{ 
         width: size + 60, // Reduced from 80 back to 60 since no side AVG bubble needed
         height: size + 200, // Increased from 180 to 200 for even more vertical space
@@ -227,15 +229,7 @@ export default function RadarChart({ moderatorScores, size = 400, showLabels = t
         transition: 'transform 0.2s ease'
       }}
       onClick={isClickable ? onClick : undefined}
-      onMouseEnter={(e) => {
-        if (isClickable) {
-          e.currentTarget.style.transform = 'scale(1.02)';
-        }
-      }}
       onMouseLeave={(e) => {
-        if (isClickable) {
-          e.currentTarget.style.transform = 'scale(1)';
-        }
         setHoveredPoint(null); // Clear hover when leaving the chart
         setHoveredRefusedGroup(null); // Clear refused group hover when leaving the chart
       }}
@@ -628,15 +622,36 @@ export default function RadarChart({ moderatorScores, size = 400, showLabels = t
           top: 30, // Moved down more to avoid obstruction
           right: 20, // Positioned well away from labels
           background: 'rgba(0, 0, 0, 0.8)',
-          border: '1px solid #FFD600',
           borderRadius: 8,
-          padding: '4px 8px',
+          padding: '8px 10px',
           fontSize: 11,
           color: '#FFD600',
           fontWeight: 600,
-          pointerEvents: 'none'
-        }}>
-          🔍 Click to expand
+          pointerEvents: 'auto',
+          cursor: 'pointer'
+        }}
+        onMouseEnter={() => {
+          // Zoomer le RadarChart entier via la référence
+          if (radarContainerRef.current) {
+            radarContainerRef.current.style.transform = 'scale(1.02)';
+          }
+        }}
+        onMouseLeave={() => {
+          // Remettre le RadarChart à sa taille normale
+          if (radarContainerRef.current) {
+            radarContainerRef.current.style.transform = 'scale(1)';
+          }
+        }}
+        >
+          <svg width="40" height="40" viewBox="0 0 40 40" fill="none" 
+               style={{ 
+                 display: 'inline-block', 
+                 cursor: 'pointer' 
+               }}
+               >
+            <path d="M6 6L14 14M6 6L6 14M6 6L14 6" stroke="#FFD600" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M34 34L26 26M34 34L34 26M34 34L26 34" stroke="#FFD600" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
         </div>
       )}
 

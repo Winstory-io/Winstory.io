@@ -223,9 +223,9 @@ function ModernLineChart({ points, maxY, maxX, showDeficit = false, deficitThres
   onChartClick?: () => void;
   dayStartHour?: number;
 }) {
-	// Enhanced dimensions for detailed view
-	const width = isEnhanced ? 1200 : 820;
-	const height = isEnhanced ? 600 : 280; // Increased height as requested
+	
+	const width = isEnhanced ? 1200 : 900;
+	const height = isEnhanced ? 700 : 380; // Increased height significantly
 	const padding = { left: 60, right: 16, top: 10, bottom: 28 };
 	const innerW = width - padding.left - padding.right;
 	const innerH = height - padding.top - padding.bottom;
@@ -248,96 +248,136 @@ function ModernLineChart({ points, maxY, maxX, showDeficit = false, deficitThres
 	const yTicks = [0, maxY * 0.25, maxY * 0.5, maxY * 0.75, maxY];
 	
 	return (
-		<svg 
-			width={width} 
-			height={height} 
-			style={{ 
-				background: 'transparent', 
-				cursor: !isEnhanced && onChartClick ? 'pointer' : 'default' 
-			}}
-			onClick={!isEnhanced && onChartClick ? onChartClick : undefined}
-		>
-			{/* Y-axis label */}
-			<text 
-				x={15} 
-				y={height / 2} 
-				fill="#C0C0C0" 
-				fontSize={12} 
-				textAnchor="middle" 
-				dominantBaseline="central"
-				transform={`rotate(-90, 15, ${height / 2})`}
+		<div style={{ position: 'relative', display: 'inline-block' }}>
+			<svg 
+				width={width} 
+				height={height}
+				style={{ 
+					background: 'transparent', 
+					cursor: !isEnhanced && onChartClick ? 'pointer' : 'default',
+					transition: 'transform 0.3s ease'
+				}}
+				onClick={!isEnhanced && onChartClick ? onChartClick : undefined}
 			>
-				{yAxisLabel}
-			</text>
-
-			{/* horizontal grid */}
-			{yTicks.map((t, i) => (
-				<line key={i} x1={padding.left} y1={toY(t)} x2={width - padding.right} y2={toY(t)} stroke="#141414" />
-			))}
-			
-			{/* Y-axis ticks and labels */}
-			{yTicks.map((t, i) => (
-				<g key={i}>
-					<line x1={padding.left - 5} y1={toY(t)} x2={padding.left} y2={toY(t)} stroke="#333" />
-					<text x={padding.left - 8} y={toY(t)} fill="#FFD600" fontSize={10} textAnchor="end" dominantBaseline="central">
-						{isROI ? `$${Math.round(t)}` : Math.round(t)}
-					</text>
-				</g>
-			))}
-			
-			{xTicks.map((h) => (
-				<g key={h}>
-					<line x1={toX(h)} y1={padding.top} x2={toX(h)} y2={height - padding.bottom} stroke="#0f0f0f" />
-					<text x={toX(h)} y={height - 8} fill="#C0C0C0" fontSize={10} textAnchor="middle">
-						{h === 0 ? 'Launch' : `${h}h`}
-					</text>
-				</g>
-			))}
-
-			{/* Deficit area for ROI chart - break even point */}
-			{showDeficit && deficitThreshold > 0 && (
-				<rect
-					x={padding.left}
-					y={toY(deficitThreshold)}
-					width={innerW}
-					height={innerH - toY(deficitThreshold)}
-					fill="rgba(255, 0, 0, 0.2)"
-					stroke="rgba(255, 0, 0, 0.5)"
-					strokeWidth={1}
-				/>
-			)}
-
-			{/* area under curve */}
-			{points.length > 0 && (
-				<path d={`${d} L ${toX(points[points.length - 1].x)} ${toY(0)} L ${toX(points[0].x)} ${toY(0)} Z`} fill="url(#gArea)" opacity={0.35} />
-			)}
-			<defs>
-				<linearGradient id="gArea" x1="0" y1="0" x2="0" y2="1">
-					<stop offset="0%" stopColor="#18C964" stopOpacity="0.35" />
-					<stop offset="100%" stopColor="#18C964" stopOpacity="0.05" />
-				</linearGradient>
-			</defs>
-
-			{/* Thinner line as requested */}
-			<path d={d} fill="none" stroke="#18C964" strokeWidth={2} />
-			
-			{/* current point - positioned at actual current time */}
-			{currentPoint && (
-				<circle 
-					cx={toX(currentPoint.x)} 
-					cy={toY(currentPoint.y)} 
-					r={4} 
-					fill="#18C964" 
-				/>
-			)}
-			
-			{/* Click indicator for enhanced view */}
-			{!isEnhanced && onChartClick && (
-				<text x={width - 20} y={20} fill="#FFD600" fontSize={12} textAnchor="end">
-					🔍 Click to expand
+				{/* Y-axis label */}
+				<text 
+					x={15} 
+					y={height / 2} 
+					fill="#C0C0C0" 
+					fontSize={12} 
+					textAnchor="middle" 
+					dominantBaseline="central"
+					transform={`rotate(-90, 15, ${height / 2})`}
+				>
+					{yAxisLabel}
 				</text>
+
+				{/* horizontal grid */}
+				{yTicks.map((t, i) => (
+					<line key={i} x1={padding.left} y1={toY(t)} x2={width - padding.right} y2={toY(t)} stroke="#141414" />
+				))}
+				
+				{/* Y-axis ticks and labels */}
+				{yTicks.map((t, i) => (
+					<g key={i}>
+						<line x1={padding.left - 5} y1={toY(t)} x2={padding.left} y2={toY(t)} stroke="#333" />
+						<text x={padding.left - 8} y={toY(t)} fill="#FFD600" fontSize={10} textAnchor="end" dominantBaseline="central">
+							{isROI ? `$${Math.round(t)}` : Math.round(t)}
+						</text>
+					</g>
+				))}
+				
+				{xTicks.map((h) => (
+					<g key={h}>
+						<line x1={toX(h)} y1={padding.top} x2={toX(h)} y2={height - padding.bottom} stroke="#0f0f0f" />
+						<text x={toX(h)} y={height - 8} fill="#C0C0C0" fontSize={10} textAnchor="middle">
+							{h === 0 ? 'Launch' : `${h}h`}
+						</text>
+					</g>
+				))}
+
+				{/* Deficit area for ROI chart - break even point */}
+				{showDeficit && deficitThreshold > 0 && (
+					<rect
+						x={padding.left}
+						y={toY(deficitThreshold)}
+						width={innerW}
+						height={innerH - toY(deficitThreshold)}
+						fill="rgba(255, 0, 0, 0.2)"
+						stroke="rgba(255, 0, 0, 0.5)"
+						strokeWidth={1}
+					/>
+				)}
+
+				{/* area under curve */}
+				{points.length > 0 && (
+					<path d={`${d} L${toX(points[points.length - 1].x)} ${toY(0)} L${toX(points[0].x)} ${toY(0)} Z`} fill="url(#gArea)" opacity={0.35} />
+				)}
+				<defs>
+					<linearGradient id="gArea" x1="0" y1="0" x2="0" y2="1">
+						<stop offset="0%" stopColor="#18C964" stopOpacity="0.35" />
+						<stop offset="100%" stopColor="#18C964" stopOpacity="0.05" />
+					</linearGradient>
+				</defs>
+
+				{/* Thinner line as requested */}
+				<path d={d} fill="none" stroke="#18C964" strokeWidth={2} />
+				
+				{/* current point - positioned at actual current time */}
+				{currentPoint && (
+					<circle 
+						cx={toX(currentPoint.x)} 
+						cy={toY(currentPoint.y)} 
+						r={4} 
+						fill="#18C964" 
+					/>
+				)}
+			</svg>
+			
+			{/* Click indicator - outside SVG */}
+			{!isEnhanced && onChartClick && (
+				<div style={{
+					position: 'absolute',
+					top: 15,
+					right: 15,
+					background: 'rgba(0, 0, 0, 0.8)',
+					borderRadius: 8,
+					padding: '8px 10px',
+					fontSize: 11,
+					color: '#FFD600',
+					fontWeight: 600,
+					cursor: 'pointer',
+					zIndex: 10
+				}}
+				onMouseEnter={(e) => {
+					// Agrandir le graphique entier
+					const svgElement = e.currentTarget.parentElement?.querySelector('svg');
+					if (svgElement) {
+						svgElement.style.transform = 'scale(1.02)';
+						svgElement.style.transition = 'transform 0.3s ease';
+					}
+				}}
+				onMouseLeave={(e) => {
+					// Remettre à la taille normale
+					const svgElement = e.currentTarget.parentElement?.querySelector('svg');
+					if (svgElement) {
+						svgElement.style.transform = 'scale(1)';
+					}
+				}}
+				onClick={onChartClick}
+				>
+					<svg width="40" height="40" viewBox="0 0 40 40" fill="none" 
+						 style={{ 
+							display: 'inline-block', 
+							cursor: 'pointer' 
+						 }}
+					>
+						<path d="M6 6L14 14M6 6L6 14M6 6L14 6" stroke="#FFD600" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+						<path d="M34 34L26 26M34 34L34 26M34 34L26 34" stroke="#FFD600" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+					</svg>
+				</div>
 			)}
-		</svg>
+		</div>
 	);
 }
 
@@ -354,9 +394,9 @@ function DualLineChart({ mintPoints, validatedPoints, maxY, maxX, currentMintPoi
   onChartClick?: () => void;
   dayStartHour?: number;
 }) {
-	// Enhanced dimensions for detailed view
-	const width = isEnhanced ? 1200 : 820;
-	const height = isEnhanced ? 600 : 280;
+	
+	const width = isEnhanced ? 1200 : 900;
+	const height = isEnhanced ? 700 : 380;
 	const padding = { left: 60, right: 16, top: 10, bottom: 28 };
 	const innerW = width - padding.left - padding.right;
 	const innerH = height - padding.top - padding.bottom;
@@ -379,112 +419,152 @@ function DualLineChart({ mintPoints, validatedPoints, maxY, maxX, currentMintPoi
 	const yTicks = [0, maxY * 0.25, maxY * 0.5, maxY * 0.75, maxY];
 	
 	return (
-		<svg 
-			width={width} 
-			height={height} 
-			style={{ 
-				background: 'transparent', 
-				cursor: !isEnhanced && onChartClick ? 'pointer' : 'default' 
-			}}
-			onClick={!isEnhanced && onChartClick ? onChartClick : undefined}
-		>
-			{/* Y-axis label */}
-			<text 
-				x={15} 
-				y={height / 2} 
-				fill="#C0C0C0" 
-				fontSize={12} 
-				textAnchor="middle" 
-				dominantBaseline="central"
-				transform={`rotate(-90, 15, ${height / 2})`}
+		<div style={{ position: 'relative', display: 'inline-block' }}>
+			<svg 
+				width={width} 
+				height={height}
+				style={{ 
+					background: 'transparent', 
+					cursor: !isEnhanced && onChartClick ? 'pointer' : 'default',
+					transition: 'transform 0.3s ease'
+				}}
+				onClick={!isEnhanced && onChartClick ? onChartClick : undefined}
 			>
-				{yAxisLabel}
-			</text>
-
-			{/* horizontal grid */}
-			{yTicks.map((t, i) => (
-				<line key={i} x1={padding.left} y1={toY(t)} x2={width - padding.right} y2={toY(t)} stroke="#141414" />
-			))}
-			
-			{/* Y-axis ticks and labels */}
-			{yTicks.map((t, i) => (
-				<g key={i}>
-					<line x1={padding.left - 5} y1={toY(t)} x2={padding.left} y2={toY(t)} stroke="#333" />
-					<text x={padding.left - 8} y={toY(t)} fill="#FFD600" fontSize={10} textAnchor="end" dominantBaseline="central">
-						{Math.round(t)}
-					</text>
-				</g>
-			))}
-			
-			{/* X-axis grid and labels */}
-			{xTicks.map((h) => (
-				<g key={h}>
-					<line x1={toX(h)} y1={padding.top} x2={toX(h)} y2={height - padding.bottom} stroke="#0f0f0f" />
-					<text x={toX(h)} y={height - 8} fill="#C0C0C0" fontSize={10} textAnchor="middle">
-						{h === 0 ? 'Launch' : `${h}h`}
-					</text>
-				</g>
-			))}
-
-			{/* Areas under curves */}
-			{mintPoints.length > 0 && (
-				<path d={`${mintPath} L ${toX(mintPoints[mintPoints.length - 1].x)} ${toY(0)} L ${toX(mintPoints[0].x)} ${toY(0)} Z`} fill="url(#mintArea)" opacity={0.2} />
-			)}
-			{validatedPoints.length > 0 && (
-				<path d={`${validatedPath} L ${toX(validatedPoints[validatedPoints.length - 1].x)} ${toY(0)} L ${toX(validatedPoints[0].x)} ${toY(0)} Z`} fill="url(#validatedArea)" opacity={0.3} />
-			)}
-			
-			<defs>
-				<linearGradient id="mintArea" x1="0" y1="0" x2="0" y2="1">
-					<stop offset="0%" stopColor="#FFD600" stopOpacity="0.2" />
-					<stop offset="100%" stopColor="#FFD600" stopOpacity="0.05" />
-				</linearGradient>
-				<linearGradient id="validatedArea" x1="0" y1="0" x2="0" y2="1">
-					<stop offset="0%" stopColor="#18C964" stopOpacity="0.3" />
-					<stop offset="100%" stopColor="#18C964" stopOpacity="0.05" />
-				</linearGradient>
-			</defs>
-
-			{/* MINT line (yellow) */}
-			<path d={mintPath} fill="none" stroke="#FFD600" strokeWidth={2} />
-			
-			{/* Validated line (green) */}
-			<path d={validatedPath} fill="none" stroke="#18C964" strokeWidth={2} />
-			
-			{/* Current points */}
-			{currentMintPoint && (
-				<circle 
-					cx={toX(currentMintPoint.x)} 
-					cy={toY(currentMintPoint.y)} 
-					r={4} 
-					fill="#FFD600" 
-				/>
-			)}
-			{currentValidatedPoint && (
-				<circle 
-					cx={toX(currentValidatedPoint.x)} 
-					cy={toY(currentValidatedPoint.y)} 
-					r={4} 
-					fill="#18C964" 
-				/>
-			)}
-			
-			{/* Legend */}
-			<g transform={`translate(${width - 200}, 30)`}>
-				<rect x={0} y={0} width={190} height={50} fill="rgba(0,0,0,0.8)" stroke="#333" strokeWidth={1} rx={4} />
-				<circle cx={15} cy={15} r={4} fill="#FFD600" />
-				<text x={25} y={19} fill="#FFD600" fontSize={12} fontWeight={600}>Total MINT</text>
-				<circle cx={15} cy={35} r={4} fill="#18C964" />
-				<text x={25} y={39} fill="#18C964" fontSize={12} fontWeight={600}>Validated Rewards</text>
-			</g>
-			
-			{/* Click indicator for enhanced view */}
-			{!isEnhanced && onChartClick && (
-				<text x={width - 20} y={20} fill="#FFD600" fontSize={12} textAnchor="end">
-					🔍 Click to expand
+				{/* Y-axis label */}
+				<text 
+					x={15} 
+					y={height / 2} 
+					fill="#C0C0C0" 
+					fontSize={12} 
+					textAnchor="middle" 
+					dominantBaseline="central"
+					transform={`rotate(-90, 15, ${height / 2})`}
+				>
+					{yAxisLabel}
 				</text>
+
+				{/* horizontal grid */}
+				{yTicks.map((t, i) => (
+					<line key={i} x1={padding.left} y1={toY(t)} x2={width - padding.right} y2={toY(t)} stroke="#141414" />
+				))}
+				
+				{/* Y-axis ticks and labels */}
+				{yTicks.map((t, i) => (
+					<g key={i}>
+						<line x1={padding.left - 5} y1={toY(t)} x2={padding.left} y2={toY(t)} stroke="#333" />
+						<text x={padding.left - 8} y={toY(t)} fill="#FFD600" fontSize={10} textAnchor="end" dominantBaseline="central">
+							{Math.round(t)}
+						</text>
+					</g>
+				))}
+				
+				{/* X-axis grid and labels */}
+				{xTicks.map((h) => (
+					<g key={h}>
+						<line x1={toX(h)} y1={padding.top} x2={toX(h)} y2={height - padding.bottom} stroke="#0f0f0f" />
+						<text x={toX(h)} y={height - 8} fill="#C0C0C0" fontSize={10} textAnchor="middle">
+							{h === 0 ? 'Launch' : `${h}h`}
+						</text>
+					</g>
+				))}
+
+				{/* Areas under curves */}
+				{mintPoints.length > 0 && (
+					<path d={`${mintPath} L${toX(mintPoints[mintPoints.length - 1].x)} ${toY(0)} L${toX(mintPoints[0].x)} ${toY(0)} Z`} fill="url(#mintArea)" opacity={0.3} />
+				)}
+				{validatedPoints.length > 0 && (
+					<path d={`${validatedPath} L${toX(validatedPoints[validatedPoints.length - 1].x)} ${toY(0)} L${toX(validatedPoints[0].x)} ${toY(0)} Z`} fill="url(#validatedArea)" opacity={0.3} />
+				)}
+				
+				<defs>
+					<linearGradient id="mintArea" x1="0" y1="0" x2="0" y2="1">
+						<stop offset="0%" stopColor="#FFD600" stopOpacity="0.2" />
+						<stop offset="100%" stopColor="#FFD600" stopOpacity="0.05" />
+					</linearGradient>
+					<linearGradient id="validatedArea" x1="0" y1="0" x2="0" y2="1">
+						<stop offset="0%" stopColor="#18C964" stopOpacity="0.3" />
+						<stop offset="100%" stopColor="#18C964" stopOpacity="0.05" />
+					</linearGradient>
+				</defs>
+
+				{/* MINT line (yellow) */}
+				<path d={mintPath} fill="none" stroke="#FFD600" strokeWidth={2} />
+				
+				{/* Validated line (green) */}
+				<path d={validatedPath} fill="none" stroke="#18C964" strokeWidth={2} />
+				
+				{/* Current points */}
+				{currentMintPoint && (
+					<circle 
+						cx={toX(currentMintPoint.x)} 
+						cy={toY(currentMintPoint.y)} 
+						r={4} 
+						fill="#FFD600" 
+					/>
+				)}
+				{currentValidatedPoint && (
+					<circle 
+						cx={toX(currentValidatedPoint.x)} 
+						cy={toY(currentValidatedPoint.y)} 
+						r={4} 
+						fill="#18C964" 
+					/>
+				)}
+				
+				{/* Legend */}
+				<g transform={`translate(${width - 200}, 30)`}>
+					<rect x={0} y={0} width={190} height={50} fill="rgba(0,0,0,0.8)" stroke="#333" strokeWidth={1} rx={4} />
+					<circle cx={15} cy={15} r={4} fill="#FFD600" />
+					<text x={25} y={19} fill="#FFD600" fontSize={12} fontWeight={600}>Total MINT</text>
+					<circle cx={15} cy={35} r={4} fill="#18C964" />
+					<text x={25} y={39} fill="#18C964" fontSize={12} fontWeight={600}>Validated Rewards</text>
+				</g>
+			</svg>
+			
+			{/* Click indicator - outside SVG */}
+			{!isEnhanced && onChartClick && (
+				<div style={{
+					position: 'absolute',
+					top: 15,
+					right: 15,
+					background: 'rgba(0, 0, 0, 0.8)',
+					borderRadius: 8,
+					padding: '8px 10px',
+					fontSize: 11,
+					color: '#FFD600',
+					fontWeight: 600,
+					cursor: 'pointer',
+					zIndex: 10
+				}}
+				onMouseEnter={(e) => {
+					// Agrandir le graphique entier
+					const svgElement = e.currentTarget.parentElement?.querySelector('svg');
+					if (svgElement) {
+						svgElement.style.transform = 'scale(1.02)';
+						svgElement.style.transition = 'transform 0.3s ease';
+					}
+				}}
+				onMouseLeave={(e) => {
+					// Remettre à la taille normale
+					const svgElement = e.currentTarget.parentElement?.querySelector('svg');
+					if (svgElement) {
+						svgElement.style.transform = 'scale(1)';
+					}
+				}}
+				onClick={onChartClick}
+				>
+					<svg width="40" height="40" viewBox="0 0 40 40" fill="none" 
+						 style={{ 
+							display: 'inline-block', 
+							cursor: 'pointer' 
+						 }}
+					>
+						<path d="M6 6L14 14M6 6L6 14M6 6L14 6" stroke="#FFD600" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+						<path d="M34 34L26 26M34 34L34 26M34 34L26 34" stroke="#FFD600" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+					</svg>
+				</div>
 			)}
-		</svg>
+		</div>
 	);
 }
 
@@ -821,7 +901,7 @@ export default function ValidatedCampaignDashboard({ forceValidated, onForceVali
 				))}
 			</div>
 
-			<div style={{ display: 'grid', gridTemplateColumns: 'minmax(680px, 1fr) 280px', gap: 18, alignItems: 'start', marginTop: 16 }}>
+			<div style={{ display: 'grid', gridTemplateColumns: 'minmax(900px, 1fr) 320px', gap: 40, alignItems: 'start', marginTop: 16 }}>
 				{/* Chart area */}
 				<div style={{ overflow: 'hidden', marginBottom: 20 }}>
 					{tab === 'mint' && (
@@ -941,7 +1021,7 @@ export default function ValidatedCampaignDashboard({ forceValidated, onForceVali
 			</div>
 
 			{/* Bottom metrics and Top 3 */}
-			<div style={{ display: 'grid', gridTemplateColumns: 'minmax(680px, 1fr) 280px', gap: 18, alignItems: 'start', marginTop: 32 }}>
+			<div style={{ display: 'grid', gridTemplateColumns: 'minmax(900px, 1fr) 320px', gap: 40, alignItems: 'start', marginTop: 32 }}>
 				<div style={{ textAlign: 'center' }}>
 					{tab === 'mint' && (
 						<>

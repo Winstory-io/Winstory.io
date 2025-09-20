@@ -506,17 +506,30 @@ export default function MyCompletionsPage() {
                   />
                 </label>
 
-                <label style={{ display: 'grid', gridTemplateColumns: '1fr auto', alignItems: 'center', gap: 8 }}>
-                  <span style={{ fontSize: 13 }}>Campaign Time Remaining (h)</span>
-                  <input
-                    type="number"
-                    value={devCampaignTimeHours}
-                    min={0}
-                    max={168} // 7 days max
-                    onChange={(e) => setDevCampaignTimeHours(Math.max(0, parseInt(e.target.value) || 0))}
-                    style={{ width: 60, background: '#111', color: '#fff', border: '1px solid #333', borderRadius: 4, padding: '4px 6px', fontSize: 12 }}
-                  />
-                </label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <label style={{ display: 'grid', gridTemplateColumns: '1fr auto', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontSize: 13 }}>Time before End of Campaign (h)</span>
+                    <input
+                      type="number"
+                      value={devCampaignTimeHours}
+                      min={0}
+                      max={168} // 7 days max
+                      onChange={(e) => setDevCampaignTimeHours(Math.max(0, parseInt(e.target.value) || 0))}
+                      style={{ width: 60, background: '#111', color: '#fff', border: '1px solid #333', borderRadius: 4, padding: '4px 6px', fontSize: 12 }}
+                    />
+                  </label>
+                  
+                  {/* Quick time presets */}
+                  <div style={{ display: 'flex', gap: 4, marginTop: 4, flexWrap: 'wrap' }}>
+                    <button onClick={() => setDevCampaignTimeHours(0)} style={{ background: '#333', color: '#FF4444', border: '1px solid #555', borderRadius: 4, padding: '2px 6px', fontSize: 10, cursor: 'pointer' }}>Finished</button>
+                    <button onClick={() => setDevCampaignTimeHours(0.5)} style={{ background: '#333', color: '#FFD600', border: '1px solid #555', borderRadius: 4, padding: '2px 6px', fontSize: 10, cursor: 'pointer' }}>30min</button>
+                    <button onClick={() => setDevCampaignTimeHours(1)} style={{ background: '#333', color: '#FFD600', border: '1px solid #555', borderRadius: 4, padding: '2px 6px', fontSize: 10, cursor: 'pointer' }}>1h</button>
+                    <button onClick={() => setDevCampaignTimeHours(6)} style={{ background: '#333', color: '#FFD600', border: '1px solid #555', borderRadius: 4, padding: '2px 6px', fontSize: 10, cursor: 'pointer' }}>6h</button>
+                    <button onClick={() => setDevCampaignTimeHours(24)} style={{ background: '#333', color: '#18C964', border: '1px solid #555', borderRadius: 4, padding: '2px 6px', fontSize: 10, cursor: 'pointer' }}>24h</button>
+                    <button onClick={() => setDevCampaignTimeHours(48)} style={{ background: '#333', color: '#18C964', border: '1px solid #555', borderRadius: 4, padding: '2px 6px', fontSize: 10, cursor: 'pointer' }}>48h</button>
+                    <button onClick={() => setDevCampaignTimeHours(168)} style={{ background: '#333', color: '#18C964', border: '1px solid #555', borderRadius: 4, padding: '2px 6px', fontSize: 10, cursor: 'pointer' }}>7d</button>
+                  </div>
+                </div>
 
                 <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
                   <input 

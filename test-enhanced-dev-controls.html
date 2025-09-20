@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Enhanced Moderation Dev Controls</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #000;
+            color: #fff;
+            font-family: Arial, sans-serif;
+        }
+        
+        .dev-controls {
+            position: fixed;
+            right: 20px;
+            top: 20px;
+            width: 320px;
+            background: #0a0a0a;
+            border: 1px solid #6B5A20;
+            border-radius: 12px;
+            padding: 16px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 6px 24px rgba(0,0,0,0.5);
+        }
+        
+        .section {
+            margin-bottom: 16px;
+            padding: 12px;
+            background: rgba(255, 214, 0, 0.1);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 214, 0, 0.3);
+        }
+        
+        .section h4 {
+            color: #FFD600;
+            margin: 0 0 10px 0;
+            font-size: 14px;
+        }
+        
+        .controls-grid {
+            display: grid;
+            gap: 8px;
+            font-size: 12px;
+        }
+        
+        .controls-grid.two-cols {
+            grid-template-columns: 1fr 1fr;
+        }
+        
+        .controls-grid.three-cols {
+            grid-template-columns: 1fr 1fr 1fr;
+        }
+        
+        input[type="number"] {
+            width: 70px;
+            padding: 4px 8px;
+            background: #111;
+            border: 1px solid #444;
+            border-radius: 4px;
+            color: #fff;
+            font-size: 12px;
+            margin-left: 5px;
+        }
+        
+        input[readonly] {
+            background: #333;
+            color: #999;
+        }
+        
+        .button {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            color: #fff;
+            fontSize: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-bottom: 4px;
+            width: 100%;
+        }
+        
+        .btn-success { background: #18C964; }
+        .btn-danger { background: #FF3B30; }
+        .btn-secondary { background: #666; }
+        
+        .status {
+            padding: 10px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 6px;
+            font-size: 11px;
+            border: 1px solid #333;
+        }
+        
+        .status-item {
+            margin-bottom: 4px;
+        }
+        
+        .dashboard {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        
+        .dashboard h1 {
+            color: #FFD600;
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .progress-info {
+            background: rgba(255, 214, 0, 0.1);
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+        }
+        
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .stat-card {
+            background: rgba(0,0,0,0.5);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <h1>🔧 Test Enhanced Moderation Dev Controls</h1>
+        <p>Simulateur des contrôles de développement pour la modération de campagnes</p>
+        
+        <div class="progress-info">
+            <h2 id="campaignStatus">Moderation Campaign in progress</h2>
+            <div class="stat-grid">
+                <div class="stat-card">
+                    <h3>Votes</h3>
+                    <div>✅ Valid: <span id="validVotes">2</span></div>
+                    <div>❌ Refuse: <span id="refuseVotes">0</span></div>
+                    <div>📊 Total: <span id="totalVotes">2</span></div>
+                </div>
+                <div class="stat-card">
+                    <h3>Staking</h3>
+                    <div>💰 YES: $<span id="stakeYes">120</span></div>
+                    <div>💰 NO: $<span id="stakeNo">30</span></div>
+                    <div>💎 Total: $<span id="totalStaked">150</span></div>
+                </div>
+                <div class="stat-card">
+                    <h3>Requirements</h3>
+                    <div>👥 Stakers: <span id="currentStakers">3</span>/<span id="requiredStakers">22</span></div>
+                    <div>💳 MINT: $<span id="mintPrice">1000</span></div>
+                    <div>📈 Ratio: <span id="voteRatio">2.00</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="dev-controls">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <strong style="color: #FFD600; font-size: 16px;">Enhanced Dev Controls</strong>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="section">
+            <h4>Quick Actions</h4>
+            <button class="button btn-success" onclick="setValidatedState()">✅ Set Validated State</button>
+            <button class="button btn-danger" onclick="setFailedState()">❌ Set Failed State</button>
+            <button class="button btn-secondary" onclick="resetToDefaults()">🔄 Reset to Defaults</button>
+        </div>
+
+        <!-- Stakers Controls -->
+        <div class="section">
+            <h4>Stakers & Participants</h4>
+            <div class="controls-grid two-cols">
+                <label>
+                    Stakers Required:
+                    <input type="number" id="stakersRequired" value="22" min="1" max="100" onchange="updateProgress()">
+                </label>
+                <label>
+                    Current Stakers:
+                    <input type="number" id="stakers" value="3" min="0" max="100" onchange="updateProgress()">
+                </label>
+            </div>
+        </div>
+
+        <!-- Votes Controls -->
+        <div class="section">
+            <h4>Individual Votes</h4>
+            <div class="controls-grid three-cols">
+                <label>
+                    Valid Votes:
+                    <input type="number" id="validVotesInput" value="2" min="0" onchange="updateVotes()">
+                </label>
+                <label>
+                    Refuse Votes:
+                    <input type="number" id="refuseVotesInput" value="0" min="0" onchange="updateVotes()">
+                </label>
+                <label>
+                    Total Votes:
+                    <input type="number" id="totalVotesInput" value="2" readonly>
+                </label>
+            </div>
+        </div>
+
+        <!-- MINT Price Controls -->
+        <div class="section">
+            <h4>MINT Price</h4>
+            <div style="display: grid; grid-template-columns: 1fr auto; gap: 8px; font-size: 12px; align-items: center;">
+                <label>
+                    MINT Price ($):
+                    <input type="number" id="mintPriceInput" value="1000" min="0" step="50" onchange="updateProgress()">
+                </label>
+                <div style="font-size: 10px; color: #888;">
+                    Standard: $1000<br/>
+                    With AI: $1500
+                </div>
+            </div>
+        </div>
+
+        <!-- Staking Amounts Controls -->
+        <div class="section">
+            <h4>Moderators Staking</h4>
+            <div class="controls-grid three-cols">
+                <label>
+                    Stake YES ($):
+                    <input type="number" id="stakeYesInput" value="120" min="0" step="10" onchange="updateStakes()">
+                </label>
+                <label>
+                    Stake NO ($):
+                    <input type="number" id="stakeNoInput" value="30" min="0" step="10" onchange="updateStakes()">
+                </label>
+                <label>
+                    Total Staked:
+                    <input type="number" id="totalStakedInput" value="150" min="0" step="10" onchange="redistributeStakes()">
+                </label>
+            </div>
+        </div>
+
+        <!-- Current Status Indicator -->
+        <div class="status">
+            <div style="color: #FFD600; font-weight: 600; margin-bottom: 6px;">Current Status:</div>
+            <div class="status-item" id="votesStatus">Votes: ⚠️ 2/22 minimum</div>
+            <div class="status-item" id="stakingStatus">Staking: ❌ $150 > $1000</div>
+            <div class="status-item" id="ratioStatus">Ratio: ❌ 2.00 (need >=2.0)</div>
+        </div>
+    </div>
+
+    <script>
+        function updateProgress() {
+            const stakersRequired = parseInt(document.getElementById('stakersRequired').value) || 22;
+            const stakers = parseInt(document.getElementById('stakers').value) || 0;
+            const mintPrice = parseFloat(document.getElementById('mintPriceInput').value) || 1000;
+            
+            document.getElementById('requiredStakers').textContent = stakersRequired;
+            document.getElementById('currentStakers').textContent = stakers;
+            document.getElementById('mintPrice').textContent = mintPrice;
+            
+            updateStatus();
+        }
+        
+        function updateVotes() {
+            const validVotes = parseInt(document.getElementById('validVotesInput').value) || 0;
+            const refuseVotes = parseInt(document.getElementById('refuseVotesInput').value) || 0;
+            const totalVotes = validVotes + refuseVotes;
+            
+            document.getElementById('totalVotesInput').value = totalVotes;
+            document.getElementById('validVotes').textContent = validVotes;
+            document.getElementById('refuseVotes').textContent = refuseVotes;
+            document.getElementById('totalVotes').textContent = totalVotes;
+            
+            // Auto-update stakers to match total votes if higher
+            const currentStakers = parseInt(document.getElementById('stakers').value) || 0;
+            if (totalVotes > currentStakers) {
+                document.getElementById('stakers').value = totalVotes;
+                document.getElementById('currentStakers').textContent = totalVotes;
+            }
+            
+            const ratio = refuseVotes > 0 ? (validVotes / refuseVotes).toFixed(2) : validVotes > 0 ? '∞' : '0';
+            document.getElementById('voteRatio').textContent = ratio;
+            
+            updateStatus();
+        }
+        
+        function updateStakes() {
+            const stakeYes = parseFloat(document.getElementById('stakeYesInput').value) || 0;
+            const stakeNo = parseFloat(document.getElementById('stakeNoInput').value) || 0;
+            const totalStaked = stakeYes + stakeNo;
+            
+            document.getElementById('totalStakedInput').value = totalStaked;
+            document.getElementById('stakeYes').textContent = stakeYes;
+            document.getElementById('stakeNo').textContent = stakeNo;
+            document.getElementById('totalStaked').textContent = totalStaked;
+            
+            updateStatus();
+        }
+        
+        function redistributeStakes() {
+            const totalStaked = parseFloat(document.getElementById('totalStakedInput').value) || 0;
+            const currentYes = parseFloat(document.getElementById('stakeYesInput').value) || 0;
+            const currentNo = parseFloat(document.getElementById('stakeNoInput').value) || 0;
+            const currentTotal = currentYes + currentNo;
+            
+            if (currentTotal > 0) {
+                const ratio = currentYes / currentTotal;
+                const newYes = Math.round(totalStaked * ratio * 100) / 100;
+                const newNo = Math.round(totalStaked * (1 - ratio) * 100) / 100;
+                
+                document.getElementById('stakeYesInput').value = newYes;
+                document.getElementById('stakeNoInput').value = newNo;
+                document.getElementById('stakeYes').textContent = newYes;
+                document.getElementById('stakeNo').textContent = newNo;
+            }
+            
+            updateStatus();
+        }
+        
+        function updateStatus() {
+            const totalVotes = parseInt(document.getElementById('totalVotes').textContent);
+            const stakersRequired = parseInt(document.getElementById('requiredStakers').textContent);
+            const totalStaked = parseFloat(document.getElementById('totalStaked').textContent);
+            const mintPrice = parseFloat(document.getElementById('mintPrice').textContent);
+            const validVotes = parseInt(document.getElementById('validVotes').textContent);
+            const refuseVotes = parseInt(document.getElementById('refuseVotes').textContent);
+            const ratio = refuseVotes > 0 ? validVotes / refuseVotes : validVotes;
+            
+            // Update status indicators
+            const votesOk = totalVotes >= stakersRequired;
+            const stakingOk = totalStaked > mintPrice;
+            const ratioOk = ratio >= 2;
+            
+            document.getElementById('votesStatus').innerHTML = 
+                `Votes: ${votesOk ? '✅' : '⚠️'} ${totalVotes}/${stakersRequired} minimum`;
+            document.getElementById('votesStatus').style.color = votesOk ? '#18C964' : '#FF9500';
+            
+            document.getElementById('stakingStatus').innerHTML = 
+                `Staking: ${stakingOk ? '✅' : '❌'} $${totalStaked} > $${mintPrice}`;
+            document.getElementById('stakingStatus').style.color = stakingOk ? '#18C964' : '#FF9500';
+            
+            document.getElementById('ratioStatus').innerHTML = 
+                `Ratio: ${ratioOk ? '✅' : '❌'} ${ratio.toFixed(2)} (need >=2.0)`;
+            document.getElementById('ratioStatus').style.color = ratioOk ? '#18C964' : '#FF9500';
+            
+            // Update campaign status
+            if (votesOk && stakingOk && ratioOk) {
+                document.getElementById('campaignStatus').textContent = '🎉 Moderators validated your Initial Campaign!';
+                document.getElementById('campaignStatus').style.color = '#18C964';
+            } else if (!ratioOk && totalVotes > 0) {
+                document.getElementById('campaignStatus').textContent = '❌ Moderators refused your Initial Campaign';
+                document.getElementById('campaignStatus').style.color = '#FF3B30';
+            } else {
+                document.getElementById('campaignStatus').textContent = '⏳ Moderation Campaign in progress';
+                document.getElementById('campaignStatus').style.color = '#FFD600';
+            }
+        }
+        
+        function setValidatedState() {
+            document.getElementById('stakersRequired').value = 22;
+            document.getElementById('stakers').value = 25;
+            document.getElementById('validVotesInput').value = 20;
+            document.getElementById('refuseVotesInput').value = 5;
+            document.getElementById('mintPriceInput').value = 1000;
+            document.getElementById('stakeYesInput').value = 2000;
+            document.getElementById('stakeNoInput').value = 500;
+            
+            updateProgress();
+            updateVotes();
+            updateStakes();
+        }
+        
+        function setFailedState() {
+            document.getElementById('stakersRequired').value = 22;
+            document.getElementById('stakers').value = 8;
+            document.getElementById('validVotesInput').value = 2;
+            document.getElementById('refuseVotesInput').value = 6;
+            document.getElementById('mintPriceInput').value = 1000;
+            document.getElementById('stakeYesInput').value = 100;
+            document.getElementById('stakeNoInput').value = 300;
+            
+            updateProgress();
+            updateVotes();
+            updateStakes();
+        }
+        
+        function resetToDefaults() {
+            document.getElementById('stakersRequired').value = 22;
+            document.getElementById('stakers').value = 3;
+            document.getElementById('validVotesInput').value = 15;
+            document.getElementById('refuseVotesInput').value = 7;
+            document.getElementById('mintPriceInput').value = 1000;
+            document.getElementById('stakeYesInput').value = 1200;
+            document.getElementById('stakeNoInput').value = 300;
+            
+            updateProgress();
+            updateVotes();
+            updateStakes();
+        }
+        
+        // Initialize
+        updateProgress();
+        updateVotes();
+        updateStakes();
+    </script>
+</body>
+</html> 
