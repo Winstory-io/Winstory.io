@@ -36,8 +36,8 @@ export function computeValidationState(progress: {
 	const stakingOk = stakedAmount > mintPrice; // Must be greater than MINT price
 	const hybridScoreYes = Number(hybridResult.scoreYes) / SCALE;
 	const hybridScoreNo = Number(hybridResult.scoreNo) / SCALE;
-	const hybridRatio = hybridScoreNo > 0 ? hybridScoreYes / hybridScoreNo : hybridScoreYes;
-	const ratioOk = hybridRatio >= 2.0; // Hybrid 50/50 ratio must be >= 2:1
+	// Fix: Use same logic as moderation engine
+	const ratioOk = (hybridScoreYes >= (hybridScoreNo * 2.0)) || (hybridScoreNo >= (hybridScoreYes * 2.0));
 	const majorityValid = hybridResult.status === ModerationStatus.VALIDATED || 
 						  (hybridResult.status === ModerationStatus.PENDING_REQUIREMENTS && hybridScoreYes > hybridScoreNo);
 	
@@ -50,7 +50,7 @@ export function computeValidationState(progress: {
 		majorityValid, 
 		allOk,
 		hybridResult,
-		hybridRatio: hybridRatio.toFixed(2),
+		hybridRatio: hybridScoreNo > 0 ? (hybridScoreYes / hybridScoreNo).toFixed(2) : "∞",
 		hybridScoreYes: hybridScoreYes.toFixed(3),
 		hybridScoreNo: hybridScoreNo.toFixed(3)
 	};

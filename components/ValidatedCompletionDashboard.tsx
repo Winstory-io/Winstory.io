@@ -170,14 +170,8 @@ export default function ValidatedCompletionDashboard({
     // Hybrid ratio calculation for display
     const hybridScoreYes = Number(hybridResult.scoreYes) / SCALE;
     const hybridScoreNo = Number(hybridResult.scoreNo) / SCALE;
-    const hybridRatio = hybridScoreNo > 0 ? hybridScoreYes / hybridScoreNo : hybridScoreYes;
-    const hybridRatioReverse = hybridScoreYes > 0 ? hybridScoreNo / hybridScoreYes : hybridScoreNo;
-    
-    // Corrected hybrid ratio logic - handle 0 refusés case properly and bidirectional ratio
-    const hasSufficientRatio = refuseVotes === 0 
-      ? validVotes >= 2  // Si aucun refus, minimum 2 validés requis
-      : ((hybridScoreNo > 0 && hybridScoreYes / hybridScoreNo >= 2) || 
-         (hybridScoreYes > 0 && hybridScoreNo / hybridScoreYes >= 2)); // Ratio hybride ≥ 2:1 dans les deux directions
+    // Fix: Use same logic as moderation engine instead of division-based calculation
+    const ratioOk = (hybridScoreYes >= (hybridScoreNo * 2.0)) || (hybridScoreNo >= (hybridScoreYes * 2.0)); // Hybrid 50/50 ratio must be >= 2:1 in either direction
     
     // Vote can close based on hybrid evaluation
     const voteCanClose = hybridResult.status === ModerationStatus.VALIDATED || 
@@ -190,7 +184,7 @@ export default function ValidatedCompletionDashboard({
     const voteContinues = requirementsMet && (hybridResult.status === ModerationStatus.EN_COURS);
     
     // Determine completion status - ALL conditions must be met for validation
-    const allConditionsMet = minVotesOk && stakingOk && hasSufficientRatio;
+    const allConditionsMet = minVotesOk && stakingOk && ratioOk;
     const allValidated = allConditionsMet && majorityValidates;
     const isRefused = allConditionsMet && majorityRefuses;
     
@@ -212,8 +206,8 @@ export default function ValidatedCompletionDashboard({
       validVotes,
       refuseVotes,
       numModerators,
-      majorityRatio: hybridRatio,
-      hasSufficientRatio,
+      majorityRatio: hybridScoreNo > 0 ? (hybridScoreYes / hybridScoreNo).toFixed(2) : "∞",
+      hasSufficientRatio: ratioOk,
       majorityCount: Math.max(refuseVotes, validVotes),
       minorityCount: Math.min(refuseVotes, validVotes),
       hybridResult, // Expose hybrid results for debugging
