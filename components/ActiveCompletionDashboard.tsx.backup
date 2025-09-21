@@ -1,0 +1,281 @@
+"use client";
+
+import { useEffect, useMemo, useState } from 'react';
+import { useActiveAccount } from 'thirdweb/react';
+import { useRouter } from 'next/navigation';
+import { evaluateModeration, ModerationStatus } from '@/lib/moderation-engine';
+import RadarChart from './RadarChart';
+
+export const MIN_REQUIRED_VOTES = 22;
+const SCALE = 1000000000000000000; // 1e18 for WINC precision
+
+export function computeValidationState(progress: { 
+	validVotes: number; 
+	refuseVotes: number; 
+	totalVotes: number; 
+	stakedAmount: number; 
+	mintPrice: number;
+	stakeYes?: number;
+	stakeNo?: number;
+}) {
+	const { validVotes, refuseVotes, totalVotes, stakedAmount, mintPrice, stakeYes = 0, stakeNo = 0 } = progress;
+	
+	// Use the hybrid moderation engine for intrinsic validation
+	const hybridResult = evaluateModeration(
+		validVotes, // votesYes
+		refuseVotes, // votesNo  
+		BigInt(Math.floor(stakeYes * SCALE)), // stakeYes in WINC (scaled)
+		BigInt(Math.floor(stakeNo * SCALE)), // stakeNo in WINC (scaled)
+		mintPrice, // mintPriceUSDC
+		Date.now(), // currentTimestamp
+		Date.now() + 7 * 24 * 3600 * 1000, // voteWindowEnd (7 days)
+		BigInt(SCALE) // wincPerUSDC (1 WINC = 1 USDC)
+	);
+	
+	// Extract hybrid validation results
+	const votesOk = totalVotes >= MIN_REQUIRED_VOTES;
+	const stakingOk = stakedAmount > mintPrice; // Must be greater than MINT price
+	const hybridScoreYes = Number(hybridResult.scoreYes) / SCALE;
+	const hybridScoreNo = Number(hybridResult.scoreNo) / SCALE;
+	const hybridRatio = hybridScoreNo > 0 ? hybridScoreYes / hybridScoreNo : hybridScoreYes;
+	const hybridRatioReverse = hybridScoreYes > 0 ? hybridScoreNo / hybridScoreYes : hybridScoreNo;
+	const ratioOk = (hybridRatio >= 2.0) || (hybridRatioReverse >= 2.0); // Hybrid 50/50 ratio must be >= 2:1 in either direction
+	const majorityValid = hybridResult.status === ModerationStatus.VALIDATED || 
+						  (hybridResult.status === ModerationStatus.PENDING_REQUIREMENTS && hybridScoreYes > hybridScoreNo);
+	
+	const allOk = hybridResult.status === ModerationStatus.VALIDATED;
+	
+	return { 
+		votesOk, 
+		stakingOk, 
+		ratioOk, 
+		majorityValid, 
+		allOk,
+		hybridResult,
+		hybridRatio: hybridRatio.toFixed(2),
+		hybridScoreYes: hybridScoreYes.toFixed(3),
+		hybridScoreNo: hybridScoreNo.toFixed(3)
+	};
+}
+
+interface Requirement {
+	label: string;
+	ok: boolean;
+}
+
+interface CompletionProgress {
+	validVotes: number;
+	refuseVotes: number;
+	totalVotes: number;
+	stakedAmount: number;
+	mintPrice: number;
+	stakeYes?: number;
+	stakeNo?: number;
+}
+
+interface CompletionLike {
+	id: string;
+	campaignTitle: string;
+	completionTitle: string;
+	status: 'in_moderation' | 'validated' | 'refused' | null;
+	progress?: CompletionProgress;
+}
+
+function RequirementItem({ label, ok }: Requirement) {
+	return (
+		<div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+			<div style={{ width: 22, height: 22, borderRadius: 999, background: ok ? '#18C964' : '#444', border: `2px solid ${ok ? '#18C964' : '#FF3B30'}` }} />
+			<span style={{ color: ok ? '#18C964' : '#FFD600', fontSize: 18 }}>{label}</span>
+		</div>
+	);
+}
+
+interface ModeratorScore {
+	stakerId: string;
+	stakerName: string;
+	score: number;
+	stakedAmount: number;
+}
+
+interface ActiveCompletionDashboardProps {
+	devCompletionData?: {
+		moderatorScores?: ModeratorScore[];
+		ranking?: number;
+		totalCompletions?: number;
+		stakedAmount?: number;
+		mintPrice?: number;
+		isTopThree?: boolean;
+		campaignEndTime?: number;
+	};
+}
+
+export default function ActiveCompletionDashboard({ devCompletionData }: ActiveCompletionDashboardProps) {
+	const account = useActiveAccount();
+	const router = useRouter();
+	const [completion, setCompletion] = useState<CompletionLike | null>(null);
+
+	useEffect(() => {
+		if (account && devCompletionData) {
+			// Use dynamic data from dev controls
+			const moderators = devCompletionData.moderatorScores || [];
+			const validVotes = moderators.filter(m => m.score > 0).length;
+			const refuseVotes = moderators.filter(m => m.score === 0).length;
+			const totalVotes = moderators.length;
+			
+			// Calculate stakes based on moderators
+			const stakeYes = moderators
+				.filter(m => m.score > 0)
+				.reduce((sum, m) => sum + m.stakedAmount, 0);
+			const stakeNo = moderators
+				.filter(m => m.score === 0)
+				.reduce((sum, m) => sum + m.stakedAmount, 0);
+			
+			const dynamicCompletion: CompletionLike = {
+				id: 'COMP_DYNAMIC_001',
+				campaignTitle: 'Amazing Brand Campaign',
+				completionTitle: 'My Creative Completion',
+				status: 'in_moderation',
+				progress: {
+					validVotes,
+					refuseVotes,
+					totalVotes,
+					stakedAmount: devCompletionData.stakedAmount || (stakeYes + stakeNo),
+					mintPrice: devCompletionData.mintPrice || 100,
+					stakeYes,
+					stakeNo
+				}
+			};
+			
+			setCompletion(dynamicCompletion);
+		}
+	}, [account, devCompletionData]);
+
+	const stats = useMemo(() => {
+		if (!completion || !completion.progress) return null;
+		const { validVotes, refuseVotes, totalVotes } = completion.progress;
+		const computed = computeValidationState(completion.progress);
+		const requirements: Requirement[] = [
+			{ label: `Minimum ${MIN_REQUIRED_VOTES} Stakers moderations votes`, ok: computed.votesOk },
+			{ label: `Pool Staking by Moderators > Completion Price $`, ok: computed.stakingOk },
+			{ label: `Hybrid (Majority / Minority) ≥ 2`, ok: computed.ratioOk },
+		];
+		let title = 'Completion Moderation in progress';
+		if (computed.allOk) title = 'Moderators validated and scored your Completion !';
+		else if (computed.hybridResult.status === 'REJECTED') title = 'Moderators refused your Completion';
+		return { requirements, title, validVotes, refuseVotes, totalVotes, computed };
+	}, [completion]);
+
+	// Use dynamic moderator data from dev controls - MUST be before any conditional returns
+	const dynamicModerators = useMemo(() => {
+		// Use real moderator data from dev controls if available
+		if (devCompletionData?.moderatorScores) {
+			return devCompletionData.moderatorScores;
+		}
+		
+		// Fallback to empty array if no data
+		return [];
+	}, [devCompletionData]);
+
+	const handleGoToOpenCampaigns = () => {
+		router.push('/completion');
+	};
+
+	// No active completion
+	if (!completion) {
+		return (
+			<div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 32, paddingTop: 80 }}>
+				<h2 style={{ color: '#FFFFFF', fontSize: 36, fontWeight: 800, textAlign: 'center', margin: 0 }}>No completion in progress.</h2>
+				<p style={{ color: '#C0C0C0', fontSize: 20, textAlign: 'center', margin: 0 }}>Activate your creativity !</p>
+				<button 
+					onClick={handleGoToOpenCampaigns}
+					style={{ 
+						background: 'linear-gradient(90deg, #FFD600, #8F6B00)', 
+						color: '#000', 
+						borderRadius: 12, 
+						padding: '16px 32px', 
+						fontWeight: 800, 
+						fontSize: 18, 
+						border: 'none',
+						cursor: 'pointer',
+						textDecoration: 'none',
+						transition: 'transform 0.2s ease'
+					}}
+					onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+					onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+				>
+					Go to Open Campaigns
+				</button>
+			</div>
+		);
+	}
+
+	// Completion in moderation with RadarChart
+	return (
+		<div style={{ width: '100%', maxWidth: 1200 }}>
+			<h2 style={{ 
+				color: stats?.computed.hybridResult.status === 'REJECTED' ? '#FF3B30' : '#FFD600', 
+				fontSize: 40, 
+				fontWeight: 900, 
+				textAlign: 'center', 
+				marginBottom: 8 
+			}}>
+				{stats?.title}
+			</h2>
+			<p style={{ color: '#C0C0C0', textAlign: 'center', marginBottom: 20 }}>
+				{completion.campaignTitle}
+			</p>
+
+			<div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: 24 }}>
+				<div style={{ color: '#FFD600', justifySelf: 'start' }}>
+					<div style={{ fontSize: 20, fontWeight: 800, marginBottom: 10 }}>
+						Completion Moderation<br/>by {stats?.totalVotes || 0} Stakers
+					</div>
+					<div style={{ color: '#18C964', fontSize: 18, fontWeight: 700 }}>
+						{stats?.validVotes || 0} Validated
+					</div>
+					<div style={{ color: '#FF3B30', fontSize: 18, fontWeight: 700, marginTop: 6 }}>
+						{stats?.refuseVotes || 0} Refused
+					</div>
+				</div>
+
+				<RadarChart 
+					moderatorScores={dynamicModerators}
+					size={400}
+					showLabels={true}
+				/>
+
+				<div style={{ justifySelf: 'end' }}>
+					<div style={{ color: '#FFFFFF', fontSize: 20, fontWeight: 800, marginBottom: 12 }}>
+						3 Requirements for Completion availability
+					</div>
+					<div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+						{stats?.requirements.map((r) => (<RequirementItem key={r.label} label={r.label} ok={r.ok} />))}
+					</div>
+				</div>
+			</div>
+
+			{stats && stats.computed.hybridResult.status === 'REJECTED' && (
+				<p style={{ marginTop: 20, textAlign: 'center', color: '#FF3B30', fontSize: 16 }}>
+					Unfortunately, your completion has been rejected by the Stakers moderators. It was deemed that the content did not comply with the moderation rules.
+				</p>
+			)}
+
+			{stats && stats.computed.hybridResult.status === 'VALIDATED' && (
+				<div style={{ display: 'flex', justifyContent: 'center', marginTop: 24 }}>
+					<button style={{ 
+						background: 'linear-gradient(90deg, #18C964, #0EA75A)', 
+						color: '#000', 
+						borderRadius: 14, 
+						padding: '12px 20px', 
+						fontWeight: 800, 
+						border: 'none',
+						cursor: 'pointer',
+						textDecoration: 'none' 
+					}}>
+						View Completion Results
+					</button>
+				</div>
+			)}
+		</div>
+	);
+} 

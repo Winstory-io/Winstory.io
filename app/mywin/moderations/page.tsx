@@ -378,7 +378,13 @@ export default function MyModerationsPage() {
             color: totalVotes >= 22 ? '#18C964' : '#FFD600', 
             fontSize: 18 
           }}>
-            You moderate ({data.userVote === 'valid' ? 'Valid' : data.userVote === 'refuse' ? 'Refuse' : 'Not voted'}) with {totalVotes} others Moderators / 22
+            You moderate ({data.userVote === 'valid' ? (
+              <span style={{ color: '#00FF00' }}>Valid</span>
+            ) : data.userVote === 'refuse' ? (
+              <span style={{ color: '#FF0000' }}>Refuse</span>
+            ) : (
+              <span style={{ color: '#FFD600' }}>Not voted</span>
+            )}) with {totalVotes} others Moderators / 22
           </span>
         </div>
       </div>
@@ -387,7 +393,9 @@ export default function MyModerationsPage() {
 
   // Fonction pour rendre la ligne de score (completion seulement)
   const renderScoreLine = (data: CompletionModerationData) => {
-    const userScorePosition = (data.userScore / 100) * 100;
+    // Forcer le score à 0 si le modérateur a refusé
+    const actualUserScore = data.userVote === 'refuse' ? 0 : data.userScore;
+    const userScorePosition = (actualUserScore / 100) * 100;
     const averageScorePosition = (data.averageScore / 100) * 100;
 
     const getScoreColor = (score: number) => {
@@ -413,10 +421,10 @@ export default function MyModerationsPage() {
             0
           </div>
 
-          {/* 100 vert à droite */}
+          {/* 100 vert à droite - décalé davantage vers la droite */}
           <div style={{
             position: 'absolute',
-            right: '0',
+            right: '-25px', // Décalé davantage vers la droite
             top: '50%',
             transform: 'translateY(-50%)',
             color: '#00FF00',
@@ -435,43 +443,43 @@ export default function MyModerationsPage() {
             position: 'relative',
             margin: '0 20px'
           }}>
-            {/* Marqueur de votre score */}
+            {/* Marqueur de votre score - monté vers le haut */}
             <div style={{
               position: 'absolute',
               left: `${userScorePosition}%`,
-              top: '-20px',
+              top: '-40px', // Monté davantage vers le haut
               transform: 'translateX(-50%)',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center'
             }}>
               <div style={{
-                background: getScoreColor(data.userScore),
+                background: getScoreColor(actualUserScore),
                 color: '#000',
                 padding: '4px 8px',
                 borderRadius: '6px',
                 fontSize: '13px',
                 fontWeight: 700,
-                marginBottom: '4px',
+                marginBottom: '6px',
                 whiteSpace: 'nowrap',
                 boxShadow: '0 2px 8px rgba(0,0,0,0.3)'
               }}>
-                Your Score: {data.userScore}
+                Your Score: {actualUserScore}
               </div>
               <div style={{
                 width: '0',
                 height: '0',
                 borderLeft: '6px solid transparent',
                 borderRight: '6px solid transparent',
-                borderTop: `6px solid ${getScoreColor(data.userScore)}`,
+                borderTop: `6px solid ${getScoreColor(actualUserScore)}`,
               }} />
             </div>
 
-            {/* Marqueur du score moyen */}
+            {/* Marqueur du score moyen - espacé en hauteur */}
             <div style={{
               position: 'absolute',
               left: `${averageScorePosition}%`,
-              top: '16px',
+              top: '26px', // Plus d'espace en hauteur
               transform: 'translateX(-50%)',
               display: 'flex',
               flexDirection: 'column',
@@ -483,7 +491,7 @@ export default function MyModerationsPage() {
                 borderLeft: '6px solid transparent',
                 borderRight: '6px solid transparent',
                 borderBottom: `6px solid ${getScoreColor(data.averageScore)}`,
-                marginBottom: '4px'
+                marginBottom: '6px' // Plus d'espace entre la flèche et le texte
               }} />
               <div style={{
                 background: getScoreColor(data.averageScore),

@@ -6,6 +6,7 @@ interface ModeratorScore {
   stakerId: string;
   stakerName: string;
   score: number; // 0-100
+  stakedAmount: number; // Amount staked by this moderator in WINC
 }
 
 interface RadarChartModalProps {

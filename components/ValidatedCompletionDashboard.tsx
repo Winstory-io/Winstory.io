@@ -171,11 +171,13 @@ export default function ValidatedCompletionDashboard({
     const hybridScoreYes = Number(hybridResult.scoreYes) / SCALE;
     const hybridScoreNo = Number(hybridResult.scoreNo) / SCALE;
     const hybridRatio = hybridScoreNo > 0 ? hybridScoreYes / hybridScoreNo : hybridScoreYes;
+    const hybridRatioReverse = hybridScoreYes > 0 ? hybridScoreNo / hybridScoreYes : hybridScoreNo;
     
-    // Corrected hybrid ratio logic - handle 0 refusés case properly
+    // Corrected hybrid ratio logic - handle 0 refusés case properly and bidirectional ratio
     const hasSufficientRatio = refuseVotes === 0 
       ? validVotes >= 2  // Si aucun refus, minimum 2 validés requis
-      : (hybridScoreNo > 0 ? (hybridScoreYes / hybridScoreNo >= 2) : false); // Sinon ratio hybride ≥ 2:1
+      : ((hybridScoreNo > 0 && hybridScoreYes / hybridScoreNo >= 2) || 
+         (hybridScoreYes > 0 && hybridScoreNo / hybridScoreYes >= 2)); // Ratio hybride ≥ 2:1 dans les deux directions
     
     // Vote can close based on hybrid evaluation
     const voteCanClose = hybridResult.status === ModerationStatus.VALIDATED || 
