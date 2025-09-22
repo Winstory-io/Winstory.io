@@ -133,43 +133,49 @@ export default function MyModerationsPage() {
 
   // Fonction pour rendre un cercle de modération stylisé
   const renderModerationCircle = (data: ModerationData) => {
-    const validPercentage = data.totalModerators > 0 ? (data.validatedVotes / data.totalModerators) * 100 : 0;
-    const refusedPercentage = data.totalModerators > 0 ? (data.refusedVotes / data.totalModerators) * 100 : 0;
-    const remainingPercentage = 100 - validPercentage - refusedPercentage;
+    // Calculs des pourcentages basés sur les votes réels
+    const totalVotes = data.validatedVotes + data.refusedVotes;
+    const validPct = totalVotes > 0 ? (data.validatedVotes / totalVotes) * 100 : 0;
+    const refusePct = totalVotes > 0 ? (data.refusedVotes / totalVotes) * 100 : 0;
 
-    const radius = 140; // Agrandi de 110 à 140
-    const strokeWidth = 16; // Légèrement plus épais aussi
-    const normalizedRadius = radius - strokeWidth * 0.5;
-    const circumference = normalizedRadius * 2 * Math.PI;
+    const size = 280; // Taille du cercle
+    const stroke = 40; // Épaisseur du trait
+    const radius = (size - stroke) / 2;
+    const circumference = 2 * Math.PI * radius;
+    
+    // Ajouter un petit espacement entre les segments pour éviter les angles étranges
+    const gap = totalVotes > 0 ? Math.min(8, circumference * 0.02) : 0;
+    const validLen = totalVotes > 0 ? Math.max(0, (validPct / 100) * circumference - gap/2) : 0;
+    const refuseLen = totalVotes > 0 ? Math.max(0, (refusePct / 100) * circumference - gap/2) : 0;
 
-    // Calculs pour les segments
-    const validOffset = circumference * (1 - validPercentage / 100);
-    const refusedOffset = circumference * (1 - refusedPercentage / 100);
+    // Calculer les positions des segments avec espacement
+    const validOffset = 0;
+    const refuseOffset = -(validLen + gap);
 
     // Déterminer les propriétés de la bulle de vote
     const getVoteBubbleProps = () => {
       switch (data.userVote) {
         case 'valid':
           return {
-            background: 'rgba(0, 255, 0, 0.15)',
-            border: '2px solid #00FF00',
-            color: '#00FF00',
+            background: 'rgba(34, 197, 94, 0.15)',
+            border: '2px solid #22C55E',
+            color: '#22C55E',
             text: 'Valid',
             emoji: '✅'
           };
         case 'refuse':
           return {
-            background: 'rgba(255, 0, 0, 0.15)',
-            border: '2px solid #FF0000',
-            color: '#FF0000',
+            background: 'rgba(239, 68, 68, 0.15)',
+            border: '2px solid #EF4444',
+            color: '#EF4444',
             text: 'Refuse',
             emoji: '❌'
           };
         default:
           return {
-            background: 'rgba(128, 128, 128, 0.15)',
-            border: '2px solid #888',
-            color: '#888',
+            background: 'rgba(156, 163, 175, 0.15)',
+            border: '2px solid #9CA3AF',
+            color: '#9CA3AF',
             text: 'Not voted',
             emoji: '⏳'
           };
@@ -185,91 +191,175 @@ export default function MyModerationsPage() {
           background: bubbleProps.background,
           border: bubbleProps.border,
           borderRadius: '20px',
-          padding: '8px 16px',
-          marginBottom: '20px',
+          padding: '10px 18px',
+          marginBottom: '24px',
           display: 'flex',
           alignItems: 'center',
-          gap: '8px',
+          gap: '10px',
           backdropFilter: 'blur(10px)',
           boxShadow: `0 4px 20px ${bubbleProps.color}33`
         }}>
-          <span style={{ fontSize: '16px' }}>{bubbleProps.emoji}</span>
+          <span style={{ fontSize: '18px' }}>{bubbleProps.emoji}</span>
           <span style={{ 
             color: bubbleProps.color, 
-            fontSize: '14px', 
+            fontSize: '15px', 
             fontWeight: 700 
           }}>
             Your Vote: {bubbleProps.text}
           </span>
         </div>
 
-        {/* Cercle de modération */}
-        <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <svg
-            height={radius * 2}
-            width={radius * 2}
-            style={{ transform: 'rotate(-90deg)' }}
-          >
-            {/* Cercle de base (gris) */}
-            <circle
-              stroke="#333"
-              fill="transparent"
-              strokeWidth={strokeWidth}
-              r={normalizedRadius}
-              cx={radius}
-              cy={radius}
-            />
-            
-            {/* Segment vert (validé) */}
-            {validPercentage > 0 && (
-              <circle
-                stroke="#00FF00"
-                fill="transparent"
-                strokeWidth={strokeWidth}
-                strokeDasharray={`${validPercentage / 100 * circumference} ${circumference}`}
-                strokeDashoffset={0}
-                r={normalizedRadius}
-                cx={radius}
-                cy={radius}
-                style={{ transition: 'stroke-dasharray 0.5s ease' }}
+        {/* Cercle de modération moderne */}
+        <div style={{ width: size, height: size, position: 'relative' }}>
+          <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+            <defs>
+              {/* Gradients modernes pour les votes validés */}
+              <linearGradient id="validGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#22C55E" />
+                <stop offset="50%" stopColor="#16A34A" />
+                <stop offset="100%" stopColor="#15803D" />
+              </linearGradient>
+              {/* Gradients modernes pour les votes refusés */}
+              <linearGradient id="refuseGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#EF4444" />
+                <stop offset="50%" stopColor="#DC2626" />
+                <stop offset="100%" stopColor="#B91C1C" />
+              </linearGradient>
+              {/* Gradient pour le fond */}
+              <linearGradient id="backgroundGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#374151" />
+                <stop offset="100%" stopColor="#1F2937" />
+              </linearGradient>
+              {/* Effets de glow */}
+              <filter id="glow">
+                <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                <feMerge> 
+                  <feMergeNode in="coloredBlur"/>
+                  <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+              </filter>
+              <filter id="shadow">
+                <feDropShadow dx="0" dy="0" stdDeviation="4" floodColor="rgba(0,0,0,0.3)"/>
+              </filter>
+            </defs>
+            <g transform={`rotate(-90 ${size / 2} ${size / 2})`}>
+              {/* Cercle de fond avec effet moderne */}
+              <circle 
+                cx={size / 2} 
+                cy={size / 2} 
+                r={radius} 
+                fill="none" 
+                stroke="url(#backgroundGradient)" 
+                strokeWidth={stroke}
+                opacity="0.15"
               />
-            )}
-            
-            {/* Segment rouge (refusé) */}
-            {refusedPercentage > 0 && (
-              <circle
-                stroke="#FF0000"
-                fill="transparent"
-                strokeWidth={strokeWidth}
-                strokeDasharray={`${refusedPercentage / 100 * circumference} ${circumference}`}
-                strokeDashoffset={-validPercentage / 100 * circumference}
-                r={normalizedRadius}
-                cx={radius}
-                cy={radius}
-                style={{ transition: 'stroke-dasharray 0.5s ease' }}
-              />
-            )}
+              
+              {/* Segment des votes validés */}
+              {validLen > 0 && (
+                <circle 
+                  cx={size / 2} 
+                  cy={size / 2} 
+                  r={radius} 
+                  fill="none" 
+                  stroke="url(#validGradient)" 
+                  strokeWidth={stroke} 
+                  strokeDasharray={`${validLen} ${circumference - validLen}`} 
+                  strokeDashoffset={validOffset}
+                  strokeLinecap="round"
+                  filter="url(#glow)"
+                  style={{
+                    transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+                    transformOrigin: 'center'
+                  }}
+                />
+              )}
+              
+              {/* Segment des votes refusés */}
+              {refuseLen > 0 && (
+                <circle 
+                  cx={size / 2} 
+                  cy={size / 2} 
+                  r={radius} 
+                  fill="none" 
+                  stroke="url(#refuseGradient)" 
+                  strokeWidth={stroke} 
+                  strokeDasharray={`${refuseLen} ${circumference - refuseLen}`} 
+                  strokeDashoffset={refuseOffset}
+                  strokeLinecap="round"
+                  filter="url(#glow)"
+                  style={{
+                    transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+                    transformOrigin: 'center'
+                  }}
+                />
+              )}
+            </g>
           </svg>
           
-          {/* Contenu central */}
+          {/* Centre du donut avec informations */}
           <div style={{
             position: 'absolute',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
             textAlign: 'center',
-            color: '#FFD600',
-            fontSize: '13px', // Légèrement plus grand
-            fontWeight: 600
+            pointerEvents: 'none'
           }}>
-            <div style={{ fontSize: '16px', marginBottom: '2px' }}>Personal Staking</div>
-            <div style={{ fontSize: '20px', fontWeight: 800, color: '#FFD600' }}>{data.personalStaking}</div>
-            <div style={{ fontSize: '14px', marginBottom: '4px' }}>Pool Staking</div>
-            <div style={{ fontSize: '18px', fontWeight: 700 }}>{data.poolStaking}</div>
-            <div style={{ fontSize: '12px', color: '#999' }}>
+            {/* Nombre total de votes avec couleur dynamique */}
+            <div style={{
+              fontSize: '36px',
+              fontWeight: '900',
+              color: totalVotes > 0 ? (validPct > refusePct ? '#22C55E' : validPct < refusePct ? '#EF4444' : '#FFD600') : '#666',
+              textShadow: '0 0 10px rgba(0,0,0,0.5)',
+              marginBottom: '4px'
+            }}>
+              {totalVotes}
+            </div>
+            <div style={{
+              fontSize: '12px',
+              color: '#9CA3AF',
+              fontWeight: '600',
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px',
+              marginBottom: '8px'
+            }}>
+              Total Votes
+            </div>
+            
+            {/* Informations de staking */}
+            <div style={{
+              fontSize: '11px',
+              color: '#FFD600',
+              fontWeight: 600,
+              marginBottom: '2px'
+            }}>
+              Personal: {data.personalStaking}
+            </div>
+            <div style={{
+              fontSize: '13px',
+              color: '#FFFFFF',
+              fontWeight: 700,
+              marginBottom: '2px'
+            }}>
+              Pool: {data.poolStaking}
+            </div>
+            <div style={{
+              fontSize: '10px',
+              color: '#9CA3AF'
+            }}>
               {data.personalStakingPercentage}%
             </div>
+            
+            {/* Pourcentages si votes présents */}
+            {totalVotes > 0 && (
+              <div style={{
+                fontSize: '10px',
+                color: '#6B7280',
+                marginTop: '6px'
+              }}>
+                {validPct.toFixed(0)}% / {refusePct.toFixed(0)}%
+              </div>
+            )}
           </div>
         </div>
       </div>
