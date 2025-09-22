@@ -104,6 +104,244 @@ export default function MyModerationsPage() {
     }
   ]);
 
+  // Données mock pour l'historique des modérations (finalisées)
+  type FinalDecision = 'valid' | 'refuse';
+  interface HistoryModerationData extends BaseModerationData {
+    finalizedAt: string; // ISO date-time
+    finalDecision: FinalDecision; // majorité hybride finale
+    campaignName: string;
+  }
+  const [historyModerations, setHistoryModerations] = useState<HistoryModerationData[]>([]); // Commencer vide
+  const [initialHistoryData] = useState<HistoryModerationData[]>([
+    {
+      id: 'HIST_INIT_101',
+      type: 'initial',
+      mintPrice: 120,
+      walletAddress: '0x9B28EP...75A0G9BR',
+      personalStaking: 180,
+      poolStaking: 2200,
+      personalStakingPercentage: 8.2,
+      validatedVotes: 16,
+      refusedVotes: 6,
+      totalModerators: 22,
+      userVote: 'valid',
+      conditions: { poolStakingExceedsMint: true, hybridRatioMet: true, moderatorThresholdMet: true },
+      finalizedAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(),
+      finalDecision: 'valid',
+      campaignName: 'Campaign A'
+    },
+    {
+      id: 'HIST_COMP_202',
+      type: 'completion',
+      mintPrice: 95,
+      walletAddress: '0x7A15BC...23F8D1AC',
+      personalStaking: 120,
+      poolStaking: 1400,
+      personalStakingPercentage: 8.6,
+      validatedVotes: 7,
+      refusedVotes: 12,
+      totalModerators: 22,
+      userVote: 'valid',
+      conditions: { poolStakingExceedsMint: true, hybridRatioMet: true, moderatorThresholdMet: true },
+      finalizedAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5).toISOString(),
+      finalDecision: 'refuse',
+      campaignName: 'Campaign B'
+    },
+    {
+      id: 'HIST_INIT_303',
+      type: 'initial',
+      mintPrice: 160,
+      walletAddress: '0x1111AA...2222BB',
+      personalStaking: 90,
+      poolStaking: 800,
+      personalStakingPercentage: 11.3,
+      validatedVotes: 9,
+      refusedVotes: 13,
+      totalModerators: 22,
+      userVote: 'refuse',
+      conditions: { poolStakingExceedsMint: false, hybridRatioMet: true, moderatorThresholdMet: true },
+      finalizedAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 8).toISOString(),
+      finalDecision: 'refuse',
+      campaignName: 'Campaign C'
+    },
+    {
+      id: 'HIST_COMP_404',
+      type: 'completion',
+      mintPrice: 70,
+      walletAddress: '0x3333CC...4444DD',
+      personalStaking: 140,
+      poolStaking: 2100,
+      personalStakingPercentage: 6.6,
+      validatedVotes: 18,
+      refusedVotes: 4,
+      totalModerators: 22,
+      userVote: 'refuse',
+      conditions: { poolStakingExceedsMint: true, hybridRatioMet: true, moderatorThresholdMet: true },
+      finalizedAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 12).toISOString(),
+      finalDecision: 'valid',
+      campaignName: 'Campaign D'
+    }
+  ]);
+
+  // DevControls pour l'onglet History uniquement
+  const [selectedHistoryId, setSelectedHistoryId] = useState<string | null>(null);
+  const HistoryDevControls = () => {
+    // Initialiser la sélection
+    useEffect(() => {
+      if (!selectedHistoryId && historyModerations.length > 0) {
+        setSelectedHistoryId(historyModerations[0].id);
+      }
+    }, [historyModerations.length]);
+
+    const addItem = (preset: Partial<HistoryModerationData>) => {
+      const base: HistoryModerationData = {
+        id: `HIST_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        type: 'initial',
+        mintPrice: 100,
+        walletAddress: '0xFAKE...WALLET',
+        personalStaking: 120,
+        poolStaking: 1500,
+        personalStakingPercentage: 8.0,
+        validatedVotes: 12,
+        refusedVotes: 10,
+        totalModerators: 22,
+        userVote: 'valid',
+        conditions: { poolStakingExceedsMint: true, hybridRatioMet: true, moderatorThresholdMet: true },
+        finalizedAt: new Date().toISOString(),
+        finalDecision: 'valid',
+        campaignName: 'Campaign X'
+      };
+      
+      // Appliquer le preset et ajuster les votes pour la cohérence si nécessaire
+      const item = { ...base, ...preset } as HistoryModerationData;
+      
+      // Si on force une finalDecision, ajuster les votes pour être cohérent
+      if (preset.finalDecision) {
+        if (preset.finalDecision === 'valid') {
+          item.validatedVotes = Math.max(item.validatedVotes, item.refusedVotes + 1);
+        } else {
+          item.refusedVotes = Math.max(item.refusedVotes, item.validatedVotes + 1);
+        }
+      }
+      
+      setHistoryModerations((prev) => [item, ...prev]);
+    };
+
+    const clearAll = () => setHistoryModerations([]);
+    const resetToMock = () => setHistoryModerations(initialHistoryData);
+    const removeFirst = () => setHistoryModerations((prev) => prev.slice(1));
+    const shuffle = () => setHistoryModerations((prev) => {
+      const arr = [...prev];
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    });
+
+    // Form state pour édition détaillée
+    const selected = historyModerations.find(m => m.id === selectedHistoryId) || null;
+    const [form, setForm] = useState<Partial<HistoryModerationData>>({});
+    useEffect(() => {
+      if (selected) {
+        setForm({ ...selected });
+      }
+    }, [selectedHistoryId]);
+
+    const updateForm = (k: keyof HistoryModerationData, v: any) => setForm((f) => ({ ...f, [k]: v }));
+    const applyToSelected = () => {
+      if (!selected) return;
+      setHistoryModerations((prev) => prev.map(m => m.id === selected.id ? { ...m, ...form } as HistoryModerationData : m));
+    };
+    const applyToAll = () => {
+      setHistoryModerations((prev) => prev.map(m => ({ ...m, ...form } as HistoryModerationData)));
+    };
+
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div style={{ borderTop: '1px solid #333', paddingTop: 12, marginTop: 12 }}>
+          <strong style={{ color: '#FFD600', fontSize: 14, marginBottom: 10, display: 'block' }}>
+            🗂️ History Controls ({historyModerations.length} cards)
+          </strong>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            <button onClick={() => addItem({ finalDecision: 'valid', userVote: 'valid', validatedVotes: 15, refusedVotes: 7 })} style={{ background: '#18C964', color: '#000', border: 'none', borderRadius: 4, padding: '6px 8px', fontSize: 12, cursor: 'pointer', fontWeight: 700 }}>+ Add Win</button>
+            <button onClick={() => addItem({ finalDecision: 'refuse', userVote: 'valid', validatedVotes: 8, refusedVotes: 14 })} style={{ background: '#FF4D4D', color: '#fff', border: 'none', borderRadius: 4, padding: '6px 8px', fontSize: 12, cursor: 'pointer', fontWeight: 700 }}>+ Add Lose</button>
+            <button onClick={removeFirst} disabled={historyModerations.length === 0} style={{ background: historyModerations.length === 0 ? '#222' : '#AA1111', color: '#fff', border: 'none', borderRadius: 4, padding: '6px 8px', fontSize: 12, cursor: historyModerations.length === 0 ? 'not-allowed' : 'pointer', fontWeight: 700 }}>🗑️ Remove First</button>
+            <button onClick={clearAll} disabled={historyModerations.length === 0} style={{ background: historyModerations.length === 0 ? '#222' : '#661111', color: '#fff', border: 'none', borderRadius: 4, padding: '6px 8px', fontSize: 12, cursor: historyModerations.length === 0 ? 'not-allowed' : 'pointer', fontWeight: 700 }}>🗑️ Clear All</button>
+            <button onClick={shuffle} disabled={historyModerations.length < 2} style={{ background: historyModerations.length < 2 ? '#222' : '#333', color: '#FFD600', border: '1px solid #555', borderRadius: 4, padding: '6px 8px', fontSize: 12, cursor: historyModerations.length < 2 ? 'not-allowed' : 'pointer', fontWeight: 700 }}>🔀 Shuffle</button>
+            <button onClick={resetToMock} style={{ background: '#333', color: '#FFD600', border: '1px solid #555', borderRadius: 4, padding: '6px 8px', fontSize: 12, cursor: 'pointer', fontWeight: 700 }}>🔄 Reset to Mock</button>
+          </div>
+          {/* Edition détaillée */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8, marginTop: 12, textAlign: 'left' }}>
+            <div style={{ gridColumn: '1 / -1' }}>
+              <label style={{ color: '#C0C0C0', fontSize: 12 }}>Select card</label>
+              <select value={selectedHistoryId ?? ''} onChange={(e) => setSelectedHistoryId(e.target.value)} style={{ width: '100%', background: '#111', color: '#fff', border: '1px solid #333', borderRadius: 6, padding: 8 }}>
+                {historyModerations.map(m => (<option key={m.id} value={m.id}>{m.campaignName} — {m.id}</option>))}
+              </select>
+            </div>
+            <div>
+              <label style={{ color: '#C0C0C0', fontSize: 12 }}>Campaign</label>
+              <input value={String(form.campaignName ?? '')} onChange={(e) => updateForm('campaignName', e.target.value)} style={{ width: '100%', background: '#111', color: '#fff', border: '1px solid #333', borderRadius: 6, padding: 8 }} />
+            </div>
+            <div>
+              <label style={{ color: '#C0C0C0', fontSize: 12 }}>Type</label>
+              <select value={String(form.type ?? 'initial')} onChange={(e) => updateForm('type', e.target.value as any)} style={{ width: '100%', background: '#111', color: '#fff', border: '1px solid #333', borderRadius: 6, padding: 8 }}>
+                <option value="initial">Initial</option>
+                <option value="completion">Completion</option>
+              </select>
+            </div>
+            <div>
+              <label style={{ color: '#C0C0C0', fontSize: 12 }}>User vote</label>
+              <select value={String(form.userVote ?? 'valid')} onChange={(e) => updateForm('userVote', e.target.value as any)} style={{ width: '100%', background: '#111', color: '#fff', border: '1px solid #333', borderRadius: 6, padding: 8 }}>
+                <option value="valid">valid</option>
+                <option value="refuse">refuse</option>
+              </select>
+            </div>
+            <div>
+              <label style={{ color: '#C0C0C0', fontSize: 12 }}>Final decision</label>
+              <select value={String(form.finalDecision ?? 'valid')} onChange={(e) => updateForm('finalDecision', e.target.value as any)} style={{ width: '100%', background: '#111', color: '#fff', border: '1px solid #333', borderRadius: 6, padding: 8 }}>
+                <option value="valid">valid</option>
+                <option value="refuse">refuse</option>
+              </select>
+            </div>
+            <div>
+              <label style={{ color: '#C0C0C0', fontSize: 12 }}>Mint Price</label>
+              <input type="number" value={Number(form.mintPrice ?? 0)} onChange={(e) => updateForm('mintPrice', Number(e.target.value))} style={{ width: '100%', background: '#111', color: '#fff', border: '1px solid #333', borderRadius: 6, padding: 8 }} />
+            </div>
+            <div>
+              <label style={{ color: '#C0C0C0', fontSize: 12 }}>Personal staking</label>
+              <input type="number" value={Number(form.personalStaking ?? 0)} onChange={(e) => updateForm('personalStaking', Number(e.target.value))} style={{ width: '100%', background: '#111', color: '#fff', border: '1px solid #333', borderRadius: 6, padding: 8 }} />
+            </div>
+            <div>
+              <label style={{ color: '#C0C0C0', fontSize: 12 }}>Pool staking</label>
+              <input type="number" value={Number(form.poolStaking ?? 0)} onChange={(e) => updateForm('poolStaking', Number(e.target.value))} style={{ width: '100%', background: '#111', color: '#fff', border: '1px solid #333', borderRadius: 6, padding: 8 }} />
+            </div>
+            <div>
+              <label style={{ color: '#C0C0C0', fontSize: 12 }}>Validated votes</label>
+              <input type="number" value={Number(form.validatedVotes ?? 0)} onChange={(e) => updateForm('validatedVotes', Number(e.target.value))} style={{ width: '100%', background: '#111', color: '#fff', border: '1px solid #333', borderRadius: 6, padding: 8 }} />
+            </div>
+            <div>
+              <label style={{ color: '#C0C0C0', fontSize: 12 }}>Refused votes</label>
+              <input type="number" value={Number(form.refusedVotes ?? 0)} onChange={(e) => updateForm('refusedVotes', Number(e.target.value))} style={{ width: '100%', background: '#111', color: '#fff', border: '1px solid #333', borderRadius: 6, padding: 8 }} />
+            </div>
+            <div>
+              <label style={{ color: '#C0C0C0', fontSize: 12 }}>Total moderators</label>
+              <input type="number" value={Number(form.totalModerators ?? 22)} onChange={(e) => updateForm('totalModerators', Number(e.target.value))} style={{ width: '100%', background: '#111', color: '#fff', border: '1px solid #333', borderRadius: 6, padding: 8 }} />
+            </div>
+            <div style={{ gridColumn: '1 / -1' }}>
+              <label style={{ color: '#C0C0C0', fontSize: 12 }}>Finalized at</label>
+              <input type="datetime-local" value={selected && form.finalizedAt ? (() => { try { const date = new Date(form.finalizedAt as string); return isNaN(date.getTime()) ? '' : date.toISOString().slice(0, 16); } catch { return ''; } })() : ''} onChange={(e) => { try { const newDate = new Date(e.target.value); if (!isNaN(newDate.getTime())) { updateForm('finalizedAt', newDate.toISOString()); } } catch { } }} style={{ width: '100%', background: '#111', color: '#fff', border: '1px solid #333', borderRadius: 6, padding: 8 }} />
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
+            <button onClick={applyToSelected} disabled={!selected} style={{ background: !selected ? '#222' : '#18C964', color: !selected ? '#666' : '#000', border: 'none', borderRadius: 4, padding: '8px 10px', fontSize: 12, cursor: !selected ? 'not-allowed' : 'pointer', fontWeight: 800 }}>Apply to selected</button>
+            <button onClick={applyToAll} disabled={historyModerations.length === 0} style={{ background: historyModerations.length === 0 ? '#222' : '#FF9500', color: '#000', border: 'none', borderRadius: 4, padding: '8px 10px', fontSize: 12, cursor: historyModerations.length === 0 ? 'not-allowed' : 'pointer', fontWeight: 800 }}>Apply to all</button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   // Navigation du carrousel
   const nextModeration = () => {
     setCurrentModerationIndex((prev) => 
@@ -361,6 +599,142 @@ export default function MyModerationsPage() {
               </div>
             )}
           </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Rendu d'une carte d'historique (finalisée)
+  const renderHistoryCard = (data: HistoryModerationData) => {
+    const totalVotes = data.validatedVotes + data.refusedVotes;
+    
+    // Calculer la majorité basée sur les votes réels
+    const majoritySide: FinalDecision = data.validatedVotes > data.refusedVotes ? 'valid' : 'refuse';
+    
+    // Utiliser la finalDecision telle quelle (permet les cas incohérents via Dev Controls)
+    const finalDecision = data.finalDecision;
+    
+    // Le modérateur gagne s'il est dans la majorité (même vote que la décision finale)
+    const isWinForStaker = data.userVote === finalDecision;
+    
+    // Couleur de la bulle = vote personnel du modérateur
+    const voteBubbleColor = data.userVote === 'valid' ? '#18C964' : '#FF3333';
+    
+    // Couleur de la carte = victoire/défaite du modérateur (majorité/minorité)
+    const cardBorderColor = isWinForStaker ? '#18C964' : '#FF3333';
+    const cardGlow = isWinForStaker ? '0 0 24px rgba(24,201,100,0.25)' : '0 0 24px rgba(255,51,51,0.25)';
+    
+    // Debug: afficher les calculs
+    console.log('Debug moderation:', {
+      id: data.id,
+      userVote: data.userVote,
+      validatedVotes: data.validatedVotes,
+      refusedVotes: data.refusedVotes,
+      majoritySide,
+      originalFinalDecision: data.finalDecision,
+      correctedFinalDecision: finalDecision,
+      isWinForStaker
+    });
+
+
+
+    const date = new Date(data.finalizedAt);
+    const dateStr = `${date.toLocaleDateString()} ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+
+    return (
+      <div style={{
+        position: 'relative',
+        background: 'rgba(0,0,0,0.6)',
+        borderRadius: 20,
+        border: `2px solid ${cardBorderColor}`,
+        boxShadow: cardGlow,
+        padding: 20,
+        minWidth: 320,
+      }}>
+        {/* Good/Bad decision dans le coin supérieur droit */}
+        <div style={{
+          position: 'absolute',
+          top: 12,
+          right: 12,
+          color: isWinForStaker ? '#18C964' : '#FF3333',
+          fontWeight: 800,
+          fontSize: 11,
+          background: 'rgba(0,0,0,0.7)',
+          padding: '4px 8px',
+          borderRadius: 8,
+          border: `1px solid ${isWinForStaker ? '#18C964' : '#FF3333'}`,
+          backdropFilter: 'blur(4px)'
+        }}>
+          {isWinForStaker ? 'Good decision !' : 'Bad decision !'}
+        </div>
+        {/* Bulle de vote dans le coin supérieur gauche */}
+        <div style={{
+          position: 'absolute',
+          top: 8,
+          left: 8,
+          width: 32,
+          height: 32,
+          borderRadius: 999,
+          background: `${voteBubbleColor}22`,
+          border: `2px solid ${voteBubbleColor}`,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: voteBubbleColor,
+          fontWeight: 900,
+          zIndex: 10
+        }}>
+          {data.userVote === 'valid' ? '✓' : '✗'}
+        </div>
+        
+        {/* En-tête avec ID seulement */}
+        <div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', marginBottom: 12, marginTop: 20, padding: '0 8px', paddingLeft: 48 }}>
+          <div style={{ color: '#C0C0C0', fontSize: 12, fontWeight: 700 }}>ID: {data.id}</div>
+        </div>
+
+        <div style={{ height: 1, background: 'linear-gradient(90deg, rgba(255,214,0,0.7), rgba(255,255,255,0.2))', margin: '8px 0' }} />
+
+        {/* Corps */}
+        <div style={{ color: '#FFFFFF' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+            <div style={{ fontWeight: 800, fontSize: 16 }}>Campaign</div>
+            <div style={{ color: '#9CA3AF', fontSize: 12, fontWeight: 600, background: 'rgba(156, 163, 175, 0.1)', padding: '4px 8px', borderRadius: 6 }}>{data.type === 'initial' ? 'Initial' : 'Completion'}</div>
+          </div>
+          <div style={{ color: '#C0C0C0', fontSize: 12, marginTop: -6, marginBottom: 10 }}>{data.campaignName}</div>
+
+          <div style={{ color: '#FFD600', fontWeight: 700, fontSize: 13, marginBottom: 2 }}>Snapshot personal staking :</div>
+          <div style={{ fontSize: 14, marginBottom: 8 }}>{data.personalStaking}</div>
+
+          <div style={{ color: '#FFD600', fontWeight: 700, fontSize: 13, marginBottom: 2 }}>Final pool staking :</div>
+          <div style={{ fontSize: 14, marginBottom: 8 }}>{data.poolStaking}</div>
+
+          <div style={{ color: '#FFD600', fontWeight: 700, fontSize: 13, marginBottom: 2 }}>MINT Price</div>
+          <div style={{ fontSize: 14, marginBottom: 12 }}>{data.mintPrice}</div>
+
+          <div style={{ color: '#FFD600', fontWeight: 800, margin: '8px 0 6px 0' }}>Final requirements :</div>
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: 6 }}>
+            <li style={{ color: '#FFFFFF', fontSize: 12 }}>* {data.poolStaking} SWINC Staked &gt; {data.mintPrice} MINT Price</li>
+            <li style={{ color: '#FFFFFF', fontSize: 12 }}>* {data.totalModerators} Moderators</li>
+            <li style={{ color: '#FFFFFF', fontSize: 12 }}>* {finalDecision === 'valid' ? (
+              <>
+                <span style={{ color: '#18C964' }}>Majority ({data.validatedVotes} $SWINC Valid)</span> / <span style={{ color: '#FF3333' }}>Minority ({data.refusedVotes} $SWINC Refuse)</span> ≥ 2
+              </>
+            ) : (
+              <>
+                <span style={{ color: '#FF3333' }}>Majority ({data.refusedVotes} $SWINC Refuse)</span> / <span style={{ color: '#18C964' }}>Minority ({data.validatedVotes} $SWINC Valid)</span> ≥ 2
+              </>
+            )}</li>
+          </ul>
+
+          <div style={{ color: '#9CA3AF', fontSize: 12, marginTop: 10 }}>Moderation vote {dateStr}</div>
+
+          <div style={{ height: 1, background: '#222', margin: '10px 0' }} />
+
+          {isWinForStaker ? (
+            <div style={{ color: '#18C964', fontWeight: 800 }}>Your WIN = <span style={{ color: '#FFFFFF' }}>TBD</span></div>
+          ) : (
+            <div style={{ color: '#FF3333', fontWeight: 800 }}>Your LOOSE = <span style={{ color: '#FFFFFF' }}>TBD</span></div>
+          )}
         </div>
       </div>
     );
@@ -898,7 +1272,41 @@ export default function MyModerationsPage() {
         {activeTab === 'history' && (
           <div style={{ color: '#fff', textAlign: 'center', paddingTop: 40 }}>
             <h2 style={{ fontSize: 36, fontWeight: 800, marginBottom: 8 }}>Moderation History</h2>
-            <p style={{ color: '#C0C0C0' }}>Your complete moderation history will be displayed here</p>
+            <p style={{ color: '#C0C0C0', marginBottom: 24 }}>Your complete moderation history will be displayed here</p>
+            {historyModerations.length > 0 ? (
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+                gap: 20,
+                textAlign: 'left',
+                width: '100%',
+                maxWidth: 1180,
+                margin: '0 auto'
+              }}>
+                {historyModerations.map((m) => <div key={m.id}>{renderHistoryCard(m)}</div>)}
+              </div>
+            ) : (
+              <div style={{ 
+                background: 'rgba(0, 0, 0, 0.6)',
+                border: '2px dashed #333',
+                borderRadius: 16,
+                padding: '48px 24px',
+                textAlign: 'center'
+              }}>
+                <div style={{ fontSize: 48, marginBottom: 16, opacity: 0.5 }}>🗂️</div>
+                <h3 style={{ color: '#C0C0C0', fontSize: 20, marginBottom: 8 }}>No finished moderations yet</h3>
+                <p style={{ color: '#888', fontSize: 16 }}>When your moderated campaigns are finalized, they will appear here.</p>
+              </div>
+            )}
+
+            {/* Dev Controls uniquement pour l'historique */}
+            <DevControls 
+              onForceValidated={() => {}}
+              forceValidated={false}
+              additionalControls={
+                <HistoryDevControls />
+              }
+            />
           </div>
         )}
 
@@ -916,534 +1324,7 @@ export default function MyModerationsPage() {
           </div>
         )}
 
-        {/* Dev Controls */}
-        <DevControls 
-          onForceValidated={() => {}} // Pas utilisé ici mais requis par le composant
-          forceValidated={false}
-          additionalControls={
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {/* Section 1: Gestion des modérations */}
-              <div style={{ borderTop: '1px solid #333', paddingTop: 12, marginTop: 12 }}>
-                <strong style={{ color: '#FFD600', fontSize: 14, marginBottom: 10, display: 'block' }}>
-                  📊 Moderation Management ({activeModerations.length} total)
-                </strong>
-                
-                {/* Navigation forcée du carrousel */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 10 }}>
-                  <button 
-                    onClick={prevModeration}
-                    disabled={activeModerations.length <= 1}
-                    style={{ 
-                      background: activeModerations.length <= 1 ? '#222' : '#333', 
-                      color: activeModerations.length <= 1 ? '#666' : '#FFD600', 
-                      border: '1px solid #555', 
-                      borderRadius: 4, 
-                      padding: '6px 8px', 
-                      fontSize: 11, 
-                      cursor: activeModerations.length <= 1 ? 'not-allowed' : 'pointer' 
-                    }}
-                  >
-                    ← Prev
-                  </button>
-                  <span style={{ 
-                    fontSize: 12, 
-                    color: '#FFD600', 
-                    textAlign: 'center', 
-                    alignSelf: 'center' 
-                  }}>
-                    {activeModerations.length > 0 ? `${currentModerationIndex + 1} / ${activeModerations.length}` : 'No moderations'}
-                  </span>
-                  <button 
-                    onClick={nextModeration}
-                    disabled={activeModerations.length <= 1}
-                    style={{ 
-                      background: activeModerations.length <= 1 ? '#222' : '#333', 
-                      color: activeModerations.length <= 1 ? '#666' : '#FFD600', 
-                      border: '1px solid #555', 
-                      borderRadius: 4, 
-                      padding: '6px 8px', 
-                      fontSize: 11, 
-                      cursor: activeModerations.length <= 1 ? 'not-allowed' : 'pointer' 
-                    }}
-                  >
-                    Next →
-                  </button>
-                </div>
-
-                {/* Boutons de gestion */}
-                <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginBottom: 8 }}>
-                  <button 
-                    onClick={() => {
-                      const newId = `TEST_${Date.now().toString().slice(-4)}`;
-                      const newModeration: ModerationData = {
-                        id: newId,
-                        type: 'initial',
-                        mintPrice: 100,
-                        walletAddress: '0x1234AB...5678CD',
-                        personalStaking: 150,
-                        poolStaking: 1500,
-                        personalStakingPercentage: 10,
-                        validatedVotes: 10,
-                        refusedVotes: 2,
-                        totalModerators: 22,
-                        userVote: 'valid',
-                        conditions: {
-                          poolStakingExceedsMint: true,
-                          hybridRatioMet: true,
-                          moderatorThresholdMet: true,
-                        }
-                      };
-                      setActiveModerations([...activeModerations, newModeration]);
-                      setCurrentModerationIndex(activeModerations.length);
-                    }}
-                    style={{ background: '#18C964', color: '#000', border: 'none', borderRadius: 4, padding: '4px 8px', fontSize: 10, cursor: 'pointer', fontWeight: 600 }}
-                  >
-                    + Add Initial
-                  </button>
-                  <button 
-                    onClick={() => {
-                      const newId = `COMP_${Date.now().toString().slice(-4)}`;
-                      const newModeration: ModerationData = {
-                        id: newId,
-                        type: 'completion',
-                        mintPrice: 75,
-                        walletAddress: '0x5678EF...9ABC10',
-                        personalStaking: 120,
-                        poolStaking: 1200,
-                        personalStakingPercentage: 10,
-                        validatedVotes: 8,
-                        refusedVotes: 1,
-                        totalModerators: 15,
-                        userVote: 'valid',
-                        userScore: 85,
-                        averageScore: 82.3,
-                        conditions: {
-                          poolStakingExceedsMint: true,
-                          hybridRatioMet: true,
-                          moderatorThresholdMet: false,
-                        }
-                      };
-                      setActiveModerations([...activeModerations, newModeration]);
-                      setCurrentModerationIndex(activeModerations.length);
-                    }}
-                    style={{ background: '#FF9500', color: '#000', border: 'none', borderRadius: 4, padding: '4px 8px', fontSize: 10, cursor: 'pointer', fontWeight: 600 }}
-                  >
-                    + Add Completion
-                  </button>
-                  <button 
-                    onClick={() => {
-                      if (activeModerations.length > 0) {
-                        const newModerations = activeModerations.filter((_, index) => index !== currentModerationIndex);
-                        setActiveModerations(newModerations);
-                        setCurrentModerationIndex(Math.max(0, Math.min(currentModerationIndex, newModerations.length - 1)));
-                      }
-                    }}
-                    disabled={activeModerations.length === 0}
-                    style={{ 
-                      background: activeModerations.length === 0 ? '#222' : '#FF3333', 
-                      color: activeModerations.length === 0 ? '#666' : '#fff', 
-                      border: 'none', 
-                      borderRadius: 4, 
-                      padding: '4px 8px', 
-                      fontSize: 10, 
-                      cursor: activeModerations.length === 0 ? 'not-allowed' : 'pointer', 
-                      fontWeight: 600 
-                    }}
-                  >
-                    🗑️ Remove Current
-                  </button>
-                  <button 
-                    onClick={() => {
-                      setActiveModerations([]);
-                      setCurrentModerationIndex(0);
-                    }}
-                    disabled={activeModerations.length === 0}
-                    style={{ 
-                      background: activeModerations.length === 0 ? '#222' : '#AA1111', 
-                      color: activeModerations.length === 0 ? '#666' : '#fff', 
-                      border: 'none', 
-                      borderRadius: 4, 
-                      padding: '4px 8px', 
-                      fontSize: 10, 
-                      cursor: activeModerations.length === 0 ? 'not-allowed' : 'pointer', 
-                      fontWeight: 600 
-                    }}
-                  >
-                    🗑️ Clear All
-                  </button>
-                </div>
-
-                {/* Presets rapides */}
-                <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-                  <button 
-                    onClick={() => {
-                      const presets: ModerationData[] = [
-                        {
-                          id: 'INIT_VALID',
-                          type: 'initial',
-                          mintPrice: 100,
-                          walletAddress: '0x9B28EP...75A0G9BR',
-                          personalStaking: 200,
-                          poolStaking: 2400,
-                          personalStakingPercentage: 8.3,
-                          validatedVotes: 18,
-                          refusedVotes: 4,
-                          totalModerators: 22,
-                          userVote: 'valid',
-                          conditions: { poolStakingExceedsMint: true, hybridRatioMet: true, moderatorThresholdMet: true }
-                        },
-                        {
-                          id: 'COMP_HIGH',
-                          type: 'completion',
-                          mintPrice: 150,
-                          walletAddress: '0x7A15BC...23F8D1AC',
-                          personalStaking: 300,
-                          poolStaking: 3000,
-                          personalStakingPercentage: 10,
-                          validatedVotes: 20,
-                          refusedVotes: 2,
-                          totalModerators: 22,
-                          userVote: 'valid',
-                          userScore: 95,
-                          averageScore: 91.2,
-                          conditions: { poolStakingExceedsMint: true, hybridRatioMet: true, moderatorThresholdMet: true }
-                        }
-                      ];
-                      setActiveModerations(presets);
-                      setCurrentModerationIndex(0);
-                    }}
-                    style={{ background: '#333', color: '#18C964', border: '1px solid #555', borderRadius: 4, padding: '2px 6px', fontSize: 9, cursor: 'pointer' }}
-                  >
-                    ✅ All Valid
-                  </button>
-                  <button 
-                    onClick={() => {
-                      const presets: ModerationData[] = [
-                        {
-                          id: 'INIT_FAIL',
-                          type: 'initial',
-                          mintPrice: 200,
-                          walletAddress: '0x1111AA...2222BB',
-                          personalStaking: 50,
-                          poolStaking: 150, // Moins que MINT price
-                          personalStakingPercentage: 33.3,
-                          validatedVotes: 3,
-                          refusedVotes: 8,
-                          totalModerators: 11, // Moins de 22
-                          userVote: 'refuse',
-                          conditions: { poolStakingExceedsMint: false, hybridRatioMet: false, moderatorThresholdMet: false }
-                        }
-                      ];
-                      setActiveModerations(presets);
-                      setCurrentModerationIndex(0);
-                    }}
-                    style={{ background: '#333', color: '#FF3333', border: '1px solid #555', borderRadius: 4, padding: '2px 6px', fontSize: 9, cursor: 'pointer' }}
-                  >
-                    ❌ All Failed
-                  </button>
-                  <button 
-                    onClick={() => {
-                      const presets: ModerationData[] = [
-                        {
-                          id: 'INIT_MIX',
-                          type: 'initial',
-                          mintPrice: 100,
-                          walletAddress: '0x3333CC...4444DD',
-                          personalStaking: 150,
-                          poolStaking: 1500,
-                          personalStakingPercentage: 10,
-                          validatedVotes: 12,
-                          refusedVotes: 5,
-                          totalModerators: 22,
-                          userVote: 'valid',
-                          conditions: { poolStakingExceedsMint: true, hybridRatioMet: false, moderatorThresholdMet: true }
-                        },
-                        {
-                          id: 'COMP_LOW',
-                          type: 'completion',
-                          mintPrice: 80,
-                          walletAddress: '0x5555EE...6666FF',
-                          personalStaking: 80,
-                          poolStaking: 800,
-                          personalStakingPercentage: 10,
-                          validatedVotes: 6,
-                          refusedVotes: 3,
-                          totalModerators: 12,
-                          userVote: 'refuse',
-                          userScore: 25,
-                          averageScore: 42.8,
-                          conditions: { poolStakingExceedsMint: true, hybridRatioMet: true, moderatorThresholdMet: false }
-                        }
-                      ];
-                      setActiveModerations(presets);
-                      setCurrentModerationIndex(0);
-                    }}
-                    style={{ background: '#333', color: '#FFD600', border: '1px solid #555', borderRadius: 4, padding: '2px 6px', fontSize: 9, cursor: 'pointer' }}
-                  >
-                    ⚡ Mixed
-                  </button>
-                </div>
-              </div>
-
-              {/* Section 2: Modification de la modération actuelle */}
-              {activeModerations.length > 0 && (
-                <div style={{ borderTop: '1px solid #333', paddingTop: 12, marginTop: 12 }}>
-                  <strong style={{ color: '#FFD600', fontSize: 14, marginBottom: 10, display: 'block' }}>
-                    ⚙️ Current Moderation: {activeModerations[currentModerationIndex]?.id} ({activeModerations[currentModerationIndex]?.type})
-                  </strong>
-
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 8 }}>
-                    {/* Type de modération */}
-                    <label style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                      <span style={{ fontSize: 11, color: '#FFD600' }}>Type</span>
-                                             <select
-                         value={activeModerations[currentModerationIndex]?.type || 'initial'}
-                         onChange={(e) => {
-                           const newModerations = [...activeModerations];
-                           const current = newModerations[currentModerationIndex];
-                           if (e.target.value === 'completion' && current.type === 'initial') {
-                             // Convertir en completion - recréer l'objet avec le bon type
-                             const newCompletion: CompletionModerationData = {
-                               ...current,
-                               type: 'completion',
-                               userScore: 85,
-                               averageScore: 82
-                             };
-                             newModerations[currentModerationIndex] = newCompletion;
-                           } else if (e.target.value === 'initial' && current.type === 'completion') {
-                             // Convertir en initial - recréer l'objet avec le bon type
-                             const { userScore, averageScore, ...rest } = current as CompletionModerationData;
-                             const newInitial: InitialModerationData = {
-                               ...rest,
-                               type: 'initial'
-                             };
-                             newModerations[currentModerationIndex] = newInitial;
-                           }
-                           setActiveModerations(newModerations);
-                         }}
-                        style={{ background: '#111', color: '#fff', border: '1px solid #333', borderRadius: 4, padding: '4px 6px', fontSize: 11 }}
-                      >
-                        <option value="initial">Initial</option>
-                        <option value="completion">Completion</option>
-                      </select>
-                    </label>
-
-                    {/* MINT Price */}
-                    <label style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                      <span style={{ fontSize: 11, color: '#FFD600' }}>MINT Price</span>
-                      <input
-                        type="number"
-                        value={activeModerations[currentModerationIndex]?.mintPrice || 100}
-                        min={1}
-                        max={1000}
-                        onChange={(e) => {
-                          const newModerations = [...activeModerations];
-                          newModerations[currentModerationIndex].mintPrice = parseInt(e.target.value) || 100;
-                          // Recalculer la condition 1
-                          newModerations[currentModerationIndex].conditions.poolStakingExceedsMint = 
-                            newModerations[currentModerationIndex].poolStaking >= newModerations[currentModerationIndex].mintPrice;
-                          setActiveModerations(newModerations);
-                        }}
-                        style={{ background: '#111', color: '#fff', border: '1px solid #333', borderRadius: 4, padding: '4px 6px', fontSize: 11 }}
-                      />
-                    </label>
-
-                    {/* Personal Staking */}
-                    <label style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                      <span style={{ fontSize: 11, color: '#FFD600' }}>Personal Staking</span>
-                      <input
-                        type="number"
-                        value={activeModerations[currentModerationIndex]?.personalStaking || 100}
-                        min={1}
-                        max={5000}
-                        onChange={(e) => {
-                          const newModerations = [...activeModerations];
-                          const personal = parseInt(e.target.value) || 100;
-                          newModerations[currentModerationIndex].personalStaking = personal;
-                          // Recalculer le pourcentage
-                          newModerations[currentModerationIndex].personalStakingPercentage = 
-                            Math.round((personal / newModerations[currentModerationIndex].poolStaking) * 100 * 10) / 10;
-                          setActiveModerations(newModerations);
-                        }}
-                        style={{ background: '#111', color: '#fff', border: '1px solid #333', borderRadius: 4, padding: '4px 6px', fontSize: 11 }}
-                      />
-                    </label>
-
-                    {/* Pool Staking */}
-                    <label style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                      <span style={{ fontSize: 11, color: '#FFD600' }}>Pool Staking</span>
-                      <input
-                        type="number"
-                        value={activeModerations[currentModerationIndex]?.poolStaking || 1000}
-                        min={1}
-                        max={10000}
-                        onChange={(e) => {
-                          const newModerations = [...activeModerations];
-                          const pool = parseInt(e.target.value) || 1000;
-                          newModerations[currentModerationIndex].poolStaking = pool;
-                          // Recalculer les pourcentages et conditions
-                          newModerations[currentModerationIndex].personalStakingPercentage = 
-                            Math.round((newModerations[currentModerationIndex].personalStaking / pool) * 100 * 10) / 10;
-                          newModerations[currentModerationIndex].conditions.poolStakingExceedsMint = 
-                            pool >= newModerations[currentModerationIndex].mintPrice;
-                          setActiveModerations(newModerations);
-                        }}
-                        style={{ background: '#111', color: '#fff', border: '1px solid #333', borderRadius: 4, padding: '4px 6px', fontSize: 11 }}
-                      />
-                    </label>
-
-                    {/* Validated Votes */}
-                    <label style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                      <span style={{ fontSize: 11, color: '#00FF00' }}>Valid Votes</span>
-                      <input
-                        type="number"
-                        value={activeModerations[currentModerationIndex]?.validatedVotes || 0}
-                        min={0}
-                        max={30}
-                        onChange={(e) => {
-                          const newModerations = [...activeModerations];
-                          const valid = parseInt(e.target.value) || 0;
-                          newModerations[currentModerationIndex].validatedVotes = valid;
-                          const refused = newModerations[currentModerationIndex].refusedVotes;
-                          // Recalculer la condition hybrid ratio (2:1 minimum)
-                          newModerations[currentModerationIndex].conditions.hybridRatioMet = 
-                            (valid >= 2 * refused) || (refused >= 2 * valid);
-                          setActiveModerations(newModerations);
-                        }}
-                        style={{ background: '#111', color: '#00FF00', border: '1px solid #333', borderRadius: 4, padding: '4px 6px', fontSize: 11 }}
-                      />
-                    </label>
-
-                    {/* Refused Votes */}
-                    <label style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                      <span style={{ fontSize: 11, color: '#FF0000' }}>Refuse Votes</span>
-                      <input
-                        type="number"
-                        value={activeModerations[currentModerationIndex]?.refusedVotes || 0}
-                        min={0}
-                        max={30}
-                        onChange={(e) => {
-                          const newModerations = [...activeModerations];
-                          const refused = parseInt(e.target.value) || 0;
-                          newModerations[currentModerationIndex].refusedVotes = refused;
-                          const valid = newModerations[currentModerationIndex].validatedVotes;
-                          // Recalculer la condition hybrid ratio
-                          newModerations[currentModerationIndex].conditions.hybridRatioMet = 
-                            (valid >= 2 * refused) || (refused >= 2 * valid);
-                          setActiveModerations(newModerations);
-                        }}
-                        style={{ background: '#111', color: '#FF0000', border: '1px solid #333', borderRadius: 4, padding: '4px 6px', fontSize: 11 }}
-                      />
-                    </label>
-                  </div>
-
-                  {/* Total Moderators et User Vote */}
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 }}>
-                    <label style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                      <span style={{ fontSize: 11, color: '#FFD600' }}>Total Moderators</span>
-                      <input
-                        type="number"
-                        value={activeModerations[currentModerationIndex]?.totalModerators || 22}
-                        min={1}
-                        max={50}
-                        onChange={(e) => {
-                          const newModerations = [...activeModerations];
-                          const total = parseInt(e.target.value) || 22;
-                          newModerations[currentModerationIndex].totalModerators = total;
-                          // Recalculer la condition de seuil
-                          newModerations[currentModerationIndex].conditions.moderatorThresholdMet = total >= 22;
-                          setActiveModerations(newModerations);
-                        }}
-                        style={{ background: '#111', color: '#fff', border: '1px solid #333', borderRadius: 4, padding: '4px 6px', fontSize: 11 }}
-                      />
-                    </label>
-
-                    <label style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                      <span style={{ fontSize: 11, color: '#FFD600' }}>Your Vote</span>
-                      <select
-                        value={activeModerations[currentModerationIndex]?.userVote || 'valid'}
-                        onChange={(e) => {
-                          const newModerations = [...activeModerations];
-                          newModerations[currentModerationIndex].userVote = e.target.value as 'valid' | 'refuse' | null;
-                          setActiveModerations(newModerations);
-                        }}
-                        style={{ background: '#111', color: '#fff', border: '1px solid #333', borderRadius: 4, padding: '4px 6px', fontSize: 11 }}
-                      >
-                        <option value="valid">Valid</option>
-                        <option value="refuse">Refuse</option>
-                        <option value={null}>Not voted</option>
-                      </select>
-                    </label>
-                  </div>
-
-                  {/* Scores pour les completions */}
-                  {activeModerations[currentModerationIndex]?.type === 'completion' && (
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                      <label style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                        <span style={{ fontSize: 11, color: '#FFD600' }}>Your Score</span>
-                        <input
-                          type="number"
-                          value={(activeModerations[currentModerationIndex] as CompletionModerationData)?.userScore || 85}
-                          min={0}
-                          max={100}
-                          onChange={(e) => {
-                            const newModerations = [...activeModerations];
-                            (newModerations[currentModerationIndex] as CompletionModerationData).userScore = parseInt(e.target.value) || 85;
-                            setActiveModerations(newModerations);
-                          }}
-                          style={{ background: '#111', color: '#fff', border: '1px solid #333', borderRadius: 4, padding: '4px 6px', fontSize: 11 }}
-                        />
-                      </label>
-
-                      <label style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                        <span style={{ fontSize: 11, color: '#FFD600' }}>Average Score</span>
-                        <input
-                          type="number"
-                          value={(activeModerations[currentModerationIndex] as CompletionModerationData)?.averageScore || 82}
-                          min={0}
-                          max={100}
-                          step={0.1}
-                          onChange={(e) => {
-                            const newModerations = [...activeModerations];
-                            (newModerations[currentModerationIndex] as CompletionModerationData).averageScore = parseFloat(e.target.value) || 82;
-                            setActiveModerations(newModerations);
-                          }}
-                          style={{ background: '#111', color: '#fff', border: '1px solid #333', borderRadius: 4, padding: '4px 6px', fontSize: 11 }}
-                        />
-                      </label>
-                    </div>
-                  )}
-
-                  {/* Status des conditions */}
-                  <div style={{ marginTop: 8, padding: 8, background: '#111', borderRadius: 4, border: '1px solid #333' }}>
-                    <div style={{ fontSize: 11, color: '#FFD600', marginBottom: 4 }}>Conditions Status:</div>
-                    <div style={{ fontSize: 10, color: activeModerations[currentModerationIndex]?.conditions.poolStakingExceedsMint ? '#00FF00' : '#FF0000' }}>
-                      Pool ≥ MINT: {activeModerations[currentModerationIndex]?.conditions.poolStakingExceedsMint ? '✅' : '❌'}
-                    </div>
-                    <div style={{ fontSize: 10, color: activeModerations[currentModerationIndex]?.conditions.hybridRatioMet ? '#00FF00' : '#FF0000' }}>
-                      Hybrid 2:1: {activeModerations[currentModerationIndex]?.conditions.hybridRatioMet ? '✅' : '❌'}
-                    </div>
-                    <div style={{ fontSize: 10, color: activeModerations[currentModerationIndex]?.conditions.moderatorThresholdMet ? '#00FF00' : '#FF0000' }}>
-                      Threshold 22+: {activeModerations[currentModerationIndex]?.conditions.moderatorThresholdMet ? '✅' : '❌'}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Section 3: Informations générales */}
-              <div style={{ borderTop: '1px solid #333', paddingTop: 12, marginTop: 12 }}>
-                <div style={{ fontSize: 11, color: '#666', fontStyle: 'italic' }}>
-                  💡 <strong>Dev Mode Tips:</strong><br/>
-                  🔄 <strong>Carrousel:</strong> Navigate between different moderation states<br/>
-                  📊 <strong>Initial:</strong> Content creation moderation (B2C/Agency/Individual)<br/>
-                  🎯 <strong>Completion:</strong> User-generated content moderation with scoring<br/>
-                  ⚖️ <strong>Conditions:</strong> Pool ≥ MINT + Hybrid 2:1 ratio + 22+ moderators<br/>
-                  🎨 <strong>Real-time:</strong> All changes update the UI immediately
-                </div>
-              </div>
-            </div>
-          }
-        />
+        {/* Dev Controls déplacés dans l'onglet History */}
       </div>
     </div>
   );
