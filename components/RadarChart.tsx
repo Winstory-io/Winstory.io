@@ -42,7 +42,7 @@ function getScoreColor(category: 'refused' | 'medium' | 'good'): string {
 export default function RadarChart({ moderatorScores, size = 400, showLabels = true, onClick, isClickable = false }: RadarChartProps) {
   const center = size / 2;
   const maxRadius = (size * 0.48); // Increased from 44% to 48% - radar chart closer to staker numbers
-  const labelRadius = maxRadius + 35; // Keep same gap - labels stay in same position
+  const labelRadius = maxRadius + 18; // Reduced gap to bring labels nearer the outer circle
   const [hoveredPoint, setHoveredPoint] = useState<HoveredPoint | null>(null);
   const [hoveredRefusedGroup, setHoveredRefusedGroup] = useState<ModeratorScore[] | null>(null);
   const radarContainerRef = useRef<HTMLDivElement>(null);
@@ -460,7 +460,7 @@ export default function RadarChart({ moderatorScores, size = 400, showLabels = t
               {/* Moderator number label - show for ALL moderators, but in red for refused ones */}
               <text
                 x={labelX + 30}
-                y={labelY + 40 - (shouldShowScore && !isRefused ? 10 : 3)}
+                y={labelY + 40 - (shouldShowScore && !isRefused ? 8 : 2)}
                 textAnchor="middle"
                 dominantBaseline="middle"
                 fill={isRefused ? "#FF3B30" : "#FFD600"} // Red for refused, yellow for others
@@ -477,7 +477,7 @@ export default function RadarChart({ moderatorScores, size = 400, showLabels = t
               {shouldShowScore && !isRefused && (
                 <text
                   x={labelX + 30}
-                  y={labelY + 40 + 8}
+                  y={labelY + 40 + 10}
                   textAnchor="middle"
                   dominantBaseline="middle"
                   fill={getScoreColor(scoreCategory)}

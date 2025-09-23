@@ -1,6 +1,4 @@
 {
   "/mywin/moderations/page": "app/mywin/moderations/page.js",
-  "/mywin/creations/page": "app/mywin/creations/page.js",
-  "/mywin/page": "app/mywin/page.js",
   "/mywin/completions/page": "app/mywin/completions/page.js"
 }
