@@ -9,12 +9,6 @@ export default function AgencyB2CMintPage() {
   const [totalPrice, setTotalPrice] = useState(1000);
   const [pricingOptions, setPricingOptions] = useState([
     {
-      label: "Winstory creates the film",
-      price: 500,
-      isSelected: false,
-      description: "AI-generated film based on your story"
-    },
-    {
       label: "No rewards to give",
       price: 1000,
       isSelected: false,
@@ -23,40 +17,27 @@ export default function AgencyB2CMintPage() {
   ]);
 
   useEffect(() => {
-    // Récupérer les données du localStorage pour déterminer le prix
-    const filmData = localStorage.getItem("film");
-    const campaignRewardData = localStorage.getItem("campaignReward");
-    const roiData = localStorage.getItem("roiData");
-    
-    let aiRequested = false;
-    let noRewards = false;
-    
-    if (filmData) {
-      const film = JSON.parse(filmData);
-      aiRequested = film.aiRequested || false;
-    }
-    
-    // Vérifier si "No rewards" est sélectionné
-    if (campaignRewardData) {
-      const campaignReward = JSON.parse(campaignRewardData);
-      noRewards = campaignReward.rewardType === 'none' || 
-                  campaignReward.rewardLabel?.includes('No Reward');
-    }
-    
-    // Vérifier aussi dans roiData
-    if (roiData && !noRewards) {
-      const roi = JSON.parse(roiData);
-      noRewards = roi.noReward === true;
-    }
-    
-    // Mettre à jour les options de prix
+    try {
+      // Mark current flow as AgencyB2C to keep context coherent
+      localStorage.setItem("currentCreationFlow", "AgencyB2C");
+    } catch {}
+
+    // Récupérer les données nécessaires du localStorage (sans utiliser les clés legacy de B2C)
+    const roiDataRaw = localStorage.getItem("roiData");
+    const standardTokenRaw = localStorage.getItem("standardTokenReward");
+    const standardItemRaw = localStorage.getItem("standardItemReward");
+    const premiumTokenRaw = localStorage.getItem("premiumTokenReward");
+    const premiumItemRaw = localStorage.getItem("premiumItemReward");
+
+    const roi = roiDataRaw ? JSON.parse(roiDataRaw) : null;
+    const hasStandard = !!(standardTokenRaw || standardItemRaw);
+    const hasPremium = !!(premiumTokenRaw || premiumItemRaw);
+
+    // "No rewards" uniquement si explicitement choisi ET aucune config de récompense n'existe
+    const noRewards = roi?.noReward === true && !hasStandard && !hasPremium;
+
+    // Mettre à jour les options de prix (aucune option AI dans le flux agence)
     setPricingOptions([
-      {
-        label: "Winstory creates the film",
-        price: 500,
-        isSelected: aiRequested,
-        description: "AI-generated film based on your story"
-      },
       {
         label: "No rewards to give",
         price: 1000,
@@ -64,14 +45,13 @@ export default function AgencyB2CMintPage() {
         description: "Free completions for the community"
       }
     ]);
-    
-    // Calculer le prix total
+
+    // Calculer le prix total (base + éventuel supplément "no rewards")
     let price = 1000; // Prix de base
-    if (aiRequested) price += 500;
     if (noRewards) price += 1000;
-    
+
     setTotalPrice(price);
-    
+
     // Stocker le prix final pour le paiement
     localStorage.setItem("finalPrice", price.toString());
   }, []);
@@ -91,7 +71,7 @@ export default function AgencyB2CMintPage() {
         <img src="/company.svg" alt="Company" style={{ width: 96, height: 96, marginRight: 16 }} />
         <h1 style={{ fontSize: 36, fontWeight: 700, margin: 0, textAlign: 'center' }}>MINT</h1>
       </div>
-      
+
       {/* Desktop Layout - Two columns */}
       <div style={{ 
         display: 'flex', 
@@ -105,7 +85,7 @@ export default function AgencyB2CMintPage() {
         <div style={{ flex: 1, minWidth: 420 }}>
           <PricingBubbles options={pricingOptions} totalPrice={totalPrice} flowType="AgencyB2C" />
         </div>
-        
+
         {/* Right Column - Payment Methods */}
         <div style={{ flex: 1, minWidth: 420 }}>
           <div style={{ border: "2px solid #fff", borderRadius: 24, padding: 24, width: '100%', background: '#181818', boxShadow: '0 4px 32px rgba(24,201,100,0.10)' }}>
@@ -172,7 +152,7 @@ export default function AgencyB2CMintPage() {
           </div>
         </div>
       </div>
-      
+
       {/* Back Button */}
       <button onClick={() => router.back()} style={{ background: 'none', border: '2px solid #fff', color: '#fff', borderRadius: 32, fontSize: 18, fontWeight: 700, padding: '10px 32px', cursor: 'pointer', marginTop: 32 }}>Back</button>
     </div>

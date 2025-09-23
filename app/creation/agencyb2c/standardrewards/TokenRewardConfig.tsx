@@ -2,6 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from '../../b2c/standardrewards/Rewards.module.css';
+import { useActiveAccount } from "thirdweb/react";
+import { validateContract } from '../../../../lib/blockchain-rpc';
 
 interface TokenInfo {
   name: string;
@@ -27,13 +29,14 @@ export default function AgencyB2CTokenRewardConfig({ onClose }: { onClose: () =>
   const [balanceLoading, setBalanceLoading] = useState(false);
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
 
+  // Wallet connection (real connected wallet)
+  const account = useActiveAccount();
+
   // Récupérer les données du localStorage
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const roiData = JSON.parse(localStorage.getItem('roiData') || 'null');
-      const maxCompletions = roiData?.maxCompletions || 0;
       const savedConfig = JSON.parse(localStorage.getItem('standardTokenReward') || 'null');
-      
       if (savedConfig) {
         setTokenName(savedConfig.tokenName || '');
         setTokenSymbol(savedConfig.tokenSymbol || '');
@@ -42,11 +45,13 @@ export default function AgencyB2CTokenRewardConfig({ onClose }: { onClose: () =>
         setBlockchain(savedConfig.blockchain || 'Ethereum');
         setTokenStandard(savedConfig.tokenStandard || 'ERC20');
       }
-      
-      // Simuler une adresse de wallet connectée
-      setWalletAddress('0x1234567890abcdef1234567890abcdef12345678');
     }
   }, []);
+
+  // Sync connected wallet address
+  useEffect(() => {
+    setWalletAddress(account?.address ?? null);
+  }, [account]);
 
   const maxCompletions = JSON.parse(localStorage.getItem('roiData') || 'null')?.maxCompletions || 0;
   const totalTokens = parseFloat(amountPerUser || '0') * maxCompletions;
@@ -63,29 +68,31 @@ export default function AgencyB2CTokenRewardConfig({ onClose }: { onClose: () =>
 
   const validateContractAddress = async (address: string) => {
     if (!address) return;
-    
+
     setIsValidating(true);
     setError('');
-    
+
     try {
-      // Simulation de validation de contrat
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Simuler des informations de token
-      setTokenInfo({
-        name: 'Sample Token',
-        symbol: 'SMPL',
-        decimals: 18,
-        totalSupply: '1000000000000000000000000',
-        balance: '50000000000000000000000'
-      });
-      
+      if (!walletAddress) {
+        setError('Veuillez connecter votre wallet pour valider le contrat');
+        setTokenInfo(null);
+        return;
+      }
+
+      // Real on-chain validation
+      const info = await validateContract(address, blockchain, tokenStandard, walletAddress) as TokenInfo;
+      setTokenInfo(info);
+      // Auto-fill from fetched metadata
+      setTokenName((prev) => prev || info.name);
+      setTokenSymbol((prev) => prev || info.symbol);
+
+      // Optional small delay to show loader for balance
       setBalanceLoading(true);
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise(resolve => setTimeout(resolve, 100));
       setBalanceLoading(false);
-      
     } catch (err) {
-      setError('Invalid contract address or network error');
+      setError(err instanceof Error ? err.message : 'Invalid contract address or network error');
+      setTokenInfo(null);
     } finally {
       setIsValidating(false);
     }
@@ -94,7 +101,7 @@ export default function AgencyB2CTokenRewardConfig({ onClose }: { onClose: () =>
   const handleContractAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const address = e.target.value;
     setContractAddress(address);
-    
+
     if (address && address.length >= 42) {
       validateContractAddress(address);
     } else {
@@ -104,14 +111,18 @@ export default function AgencyB2CTokenRewardConfig({ onClose }: { onClose: () =>
   };
 
   const handleBlockchainChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setBlockchain(e.target.value);
+    const newChain = e.target.value;
+    setBlockchain(newChain);
     setTokenInfo(null);
     setError('');
+    if (contractAddress && contractAddress.length >= 42) {
+      validateContractAddress(contractAddress);
+    }
   };
 
   const handleConfirm = () => {
     if (!canConfirm) return;
-    
+
     const config = {
       tokenName,
       tokenSymbol,
@@ -122,10 +133,10 @@ export default function AgencyB2CTokenRewardConfig({ onClose }: { onClose: () =>
       hasEnoughBalance,
       walletAddress
     };
-    
+
     localStorage.setItem('standardTokenReward', JSON.stringify(config));
     setIsConfirmed(true);
-    
+
     // Close modal after short delay
     router.push('/creation/agencyb2c/premiumrewards');
   };
@@ -158,7 +169,6 @@ export default function AgencyB2CTokenRewardConfig({ onClose }: { onClose: () =>
         <div style={{ color: '#fff', marginBottom: 18, fontWeight: 600 }}>
           You must hold at least : <span style={{ color: '#FFD600', fontWeight: 700 }}>{totalTokens}</span> = <span style={{ color: '#FFD600' }}>{amountPerUser !== '' ? amountPerUser : '[Amount per user]'}</span> × {maxCompletions > 0 ? maxCompletions : '[Max completions]'}
         </div>
-        
         {/* Wallet Connection Status */}
         {walletAddress && (
           <div style={{ 
@@ -172,10 +182,8 @@ export default function AgencyB2CTokenRewardConfig({ onClose }: { onClose: () =>
             <span style={{ color: '#00C46C', fontWeight: 600 }}>✅ Connected:</span> {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
           </div>
         )}
-        
         {error && <div style={{ color: 'red', fontWeight: 600, marginBottom: 12 }}>{error}</div>}
         {balanceError && <div style={{ color: 'orange', fontWeight: 600, marginBottom: 12 }}>⚠️ {balanceError}</div>}
-        
         <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
           {/* Blockchain Selection */}
           <div style={{ display: 'flex', gap: 12 }}>
@@ -202,7 +210,6 @@ export default function AgencyB2CTokenRewardConfig({ onClose }: { onClose: () =>
               <option value="Bitcoin">Bitcoin</option>
               <option value="Base">Base</option>
             </select>
-            
             <select 
               value={tokenStandard}
               onChange={(e) => setTokenStandard(e.target.value)}
@@ -223,7 +230,6 @@ export default function AgencyB2CTokenRewardConfig({ onClose }: { onClose: () =>
               <option value="BRC20">BRC20 (Bitcoin)</option>
             </select>
           </div>
-
           {/* Token Name */}
           <div>
             <label style={{ display: 'block', color: '#FFD600', fontWeight: 600, marginBottom: 8 }}>Token Name</label>
@@ -238,19 +244,19 @@ export default function AgencyB2CTokenRewardConfig({ onClose }: { onClose: () =>
                 borderRadius: 8,
                 border: '2px solid #FFD600',
                 background: 'none',
-                color: '#fff',
+                color: '#FFD600',
+                fontWeight: 600,
                 fontSize: 16
               }}
             />
           </div>
-
           {/* Token Symbol */}
           <div>
             <label style={{ display: 'block', color: '#FFD600', fontWeight: 600, marginBottom: 8 }}>Token Symbol</label>
             <input
               type="text"
               value={tokenSymbol}
-              onChange={(e) => setTokenSymbol(e.target.value.toUpperCase())}
+              onChange={(e) => setTokenSymbol(e.target.value)}
               placeholder="e.g., WINC"
               style={{
                 width: '100%',
@@ -258,32 +264,28 @@ export default function AgencyB2CTokenRewardConfig({ onClose }: { onClose: () =>
                 borderRadius: 8,
                 border: '2px solid #FFD600',
                 background: 'none',
-                color: '#fff',
+                color: '#FFD600',
+                fontWeight: 600,
                 fontSize: 16
               }}
             />
           </div>
-
-          {/* Contract Address */}
-          <div>
-            <label style={{ display: 'block', color: '#FFD600', fontWeight: 600, marginBottom: 8 }}>Contract Address</label>
+          <div style={{ position: 'relative' }}>
             <input
               type="text"
+              placeholder="Token contract address"
               value={contractAddress}
               onChange={handleContractAddressChange}
-              placeholder="0x..."
-              style={{
-                width: '100%',
-                padding: 12,
-                borderRadius: 8,
-                border: '2px solid #FFD600',
-                background: 'none',
+              style={{ 
+                padding: 12, 
+                borderRadius: 8, 
+                border: '2px solid #FFD600', 
+                background: 'none', 
                 color: '#fff',
                 fontSize: 16
               }}
             />
           </div>
-
           {/* Amount per User */}
           <div>
             <label style={{ display: 'block', color: '#FFD600', fontWeight: 600, marginBottom: 8 }}>Amount per User</label>
@@ -305,7 +307,6 @@ export default function AgencyB2CTokenRewardConfig({ onClose }: { onClose: () =>
               }}
             />
           </div>
-
           {/* Token Info Display */}
           {tokenInfo && (
             <div style={{ 
@@ -327,7 +328,6 @@ export default function AgencyB2CTokenRewardConfig({ onClose }: { onClose: () =>
               </div>
             </div>
           )}
-
           {/* Confirm Button */}
           <button
             onClick={handleConfirm}

@@ -23,6 +23,17 @@ export default function MintPage() {
   ]);
 
   useEffect(() => {
+    try {
+      // Detect if user is in an Agency B2C flow and redirect to the correct mint page
+      const agencyContext = localStorage.getItem("agencyB2CContext");
+      if (agencyContext) {
+        router.replace("/creation/agencyb2c/mint");
+        return;
+      }
+      // Mark current flow to avoid cross-session confusion
+      localStorage.setItem("currentCreationFlow", "B2C");
+    } catch {}
+
     // Récupérer les données du localStorage pour déterminer le prix
     const filmData = localStorage.getItem("film");
     const campaignRewardData = localStorage.getItem("campaignReward");

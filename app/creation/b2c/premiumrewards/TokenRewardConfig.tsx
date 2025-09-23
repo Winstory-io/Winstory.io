@@ -28,6 +28,9 @@ export default function TokenRewardConfig({ onClose }: { onClose: () => void }) 
   // Wallet connection
   const walletAddress = useWalletAddress();
   const router = useRouter();
+  const { usePathname } = require('next/navigation');
+  const pathname: string = usePathname();
+  const isAgencyB2C: boolean = pathname.includes('/creation/agencyb2c/');
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
@@ -287,7 +290,7 @@ export default function TokenRewardConfig({ onClose }: { onClose: () => void }) 
                 saveUnifiedRewardConfig(standardConfig, typedPremiumConfig, walletAddress, maxCompletions);
               }
               
-              router.push('/creation/b2c/recap');
+              router.push(isAgencyB2C ? '/creation/agencyb2c/recap' : '/creation/b2c/recap');
             }}
           >
             Go to Recap

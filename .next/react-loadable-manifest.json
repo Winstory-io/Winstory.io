@@ -11,28 +11,6 @@
       "static/chunks/_app-pages-browser_components_ValidatedCompletionDashboard_tsx.js"
     ]
   },
-  "app/mywin/creations/page.tsx -> ../../../components/ActiveCampaignDashboard": {
-    "id": "app/mywin/creations/page.tsx -> ../../../components/ActiveCampaignDashboard",
-    "files": []
-  },
-  "app/mywin/creations/page.tsx -> ../../../components/ValidatedCampaignDashboard": {
-    "id": "app/mywin/creations/page.tsx -> ../../../components/ValidatedCampaignDashboard",
-    "files": [
-      "static/chunks/_app-pages-browser_components_ValidatedCampaignDashboard_tsx.js"
-    ]
-  },
-  "app/mywin/creations/page.tsx -> ../../../lib/mockData": {
-    "id": "app/mywin/creations/page.tsx -> ../../../lib/mockData",
-    "files": [
-      "static/chunks/_app-pages-browser_lib_mockData_ts.js"
-    ]
-  },
-  "components/ActiveCampaignDashboard.tsx -> ../lib/mockData": {
-    "id": "components/ActiveCampaignDashboard.tsx -> ../lib/mockData",
-    "files": [
-      "static/chunks/_app-pages-browser_lib_mockData_ts.js"
-    ]
-  },
   "node_modules/thirdweb/dist/esm/chains/constants.js -> ./utils.js": {
     "id": "node_modules/thirdweb/dist/esm/chains/constants.js -> ./utils.js",
     "files": []

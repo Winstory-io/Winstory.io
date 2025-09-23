@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import styles from '../standardrewards/Rewards.module.css';
 import { useWalletAddress } from '../../../../lib/hooks/useWalletConnection';
 import { useRouter } from 'next/navigation';
+const { usePathname } = require('next/navigation');
 
 interface ItemInfo {
   name: string;
@@ -26,6 +27,8 @@ export default function ItemRewardConfig({ onClose }: { onClose: () => void }) {
   // Wallet connection
   const walletAddress = useWalletAddress();
   const router = useRouter();
+  const pathname: string = usePathname();
+  const isAgencyB2C: boolean = pathname.includes('/creation/agencyb2c/');
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
@@ -270,7 +273,7 @@ export default function ItemRewardConfig({ onClose }: { onClose: () => void }) {
                 walletAddress
               };
               localStorage.setItem('premiumItemReward', JSON.stringify(config));
-              router.push('/creation/b2c/recap');
+              router.push(isAgencyB2C ? '/creation/agencyb2c/recap' : '/creation/b2c/recap');
             }}
           >
             Go to Recap
