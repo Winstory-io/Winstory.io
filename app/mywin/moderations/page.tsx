@@ -4,6 +4,7 @@ import { useActiveAccount } from 'thirdweb/react';
 import { useState, useEffect, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import DevControls from '@/components/DevControls';
+import StakingPerformanceChart from '@/components/StakingPerformanceChart';
 
 // Types pour les données de modération active
 interface BaseModerationData {
@@ -341,6 +342,24 @@ export default function MyModerationsPage() {
       </div>
     );
   };
+
+  // Données mock et Dev Controls pour Staking Performance
+  const [stakingBarGap, setStakingBarGap] = useState(12);
+  const [stakingSmooth, setStakingSmooth] = useState(true);
+  const [stakingMaxAbs, setStakingMaxAbs] = useState<number | null>(null);
+  const [winAmount, setWinAmount] = useState(5); // WINC gain when staker is in majority
+  const [lossAmount, setLossAmount] = useState(3); // WINC loss when staker is in minority
+
+  const stakingDeltas = useMemo(() => {
+    // Construire les deltas à partir de l'historique, triés chronologiquement
+    if (!historyModerations || historyModerations.length === 0) return [] as number[];
+    const sorted = [...historyModerations].sort((a, b) => {
+      const ta = new Date(a.finalizedAt).getTime();
+      const tb = new Date(b.finalizedAt).getTime();
+      return ta - tb;
+    });
+    return sorted.map((m) => (m.userVote === m.finalDecision ? Math.abs(winAmount) : -Math.abs(lossAmount)));
+  }, [historyModerations, winAmount, lossAmount]);
 
   // Navigation du carrousel
   const nextModeration = () => {
@@ -1313,7 +1332,58 @@ export default function MyModerationsPage() {
         {activeTab === 'staking' && (
           <div style={{ color: '#fff', textAlign: 'center', paddingTop: 40 }}>
             <h2 style={{ fontSize: 36, fontWeight: 800, marginBottom: 8 }}>Staking Performance</h2>
-            <p style={{ color: '#C0C0C0' }}>Your staking performance metrics will be displayed here</p>
+            <p style={{ color: '#C0C0C0', marginBottom: 20 }}>Cumulative earnings based on your Moderation History</p>
+            {stakingDeltas.length > 0 ? (
+              <div style={{ display: 'flex', justifyContent: 'center' }}>
+                <StakingPerformanceChart 
+                  campaignDeltas={stakingDeltas}
+                  width={1180}
+                  height={480}
+                  barGap={stakingBarGap}
+                  smoothLine={stakingSmooth}
+                  maxAbsY={stakingMaxAbs}
+                />
+              </div>
+            ) : (
+              <div style={{ 
+                background: 'rgba(0, 0, 0, 0.6)',
+                border: '2px dashed #333',
+                borderRadius: 16,
+                padding: '28px 20px',
+                textAlign: 'center',
+                maxWidth: 840,
+                margin: '0 auto'
+              }}>
+                <div style={{ color: '#C0C0C0' }}>No history yet. Add some items in the <span style={{ color: '#FFD600', fontWeight: 800 }}>Moderation History</span> Dev Controls to visualize your staking performance.</div>
+              </div>
+            )}
+
+            <DevControls
+              additionalControls={
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 8, textAlign: 'left', marginTop: 12 }}>
+                  <div style={{ gridColumn: '1 / -1', color: '#FFD600', fontWeight: 800, marginBottom: 4 }}>⚙️ Staking Performance Controls</div>
+                  <label style={{ fontSize: 12, color: '#C0C0C0' }}>
+                    Win gain (+WINC): {winAmount}
+                    <input type="range" min={1} max={20} value={winAmount} onChange={(e) => setWinAmount(Number(e.target.value))} style={{ width: '100%' }} />
+                  </label>
+                  <label style={{ fontSize: 12, color: '#C0C0C0' }}>
+                    Loss amount (-WINC): {lossAmount}
+                    <input type="range" min={1} max={20} value={lossAmount} onChange={(e) => setLossAmount(Number(e.target.value))} style={{ width: '100%' }} />
+                  </label>
+                  <label style={{ fontSize: 12, color: '#C0C0C0' }}>
+                    Bar gap: {stakingBarGap}
+                    <input type="range" min={0} max={24} value={stakingBarGap} onChange={(e) => setStakingBarGap(Number(e.target.value))} style={{ width: '100%' }} />
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: '#C0C0C0' }}>
+                    <input type="checkbox" checked={stakingSmooth} onChange={(e) => setStakingSmooth(e.target.checked)} /> Smooth line
+                  </label>
+                  <label style={{ fontSize: 12, color: '#C0C0C0' }}>
+                    Max |Y| (auto if empty)
+                    <input type="number" placeholder="auto" value={stakingMaxAbs ?? ''} onChange={(e) => setStakingMaxAbs(e.target.value === '' ? null : Number(e.target.value))} style={{ width: '100%', background: '#111', color: '#fff', border: '1px solid #333', borderRadius: 6, padding: 6 }} />
+                  </label>
+                </div>
+              }
+            />
           </div>
         )}
 
