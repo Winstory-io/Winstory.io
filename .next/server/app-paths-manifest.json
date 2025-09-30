@@ -1,5 +1,5 @@
 {
-  "/welcome/page": "app/welcome/page.js",
-  "/mywin/completions/page": "app/mywin/completions/page.js",
-  "/mywin/moderations/page": "app/mywin/moderations/page.js"
+  "/creation/b2c/yourinformations/page": "app/creation/b2c/yourinformations/page.js",
+  "/creation/b2c/yourwinstory/page": "app/creation/b2c/yourwinstory/page.js",
+  "/creation/b2c/login/page": "app/creation/b2c/login/page.js"
 }

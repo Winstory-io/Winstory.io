@@ -5,6 +5,11 @@
       "static/chunks/main-app.js",
       "static/chunks/app/layout.js"
     ],
+    "/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/page.js"
+    ],
     "/welcome/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
@@ -20,25 +25,25 @@
       "static/chunks/main-app.js",
       "static/chunks/app/api/auth/[...nextauth]/route.js"
     ],
-    "/mywin/layout": [
+    "/creation/youare/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/mywin/layout.js"
+      "static/chunks/app/creation/youare/page.js"
     ],
-    "/mywin/page": [
+    "/creation/b2c/login/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/mywin/page.js"
+      "static/chunks/app/creation/b2c/login/page.js"
     ],
-    "/mywin/moderations/page": [
+    "/creation/b2c/yourinformations/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/mywin/moderations/page.js"
+      "static/chunks/app/creation/b2c/yourinformations/page.js"
     ],
-    "/mywin/completions/page": [
+    "/creation/b2c/yourwinstory/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/mywin/completions/page.js"
+      "static/chunks/app/creation/b2c/yourwinstory/page.js"
     ]
   }
 }

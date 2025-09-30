@@ -60,19 +60,20 @@ const CompletionScoringModal: React.FC<CompletionScoringModalProps> = ({
         
         <div className="popup-content">
           <p className="scoring-description">
-            Move the slider to assign a score from 0 to 100 based on the overall quality of this completion
+            Move the slider to assign a score from 1 to 100 based on the overall quality of this completion.
+            A score of 0 equals Refusal (use the Refuse button).
           </p>
           
           <div className="slider-container">
             <div className="score-labels">
-              <span>0</span>
+              <span>1</span>
               <span>100</span>
             </div>
             
             <div className="slider-track">
               <input
                 type="range"
-                min="0"
+                min="1"
                 max="100"
                 value={score}
                 onChange={(e) => handleSliderChange(parseInt(e.target.value))}
@@ -123,7 +124,7 @@ const CompletionScoringModal: React.FC<CompletionScoringModalProps> = ({
           </button>
           
           <div className="score-note">
-            <p>Each score can only be used once per campaign by the same moderator. Scores marked as unavailable are those you have already used for other completions from this same initial campaign.</p>
+            <p>Each score can only be used once per campaign by the same moderator. Unavailable scores are those already used for other completions from this same initial campaign.</p>
             <p><strong>Content type:</strong> {contentType === 'b2c' ? 'B2C Creation' : contentType === 'agency' ? 'Agency B2C' : 'Individual Creation'}</p>
           </div>
         </div>

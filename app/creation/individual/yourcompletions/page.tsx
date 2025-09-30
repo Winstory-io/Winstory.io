@@ -1942,7 +1942,7 @@ export default function YourCompletionsPage() {
 
                 <div style={{ marginBottom: 16 }}>
                   <strong style={{ color: '#FFD600' }}>🏅 Winner Selection</strong><br />
-                  <strong>Decentralized moderators</strong> score each completion from 0/100 to 100/100 based on quality and alignment with your original creation. Each moderator can only use a score once per campaign, ensuring unique ranking. The <strong>top 3 winners</strong> are determined by the <strong>average scores</strong> across all moderators - the completions most preferred by the moderation community.
+                  <strong>Decentralized moderators</strong> score each completion from 1/100 to 100/100 based on quality and alignment with your original creation. Each moderator can only use a score once per campaign, ensuring unique ranking. The <strong>top 3 winners</strong> are determined by the <strong>average scores</strong> across all moderators — the completions most preferred by the moderation community.
                 </div>
 
                 <div style={{ marginBottom: 16 }}>

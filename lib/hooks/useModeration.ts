@@ -193,6 +193,12 @@ export const useModeration = () => {
   const submitCompletionScore = useCallback(async (score: number, completionId?: string) => {
     if (!currentSession || !account?.address) return false;
 
+    // 0 = Refus (ne pas soumettre comme score)
+    if (score === 0) {
+      console.error('0/100 équivaut à un refus. Utilisez l’option Refuser.');
+      return false;
+    }
+
     try {
       // Vérifier localement si le score est déjà utilisé
       if (moderatorUsedScores.includes(score)) {

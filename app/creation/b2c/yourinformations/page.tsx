@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import { useAccessibilityFix } from '@/lib/hooks/useAccessibilityFix';
 
 const GreenArrowButton = ({ onClick }: { onClick: () => void }) => (
     <button
@@ -34,6 +35,7 @@ const CloseIcon = ({ onClick }: { onClick: () => void }) => (
 
 export default function YourInformationsB2C() {
     const router = useRouter();
+    const { suppressWarning } = useAccessibilityFix();
     const [company, setCompany] = useState<string>("");
     const [email, setEmail] = useState<string>("");
     const [showTooltip, setShowTooltip] = useState(false);
@@ -45,16 +47,17 @@ export default function YourInformationsB2C() {
             setCompany(companyData?.name || "@company");
             setEmail(userData?.email || "adress logged");
         };
+        const onVisibilityChange = () => {
+            if (document.visibilityState === 'visible') readLocalStorage();
+        };
         readLocalStorage();
         window.addEventListener('focus', readLocalStorage);
-        document.addEventListener('visibilitychange', () => {
-            if (document.visibilityState === 'visible') readLocalStorage();
-        });
+        document.addEventListener('visibilitychange', onVisibilityChange);
         return () => {
             window.removeEventListener('focus', readLocalStorage);
-            document.removeEventListener('visibilitychange', readLocalStorage);
+            document.removeEventListener('visibilitychange', onVisibilityChange);
         };
-    }, [company, email, router]);
+    }, []);
 
     return (
         <ProtectedRoute>
@@ -139,4 +142,4 @@ export default function YourInformationsB2C() {
             </div>
         </ProtectedRoute>
     );
-} 
+}

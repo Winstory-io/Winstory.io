@@ -11,7 +11,6 @@ export default function B2CLoginPage() {
   const [redirectMessage, setRedirectMessage] = useState('');
   const router = useRouter();
   const redirectTimeout = useRef<NodeJS.Timeout | null>(null);
-  const hasRedirected = useRef(false);
 
   // DEBUG affichage du localStorage
   const [debugUser, setDebugUser] = useState('');
@@ -32,9 +31,6 @@ export default function B2CLoginPage() {
 
   // Effet unique pour la redirection après login
   useEffect(() => {
-    // Éviter les redirections multiples
-    if (hasRedirected.current) return;
-    
     // Nettoyer tout timeout précédent
     if (redirectTimeout.current) {
       clearTimeout(redirectTimeout.current);
@@ -44,7 +40,6 @@ export default function B2CLoginPage() {
     const user = JSON.parse(localStorage.getItem('user') || 'null');
     const wallet = localStorage.getItem('walletAddress');
     if (user?.email && wallet) {
-      hasRedirected.current = true;
       setIsConnected(true);
       setShowRedirectArrow(true);
       setRedirectMessage('Redirecting to "Your informations"...');
@@ -53,7 +48,6 @@ export default function B2CLoginPage() {
         router.push('/creation/b2c/yourinformations');
       }, 600);
     } else if (user) {
-      hasRedirected.current = true;
       setIsConnected(true);
       setShowRedirectArrow(true);
       setRedirectMessage('Redirecting to "Your Story"...');
@@ -72,18 +66,15 @@ export default function B2CLoginPage() {
         redirectTimeout.current = null;
       }
     };
-  }, []); // Supprimé router des dépendances
+  }, [router]);
 
   // Function to call after successful login
   const handleLoginSuccess = (data: { email: string; walletAddress: string }) => {
     // data: { email, walletAddress }
     if (!data || !data.email || !data.walletAddress) return;
-    if (hasRedirected.current) return; // Éviter les redirections multiples
-    
     const domain = data.email.split('@')[1] || '';
     localStorage.setItem("user", JSON.stringify({ email: data.email }));
     localStorage.setItem("company", JSON.stringify({ name: domain }));
-    hasRedirected.current = true;
     setIsConnected(true);
     setShowRedirectArrow(true);
     setRedirectMessage('Redirecting to "Your informations"...');
@@ -96,7 +87,6 @@ export default function B2CLoginPage() {
 
   // Function to handle logout
   const handleLogout = () => {
-    hasRedirected.current = false; // Reset pour permettre une nouvelle redirection
     localStorage.removeItem("user");
     localStorage.removeItem("company");
     setIsConnected(false);
@@ -232,4 +222,4 @@ export default function B2CLoginPage() {
       </div>
     </div>
   );
-}
+} 

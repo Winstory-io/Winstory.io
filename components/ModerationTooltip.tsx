@@ -120,6 +120,25 @@ const ModerationTooltip: React.FC<ModerationTooltipProps> = ({ isOpen, onClose }
                 Make informed decisions based on clear criteria.
               </p>
             </div>
+
+            {/* V1 Staking & Moderation Rules */}
+            <div style={{
+              background: 'rgba(0, 0, 0, 0.5)',
+              border: '1px solid rgba(255, 215, 0, 0.2)',
+              borderRadius: '12px',
+              padding: '16px',
+              marginTop: '16px'
+            }}>
+              <h3 style={{ color: '#FFD600', fontSize: '16px', fontWeight: 700, margin: '0 0 8px 0' }}>V1 Staking & Moderation — How it works</h3>
+              <ul style={{ margin: 0, paddingLeft: '18px', color: '#ddd', fontSize: '14px' }}>
+                <li><strong>Eligibility (ACTIVE/PASSIVE)</strong>: ACTIVE if stake ≥ 50 and stake age ≥ 7 days. Otherwise PASSIVE. Only ACTIVE get XP; PASSIVE can share the minority pool but earn 0 XP.</li>
+                <li><strong>Vote weight (50/50)</strong>: 50% ploutocracy (your stake share) + 50% democracy (stake factor, XP log factor, age factor).</li>
+                <li><strong>Decision</strong>: YES if combined YES ≥ 2× NO and ≥ 50% of ACTIVE stake is YES. NO if combined NO ≥ 2× YES and ≥ 50% of ACTIVE stake is NO. Else GREY.</li>
+                <li><strong>Rewards pool (example 510 $/€)</strong>: Majority ACTIVE share ≈ 459 $/€ proportional to stake. Minority ACTIVE + PASSIVE share ≈ 51 $/€ . If no minority+passive stake, 51 $/€ are added to majority.</li>
+                <li><strong>XP</strong>: ACTIVE voters get +5 base XP. Extra XP for majority/minority is allocated by stake share, dominance, and XP log factor. PASSIVE get 0 XP.</li>
+                <li><strong>Risk</strong>: If you vote against the final decision, you may lose a proportional part of your stake (slashing risk depends on outcome).</li>
+              </ul>
+            </div>
           </section>
 
           {/* Tabs Section */}

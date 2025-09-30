@@ -307,6 +307,12 @@ const ModerationPage = () => {
   const handleCompletionScore = async (score: number) => {
     if (!currentSession) return;
     
+    // Si 0, c'est un refus explicite
+    if (score === 0) {
+      await handleCompletionRefuse();
+      return;
+    }
+
     try {
       const success = await submitCompletionScore(score);
       if (success) {

@@ -37,7 +37,7 @@ const ModerationButtons: React.FC<ModerationButtonsProps> = ({
             : '✅ For company stories: follows the brand\'s creative structure and purpose'
         ],
         additionalInfo: 'Once validated, this content will be eligible for community completions.',
-        warning: 'Your decision engages a proportional part of your staked WINC. If the majority of stakers vote YES and you also voted YES, you earn a share of the rewards pool. If the final vote is NO and you validated it, you lose proportional part of your stake.'
+        warning: 'V1 Staking: Only ACTIVE voters (stake ≥ 50 and stake age ≥ 7 days) earn XP and are subject to proportional slashing if they vote against the final decision. Your vote weight = 50% stake share + 50% democracy factors (stake, XP, age). If YES wins and you voted YES, you share the majority pool (e.g. 459 $/€) proportional to your stake among majority ACTIVE. Minority ACTIVE + PASSIVE share the minority pool (e.g. 51 $/€). If there is no minority+passive stake, the minority pool goes to the majority. If NO wins while you validated, you lose a proportional part of your stake.'
       };
     } else {
       return {
@@ -48,8 +48,8 @@ const ModerationButtons: React.FC<ModerationButtonsProps> = ({
           '✅ Follows the narrative, visual, and guideline defined by the initial company',
           '✅ Does not violate any of the listed refusal rules'
         ],
-        additionalInfo: 'Once validated, you\'ll assign a score from 0/100 to 100/100 based on the overall quality of Completion. Each score can only be used once per campaign. This scoring system helps identify the top 3 highest-rated contributions, they will win the 3 Premium Rewards.',
-        warning: 'Your decision engages a proportional part of your staked WINC. If the majority of stakers vote YES, and you also voted YES, you earn a share of the rewards pool. If the final vote is NO and you validated it, you lose proportional part of your stake.'
+        additionalInfo: 'Once validated, you\'ll assign a score from 1/100 to 100/100 based on the overall quality of the completion. Each score can only be used once per campaign. This scoring system helps identify the top 3 highest-rated contributions; they will win the 3 Premium Rewards.',
+        warning: 'V1 Staking: Only ACTIVE voters (stake ≥ 50 and stake age ≥ 7 days) earn XP and are subject to proportional slashing if they vote against the final decision. Your weight combines 50% ploutocracy (stake share) + 50% democracy (stake, XP, age). If YES wins and you voted YES, you receive part of the majority pool (e.g. 459 $/€) proportional to your stake among majority ACTIVE. Minority ACTIVE + PASSIVE split the minority pool (e.g. 51 $/€). If there is no minority+passive stake, the minority pool is added to the majority. If NO wins while you validated, you lose a proportional part of your stake.'
       };
     }
   };
@@ -69,7 +69,7 @@ const ModerationButtons: React.FC<ModerationButtonsProps> = ({
           '🚫 It has clearly not been enhanced, assisted, or post-produced using generative AI or similar post-prod technologies'
         ],
         additionalInfo: 'Refusing content is a strong decision. Make sure it clearly meets at least one of these criteria.',
-        warning: 'Your decision engages a proportional part of your staked WINC. If the majority of stakers vote Refuse, and you also voted Refuse, you win a share of the rewards pool. If the final vote is Valid and you refused it, you lose proportional part of your stake.'
+        warning: 'V1 Staking: Only ACTIVE voters (stake ≥ 50 and stake age ≥ 7 days) earn XP and may be slashed if they vote against the final decision. Weight = 50% stake share + 50% democracy (stake, XP, age). If NO wins and you voted NO, you receive a share of the majority pool (e.g. 459 $/€) proportional to your stake among majority ACTIVE. Minority ACTIVE + PASSIVE share the minority pool (e.g. 51 $/€). If there is no minority+passive stake, the minority pool goes to the majority. If YES wins while you refused, you lose a proportional part of your stake.'
       };
     } else {
       return {
@@ -84,7 +84,7 @@ const ModerationButtons: React.FC<ModerationButtonsProps> = ({
           '🚫 It contains explicit pornography'
         ],
         additionalInfo: 'Refusing content is a strong decision. Make sure it clearly meets at least one of these criteria.',
-        warning: 'Your decision engages a proportional part of your staked WINC. If the majority of stakers vote NO, and you also voted NO, you earn a share of the rewards pool. If the final vote is YES and you refused it, you lose proportional part of your stake.'
+        warning: 'V1 Staking: Only ACTIVE voters (stake ≥ 50 and stake age ≥ 7 days) earn XP and may be slashed if they vote against the final decision. Weight = 50% stake share + 50% democracy (stake, XP, age). If NO wins and you voted NO, you receive a share of the majority pool (e.g. 459 $/€) proportional to your stake among majority ACTIVE. Minority ACTIVE + PASSIVE share the minority pool (e.g. 51 $/€). If there is no minority+passive stake, the minority pool goes to the majority. If YES wins while you refused, you lose a proportional part of your stake.'
       };
     }
   };
@@ -356,7 +356,8 @@ const ModerationButtons: React.FC<ModerationButtonsProps> = ({
             </h2>
             
             <p style={{ color: '#fff', marginBottom: '20px', fontSize: '14px' }}>
-              Move the slider to assign a score from 0 to 100 based on the overall quality of this completion
+              Move the slider to assign a score from 1 to 100 based on the overall quality of this completion.
+              A score of 0 equals Refusal (use the Refuse button).
             </p>
             
             {/* Slider Container */}
@@ -368,14 +369,14 @@ const ModerationButtons: React.FC<ModerationButtonsProps> = ({
                 fontSize: '12px',
                 color: '#999'
               }}>
-                <span>0</span>
+                <span>1</span>
                 <span>100</span>
               </div>
               
               <div style={{ position: 'relative', marginBottom: '16px' }}>
                 <input
                   type="range"
-                  min="0"
+                  min="1"
                   max="100"
                   value={currentScore}
                   onChange={(e) => setCurrentScore(parseInt(e.target.value))}

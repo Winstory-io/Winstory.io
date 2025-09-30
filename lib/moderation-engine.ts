@@ -532,3 +532,287 @@ export function validateModerationInputs(
   
   return { valid: true };
 }
+
+// V1 Staking & Moderation Framework Types
+export interface StakerInputV1 {
+  wallet: string;
+  stake: number; // in base currency units (e.g., WINC), not wei
+  stakeAgeDays: number;
+  xp: number; // current XP_i
+  vote: 'YES' | 'NO' | 'PASSIVE';
+}
+
+export interface StakingFrameworkParamsV1 {
+  minStakeToVote?: number;
+  stakeAgeMinDays?: number;
+  threshold_stake_k?: number;
+  age_max_days?: number;
+  XP_scale?: number;
+  alpha?: number;
+  beta?: number;
+  fraction_small_threshold?: number;
+  stake_fraction_threshold?: number;
+  enableAdaptiveDemocracy?: boolean;
+  totalPoolEur?: number; // default example 510
+  majorityPoolRatio?: number; // default 0.9 -> 459 on 510
+}
+
+export interface StakingFrameworkOutputV1Item {
+  wallet: string;
+  stake: number;
+  vote: 'YES' | 'NO' | 'PASSIVE';
+  eligibility: 'ACTIVE' | 'PASSIVE';
+  reward_eur: number;
+  xp: number;
+  weights: {
+    pluto_share: number;
+    demo_share: number;
+    combined_weight: number;
+  };
+}
+
+export interface StakingFrameworkOutputV1 {
+  decision: 'YES' | 'NO' | 'GREY';
+  majority_pool_eur: number;
+  minority_pool_eur: number;
+  dominance: number; // Combined_majority / (Combined_yes + Combined_no)
+  stake_yes_active_fraction: number; // active stake YES / active stake total
+  params: Required<StakingFrameworkParamsV1>;
+  totals: {
+    activeCount: number;
+    passiveCount: number;
+    activeStakeTotal: number;
+    passiveStakeTotal: number;
+    yesCombined: number;
+    noCombined: number;
+    yesStakeActive: number;
+    noStakeActive: number;
+  };
+  distribution: StakingFrameworkOutputV1Item[];
+}
+
+const DEFAULT_PARAMS_V1: Required<StakingFrameworkParamsV1> = {
+  minStakeToVote: 50,
+  stakeAgeMinDays: 7,
+  threshold_stake_k: 50,
+  age_max_days: 365,
+  XP_scale: 100,
+  alpha: 0.5,
+  beta: 0.5,
+  fraction_small_threshold: 0.30,
+  stake_fraction_threshold: 0.5,
+  enableAdaptiveDemocracy: true,
+  totalPoolEur: 510,
+  majorityPoolRatio: 0.9
+};
+
+function clamp01(x: number): number {
+  if (Number.isNaN(x) || !Number.isFinite(x)) return 0;
+  if (x < 0) return 0;
+  if (x > 1) return 1;
+  return x;
+}
+
+function safeDiv(a: number, b: number): number {
+  return b === 0 ? 0 : a / b;
+}
+
+function sum(nums: number[]): number { return nums.reduce((acc, v) => acc + v, 0); }
+
+/**
+ * Implements V1 staking & moderation framework (deployable version).
+ * Returns structured JSON for front/back-end integration.
+ */
+export function computeStakingDecisionV1(
+  stakers: StakerInputV1[],
+  params?: StakingFrameworkParamsV1
+): StakingFrameworkOutputV1 {
+  const p = { ...DEFAULT_PARAMS_V1, ...(params || {}) };
+
+  // 1) Eligibility (anti-sybil filter)
+  const enriched = stakers.map(s => {
+    const isActive = s.stake >= p.minStakeToVote && s.stakeAgeDays >= p.stakeAgeMinDays;
+    return { ...s, eligibility: isActive ? 'ACTIVE' as const : 'PASSIVE' as const };
+  });
+
+  const active = enriched.filter(s => s.eligibility === 'ACTIVE');
+  const passive = enriched.filter(s => s.eligibility === 'PASSIVE');
+
+  // 2) Raw scores
+  // Ploutocracy raw = stake
+  const pluto_raw = active.map(s => Math.max(0, s.stake));
+
+  // Democracy factors
+  const demo_raw = active.map(s => {
+    const stake_factor = safeDiv(s.stake, s.stake + p.threshold_stake_k);
+    const xp_factor = 1 + Math.log1p(Math.max(0, s.xp)) / Math.log1p(p.XP_scale);
+    const age_factor = clamp01(safeDiv(s.stakeAgeDays, p.age_max_days));
+    return stake_factor * xp_factor * age_factor;
+  });
+
+  // 3) Normalized shares
+  const sum_pluto = sum(pluto_raw);
+  const sum_demo = sum(demo_raw);
+  const pluto_share = active.map((_, i) => safeDiv(pluto_raw[i], sum_pluto));
+  const demo_share = active.map((_, i) => safeDiv(demo_raw[i], sum_demo));
+
+  // 4) Combined weights with optional adaptive democracy
+  let alpha = p.alpha;
+  let beta = p.beta;
+
+  if (p.enableAdaptiveDemocracy) {
+    const smallVoters = active.filter(s => s.stake < p.threshold_stake_k).length;
+    const fraction_small = safeDiv(smallVoters, Math.max(1, active.length));
+    if (fraction_small > p.fraction_small_threshold) {
+      // Reduce beta proportionally to how much the threshold is exceeded (cap at 50% reduction)
+      const overload = clamp01((fraction_small - p.fraction_small_threshold) / (1 - p.fraction_small_threshold));
+      const reduction = 0.5 * overload;
+      beta = Math.max(0, beta * (1 - reduction));
+      const sum_ab = alpha + beta;
+      if (sum_ab > 0) {
+        alpha = alpha / sum_ab;
+        beta = beta / sum_ab;
+      }
+    }
+  }
+
+  const combined_weight = active.map((_, i) => alpha * pluto_share[i] + beta * demo_share[i]);
+
+  // 5) Decision (quorum mixte)
+  const yesIdx = active.map((s, i) => ({ i, yes: s.vote === 'YES' }));
+  const combined_yes = sum(yesIdx.map(o => o.yes ? combined_weight[o.i] : 0));
+  const combined_no = sum(yesIdx.map(o => !o.yes ? combined_weight[o.i] : 0));
+
+  const activeStakeYes = sum(active.filter(s => s.vote === 'YES').map(s => s.stake));
+  const activeStakeNo = sum(active.filter(s => s.vote === 'NO').map(s => s.stake));
+  const activeStakeTotal = activeStakeYes + activeStakeNo;
+
+  const stake_yes_fraction = safeDiv(activeStakeYes, Math.max(1e-12, activeStakeTotal));
+  const stake_no_fraction = safeDiv(activeStakeNo, Math.max(1e-12, activeStakeTotal));
+
+  let decision: 'YES' | 'NO' | 'GREY' = 'GREY';
+  if (combined_yes >= 2 * combined_no && stake_yes_fraction >= p.stake_fraction_threshold) {
+    decision = 'YES';
+  } else if (combined_no >= 2 * combined_yes && stake_no_fraction >= p.stake_fraction_threshold) {
+    decision = 'NO';
+  }
+
+  // Dominance for XP (majority combined share)
+  const combinedTotal = combined_yes + combined_no;
+  const majoritySide = decision === 'YES' ? 'YES' : decision === 'NO' ? 'NO' : (combined_yes >= combined_no ? 'YES' : 'NO');
+  const dominance = combinedTotal > 0 ? (majoritySide === 'YES' ? combined_yes : combined_no) / combinedTotal : 0.5;
+
+  // 6) Rewards distribution
+  const totalPool = p.totalPoolEur;
+  const majorityPool = Math.round(totalPool * p.majorityPoolRatio);
+  const minorityPool = Math.round(totalPool - majorityPool);
+
+  // Majority = majority ACTIVE voters ∝ stake
+  const majorityActive = active.filter(s => (decision === 'YES' ? s.vote === 'YES' : s.vote === 'NO'));
+  const minorityActive = active.filter(s => (decision === 'YES' ? s.vote === 'NO' : s.vote === 'YES'));
+  const passiveAll = passive; // PASSIVE voters share minority pool
+
+  const minorityPoolGroup = [...minorityActive, ...passiveAll];
+
+  const majorityStakeSum = sum(majorityActive.map(s => s.stake));
+  const minorityStakeSum = sum(minorityPoolGroup.map(s => s.stake));
+
+  const effectiveMajorityPool = (minorityStakeSum === 0) ? (majorityPool + minorityPool) : majorityPool;
+  const effectiveMinorityPool = (minorityStakeSum === 0) ? 0 : minorityPool;
+
+  // 7) XP distribution
+  const XP_part = 5; // fixed per active voter
+  const XP_pool_major = 50;
+  const XP_pool_min = 10;
+
+  // XP log factor per voter
+  const xpLog = (xp: number) => 1 + Math.log1p(Math.max(0, xp)) / Math.log1p(p.XP_scale);
+
+  const distribution: StakingFrameworkOutputV1Item[] = enriched.map(s => {
+    // base structure
+    return {
+      wallet: s.wallet,
+      stake: s.stake,
+      vote: s.vote,
+      eligibility: s.eligibility,
+      reward_eur: 0,
+      xp: 0,
+      weights: { pluto_share: 0, demo_share: 0, combined_weight: 0 }
+    };
+  });
+
+  // Attach weights for ACTIVE
+  active.forEach((s, idxActive) => {
+    const d = distribution.find(d => d.wallet === s.wallet)!;
+    d.weights.pluto_share = pluto_share[idxActive] || 0;
+    d.weights.demo_share = demo_share[idxActive] || 0;
+    d.weights.combined_weight = combined_weight[idxActive] || 0;
+  });
+
+  // Rewards majority
+  distribution.forEach(d => {
+    if (d.eligibility === 'ACTIVE' && (decision === 'YES' ? d.vote === 'YES' : d.vote === 'NO')) {
+      const share = safeDiv(d.stake, Math.max(1e-12, majorityStakeSum));
+      d.reward_eur = +(effectiveMajorityPool * share).toFixed(2);
+    }
+  });
+
+  // Rewards minority + passive
+  distribution.forEach(d => {
+    const isMinorityActive = d.eligibility === 'ACTIVE' && (decision === 'YES' ? d.vote === 'NO' : d.vote === 'YES');
+    const isPassive = d.eligibility === 'PASSIVE';
+    if ((isMinorityActive || isPassive) && effectiveMinorityPool > 0) {
+      const share = safeDiv(d.stake, Math.max(1e-12, minorityStakeSum));
+      d.reward_eur += +(effectiveMinorityPool * share).toFixed(2);
+    }
+  });
+
+  // XP base for active voters only
+  distribution.forEach(d => {
+    if (d.eligibility === 'ACTIVE' && (d.vote === 'YES' || d.vote === 'NO')) {
+      d.xp += XP_part;
+    }
+  });
+
+  // XP pools weighted
+  const majorityActives = distribution.filter(d => d.eligibility === 'ACTIVE' && (decision === 'YES' ? d.vote === 'YES' : d.vote === 'NO'));
+  const minorityActives = distribution.filter(d => d.eligibility === 'ACTIVE' && (decision === 'YES' ? d.vote === 'NO' : d.vote === 'YES'));
+
+  const majorityXPWeights = majorityActives.map(d => (safeDiv(d.stake, Math.max(1e-12, majorityStakeSum)) * dominance * xpLog(enriched.find(s => s.wallet === d.wallet)!.xp)));
+  const minorityXPWeights = minorityActives.map(d => (safeDiv(d.stake, Math.max(1e-12, sum(minorityActives.map(x => x.stake)))) * (1 - dominance) * xpLog(enriched.find(s => s.wallet === d.wallet)!.xp)));
+
+  const sumMajW = sum(majorityXPWeights);
+  const sumMinW = sum(minorityXPWeights);
+
+  majorityActives.forEach((d, idx) => {
+    const w = majorityXPWeights[idx];
+    const share = safeDiv(w, Math.max(1e-12, sumMajW));
+    d.xp += Math.floor(XP_pool_major * share);
+  });
+
+  minorityActives.forEach((d, idx) => {
+    const w = minorityXPWeights[idx];
+    const share = safeDiv(w, Math.max(1e-12, sumMinW));
+    d.xp += Math.floor(XP_pool_min * share);
+  });
+
+  return {
+    decision,
+    majority_pool_eur: effectiveMajorityPool,
+    minority_pool_eur: effectiveMinorityPool,
+    dominance: +dominance.toFixed(6),
+    stake_yes_active_fraction: +stake_yes_fraction.toFixed(6),
+    params: p,
+    totals: {
+      activeCount: active.length,
+      passiveCount: passive.length,
+      activeStakeTotal: +activeStakeTotal,
+      passiveStakeTotal: +sum(passive.map(s => s.stake)),
+      yesCombined: +combined_yes,
+      noCombined: +combined_no,
+      yesStakeActive: +activeStakeYes,
+      noStakeActive: +activeStakeNo
+    },
+    distribution
+  };
+}
