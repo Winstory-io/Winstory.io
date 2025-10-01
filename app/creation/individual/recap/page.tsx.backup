@@ -1,6 +1,5 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import ThirdwebPayment from "@/components/ThirdwebPayment";
 import { useRouter } from 'next/navigation';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { getVideoFromIndexedDB } from '@/lib/videoStorage';
@@ -272,7 +271,6 @@ export default function IndividualRecapPage() {
   const [economicData, setEconomicData] = useState<any>(null);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [videoLoading, setVideoLoading] = useState(false);
-  const [showPayment, setShowPayment] = useState(false);
 
   useEffect(() => {
     // Charger les données depuis le localStorage
@@ -436,27 +434,11 @@ export default function IndividualRecapPage() {
 
   const handleConfirm = () => {
     setConfirmed(true);
-    setShowPayment(true);
-  };
-
-  const handlePaymentSuccess = (transactionHash: string) => {
-    console.log("Payment successful:", transactionHash);
-    // TODO: Créer la campagne dans la base de données
-    // TODO: Rediriger vers la page de succès
     setTimeout(() => {
-      router.push("/creation/individual/mint");
-    }, 2000);
-  };
-
-  const handlePaymentError = (error: string) => {
-    console.error("Payment error:", error);
-    setConfirmed(false);
-    setShowPayment(false);
-  };
-
-  const handlePaymentCancel = () => {
-    setConfirmed(false);
-    setShowPayment(false);
+      // TODO: Rediriger vers le processus de MINT
+      console.log("Redirecting to minting process...");
+      // router.push("/creation/individual/mint");
+    }, 1000);
   };
 
   const handleStartingStoryClick = () => {
@@ -735,7 +717,7 @@ export default function IndividualRecapPage() {
                       marginTop: '12px'
                     }}>
                       <div style={{ color: '#18C964', fontSize: 12, fontStyle: 'italic' }}>
-                        ✓ Your video is stored and ready for review by AI and human moderators
+                        ✓ Your video is ready for community completions
                       </div>
                     </div>
                   </div>
@@ -1016,15 +998,6 @@ export default function IndividualRecapPage() {
               </button>
             </div>
           </div>
-        )}
-        {/* Composant de paiement */}
-        {showPayment && economicData && (
-          <ThirdwebPayment
-            mintAmount={economicData.mint}
-            onPaymentSuccess={handlePaymentSuccess}
-            onPaymentError={handlePaymentError}
-            onCancel={handlePaymentCancel}
-          />
         )}
       </div>
     </ProtectedRoute>

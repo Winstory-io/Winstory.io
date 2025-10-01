@@ -1,0 +1,289 @@
+"use client";
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import ProtectedRoute from '@/components/ProtectedRoute';
+
+export default function IndividualMintPage() {
+  const router = useRouter();
+  const [campaignData, setCampaignData] = useState<any>(null);
+  const [isCreating, setIsCreating] = useState(true);
+  const [creationStep, setCreationStep] = useState(0);
+  const [error, setError] = useState('');
+
+  const steps = [
+    "Validating campaign data...",
+    "Creating campaign in database...",
+    "Setting up moderation system...",
+    "Configuring rewards...",
+    "Finalizing campaign setup..."
+  ];
+
+  useEffect(() => {
+    // Charger les données de la campagne depuis le localStorage
+    const storyData = localStorage.getItem("story");
+    const filmData = localStorage.getItem("film");
+    const completionsData = localStorage.getItem("completions");
+
+    if (storyData && filmData && completionsData) {
+      setCampaignData({
+        story: JSON.parse(storyData),
+        film: JSON.parse(filmData),
+        completions: JSON.parse(completionsData)
+      });
+    }
+
+    // Simuler la création de la campagne
+    simulateCampaignCreation();
+  }, []);
+
+  const simulateCampaignCreation = async () => {
+    try {
+      for (let i = 0; i < steps.length; i++) {
+        setCreationStep(i);
+        // Simuler un délai pour chaque étape
+        await new Promise(resolve => setTimeout(resolve, 1500));
+      }
+      
+      // Création réussie
+      setIsCreating(false);
+      
+      // TODO: Ici, on appellerait l'API pour créer la campagne dans la base de données
+      console.log("Campaign creation completed");
+      
+    } catch (error) {
+      console.error("Campaign creation error:", error);
+      setError("Failed to create campaign. Please try again.");
+      setIsCreating(false);
+    }
+  };
+
+  const handleGoToCampaign = () => {
+    // TODO: Rediriger vers la page de la campagne créée
+    router.push("/mywin/creations");
+  };
+
+  const handleGoHome = () => {
+    router.push("/welcome");
+  };
+
+  return (
+    <ProtectedRoute>
+      <div style={{ 
+        minHeight: '100vh', 
+        background: '#000', 
+        color: '#fff', 
+        display: 'flex', 
+        flexDirection: 'column', 
+        alignItems: 'center', 
+        justifyContent: 'center',
+        padding: '20px'
+      }}>
+        
+        {/* Header */}
+        <div style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center', 
+          marginBottom: '40px' 
+        }}>
+          <img src="/individual.svg" alt="Individual" style={{ width: 80, height: 80, marginRight: 16 }} />
+          <span style={{ fontSize: 28, fontWeight: 700, color: '#fff', letterSpacing: 1 }}>
+            Campaign Creation
+          </span>
+        </div>
+
+        {/* Contenu principal */}
+        <div style={{ 
+          maxWidth: 600, 
+          width: '100%', 
+          textAlign: 'center' 
+        }}>
+          
+          {isCreating ? (
+            <div>
+              {/* Indicateur de progression */}
+              <div style={{ marginBottom: '40px' }}>
+                <div style={{
+                  width: '120px',
+                  height: '120px',
+                  border: '4px solid #FFD600',
+                  borderTop: '4px solid transparent',
+                  borderRadius: '50%',
+                  animation: 'spin 1s linear infinite',
+                  margin: '0 auto 20px auto'
+                }}></div>
+                <div style={{ color: '#FFD600', fontSize: '18px', fontWeight: '600' }}>
+                  Creating your campaign...
+                </div>
+              </div>
+
+              {/* Étapes de création */}
+              <div style={{ marginBottom: '40px' }}>
+                {steps.map((step, index) => (
+                  <div
+                    key={index}
+                    style={{
+                      padding: '12px 20px',
+                      margin: '8px 0',
+                      background: index <= creationStep ? 'rgba(24, 201, 100, 0.1)' : 'rgba(255, 255, 255, 0.05)',
+                      border: `1px solid ${index <= creationStep ? '#18C964' : '#333'}`,
+                      borderRadius: '8px',
+                      color: index <= creationStep ? '#18C964' : '#666',
+                      fontSize: '14px',
+                      fontWeight: index <= creationStep ? '600' : '400',
+                      transition: 'all 0.3s ease'
+                    }}
+                  >
+                    {index < creationStep ? '✓ ' : index === creationStep ? '⏳ ' : '○ '}
+                    {step}
+                  </div>
+                ))}
+              </div>
+
+              {/* Barre de progression */}
+              <div style={{
+                background: '#333',
+                borderRadius: '10px',
+                height: '8px',
+                marginBottom: '20px',
+                overflow: 'hidden'
+              }}>
+                <div style={{
+                  background: 'linear-gradient(90deg, #18C964, #FFD600)',
+                  height: '100%',
+                  width: `${((creationStep + 1) / steps.length) * 100}%`,
+                  transition: 'width 0.5s ease'
+                }}></div>
+              </div>
+
+              <div style={{ color: '#666', fontSize: '12px' }}>
+                Step {creationStep + 1} of {steps.length}
+              </div>
+            </div>
+          ) : error ? (
+            /* Erreur */
+            <div>
+              <div style={{ color: '#FF2D2D', fontSize: '48px', marginBottom: '20px' }}>
+                ✗
+              </div>
+              <div style={{ color: '#FF2D2D', fontSize: '24px', fontWeight: '700', marginBottom: '16px' }}>
+                Creation Failed
+              </div>
+              <div style={{ color: '#fff', fontSize: '16px', marginBottom: '30px' }}>
+                {error}
+              </div>
+              <button
+                onClick={() => window.location.reload()}
+                style={{
+                  background: '#FFD600',
+                  color: '#000',
+                  border: 'none',
+                  borderRadius: '12px',
+                  padding: '16px 32px',
+                  fontSize: '18px',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  marginRight: '12px'
+                }}
+              >
+                Try Again
+              </button>
+              <button
+                onClick={handleGoHome}
+                style={{
+                  background: '#FF2D2D',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '12px',
+                  padding: '16px 32px',
+                  fontSize: '18px',
+                  fontWeight: '700',
+                  cursor: 'pointer'
+                }}
+              >
+                Go Home
+              </button>
+            </div>
+          ) : (
+            /* Succès */
+            <div>
+              <div style={{ color: '#18C964', fontSize: '48px', marginBottom: '20px' }}>
+                ✓
+              </div>
+              <div style={{ color: '#18C964', fontSize: '28px', fontWeight: '700', marginBottom: '16px' }}>
+                Campaign Created Successfully!
+              </div>
+              <div style={{ color: '#fff', fontSize: '16px', marginBottom: '30px' }}>
+                Your campaign is now live and ready to receive completions from the community.
+              </div>
+              
+              {/* Informations de la campagne */}
+              {campaignData && (
+                <div style={{
+                  background: 'rgba(255, 215, 0, 0.1)',
+                  border: '2px solid #FFD600',
+                  borderRadius: '12px',
+                  padding: '20px',
+                  marginBottom: '30px',
+                  textAlign: 'left'
+                }}>
+                  <div style={{ color: '#FFD600', fontSize: '18px', fontWeight: '600', marginBottom: '12px' }}>
+                    Campaign Details:
+                  </div>
+                  <div style={{ color: '#fff', fontSize: '14px', marginBottom: '8px' }}>
+                    <strong>Title:</strong> {campaignData.story?.title}
+                  </div>
+                  <div style={{ color: '#fff', fontSize: '14px', marginBottom: '8px' }}>
+                    <strong>Unit Value:</strong> {campaignData.completions?.wincValue} $WINC
+                  </div>
+                  <div style={{ color: '#fff', fontSize: '14px' }}>
+                    <strong>Max Completions:</strong> {campaignData.completions?.maxCompletions}
+                  </div>
+                </div>
+              )}
+
+              <button
+                onClick={handleGoToCampaign}
+                style={{
+                  background: '#18C964',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '12px',
+                  padding: '16px 32px',
+                  fontSize: '18px',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  marginRight: '12px'
+                }}
+              >
+                View Campaign
+              </button>
+              <button
+                onClick={handleGoHome}
+                style={{
+                  background: '#FFD600',
+                  color: '#000',
+                  border: 'none',
+                  borderRadius: '12px',
+                  padding: '16px 32px',
+                  fontSize: '18px',
+                  fontWeight: '700',
+                  cursor: 'pointer'
+                }}
+              >
+                Go Home
+              </button>
+            </div>
+          )}
+        </div>
+
+        <style jsx>{`
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}</style>
+      </div>
+    </ProtectedRoute>
+  );
+}

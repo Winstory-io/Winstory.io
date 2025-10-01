@@ -30,20 +30,56 @@
       "static/chunks/main-app.js",
       "static/chunks/app/creation/youare/page.js"
     ],
-    "/creation/b2c/login/page": [
+    "/creation/individual/login/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/creation/b2c/login/page.js"
+      "static/chunks/app/creation/individual/login/page.js"
     ],
-    "/creation/b2c/yourinformations/page": [
+    "/moderation/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/creation/b2c/yourinformations/page.js"
+      "static/chunks/app/moderation/layout.js"
     ],
-    "/creation/b2c/yourwinstory/page": [
+    "/moderation/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/creation/b2c/yourwinstory/page.js"
+      "static/css/app/moderation/page.css",
+      "static/chunks/app/moderation/page.js"
+    ],
+    "/api/moderation/moderator-scores/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/moderation/moderator-scores/route.js"
+    ],
+    "/creation/individual/yourwinstory/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/creation/individual/yourwinstory/page.js"
+    ],
+    "/creation/individual/yourfilm/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/creation/individual/yourfilm/page.js"
+    ],
+    "/creation/individual/yourcompletions/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/creation/individual/yourcompletions/page.js"
+    ],
+    "/creation/individual/recap/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/creation/individual/recap/page.js"
+    ],
+    "/creation/individual/mint/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/creation/individual/mint/page.js"
+    ],
+    "/api/campaigns/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/campaigns/route.js"
     ]
   }
 }
