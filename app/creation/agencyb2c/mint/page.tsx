@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import PricingBubbles from "@/components/PricingBubbles";
+import StripePaymentModal from "@/components/StripePaymentModal";
 
 export default function AgencyB2CMintPage() {
   const router = useRouter();
@@ -15,11 +16,17 @@ export default function AgencyB2CMintPage() {
       description: "Free completions for the community"
     }
   ]);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [userEmail, setUserEmail] = useState('');
 
   useEffect(() => {
     try {
       // Mark current flow as AgencyB2C to keep context coherent
       localStorage.setItem("currentCreationFlow", "AgencyB2C");
+      
+      // Récupérer l'email de l'utilisateur
+      const email = localStorage.getItem("userEmail") || '';
+      setUserEmail(email);
     } catch {}
 
     // Récupérer les données nécessaires du localStorage (sans utiliser les clés legacy de B2C)
@@ -59,9 +66,14 @@ export default function AgencyB2CMintPage() {
   const handlePaymentMethod = (method: string) => {
     // Stocker la méthode de paiement choisie
     localStorage.setItem("paymentMethod", method);
-    // Rediriger vers le processus de paiement ou confirmation
-    console.log(`Payment method selected: ${method}, Amount: $${totalPrice}`);
-    // TODO: Implémenter la logique de paiement
+    
+    if (method === 'USDC_Base') {
+      // TODO: Implement USDC payment (coming soon)
+      alert('USDC payment will be available soon!');
+    } else {
+      // For all other payment methods (Card, Stripe, PayPal, etc.), use Stripe
+      setIsPaymentModalOpen(true);
+    }
   };
 
   return (
@@ -155,6 +167,20 @@ export default function AgencyB2CMintPage() {
 
       {/* Back Button */}
       <button onClick={() => router.back()} style={{ background: 'none', border: '2px solid #fff', color: '#fff', borderRadius: 32, fontSize: 18, fontWeight: 700, padding: '10px 32px', cursor: 'pointer', marginTop: 32 }}>Back</button>
+      
+      {/* Modal de paiement Stripe */}
+      <StripePaymentModal
+        isOpen={isPaymentModalOpen}
+        onClose={() => setIsPaymentModalOpen(false)}
+        amount={totalPrice}
+        flowType="agencyb2c"
+        userEmail={userEmail}
+        metadata={{
+          pricingOptions: pricingOptions.filter(opt => opt.isSelected).map(opt => opt.label),
+          agencyName: localStorage.getItem("agencyName") || '',
+          clientB2CName: localStorage.getItem("clientB2CName") || '',
+        }}
+      />
     </div>
   );
 } 

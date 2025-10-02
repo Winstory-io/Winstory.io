@@ -202,6 +202,62 @@ enum CreatorType {
   INDIVIDUAL_CREATORS
   FOR_B2C
   FOR_INDIVIDUALS
+}
+
+// Modèles pour la gestion des paiements
+model Payment {
+  id                String   @id @default(cuid())
+  provider          String   // "stripe", "usdc_base", etc.
+  providerId        String   @unique // payment_intent.id ou tx hash
+  amount            Float    // Montant en cents (pour Stripe) ou unité de base
+  currency          String   @default("usd")
+  status            PaymentStatus @default(PENDING_SETTLEMENT)
+  
+  // Informations de campagne et utilisateur
+  campaignId        String?
+  userId            String?
+  userEmail         String?
+  userType          String?  // "B2C", "AgencyB2C", "Individual"
+  
+  // Métadonnées du paiement
+  metadata          Json?    // Données additionnelles (campagne, récompenses, etc.)
+  onchainTxHash     String?  // Hash de transaction blockchain si applicable
+  
+  // Dates
+  createdAt         DateTime @default(now())
+  settledAt         DateTime?
+  updatedAt         DateTime @updatedAt
+  
+  @@map("payments")
+}
+
+model PaymentReceipt {
+  id                String   @id @default(cuid())
+  paymentId         String   @unique
+  receiptUrl        String?  // URL de la facture PDF
+  invoiceNumber     String   @unique
+  
+  // Informations de facturation
+  billingName       String
+  billingEmail      String
+  billingAddress    String?
+  
+  // Pour AgencyB2C - client final
+  clientEmail       String?
+  clientName        String?
+  
+  createdAt         DateTime @default(now())
+  
+  @@map("payment_receipts")
+}
+
+enum PaymentStatus {
+  PENDING_SETTLEMENT
+  SETTLED
+  ONCHAIN
+  REFUNDED
+  FAILED
+  AWAITING_REVIEW
 } 
 
  
