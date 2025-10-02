@@ -32,19 +32,18 @@ export default function IndividualMintPage() {
   const [creationStep, setCreationStep] = useState(0);
   const [error, setError] = useState('');
   const [evaluationData, setEvaluationData] = useState<EvaluationData | null>(null);
-  const [isEvaluating, setIsEvaluating] = useState(false);
   const [evaluationError, setEvaluationError] = useState('');
   const [campaignId, setCampaignId] = useState<string | null>(null);
+  const [aiEvaluationCompleted, setAiEvaluationCompleted] = useState(false);
+  const [humanModerationStatus, setHumanModerationStatus] = useState<'pending' | 'in_progress' | 'approved' | 'rejected'>('pending');
 
+  // Simplified steps as requested
   const steps = [
-    "Validating campaign data...",
-    "Creating campaign in database...",
-    "Setting up moderation system...",
-    "Configuring rewards...",
-    "Finalizing campaign setup...",
-    "AI evaluation in progress...",
-    "Human moderation review...",
-    "Final approval..."
+    "Creating campaign in database",
+    "MINT on Blockchain",
+    "AI evaluation in progress",
+    "Configuring pool rewards",
+    "Human Moderation in progress"
   ];
 
   useEffect(() => {
@@ -131,44 +130,80 @@ export default function IndividualMintPage() {
     }
   };
 
+  // TODO: Replace this function with real blockchain transaction
+  // This function should handle the actual MINT transaction on blockchain
+  // It should integrate with thirdweb/metamask/wallet web3 for transaction signing
+  const performBlockchainMint = async () => {
+    try {
+      // TODO: Implement real blockchain transaction here
+      // This is where you'll integrate with:
+      // - thirdweb SDK for transaction handling
+      // - Wallet connection (MetaMask, WalletConnect, etc.)
+      // - Smart contract interaction for MINT
+      // - Transaction confirmation and hash retrieval
+      
+      console.log('TODO: Implement real blockchain MINT transaction');
+      console.log('This should:');
+      console.log('1. Connect to user wallet');
+      console.log('2. Sign transaction for MINT');
+      console.log('3. Wait for transaction confirmation');
+      console.log('4. Return transaction hash');
+      
+      // For now, simulate the transaction
+      await new Promise(resolve => setTimeout(resolve, 2500));
+      
+      // TODO: Return actual transaction hash when implemented
+      return '0x' + Math.random().toString(16).substr(2, 64);
+    } catch (error) {
+      console.error('Blockchain MINT error:', error);
+      throw error;
+    }
+  };
+
   const simulateCampaignCreation = async (data?: any) => {
     try {
       const payload = data || campaignData;
       if (!payload) throw new Error('Missing campaign data');
-      // Étapes 1-2: Création de base et base de données
+      
+      // Step 0: Creating campaign in database
       setCreationStep(0);
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      setCreationStep(1);
       await createCampaignInDatabase(payload);
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await new Promise(resolve => setTimeout(resolve, 2000));
       
-      // Étapes 3-5: Configuration
-      for (let i = 2; i < 5; i++) {
-        setCreationStep(i);
-        await new Promise(resolve => setTimeout(resolve, 1500));
-      }
+      // Step 1: MINT on Blockchain - TODO: Replace with real blockchain transaction
+      setCreationStep(1);
+      const transactionHash = await performBlockchainMint();
+      console.log('MINT transaction hash:', transactionHash);
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Étape 6: Évaluation IA
-      setCreationStep(5);
-      setIsEvaluating(true);
+      // Step 2: AI evaluation in progress
+      setCreationStep(2);
       await performAIEvaluation();
+      await new Promise(resolve => setTimeout(resolve, 2000));
       
-      // Étapes 7-8: Modération humaine et approbation finale
-      for (let i = 6; i < steps.length; i++) {
-        setCreationStep(i);
-        await new Promise(resolve => setTimeout(resolve, 2000));
-      }
+      // Mark AI evaluation as completed
+      setAiEvaluationCompleted(true);
+      
+      // Step 3: Configuring pool rewards
+      setCreationStep(3);
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Step 4: Human Moderation in progress
+      setCreationStep(4);
+      setHumanModerationStatus('in_progress');
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      
+      // Simulate human moderation result (for now, always approve)
+      // TODO: Replace with real human moderation system
+      setHumanModerationStatus('approved');
       
       // Création réussie
       setIsCreating(false);
-      setIsEvaluating(false);
       
     } catch (error) {
       console.error("Campaign creation error:", error);
       setError("Failed to create campaign. Please try again.");
       setIsCreating(false);
-      setIsEvaluating(false);
     }
   };
 
@@ -201,8 +236,8 @@ export default function IndividualMintPage() {
       // Mettre à jour le statut de la campagne
       if (evaluation.securityStatus === 'FLAGGED' || evaluation.tier === 'F') {
         await updateCampaignStatus('rejected', evaluation);
+        setHumanModerationStatus('rejected');
         setIsCreating(false);
-        setIsEvaluating(false);
         return;
       } else {
         await updateCampaignStatus('evaluating', evaluation);
@@ -212,12 +247,10 @@ export default function IndividualMintPage() {
       console.error('AI Evaluation error:', error);
       setEvaluationError('AI evaluation failed. Please try again.');
       setIsCreating(false);
-      setIsEvaluating(false);
     }
   };
 
   const handleGoToCampaign = () => {
-    // TODO: Rediriger vers la page de la campagne créée
     router.push("/mywin/creations");
   };
 
@@ -229,7 +262,8 @@ export default function IndividualMintPage() {
     setEvaluationData(null);
     setEvaluationError('');
     setIsCreating(true);
-    setIsEvaluating(false);
+    setAiEvaluationCompleted(false);
+    setHumanModerationStatus('pending');
     setCreationStep(0);
     simulateCampaignCreation();
   };
@@ -252,6 +286,112 @@ export default function IndividualMintPage() {
       console.error('Error approving campaign:', error);
       setError('Failed to approve campaign. Please try again.');
     }
+  };
+
+  // Function to determine step styling with enhanced logic for Human Moderation
+  const getStepStyle = (index: number) => {
+    // Step 4 (Human Moderation) special handling
+    if (index === 4) {
+      if (!aiEvaluationCompleted) {
+        // Not yet available (AI evaluation not completed)
+        return {
+          background: 'rgba(255, 255, 255, 0.05)',
+          border: '1px solid #333',
+          color: '#666',
+          fontWeight: '400'
+        };
+      }
+      
+      if (humanModerationStatus === 'in_progress') {
+        // In progress - YELLOW
+        return {
+          background: 'rgba(255, 215, 0, 0.1)',
+          border: '1px solid #FFD600',
+          color: '#FFD600',
+          fontWeight: '600'
+        };
+      }
+      
+      if (humanModerationStatus === 'approved') {
+        // Approved - GREEN
+        return {
+          background: 'rgba(24, 201, 100, 0.1)',
+          border: '1px solid #18C964',
+          color: '#18C964',
+          fontWeight: '600'
+        };
+      }
+      
+      if (humanModerationStatus === 'rejected') {
+        // Rejected - RED
+        return {
+          background: 'rgba(255, 45, 45, 0.1)',
+          border: '1px solid #FF2D2D',
+          color: '#FF2D2D',
+          fontWeight: '600'
+        };
+      }
+    }
+    
+    // Default styling for other steps
+    if (index < creationStep) {
+      return {
+        background: 'rgba(24, 201, 100, 0.1)',
+        border: '1px solid #18C964',
+        color: '#18C964',
+        fontWeight: '600'
+      };
+    }
+    
+    if (index === creationStep) {
+      return {
+        background: 'rgba(255, 215, 0, 0.1)',
+        border: '1px solid #FFD600',
+        color: '#FFD600',
+        fontWeight: '600'
+      };
+    }
+    
+    // Pending steps
+    return {
+      background: 'rgba(255, 255, 255, 0.05)',
+      border: '1px solid #333',
+      color: '#666',
+      fontWeight: '400'
+    };
+  };
+
+  // Function to get step icon with enhanced logic for Human Moderation
+  const getStepIcon = (index: number) => {
+    // Step 4 (Human Moderation) special handling
+    if (index === 4) {
+      if (!aiEvaluationCompleted) {
+        return '○ '; // Pending
+      }
+      
+      if (humanModerationStatus === 'in_progress') {
+        return '⏳ '; // In progress
+      }
+      
+      if (humanModerationStatus === 'approved') {
+        return '✓ '; // Approved
+      }
+      
+      if (humanModerationStatus === 'rejected') {
+        return '✗ '; // Rejected
+      }
+    }
+    
+    // Default logic for other steps
+    if (index < creationStep) {
+      return '✓ '; // Completed
+    }
+    
+    if (index === creationStep) {
+      return '⏳ '; // In progress
+    }
+    
+    return '○ '; // Pending
   };
 
   return (
@@ -301,31 +441,34 @@ export default function IndividualMintPage() {
                   margin: '0 auto 20px auto'
                 }}></div>
                 <div style={{ color: '#FFD600', fontSize: '18px', fontWeight: '600' }}>
-                  {isEvaluating ? 'AI Evaluation in Progress...' : 'Creating your campaign...'}
+                  Creating your campaign...
                 </div>
               </div>
 
               {/* Étapes de création */}
               <div style={{ marginBottom: '40px' }}>
-                {steps.map((step, index) => (
-                  <div
-                    key={index}
-                    style={{
-                      padding: '12px 20px',
-                      margin: '8px 0',
-                      background: index <= creationStep ? 'rgba(24, 201, 100, 0.1)' : 'rgba(255, 255, 255, 0.05)',
-                      border: `1px solid ${index <= creationStep ? '#18C964' : '#333'}`,
-                      borderRadius: '8px',
-                      color: index <= creationStep ? '#18C964' : '#666',
-                      fontSize: '14px',
-                      fontWeight: index <= creationStep ? '600' : '400',
-                      transition: 'all 0.3s ease'
-                    }}
-                  >
-                    {index < creationStep ? '✓ ' : index === creationStep ? '⏳ ' : '○ '}
-                    {step}
-                  </div>
-                ))}
+                {steps.map((step, index) => {
+                  const stepStyle = getStepStyle(index);
+                  return (
+                    <div
+                      key={index}
+                      style={{
+                        padding: '12px 20px',
+                        margin: '8px 0',
+                        background: stepStyle.background,
+                        border: stepStyle.border,
+                        borderRadius: '8px',
+                        color: stepStyle.color,
+                        fontSize: '14px',
+                        fontWeight: stepStyle.fontWeight as any,
+                        transition: 'all 0.3s ease'
+                      }}
+                    >
+                      {getStepIcon(index)}
+                      {step}
+                    </div>
+                  );
+                })}
               </div>
 
               {/* Barre de progression */}
@@ -344,8 +487,38 @@ export default function IndividualMintPage() {
                 }}></div>
               </div>
 
-              <div style={{ color: '#666', fontSize: '12px' }}>
+              <div style={{ color: '#666', fontSize: '12px', marginBottom: '20px' }}>
                 Step {creationStep + 1} of {steps.length}
+              </div>
+
+              {/* My Win Link */}
+              <div style={{ marginTop: '30px' }}>
+                <button
+                  onClick={handleGoToCampaign}
+                  style={{
+                    background: 'rgba(255, 215, 0, 0.1)',
+                    border: '1px solid #FFD600',
+                    borderRadius: '12px',
+                    padding: '12px 24px',
+                    color: '#FFD600',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    textDecoration: 'none',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'rgba(255, 215, 0, 0.2)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'rgba(255, 215, 0, 0.1)';
+                  }}
+                >
+                  📊 Track Your Campaign in My Win
+                </button>
               </div>
             </div>
           ) : evaluationData ? (
@@ -400,7 +573,7 @@ export default function IndividualMintPage() {
               </button>
             </div>
           ) : (
-            /* Succès (ne devrait pas arriver avec le nouveau flux) */
+            /* Succès */
             <div>
               <div style={{ color: '#18C964', fontSize: '48px', marginBottom: '20px' }}>
                 ✓

@@ -35,22 +35,6 @@
       "static/chunks/main-app.js",
       "static/chunks/app/creation/individual/login/page.js"
     ],
-    "/moderation/layout": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/moderation/layout.js"
-    ],
-    "/moderation/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/css/app/moderation/page.css",
-      "static/chunks/app/moderation/page.js"
-    ],
-    "/api/moderation/moderator-scores/route": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/api/moderation/moderator-scores/route.js"
-    ],
     "/creation/individual/yourwinstory/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
@@ -80,6 +64,36 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/api/campaigns/route.js"
+    ],
+    "/mywin/layout": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/mywin/layout.js"
+    ],
+    "/mywin/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/mywin/page.js"
+    ],
+    "/mywin/creations/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/mywin/creations/page.js"
+    ],
+    "/mywin/moderations/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/mywin/moderations/page.js"
+    ],
+    "/mywin/completions/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/mywin/completions/page.js"
+    ],
+    "/creation/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/creation/page.js"
     ]
   }
 }

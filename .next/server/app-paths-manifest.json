@@ -1,6 +1,5 @@
 {
   "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js",
-  "/api/campaigns/route": "app/api/campaigns/route.js",
-  "/creation/individual/recap/page": "app/creation/individual/recap/page.js",
-  "/creation/individual/mint/page": "app/creation/individual/mint/page.js"
+  "/mywin/creations/page": "app/mywin/creations/page.js",
+  "/mywin/moderations/page": "app/mywin/moderations/page.js"
 }
