@@ -1,4 +1,6 @@
-import React from 'react';
+'use client';
+
+import React, { useState } from 'react';
 
 type Tab = {
   key: string;
@@ -12,28 +14,72 @@ type ExplorerTabsProps = {
 };
 
 export default function ExplorerTabs({ tabs, activeTab, onTabChange }: ExplorerTabsProps) {
+  const [hoveredTab, setHoveredTab] = useState<string | null>(null);
+
   return (
-    <nav style={{ display: 'flex', gap: 32, padding: '0 2rem', marginBottom: 24 }}>
-      {tabs.map(tab => (
-        <button
-          key={tab.key}
-          onClick={() => onTabChange(tab.key)}
-          style={{
-            background: 'none',
-            border: 'none',
-            color: activeTab === tab.key ? '#FFD600' : '#bfae5e',
-            fontWeight: 700,
-            fontSize: 18,
-            padding: '12px 0',
-            borderBottom: activeTab === tab.key ? '4px solid #FFD600' : '4px solid transparent',
-            cursor: 'pointer',
-            outline: 'none',
-            transition: 'color 0.2s, border-bottom 0.2s',
-          }}
-        >
-          {tab.label}
-        </button>
-      ))}
+    <nav style={{ display: 'flex', gap: 40, padding: '0 2rem', marginBottom: 20, position: 'relative' }}>
+      {tabs.map((tab) => {
+        const isActive = activeTab === tab.key;
+        const isHovered = hoveredTab === tab.key;
+
+        return (
+          <button
+            key={tab.key}
+            onClick={() => onTabChange(tab.key)}
+            onMouseEnter={() => setHoveredTab(tab.key)}
+            onMouseLeave={() => setHoveredTab(null)}
+            style={{
+              position: 'relative',
+              background: 'none',
+              border: 'none',
+              color: isActive ? '#FFD600' : isHovered ? '#FFA500' : '#666',
+              fontWeight: 800,
+              fontSize: 20,
+              padding: '16px 8px',
+              cursor: 'pointer',
+              outline: 'none',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px',
+              textShadow: isActive ? '0 0 20px rgba(255, 214, 0, 0.5)' : 'none',
+            }}
+          >
+            {tab.label}
+            
+            {/* Active Indicator */}
+            <div
+              style={{
+                position: 'absolute',
+                bottom: 0,
+                left: 0,
+                right: 0,
+                height: 4,
+                background: isActive
+                  ? 'linear-gradient(90deg, #FFD600 0%, #FFA500 100%)'
+                  : 'transparent',
+                borderRadius: '4px 4px 0 0',
+                boxShadow: isActive ? '0 -2px 12px rgba(255, 214, 0, 0.6)' : 'none',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              }}
+            />
+
+            {/* Hover Indicator */}
+            {!isActive && isHovered && (
+              <div
+                style={{
+                  position: 'absolute',
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  height: 2,
+                  background: 'rgba(255, 165, 0, 0.5)',
+                  borderRadius: '2px 2px 0 0',
+                }}
+              />
+            )}
+          </button>
+        );
+      })}
     </nav>
   );
 } 
