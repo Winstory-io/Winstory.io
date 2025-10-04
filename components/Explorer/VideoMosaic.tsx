@@ -1,21 +1,38 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import VideoCard, { CampaignVideo } from './VideoCard';
 
 type VideoMosaicProps = {
   videos: CampaignVideo[];
   onInfoClick: (video: CampaignVideo) => void;
   onVideoClick?: (video: CampaignVideo) => void;
+  externalTypeFilter?: 'all' | 'company' | 'community' | 'completed';
+  externalFormatFilter?: 'all' | 'horizontal' | 'vertical';
+  externalSortBy?: 'recent' | 'popular';
 };
 
 type FilterType = 'all' | 'company' | 'community' | 'completed';
 type OrientationFilter = 'all' | 'horizontal' | 'vertical';
 
-export default function VideoMosaic({ videos, onInfoClick, onVideoClick }: VideoMosaicProps) {
-  const [filter, setFilter] = useState<FilterType>('all');
-  const [orientationFilter, setOrientationFilter] = useState<OrientationFilter>('all');
-  const [sortBy, setSortBy] = useState<'recent' | 'popular'>('recent');
+export default function VideoMosaic({ 
+  videos, 
+  onInfoClick, 
+  onVideoClick,
+  externalTypeFilter = 'all',
+  externalFormatFilter = 'all',
+  externalSortBy = 'recent',
+}: VideoMosaicProps) {
+  const [filter, setFilter] = useState<FilterType>(externalTypeFilter);
+  const [orientationFilter, setOrientationFilter] = useState<OrientationFilter>(externalFormatFilter);
+  const [sortBy, setSortBy] = useState<'recent' | 'popular'>(externalSortBy);
+
+  // Update internal state when external filters change
+  useEffect(() => {
+    setFilter(externalTypeFilter);
+    setOrientationFilter(externalFormatFilter);
+    setSortBy(externalSortBy);
+  }, [externalTypeFilter, externalFormatFilter, externalSortBy]);
 
   // Empty state
   if (!videos || videos.length === 0) {
@@ -114,6 +131,10 @@ export default function VideoMosaic({ videos, onInfoClick, onVideoClick }: Video
                   display: 'grid',
                   gridTemplateColumns: 'repeat(4, 1fr)',
                   gap: 24,
+                  justifyItems: 'center',
+                  maxWidth: '100%',
+                  margin: '0 auto',
+                  paddingTop: 48,
                 }}
               >
                 {sortedVideos
@@ -143,6 +164,10 @@ export default function VideoMosaic({ videos, onInfoClick, onVideoClick }: Video
                   display: 'grid',
                   gridTemplateColumns: 'repeat(4, 1fr)',
                   gap: 24,
+                  justifyItems: 'center',
+                  maxWidth: '100%',
+                  margin: '0 auto',
+                  paddingTop: 48,
                 }}
               >
                 {sortedVideos

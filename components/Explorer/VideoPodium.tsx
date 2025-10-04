@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import VideoCard, { CampaignVideo } from './VideoCard';
 
 type VideoPodiumProps = {
@@ -10,6 +10,12 @@ type VideoPodiumProps = {
 };
 
 export default function VideoPodium({ videos, onInfoClick, onVideoClick }: VideoPodiumProps) {
+  // ALL HOOKS MUST BE AT THE TOP - BEFORE ANY CONDITIONAL RETURNS
+  const [selectedOrientation, setSelectedOrientation] = useState<'horizontal' | 'vertical'>('horizontal');
+  const [showBubbleContent, setShowBubbleContent] = useState<{ type: 'starting' | 'guideline'; content: string } | null>(null);
+  const [horizontalIndex, setHorizontalIndex] = useState(0);
+  const [verticalIndex, setVerticalIndex] = useState(0);
+
   // Empty state
   if (!videos || videos.length === 0) {
     return (
@@ -37,169 +43,585 @@ export default function VideoPodium({ videos, onInfoClick, onVideoClick }: Video
     );
   }
 
-  // Get top 3 videos and add rank
-  const topThree = videos.slice(0, 3).map((video, index) => ({
+  // Group campaigns by orientation
+  const horizontalCampaigns: CampaignVideo[][] = [];
+  const verticalCampaigns: CampaignVideo[][] = [];
+
+  // Group videos into campaigns (1 initial + up to 3 completions)
+  const allVideos = [...videos];
+  let currentGroup: CampaignVideo[] = [];
+  
+  for (let i = 0; i < allVideos.length; i++) {
+    currentGroup.push(allVideos[i]);
+    
+    // When we have 4 videos or reach the end, save the group
+    if (currentGroup.length === 4 || i === allVideos.length - 1) {
+      if (currentGroup[0].orientation === 'horizontal') {
+        horizontalCampaigns.push([...currentGroup]);
+      } else {
+        verticalCampaigns.push([...currentGroup]);
+      }
+      currentGroup = [];
+    }
+  }
+
+  const activeCampaigns = selectedOrientation === 'horizontal' ? horizontalCampaigns : verticalCampaigns;
+  const currentIndex = selectedOrientation === 'horizontal' ? horizontalIndex : verticalIndex;
+  const setCurrentIndex = selectedOrientation === 'horizontal' ? setHorizontalIndex : setVerticalIndex;
+
+  if (activeCampaigns.length === 0) {
+    return (
+      <div style={{ padding: '0 2rem', textAlign: 'center', color: '#666', fontSize: 16 }}>
+        No {selectedOrientation} campaigns available in Best Completions.
+      </div>
+    );
+  }
+
+  const currentCampaign = activeCampaigns[currentIndex];
+  const initialVideo = currentCampaign[0];
+  const topCompletions = currentCampaign.slice(1, 4).map((video, index) => ({
     ...video,
     rank: index + 1,
   }));
 
-  // Better podium layout: horizontal row with cards side by side
+  const isHorizontal = selectedOrientation === 'horizontal';
+
   return (
-    <div style={{ padding: '0 2rem', maxWidth: 1600, margin: '0 auto' }}>
-      {/* Podium Display - Horizontal Layout */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: topThree.length === 3 ? '1fr 1fr 1fr' : topThree.length === 2 ? '1fr 1fr' : '1fr',
-          gap: 40,
-          margin: '0 auto',
-          maxWidth: 1400,
-        }}
-      >
-        {topThree.map((video, index) => {
-          const rank = video.rank!;
-          const colors = {
-            1: { primary: '#FFD700', secondary: '#FFA500', glow: 'rgba(255, 215, 0, 0.4)' },
-            2: { primary: '#C0C0C0', secondary: '#808080', glow: 'rgba(192, 192, 192, 0.4)' },
-            3: { primary: '#CD7F32', secondary: '#8B4513', glow: 'rgba(205, 127, 50, 0.4)' },
-          };
-          const color = colors[rank as 1 | 2 | 3];
-          
-          return (
-            <div
-              key={video.id}
+    <div style={{ padding: '0 2rem', maxWidth: 1800, margin: '0 auto' }}>
+      {/* Orientation Tabs - Left Side, Compact */}
+      <div style={{ display: 'flex', gap: 12, marginBottom: 40, justifyContent: 'flex-start' }}>
+        <button
+          onClick={() => {
+            setSelectedOrientation('horizontal');
+            setHorizontalIndex(0);
+          }}
+          disabled={horizontalCampaigns.length === 0}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            padding: '12px 20px',
+            background: selectedOrientation === 'horizontal' ? '#fff' : 'rgba(255, 255, 255, 0.1)',
+            border: `2px solid ${selectedOrientation === 'horizontal' ? '#FFD600' : 'rgba(255, 255, 255, 0.2)'}`,
+            borderRadius: 12,
+            color: selectedOrientation === 'horizontal' ? '#000' : '#fff',
+            fontSize: 14,
+            fontWeight: 700,
+            cursor: horizontalCampaigns.length === 0 ? 'not-allowed' : 'pointer',
+            transition: 'all 0.3s ease',
+            opacity: horizontalCampaigns.length === 0 ? 0.3 : 1,
+            boxShadow: selectedOrientation === 'horizontal' ? '0 4px 16px rgba(255, 214, 0, 0.4)' : 'none',
+          }}
+        >
+          <span style={{ fontSize: 20 }}>▬</span>
+          <span>Horizontal</span>
+        </button>
+
+        <button
+          onClick={() => {
+            setSelectedOrientation('vertical');
+            setVerticalIndex(0);
+          }}
+          disabled={verticalCampaigns.length === 0}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            padding: '12px 20px',
+            background: selectedOrientation === 'vertical' ? '#fff' : 'rgba(255, 255, 255, 0.1)',
+            border: `2px solid ${selectedOrientation === 'vertical' ? '#FFD600' : 'rgba(255, 255, 255, 0.2)'}`,
+            borderRadius: 12,
+            color: selectedOrientation === 'vertical' ? '#000' : '#fff',
+            fontSize: 14,
+            fontWeight: 700,
+            cursor: verticalCampaigns.length === 0 ? 'not-allowed' : 'pointer',
+            transition: 'all 0.3s ease',
+            opacity: verticalCampaigns.length === 0 ? 0.3 : 1,
+            boxShadow: selectedOrientation === 'vertical' ? '0 4px 16px rgba(255, 214, 0, 0.4)' : 'none',
+          }}
+        >
+          <span style={{ fontSize: 20 }}>▮</span>
+          <span>Vertical</span>
+        </button>
+      </div>
+
+      {/* Campaign Navigation & Display */}
+      <div style={{ position: 'relative' }}>
+        {/* Navigation Arrows */}
+        {activeCampaigns.length > 1 && (
+          <>
+            <button
+              onClick={() => setCurrentIndex(Math.max(0, currentIndex - 1))}
+              disabled={currentIndex === 0}
               style={{
+                position: 'absolute',
+                left: -60,
+                top: '50%',
+                transform: 'translateY(-50%)',
+                width: 50,
+                height: 50,
+                borderRadius: '50%',
+                background: currentIndex === 0 ? 'rgba(50, 50, 50, 0.5)' : 'rgba(0, 0, 0, 0.85)',
+                border: `2px solid ${currentIndex === 0 ? 'rgba(100, 100, 100, 0.3)' : 'rgba(255, 214, 0, 0.6)'}`,
+                color: currentIndex === 0 ? '#555' : '#FFD600',
+                fontSize: 24,
+                cursor: currentIndex === 0 ? 'not-allowed' : 'pointer',
                 display: 'flex',
-                flexDirection: 'column',
                 alignItems: 'center',
-                animation: `riseUp 0.8s ease ${index * 0.15}s backwards`,
-                position: 'relative',
+                justifyContent: 'center',
+                zIndex: 10,
+                transition: 'all 0.3s ease',
+                opacity: currentIndex === 0 ? 0.3 : 1,
+              }}
+              onMouseEnter={(e) => {
+                if (currentIndex !== 0) {
+                  e.currentTarget.style.background = '#FFD600';
+                  e.currentTarget.style.color = '#000';
+                  e.currentTarget.style.transform = 'translateY(-50%) scale(1.1)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (currentIndex !== 0) {
+                  e.currentTarget.style.background = 'rgba(0, 0, 0, 0.85)';
+                  e.currentTarget.style.color = '#FFD600';
+                  e.currentTarget.style.transform = 'translateY(-50%) scale(1)';
+                }
               }}
             >
-              {/* Rank Badge - Floating above */}
+              ‹
+            </button>
+
+            <button
+              onClick={() => setCurrentIndex(Math.min(activeCampaigns.length - 1, currentIndex + 1))}
+              disabled={currentIndex === activeCampaigns.length - 1}
+              style={{
+                position: 'absolute',
+                right: -60,
+                top: '50%',
+                transform: 'translateY(-50%)',
+                width: 50,
+                height: 50,
+                borderRadius: '50%',
+                background: currentIndex === activeCampaigns.length - 1 ? 'rgba(50, 50, 50, 0.5)' : 'rgba(0, 0, 0, 0.85)',
+                border: `2px solid ${currentIndex === activeCampaigns.length - 1 ? 'rgba(100, 100, 100, 0.3)' : 'rgba(255, 214, 0, 0.6)'}`,
+                color: currentIndex === activeCampaigns.length - 1 ? '#555' : '#FFD600',
+                fontSize: 24,
+                cursor: currentIndex === activeCampaigns.length - 1 ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 10,
+                transition: 'all 0.3s ease',
+                opacity: currentIndex === activeCampaigns.length - 1 ? 0.3 : 1,
+              }}
+              onMouseEnter={(e) => {
+                if (currentIndex !== activeCampaigns.length - 1) {
+                  e.currentTarget.style.background = '#FFD600';
+                  e.currentTarget.style.color = '#000';
+                  e.currentTarget.style.transform = 'translateY(-50%) scale(1.1)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (currentIndex !== activeCampaigns.length - 1) {
+                  e.currentTarget.style.background = 'rgba(0, 0, 0, 0.85)';
+                  e.currentTarget.style.color = '#FFD600';
+                  e.currentTarget.style.transform = 'translateY(-50%) scale(1)';
+                }
+              }}
+            >
+              ›
+            </button>
+          </>
+        )}
+
+        {/* Campaign Display */}
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: isHorizontal ? 'column' : 'row',
+            gap: isHorizontal ? 48 : 24,
+            alignItems: isHorizontal ? 'center' : 'center',
+            justifyContent: isHorizontal ? 'center' : 'center',
+            animation: 'fadeSlideIn 0.5s ease',
+            width: '100%',
+          }}
+        >
+          {/* Initial Video with Bubbles (only for horizontal) */}
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center',
+            gap: isHorizontal ? 60 : 0,
+            flexDirection: isHorizontal ? 'row' : 'column',
+            marginTop: isHorizontal ? -60 : 0,
+          }}>
+            {/* Starting Story Bubble - Only for horizontal */}
+            {isHorizontal && (
               <div
+                onClick={() => setShowBubbleContent({ type: 'starting', content: initialVideo.startingStory || 'Starting story...' })}
                 style={{
-                  width: 80,
-                  height: 80,
+                  width: 90,
+                  height: 90,
+                  background: 'linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, rgba(255, 215, 0, 0.05) 100%)',
+                  border: '2px solid rgba(255, 215, 0, 0.6)',
                   borderRadius: '50%',
-                  background: `linear-gradient(135deg, ${color.primary} 0%, ${color.secondary} 100%)`,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontWeight: 900,
-                  fontSize: 40,
-                  color: rank === 2 ? '#000' : '#fff',
-                  border: '4px solid #000',
-                  boxShadow: `0 8px 24px ${color.glow}, 0 0 60px ${color.glow}`,
-                  marginBottom: -40,
-                  zIndex: 10,
-                  position: 'relative',
+                  cursor: 'pointer',
+                  color: '#FFD600',
+                  fontWeight: 600,
+                  fontSize: 12,
+                  textAlign: 'center',
+                  padding: '8px',
+                  transition: 'all 0.3s ease',
+                  boxShadow: '0 4px 20px rgba(255, 215, 0, 0.2)',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'scale(1.05)';
+                  e.currentTarget.style.boxShadow = '0 6px 25px rgba(255, 215, 0, 0.3)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'scale(1)';
+                  e.currentTarget.style.boxShadow = '0 4px 20px rgba(255, 215, 0, 0.2)';
                 }}
               >
-                {rank}
+                Starting<br/>Story
+              </div>
+            )}
+
+            {/* Initial Video */}
+            <div
+              style={{
+                padding: 8,
+                border: '3px solid #00FF88',
+                borderRadius: 16,
+                boxShadow: '0 12px 40px rgba(0, 255, 136, 0.3)',
+                transform: isHorizontal ? 'scale(1.15)' : 'scale(0.85)',
+              }}
+            >
+              <VideoCard
+                video={initialVideo}
+                onInfoClick={onInfoClick}
+                onVideoClick={onVideoClick}
+                variant="podium"
+                size={isHorizontal ? "large" : "medium"}
+              />
+            </div>
+
+            {/* Guideline Bubble - Only for horizontal */}
+            {isHorizontal && (
+              <div
+                onClick={() => setShowBubbleContent({ type: 'guideline', content: initialVideo.guidelines || 'Guidelines...' })}
+                style={{
+                  width: 90,
+                  height: 90,
+                  background: 'linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, rgba(255, 215, 0, 0.05) 100%)',
+                  border: '2px solid rgba(255, 215, 0, 0.6)',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  color: '#FFD600',
+                  fontWeight: 600,
+                  fontSize: 12,
+                  textAlign: 'center',
+                  padding: '8px',
+                  transition: 'all 0.3s ease',
+                  boxShadow: '0 4px 20px rgba(255, 215, 0, 0.2)',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'scale(1.05)';
+                  e.currentTarget.style.boxShadow = '0 6px 25px rgba(255, 215, 0, 0.3)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'scale(1)';
+                  e.currentTarget.style.boxShadow = '0 4px 20px rgba(255, 215, 0, 0.2)';
+                }}
+              >
+                Guideline
+              </div>
+            )}
+          </div>
+
+          {/* Bubbles for Vertical Layout - Between initial and completions */}
+          {!isHorizontal && (
+            <div style={{ 
+              display: 'flex', 
+              flexDirection: 'column',
+              gap: 12,
+              alignItems: 'center',
+            }}>
+              {/* Starting Story Bubble */}
+              <div
+                onClick={() => setShowBubbleContent({ type: 'starting', content: initialVideo.startingStory || 'Starting story...' })}
+                style={{
+                  width: 70,
+                  height: 70,
+                  background: 'linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, rgba(255, 215, 0, 0.05) 100%)',
+                  border: '2px solid rgba(255, 215, 0, 0.6)',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  color: '#FFD600',
+                  fontWeight: 600,
+                  fontSize: 11,
+                  textAlign: 'center',
+                  padding: '8px',
+                  transition: 'all 0.3s ease',
+                  boxShadow: '0 4px 20px rgba(255, 215, 0, 0.2)',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'scale(1.05)';
+                  e.currentTarget.style.boxShadow = '0 6px 25px rgba(255, 215, 0, 0.3)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'scale(1)';
+                  e.currentTarget.style.boxShadow = '0 4px 20px rgba(255, 215, 0, 0.2)';
+                }}
+              >
+                Starting<br/>Story
               </div>
 
-              {/* Winner Container */}
+              {/* Guideline Bubble */}
               <div
+                onClick={() => setShowBubbleContent({ type: 'guideline', content: initialVideo.guidelines || 'Guidelines...' })}
                 style={{
-                  background: 'linear-gradient(145deg, #1a1a1a 0%, #0d0d0d 100%)',
-                  borderRadius: 20,
-                  padding: rank === 1 ? 24 : 20,
-                  border: `3px solid ${color.primary}`,
-                  boxShadow: `0 12px 40px ${color.glow}, inset 0 0 30px rgba(0,0,0,0.8)`,
-                  transform: rank === 1 ? 'scale(1.08)' : 'scale(1)',
-                  transition: 'transform 0.3s ease',
-                  width: '100%',
+                  width: 70,
+                  height: 70,
+                  background: 'linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, rgba(255, 215, 0, 0.05) 100%)',
+                  border: '2px solid rgba(255, 215, 0, 0.6)',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  color: '#FFD600',
+                  fontWeight: 600,
+                  fontSize: 11,
+                  textAlign: 'center',
+                  padding: '8px',
+                  transition: 'all 0.3s ease',
+                  boxShadow: '0 4px 20px rgba(255, 215, 0, 0.2)',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'scale(1.05)';
+                  e.currentTarget.style.boxShadow = '0 6px 25px rgba(255, 215, 0, 0.3)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'scale(1)';
+                  e.currentTarget.style.boxShadow = '0 4px 20px rgba(255, 215, 0, 0.2)';
                 }}
               >
-                {/* Video Card */}
-                <div style={{ marginBottom: 20, marginTop: 30 }}>
-                  <VideoCard
-                    video={video}
-                    onInfoClick={onInfoClick}
-                    onVideoClick={onVideoClick}
-                    variant="podium"
-                    size={rank === 1 ? 'large' : 'medium'}
-                  />
-                </div>
-
-                {/* Winner Info */}
-                <div style={{ textAlign: 'center', paddingTop: 12 }}>
-                  <div
-                    style={{
-                      fontSize: rank === 1 ? 18 : 16,
-                      fontWeight: 800,
-                      color: color.primary,
-                      textTransform: 'uppercase',
-                      letterSpacing: '1px',
-                      marginBottom: 12,
-                      textShadow: `0 0 20px ${color.glow}`,
-                    }}
-                  >
-                    {rank === 1 ? '🏆 Champion' : rank === 2 ? '🥈 Runner-Up' : '🥉 Third Place'}
-                  </div>
-
-                  {/* Reward Display */}
-                  {video.premiumReward && (
-                    <div
-                      style={{
-                        background: 'rgba(0, 255, 136, 0.15)',
-                        border: '2px solid rgba(0, 255, 136, 0.4)',
-                        borderRadius: 12,
-                        padding: '12px 20px',
-                        fontSize: 14,
-                        fontWeight: 700,
-                        color: '#00FF88',
-                        marginBottom: 8,
-                      }}
-                    >
-                      <div style={{ fontSize: 11, color: '#00FF88', opacity: 0.7, marginBottom: 4 }}>
-                        Premium Reward
-                      </div>
-                      💰 {video.premiumReward}
-                    </div>
-                  )}
-                </div>
+                Guideline
               </div>
             </div>
-          );
-        })}
+          )}
+
+          {/* Top 3 Completions - Always Side by Side */}
+          {topCompletions.length > 0 && (
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: `repeat(${topCompletions.length}, 1fr)`,
+                gap: isHorizontal ? 24 : 12,
+                alignItems: 'center',
+              }}
+            >
+              {topCompletions.map((video) => {
+                const rank = video.rank!;
+                const colors = {
+                  1: { primary: '#FFD700', glow: 'rgba(255, 215, 0, 0.4)' },
+                  2: { primary: '#C0C0C0', glow: 'rgba(192, 192, 192, 0.4)' },
+                  3: { primary: '#CD7F32', glow: 'rgba(205, 127, 50, 0.4)' },
+                };
+                const color = colors[rank as 1 | 2 | 3];
+
+                return (
+                  <div
+                    key={video.id}
+                    style={{
+                      position: 'relative',
+                      animation: `fadeIn 0.5s ease ${rank * 0.15}s backwards`,
+                    }}
+                  >
+                    {/* Ranking Badge - Closer to video */}
+                    <div
+                      style={{
+                        position: 'absolute',
+                        top: isHorizontal ? -8 : -6,
+                        left: isHorizontal ? -8 : -6,
+                        width: isHorizontal ? 44 : 38,
+                        height: isHorizontal ? 44 : 38,
+                        borderRadius: '50%',
+                        background: color.primary,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontWeight: 900,
+                        fontSize: isHorizontal ? 24 : 20,
+                        color: rank === 2 ? '#000' : '#fff',
+                        border: '3px solid #000',
+                        boxShadow: `0 4px 16px ${color.glow}, 0 0 20px ${color.glow}`,
+                        zIndex: 100,
+                      }}
+                    >
+                      {rank}
+                    </div>
+
+                    {/* Completion Card */}
+                    <div
+                      style={{
+                        padding: 6,
+                        border: `2px solid ${color.primary}`,
+                        borderRadius: 16,
+                        boxShadow: `0 6px 20px ${color.glow}`,
+                        transform: isHorizontal ? 'scale(1)' : 'scale(0.85)',
+                      }}
+                    >
+                      <VideoCard
+                        video={video}
+                        onInfoClick={onInfoClick}
+                        onVideoClick={onVideoClick}
+                        variant="podium"
+                        size="small"
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Page Indicator */}
+        {activeCampaigns.length > 1 && (
+          <div style={{ 
+            textAlign: 'center', 
+            marginTop: 32,
+            fontSize: 14,
+            color: '#666',
+            fontWeight: 600,
+          }}>
+            Campaign {currentIndex + 1} / {activeCampaigns.length}
+          </div>
+        )}
       </div>
 
-      {/* Description */}
-      <div
-        style={{
-          maxWidth: 800,
-          margin: '40px auto 0',
-          textAlign: 'center',
-          fontSize: 14,
-          color: '#999',
-          lineHeight: 1.8,
-          padding: '0 20px',
-        }}
-      >
-        <p style={{ marginBottom: 12 }}>
-          <span style={{ color: '#FFD600', fontWeight: 700 }}>Premium Rewards</span> are distributed to the top 3
-          completions at the end of each campaign.
-        </p>
-        <p style={{ margin: 0 }}>
-          Rankings are determined by moderator votes and community engagement. Keep creating exceptional content to
-          claim your spot on the podium!
-        </p>
-      </div>
+      {/* Bubble Content Modal */}
+      {showBubbleContent && (
+        <div
+          onClick={() => setShowBubbleContent(null)}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0, 0, 0, 0.85)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 2000,
+            padding: '20px',
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: 'linear-gradient(145deg, #1a1a1a 0%, #0d0d0d 100%)',
+              borderRadius: 20,
+              padding: 40,
+              maxWidth: 600,
+              width: '100%',
+              border: '2px solid #FFD600',
+              boxShadow: '0 20px 60px rgba(255, 214, 0, 0.3)',
+              position: 'relative',
+            }}
+          >
+            <button
+              onClick={() => setShowBubbleContent(null)}
+              style={{
+                position: 'absolute',
+                top: 16,
+                right: 16,
+                background: 'rgba(255, 214, 0, 0.2)',
+                border: '2px solid #FFD600',
+                borderRadius: '50%',
+                width: 40,
+                height: 40,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                fontSize: 20,
+                fontWeight: 700,
+                color: '#FFD600',
+                transition: 'all 0.2s',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = '#FFD600';
+                e.currentTarget.style.color = '#000';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'rgba(255, 214, 0, 0.2)';
+                e.currentTarget.style.color = '#FFD600';
+              }}
+            >
+              ×
+            </button>
+
+            <div
+              style={{
+                color: '#FFD600',
+                fontWeight: 800,
+                fontSize: 24,
+                marginBottom: 24,
+                textAlign: 'center',
+                letterSpacing: '1px',
+                textShadow: '0 0 20px rgba(255, 214, 0, 0.5)',
+              }}
+            >
+              {showBubbleContent.type === 'starting' ? '📝 Starting Story' : '📋 Guideline'}
+            </div>
+
+            <div
+              style={{
+                color: '#fff',
+                fontSize: 16,
+                lineHeight: 1.8,
+                textAlign: 'center',
+                whiteSpace: 'pre-wrap',
+              }}
+            >
+              {showBubbleContent.content}
+            </div>
+          </div>
+        </div>
+      )}
 
       <style jsx>{`
-        @keyframes riseUp {
+        @keyframes fadeSlideIn {
           from {
             opacity: 0;
-            transform: translateY(100px);
+            transform: translateY(20px);
           }
           to {
             opacity: 1;
             transform: translateY(0);
           }
         }
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
       `}</style>
     </div>
   );
-} 
+}

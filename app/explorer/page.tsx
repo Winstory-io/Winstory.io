@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import ExplorerTabs from "../../components/Explorer/ExplorerTabs";
 import ExplorerSubTabs from "../../components/Explorer/ExplorerSubTabs";
 import VideoCarousel from "../../components/Explorer/VideoCarousel";
@@ -88,6 +88,13 @@ export default function ExplorerPage() {
   const [selectedVideo, setSelectedVideo] = useState<CampaignVideo | null>(null);
   const [loading, setLoading] = useState(false);
   const [campaigns, setCampaigns] = useState<CampaignVideo[]>([]);
+  const [headerVisible, setHeaderVisible] = useState(true);
+  const lastScrollY = useRef(0);
+
+  // Filter states for "All" tab
+  const [typeFilter, setTypeFilter] = useState<'all' | 'company' | 'community' | 'completed'>('all');
+  const [formatFilter, setFormatFilter] = useState<'all' | 'horizontal' | 'vertical'>('all');
+  const [sortBy, setSortBy] = useState<'recent' | 'popular'>('recent');
 
   // Dev Controls State
   const [devShowMockData, setDevShowMockData] = useState(false);
@@ -137,9 +144,67 @@ export default function ExplorerPage() {
     return mockCampaigns;
   };
 
+  // Generate Best Completions mock data (1 initial + 3 completions per campaign)
+  const generateBestCompletionsCampaigns = (): CampaignVideo[] => {
+    const campaigns: CampaignVideo[] = [];
+    const campaignsToGenerate = Math.min(devPodiumCount, 5); // Max 5 campaigns
+
+    for (let campaignIndex = 0; campaignIndex < campaignsToGenerate; campaignIndex++) {
+      const isCompany = campaignIndex % 2 === 0;
+      const orientation = devOrientation === 'mixed' 
+        ? (campaignIndex % 2 === 0 ? 'horizontal' : 'vertical')
+        : devOrientation;
+
+      // Initial video (the campaign starter)
+      campaigns.push({
+        id: `best-initial-${campaignIndex}`,
+        title: `${isCompany ? 'Epic Brand Campaign' : 'Amazing Community Story'} #${campaignIndex + 1}`,
+        companyName: isCompany ? `TopBrand${campaignIndex + 1}` : undefined,
+        creatorWallet: !isCompany ? `0x${Math.random().toString(16).substr(2, 40)}` : undefined,
+        thumbnail: `https://picsum.photos/seed/best-${campaignIndex}/${orientation === 'vertical' ? '360/640' : '640/360'}`,
+        videoUrl: `https://example.com/best-video-${campaignIndex}`,
+        orientation: orientation as 'horizontal' | 'vertical',
+        completionPercentage: 100,
+        timeLeft: undefined, // Completed campaigns don't show time
+        standardReward: `${(campaignIndex + 1) * 15} WINC`,
+        premiumReward: `${(campaignIndex + 1) * 75} USDT + NFT`,
+        completionPrice: `${(0.08 + campaignIndex * 0.02).toFixed(2)} USDT`,
+        startingStory: `This is the initial creation that inspired ${3} amazing completions. The creator set a high bar for creativity and storytelling, challenging the community to build upon this foundation.`,
+        guidelines: 'Must maintain the same theme and quality. Be creative while staying true to the original vision. Professional quality required.',
+      });
+
+      // Top 3 completions
+      for (let rank = 1; rank <= 3; rank++) {
+        campaigns.push({
+          id: `best-completion-${campaignIndex}-${rank}`,
+          title: `Completion #${rank} - Campaign ${campaignIndex + 1}`,
+          companyName: undefined,
+          creatorWallet: `0x${Math.random().toString(16).substr(2, 40)}`,
+          thumbnail: `https://picsum.photos/seed/completion-${campaignIndex}-${rank}/${orientation === 'vertical' ? '360/640' : '640/360'}`,
+          videoUrl: `https://example.com/completion-${campaignIndex}-${rank}`,
+          orientation: orientation as 'horizontal' | 'vertical',
+          completionPercentage: 100,
+          timeLeft: undefined,
+          standardReward: undefined,
+          premiumReward: rank === 1 ? `${(campaignIndex + 1) * 100} USDT + Gold NFT` : 
+                         rank === 2 ? `${(campaignIndex + 1) * 60} USDT + Silver NFT` :
+                         `${(campaignIndex + 1) * 30} USDT + Bronze NFT`,
+          rank: rank,
+        });
+      }
+    }
+
+    return campaigns;
+  };
+
   // Filter campaigns based on active tab and sub-tab
   const getFilteredCampaigns = (): CampaignVideo[] => {
     if (!devShowMockData) return [];
+
+    if (activeTab === 'best') {
+      // Generate specific Best Completions data
+      return generateBestCompletionsCampaigns();
+    }
 
     const allCampaigns = generateMockCampaigns();
 
@@ -150,9 +215,6 @@ export default function ExplorerPage() {
         if (activeSubTab === 'community') return !campaign.companyName;
         return true;
       }).filter(campaign => (campaign.completionPercentage || 0) < 100);
-    } else if (activeTab === 'best') {
-      // Only show top N campaigns with ranks
-      return allCampaigns.filter(campaign => campaign.rank).slice(0, devPodiumCount);
     } else {
       // Show all
       return allCampaigns;
@@ -171,6 +233,26 @@ export default function ExplorerPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, activeSubTab, devShowMockData, devCampaignCount, devCompletionPercentage, devTimeLeftHours, devOrientation, devShowCompany, devShowCommunity, devPodiumCount]);
 
+  // Handle scroll to hide/show header
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      
+      if (currentScrollY > lastScrollY.current && currentScrollY > 100) {
+        // Scrolling down & past threshold
+        setHeaderVisible(false);
+      } else if (currentScrollY < lastScrollY.current) {
+        // Scrolling up
+        setHeaderVisible(true);
+      }
+      
+      lastScrollY.current = currentScrollY;
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   return (
     <div style={{ background: '#000', minHeight: '100vh', color: '#fff' }}>
       {/* Header Section */}
@@ -181,8 +263,10 @@ export default function ExplorerPage() {
           background: 'linear-gradient(180deg, #000 0%, rgba(0, 0, 0, 0.98) 100%)',
           borderBottom: '3px solid #FFD600',
           paddingBottom: 0,
-          zIndex: 100,
+          zIndex: 1000,
           boxShadow: '0 4px 20px rgba(0, 0, 0, 0.8)',
+          transform: headerVisible ? 'translateY(0)' : 'translateY(-100%)',
+          transition: 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
         }}
       >
         <header
@@ -301,9 +385,10 @@ export default function ExplorerPage() {
               ].map((f) => (
                 <button
                   key={f.key}
+                  onClick={() => setTypeFilter(f.key as typeof typeFilter)}
                   style={{
-                    background: 'transparent',
-                    border: 'none',
+                    background: typeFilter === f.key ? 'rgba(255, 214, 0, 0.2)' : 'transparent',
+                    border: typeFilter === f.key ? '1px solid #FFD600' : 'none',
                     color: '#FFD600',
                     fontWeight: 700,
                     fontSize: 13,
@@ -311,15 +396,19 @@ export default function ExplorerPage() {
                     padding: '4px 12px',
                     borderRadius: 12,
                     transition: 'all 0.2s',
-                    opacity: 0.6,
+                    opacity: typeFilter === f.key ? 1 : 0.6,
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.opacity = '1';
-                    e.currentTarget.style.background = 'rgba(255, 214, 0, 0.1)';
+                    if (typeFilter !== f.key) {
+                      e.currentTarget.style.background = 'rgba(255, 214, 0, 0.1)';
+                    }
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.opacity = '0.6';
-                    e.currentTarget.style.background = 'transparent';
+                    e.currentTarget.style.opacity = typeFilter === f.key ? '1' : '0.6';
+                    if (typeFilter !== f.key) {
+                      e.currentTarget.style.background = 'transparent';
+                    }
                   }}
                 >
                   {f.icon} {f.label}
@@ -337,9 +426,10 @@ export default function ExplorerPage() {
               ].map((f) => (
                 <button
                   key={f.key}
+                  onClick={() => setFormatFilter(f.key as typeof formatFilter)}
                   style={{
-                    background: 'transparent',
-                    border: 'none',
+                    background: formatFilter === f.key ? 'rgba(0, 255, 176, 0.2)' : 'transparent',
+                    border: formatFilter === f.key ? '1px solid #00FFB0' : 'none',
                     color: '#00FFB0',
                     fontWeight: 700,
                     fontSize: 13,
@@ -347,15 +437,19 @@ export default function ExplorerPage() {
                     padding: '4px 12px',
                     borderRadius: 12,
                     transition: 'all 0.2s',
-                    opacity: 0.6,
+                    opacity: formatFilter === f.key ? 1 : 0.6,
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.opacity = '1';
-                    e.currentTarget.style.background = 'rgba(0, 255, 176, 0.1)';
+                    if (formatFilter !== f.key) {
+                      e.currentTarget.style.background = 'rgba(0, 255, 176, 0.1)';
+                    }
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.opacity = '0.6';
-                    e.currentTarget.style.background = 'transparent';
+                    e.currentTarget.style.opacity = formatFilter === f.key ? '1' : '0.6';
+                    if (formatFilter !== f.key) {
+                      e.currentTarget.style.background = 'transparent';
+                    }
                   }}
                 >
                   {f.icon} {f.label}
@@ -367,6 +461,8 @@ export default function ExplorerPage() {
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
               <span style={{ fontSize: 12, color: '#666', fontWeight: 600 }}>Sort:</span>
               <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as 'recent' | 'popular')}
                 style={{
                   background: 'transparent',
                   border: '1px solid rgba(255, 255, 255, 0.2)',
@@ -379,8 +475,8 @@ export default function ExplorerPage() {
                   outline: 'none',
                 }}
               >
-                <option style={{ background: '#000' }}>Most Recent</option>
-                <option style={{ background: '#000' }}>Most Popular</option>
+                <option value="recent" style={{ background: '#000' }}>Most Recent</option>
+                <option value="popular" style={{ background: '#000' }}>Most Popular</option>
               </select>
             </div>
           </div>
@@ -388,7 +484,15 @@ export default function ExplorerPage() {
       </div>
 
       {/* Main Content */}
-      <main style={{ padding: '3rem 0', minHeight: 'calc(100vh - 200px)' }}>
+      <main 
+        style={{ 
+          paddingTop: '4rem',
+          paddingBottom: '3rem', 
+          minHeight: 'calc(100vh - 200px)',
+          position: 'relative',
+          zIndex: 1,
+        }}
+      >
         {loading ? (
           <div
             style={{
@@ -427,7 +531,14 @@ export default function ExplorerPage() {
         ) : activeTab === 'best' ? (
           <VideoPodium videos={campaigns} onInfoClick={setSelectedCampaign} onVideoClick={setSelectedVideo} />
         ) : (
-          <VideoMosaic videos={campaigns} onInfoClick={setSelectedCampaign} onVideoClick={setSelectedVideo} />
+          <VideoMosaic 
+            videos={campaigns} 
+            onInfoClick={setSelectedCampaign} 
+            onVideoClick={setSelectedVideo}
+            externalTypeFilter={typeFilter}
+            externalFormatFilter={formatFilter}
+            externalSortBy={sortBy}
+          />
         )}
       </main>
 
@@ -575,25 +686,56 @@ export default function ExplorerPage() {
                   </label>
                 </div>
 
-                {/* Podium Settings (only visible when Best Completions tab is active) */}
-                {activeTab === 'best' && (
-                  <div style={{ borderTop: '1px solid #333', paddingTop: 12 }}>
-                    <label style={{ fontSize: 12, color: '#C0C0C0', display: 'block', marginBottom: 6 }}>
-                      🏆 Podium Size: {devPodiumCount}
-                    </label>
-                    <input
-                      type="range"
-                      min={1}
-                      max={3}
-                      value={devPodiumCount}
-                      onChange={(e) => setDevPodiumCount(Number(e.target.value))}
-                      style={{ width: '100%' }}
-                    />
-                    <div style={{ fontSize: 10, color: '#666', marginTop: 2 }}>
-                      Show 1st place only, top 2, or full podium (1-3)
+                  {/* Podium Settings (only visible when Best Completions tab is active) */}
+                  {activeTab === 'best' && (
+                    <div style={{ borderTop: '1px solid #333', paddingTop: 12 }}>
+                      <div style={{ fontSize: 12, color: '#FFD600', fontWeight: 700, marginBottom: 12 }}>
+                        🏆 Best Completions Settings
+                      </div>
+                      
+                      <label style={{ fontSize: 12, color: '#C0C0C0', display: 'block', marginBottom: 6 }}>
+                        📊 Number of Campaigns: {devPodiumCount}
+                      </label>
+                      <input
+                        type="range"
+                        min={1}
+                        max={5}
+                        value={devPodiumCount}
+                        onChange={(e) => setDevPodiumCount(Number(e.target.value))}
+                        style={{ width: '100%' }}
+                      />
+                      <div style={{ fontSize: 10, color: '#666', marginTop: 2, marginBottom: 12 }}>
+                        Each campaign = 1 initial video + 3 top completions
+                      </div>
+
+                      {/* Video Orientation for Best Completions */}
+                      <label style={{ fontSize: 12, color: '#C0C0C0', display: 'block', marginBottom: 8 }}>
+                        📱 Campaign Orientation
+                      </label>
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        {(['horizontal', 'vertical', 'mixed'] as const).map((orientation) => (
+                          <button
+                            key={orientation}
+                            onClick={() => setDevOrientation(orientation)}
+                            style={{
+                              flex: 1,
+                              padding: '6px 8px',
+                              fontSize: 11,
+                              fontWeight: 700,
+                              background: devOrientation === orientation ? '#FFD600' : '#222',
+                              color: devOrientation === orientation ? '#000' : '#999',
+                              border: `1px solid ${devOrientation === orientation ? '#FFD600' : '#444'}`,
+                              borderRadius: 6,
+                              cursor: 'pointer',
+                              transition: 'all 0.2s',
+                            }}
+                          >
+                            {orientation === 'horizontal' ? '▬ 16:9' : orientation === 'vertical' ? '▮ 9:16' : 'Mixed'}
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
                 {/* Current Tab Info */}
                 <div style={{ borderTop: '1px solid #333', paddingTop: 12 }}>
