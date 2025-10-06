@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import ExplorerTabs from "../../components/Explorer/ExplorerTabs";
 import ExplorerSubTabs from "../../components/Explorer/ExplorerSubTabs";
 import VideoCarousel from "../../components/Explorer/VideoCarousel";
+import CompanyCarousel from "../../components/Explorer/CompanyCarousel";
 import VideoPodium from "../../components/Explorer/VideoPodium";
 import VideoMosaic from "../../components/Explorer/VideoMosaic";
 import CampaignInfoModal from "../../components/Explorer/CampaignInfoModal";
@@ -271,7 +272,7 @@ export default function ExplorerPage() {
       >
         <header
           style={{
-            position: 'relative',
+        position: 'relative',
             display: 'flex',
             alignItems: 'center',
             padding: '1.5rem 2rem',
@@ -486,7 +487,7 @@ export default function ExplorerPage() {
       {/* Main Content */}
       <main 
         style={{ 
-          paddingTop: '4rem',
+          paddingTop: '3rem',
           paddingBottom: '3rem', 
           minHeight: 'calc(100vh - 200px)',
           position: 'relative',
@@ -527,7 +528,11 @@ export default function ExplorerPage() {
             `}</style>
           </div>
         ) : activeTab === 'active' ? (
-          <VideoCarousel videos={campaigns} subTab={activeSubTab} onInfoClick={setSelectedCampaign} onVideoClick={setSelectedVideo} />
+          activeSubTab === 'company' ? (
+            <CompanyCarousel videos={campaigns} onInfoClick={setSelectedCampaign} onVideoClick={setSelectedVideo} />
+          ) : (
+            <VideoCarousel videos={campaigns} subTab={activeSubTab} onInfoClick={setSelectedCampaign} onVideoClick={setSelectedVideo} />
+          )
         ) : activeTab === 'best' ? (
           <VideoPodium videos={campaigns} onInfoClick={setSelectedCampaign} onVideoClick={setSelectedVideo} />
         ) : (
@@ -580,20 +585,23 @@ export default function ExplorerPage() {
 
             {devShowMockData && (
               <>
-                {/* Campaign Count */}
-                <div>
-                  <label style={{ fontSize: 12, color: '#C0C0C0', display: 'block', marginBottom: 6 }}>
-                    🎬 Number of Campaigns: {devCampaignCount}
-                  </label>
-                  <input
-                    type="range"
-                    min={1}
-                    max={20}
-                    value={devCampaignCount}
-                    onChange={(e) => setDevCampaignCount(Number(e.target.value))}
-                    style={{ width: '100%' }}
-                  />
-                </div>
+                  {/* Campaign Count - Different for Active vs All */}
+                  <div>
+                    <label style={{ fontSize: 12, color: '#C0C0C0', display: 'block', marginBottom: 6 }}>
+                      🎬 Number of Campaigns: {devCampaignCount}
+                    </label>
+                    <input
+                      type="range"
+                      min={1}
+                      max={activeTab === 'active' ? 50 : 20}
+                      value={devCampaignCount}
+                      onChange={(e) => setDevCampaignCount(Number(e.target.value))}
+                      style={{ width: '100%' }}
+                    />
+                    <div style={{ fontSize: 10, color: '#666', marginTop: 2 }}>
+                      {activeTab === 'active' ? 'Max 50 for Active Creations' : 'Max 20 for other tabs'}
+                    </div>
+                  </div>
 
                 {/* Completion Percentage */}
                 <div>

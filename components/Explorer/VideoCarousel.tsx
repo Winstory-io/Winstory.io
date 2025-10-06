@@ -11,8 +11,7 @@ type VideoCarouselProps = {
 };
 
 export default function VideoCarousel({ videos, subTab, onInfoClick, onVideoClick }: VideoCarouselProps) {
-  const [horizontalPage, setHorizontalPage] = useState(0);
-  const [verticalPage, setVerticalPage] = useState(0);
+  const [selectedOrientation, setSelectedOrientation] = useState<'all' | 'horizontal' | 'vertical'>('all');
 
   // Empty state
   if (!videos || videos.length === 0) {
@@ -40,132 +39,154 @@ export default function VideoCarousel({ videos, subTab, onInfoClick, onVideoClic
     );
   }
 
-  const horizontalVideos = videos.filter(v => v.orientation === 'horizontal');
-  const verticalVideos = videos.filter(v => v.orientation === 'vertical');
+  // Filter by orientation
+  const filteredVideos = selectedOrientation === 'all' 
+    ? videos 
+    : videos.filter(v => v.orientation === selectedOrientation);
 
-  const VIDEOS_PER_PAGE = 4;
-  
-  // Pagination for horizontal videos
-  const totalHorizontalPages = Math.ceil(horizontalVideos.length / VIDEOS_PER_PAGE);
-  const horizontalStartIndex = horizontalPage * VIDEOS_PER_PAGE;
-  const visibleHorizontalVideos = horizontalVideos.slice(horizontalStartIndex, horizontalStartIndex + VIDEOS_PER_PAGE);
-
-  // Pagination for vertical videos
-  const totalVerticalPages = Math.ceil(verticalVideos.length / VIDEOS_PER_PAGE);
-  const verticalStartIndex = verticalPage * VIDEOS_PER_PAGE;
-  const visibleVerticalVideos = verticalVideos.slice(verticalStartIndex, verticalStartIndex + VIDEOS_PER_PAGE);
-
-  const NavigationButton = ({ 
-    direction, 
-    onClick, 
-    disabled 
-  }: { 
-    direction: 'left' | 'right'; 
-    onClick: () => void; 
-    disabled: boolean;
-  }) => (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      style={{
-        position: 'absolute',
-        top: '50%',
-        [direction === 'left' ? 'left' : 'right']: -20,
-        transform: 'translateY(-50%)',
-        width: 56,
-        height: 56,
-        borderRadius: '50%',
-        background: disabled ? 'rgba(50, 50, 50, 0.5)' : 'rgba(0, 0, 0, 0.85)',
-        border: `2px solid ${disabled ? 'rgba(100, 100, 100, 0.3)' : 'rgba(255, 214, 0, 0.6)'}`,
-        color: disabled ? '#555' : '#FFD600',
-        fontSize: 28,
-        cursor: disabled ? 'not-allowed' : 'pointer',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 20,
-        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-        boxShadow: disabled ? 'none' : '0 4px 16px rgba(0, 0, 0, 0.6)',
-        opacity: disabled ? 0.3 : 1,
-      }}
-      onMouseEnter={(e) => {
-        if (!disabled) {
-          e.currentTarget.style.background = 'rgba(255, 214, 0, 0.95)';
-          e.currentTarget.style.color = '#000';
-          e.currentTarget.style.transform = 'translateY(-50%) scale(1.1)';
-        }
-      }}
-      onMouseLeave={(e) => {
-        if (!disabled) {
-          e.currentTarget.style.background = 'rgba(0, 0, 0, 0.85)';
-          e.currentTarget.style.color = '#FFD600';
-          e.currentTarget.style.transform = 'translateY(-50%) scale(1)';
-        }
-      }}
-      aria-label={`Scroll ${direction}`}
-    >
-      {direction === 'left' ? '‹' : '›'}
-    </button>
-  );
+  // Reverse order so newest videos appear on the left (newest first)
+  const horizontalVideos = filteredVideos.filter(v => v.orientation === 'horizontal').reverse();
+  const verticalVideos = filteredVideos.filter(v => v.orientation === 'vertical').reverse();
 
   return (
-    <div style={{ position: 'relative', padding: '0 2rem' }}>
-      {/* Separate Sections for Horizontal and Vertical */}
+    <div style={{ position: 'relative', padding: '0 2rem', maxWidth: 1600, margin: '0 auto' }}>
+      {/* Orientation Filter Tabs - Centered */}
+      <div style={{ 
+        display: 'flex', 
+        gap: 12, 
+        marginBottom: 40, 
+        justifyContent: 'center',
+        alignItems: 'center',
+      }}>
+        <button
+          onClick={() => setSelectedOrientation('all')}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            padding: '12px 20px',
+            background: selectedOrientation === 'all' ? '#fff' : 'rgba(255, 255, 255, 0.1)',
+            border: `2px solid ${selectedOrientation === 'all' ? '#FFD600' : 'rgba(255, 255, 255, 0.2)'}`,
+            borderRadius: 12,
+            color: selectedOrientation === 'all' ? '#000' : '#fff',
+            fontSize: 14,
+            fontWeight: 700,
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+            boxShadow: selectedOrientation === 'all' ? '0 4px 16px rgba(255, 214, 0, 0.4)' : 'none',
+          }}
+        >
+          <span style={{ fontSize: 18 }}>🎬</span>
+          <span>All Videos</span>
+        </button>
+
+        <button
+          onClick={() => setSelectedOrientation('horizontal')}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            padding: '12px 20px',
+            background: selectedOrientation === 'horizontal' ? '#fff' : 'rgba(255, 255, 255, 0.1)',
+            border: `2px solid ${selectedOrientation === 'horizontal' ? '#FFD600' : 'rgba(255, 255, 255, 0.2)'}`,
+            borderRadius: 12,
+            color: selectedOrientation === 'horizontal' ? '#000' : '#fff',
+            fontSize: 14,
+            fontWeight: 700,
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+            boxShadow: selectedOrientation === 'horizontal' ? '0 4px 16px rgba(255, 214, 0, 0.4)' : 'none',
+          }}
+        >
+          <span style={{ fontSize: 20 }}>▬</span>
+          <span>Horizontal</span>
+        </button>
+
+        <button
+          onClick={() => setSelectedOrientation('vertical')}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            padding: '12px 20px',
+            background: selectedOrientation === 'vertical' ? '#fff' : 'rgba(255, 255, 255, 0.1)',
+            border: `2px solid ${selectedOrientation === 'vertical' ? '#FFD600' : 'rgba(255, 255, 255, 0.2)'}`,
+            borderRadius: 12,
+            color: selectedOrientation === 'vertical' ? '#000' : '#fff',
+            fontSize: 14,
+            fontWeight: 700,
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+            boxShadow: selectedOrientation === 'vertical' ? '0 4px 16px rgba(255, 214, 0, 0.4)' : 'none',
+          }}
+        >
+          <span style={{ fontSize: 20 }}>▮</span>
+          <span>Vertical</span>
+        </button>
+      </div>
+
+      {/* Content Display */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 48 }}>
-        {/* Horizontal Videos - Grid with Pagination */}
-        {horizontalVideos.length > 0 && (
+        {/* Horizontal Videos - Show if "All" or "Horizontal" selected */}
+        {(selectedOrientation === 'all' || selectedOrientation === 'horizontal') && horizontalVideos.length > 0 && (
           <div>
             <div style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'space-between',
-              marginBottom: 20,
+              fontSize: 14, 
+              color: '#999', 
+              marginBottom: 20, 
+              fontWeight: 600, 
+              textTransform: 'uppercase', 
+              letterSpacing: '1px',
+              textAlign: 'center',
             }}>
-              <div style={{ fontSize: 14, color: '#999', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '1px' }}>
-                ▬ Horizontal Videos
-              </div>
-              {totalHorizontalPages > 1 && (
-                <div style={{ fontSize: 13, color: '#666', fontWeight: 600 }}>
-                  {horizontalPage + 1} / {totalHorizontalPages}
-                </div>
-              )}
+              ▬ Horizontal Videos ({horizontalVideos.length})
             </div>
             
-            <div style={{ position: 'relative' }}>
-              {/* Navigation Buttons */}
-              {totalHorizontalPages > 1 && (
-                <>
-                  <NavigationButton
-                    direction="left"
-                    onClick={() => setHorizontalPage(Math.max(0, horizontalPage - 1))}
-                    disabled={horizontalPage === 0}
-                  />
-                  <NavigationButton
-                    direction="right"
-                    onClick={() => setHorizontalPage(Math.min(totalHorizontalPages - 1, horizontalPage + 1))}
-                    disabled={horizontalPage === totalHorizontalPages - 1}
-                  />
-                </>
-              )}
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                columnGap: 24, // Reduced horizontal gap for closer videos
+                rowGap: 80, // Much larger vertical gap to prevent hover overlap
+                paddingTop: 60,
+                paddingBottom: 60,
+                maxWidth: '100%',
+                margin: '0 auto',
+              }}
+            >
+              {horizontalVideos.map((video, index) => {
+                const totalVideos = horizontalVideos.length;
+                const remainder = totalVideos % 3;
+                const isInLastRow = index >= totalVideos - remainder && remainder !== 0;
+                
+                let gridColumn = 'span 1';
+                let additionalStyle: React.CSSProperties = {};
+                
+                if (isInLastRow && remainder === 1) {
+                  // Only 1 video in last row - center it
+                  gridColumn = '2 / 3';
+                } else if (isInLastRow && remainder === 2) {
+                  // 2 videos in last row - bring them much closer together
+                  if (index === totalVideos - 2) {
+                    gridColumn = '1 / 2'; // First of the two
+                    additionalStyle.marginLeft = '25%'; // Pull more from left
+                  } else {
+                    gridColumn = '3 / 4'; // Second of the two
+                    additionalStyle.marginRight = '25%'; // Pull more from right
+                  }
+                }
 
-              {/* Grid Display */}
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: `repeat(${Math.min(visibleHorizontalVideos.length, 4)}, 1fr)`,
-                  gap: 24,
-                  paddingTop: 48,
-                  paddingBottom: 20,
-                  justifyItems: 'center',
-                  transition: 'all 0.4s ease',
-                }}
-              >
-                {visibleHorizontalVideos.map((video, index) => (
+                return (
                   <div
                     key={video.id}
                     style={{
+                      gridColumn: gridColumn,
                       animation: 'fadeSlideIn 0.5s ease backwards',
                       animationDelay: `${index * 0.1}s`,
+                      display: 'flex',
+                      justifyContent: 'center',
+                      transform: 'scale(1.15)',
+                      ...additionalStyle,
                     }}
                   >
                     <VideoCard 
@@ -173,69 +194,74 @@ export default function VideoCarousel({ videos, subTab, onInfoClick, onVideoClic
                       onInfoClick={onInfoClick} 
                       onVideoClick={onVideoClick} 
                       variant="carousel" 
-                      size="medium" 
+                      size="large"
                     />
                   </div>
-                ))}
-              </div>
+                );
+              })}
             </div>
           </div>
         )}
 
-        {/* Vertical Videos - Grid with Pagination */}
-        {verticalVideos.length > 0 && (
+        {/* Vertical Videos - Show if "All" or "Vertical" selected */}
+        {(selectedOrientation === 'all' || selectedOrientation === 'vertical') && verticalVideos.length > 0 && (
           <div>
             <div style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'space-between',
-              marginBottom: 20,
+              fontSize: 14, 
+              color: '#999', 
+              marginBottom: 20, 
+              fontWeight: 600, 
+              textTransform: 'uppercase', 
+              letterSpacing: '1px',
+              textAlign: 'center',
             }}>
-              <div style={{ fontSize: 14, color: '#999', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '1px' }}>
-                ▮ Vertical Videos
-              </div>
-              {totalVerticalPages > 1 && (
-                <div style={{ fontSize: 13, color: '#666', fontWeight: 600 }}>
-                  {verticalPage + 1} / {totalVerticalPages}
-                </div>
-              )}
+              ▮ Vertical Videos ({verticalVideos.length})
             </div>
             
-            <div style={{ position: 'relative' }}>
-              {/* Navigation Buttons */}
-              {totalVerticalPages > 1 && (
-                <>
-                  <NavigationButton
-                    direction="left"
-                    onClick={() => setVerticalPage(Math.max(0, verticalPage - 1))}
-                    disabled={verticalPage === 0}
-                  />
-                  <NavigationButton
-                    direction="right"
-                    onClick={() => setVerticalPage(Math.min(totalVerticalPages - 1, verticalPage + 1))}
-                    disabled={verticalPage === totalVerticalPages - 1}
-                  />
-                </>
-              )}
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                columnGap: 24, // Reduced horizontal gap for closer videos
+                rowGap: 70, // Much larger vertical gap to prevent hover overlap
+                paddingTop: 48,
+                paddingBottom: 20,
+                maxWidth: '100%',
+                margin: '0 auto',
+              }}
+            >
+              {verticalVideos.map((video, index) => {
+                const totalVideos = verticalVideos.length;
+                const remainder = totalVideos % 3;
+                const isInLastRow = index >= totalVideos - remainder && remainder !== 0;
+                
+                let gridColumn = 'span 1';
+                let additionalStyle: React.CSSProperties = {};
+                
+                if (isInLastRow && remainder === 1) {
+                  // Only 1 video in last row - center it
+                  gridColumn = '2 / 3';
+                } else if (isInLastRow && remainder === 2) {
+                  // 2 videos in last row - bring them much closer together
+                  if (index === totalVideos - 2) {
+                    gridColumn = '1 / 2'; // First of the two
+                    additionalStyle.marginLeft = '30%'; // Pull much more from left (more for vertical)
+                  } else {
+                    gridColumn = '3 / 4'; // Second of the two
+                    additionalStyle.marginRight = '30%'; // Pull much more from right (more for vertical)
+                  }
+                }
 
-              {/* Grid Display */}
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: `repeat(${Math.min(visibleVerticalVideos.length, 4)}, 1fr)`,
-                  gap: 24,
-                  paddingTop: 48,
-                  paddingBottom: 20,
-                  justifyItems: 'center',
-                  transition: 'all 0.4s ease',
-                }}
-              >
-                {visibleVerticalVideos.map((video, index) => (
+                return (
                   <div
                     key={video.id}
                     style={{
+                      gridColumn: gridColumn,
                       animation: 'fadeSlideIn 0.5s ease backwards',
                       animationDelay: `${index * 0.1}s`,
+                      display: 'flex',
+                      justifyContent: 'center',
+                      ...additionalStyle,
                     }}
                   >
                     <VideoCard 
@@ -246,8 +272,8 @@ export default function VideoCarousel({ videos, subTab, onInfoClick, onVideoClic
                       size="medium" 
                     />
                   </div>
-                ))}
-              </div>
+                );
+              })}
             </div>
           </div>
         )}
@@ -257,7 +283,7 @@ export default function VideoCarousel({ videos, subTab, onInfoClick, onVideoClic
         @keyframes fadeSlideIn {
           from {
             opacity: 0;
-            transform: translateX(20px);
+            transform: translateX(-20px);
           }
           to {
             opacity: 1;
