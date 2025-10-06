@@ -16,6 +16,8 @@ export default function VideoPodium({ videos, onInfoClick, onVideoClick }: Video
   const [allIndex, setAllIndex] = useState(0);
   const [horizontalIndex, setHorizontalIndex] = useState(0);
   const [verticalIndex, setVerticalIndex] = useState(0);
+  const [isInitialVideoHovered, setIsInitialVideoHovered] = useState(false);
+  const [hoveredCompletionId, setHoveredCompletionId] = useState<string | null>(null);
 
   // Empty state
   if (!videos || videos.length === 0) {
@@ -90,15 +92,14 @@ export default function VideoPodium({ videos, onInfoClick, onVideoClick }: Video
   const isHorizontal = initialVideo.orientation === 'horizontal';
 
   return (
-    <div style={{ padding: '0 2rem', maxWidth: 1800, margin: '0 auto', marginTop: '-3rem' }}>
-      {/* Filters Section */}
+    <div style={{ padding: '0 2rem', maxWidth: 1800, margin: '0 auto', marginTop: '-3rem', display: 'flex', gap: 60 }}>
+      {/* Left Sidebar - Filters & Pagination */}
       <div style={{ 
         display: 'flex', 
         flexDirection: 'column', 
         gap: 12,
         minWidth: 180,
         marginTop: 80,
-        marginBottom: 40,
         position: 'relative',
         zIndex: 20,
       }}>
@@ -236,10 +237,108 @@ export default function VideoPodium({ videos, onInfoClick, onVideoClick }: Video
           <span style={{ fontSize: 20 }}>▮</span>
           <span>Vertical</span>
         </button>
+
+        {/* Pagination - Below Filters */}
+        {activeCampaigns.length > 1 && (
+          <div style={{ 
+            marginTop: 20,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 12,
+          }}>
+            <button
+              onClick={() => setCurrentIndex(Math.max(0, currentIndex - 1))}
+              disabled={currentIndex === 0}
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: '50%',
+                background: 'rgba(0, 0, 0, 0.7)',
+                border: currentIndex === 0 
+                  ? '1px solid rgba(100, 100, 100, 0.3)'
+                  : '1px solid rgba(255, 214, 0, 0.4)',
+                color: currentIndex === 0 ? 'rgba(100, 100, 100, 0.5)' : '#FFD600',
+                fontSize: 20,
+                fontWeight: 700,
+                cursor: currentIndex === 0 ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.3s ease',
+                opacity: currentIndex === 0 ? 0.3 : 0.7,
+                backdropFilter: 'blur(4px)',
+              }}
+              onMouseEnter={(e) => {
+                if (currentIndex !== 0) {
+                  e.currentTarget.style.opacity = '1';
+                  e.currentTarget.style.borderColor = 'rgba(255, 214, 0, 0.8)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (currentIndex !== 0) {
+                  e.currentTarget.style.opacity = '0.7';
+                  e.currentTarget.style.borderColor = 'rgba(255, 214, 0, 0.4)';
+                }
+              }}
+            >
+              ‹
+            </button>
+
+            <div style={{ 
+              fontSize: 13, 
+              color: '#FFD600',
+              fontWeight: 700,
+              minWidth: 45,
+              textAlign: 'center',
+            }}>
+              {currentIndex + 1} / {activeCampaigns.length}
+            </div>
+
+            <button
+              onClick={() => setCurrentIndex(Math.min(activeCampaigns.length - 1, currentIndex + 1))}
+              disabled={currentIndex === activeCampaigns.length - 1}
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: '50%',
+                background: 'rgba(0, 0, 0, 0.7)',
+                border: currentIndex === activeCampaigns.length - 1 
+                  ? '1px solid rgba(100, 100, 100, 0.3)'
+                  : '1px solid rgba(255, 214, 0, 0.4)',
+                color: currentIndex === activeCampaigns.length - 1 ? 'rgba(100, 100, 100, 0.5)' : '#FFD600',
+                fontSize: 20,
+                fontWeight: 700,
+                cursor: currentIndex === activeCampaigns.length - 1 ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.3s ease',
+                opacity: currentIndex === activeCampaigns.length - 1 ? 0.3 : 0.7,
+                backdropFilter: 'blur(4px)',
+              }}
+              onMouseEnter={(e) => {
+                if (currentIndex !== activeCampaigns.length - 1) {
+                  e.currentTarget.style.opacity = '1';
+                  e.currentTarget.style.borderColor = 'rgba(255, 214, 0, 0.8)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (currentIndex !== activeCampaigns.length - 1) {
+                  e.currentTarget.style.opacity = '0.7';
+                  e.currentTarget.style.borderColor = 'rgba(255, 214, 0, 0.4)';
+                }
+              }}
+            >
+              ›
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* Campaign Display */}
-      <div style={{ position: 'relative', marginTop: isHorizontal ? -290 : -200 }}>
+      {/* Right - Campaign Display */}
+      <div style={{ flex: 1, marginTop: isHorizontal ? 10 : 50 }}>
+        <div style={{ position: 'relative' }}>
         {/* Campaign Content */}
         <div
           style={{
@@ -268,42 +367,48 @@ export default function VideoPodium({ videos, onInfoClick, onVideoClick }: Video
                 style={{
                   width: 90,
                   height: 90,
-                  background: 'linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, rgba(255, 215, 0, 0.05) 100%)',
-                  border: '2px solid rgba(255, 215, 0, 0.6)',
+                  background: 'linear-gradient(135deg, rgba(0, 255, 136, 0.1) 0%, rgba(0, 255, 136, 0.05) 100%)',
+                  border: '2px solid rgba(0, 255, 136, 0.6)',
                   borderRadius: '50%',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   cursor: 'pointer',
-                  color: '#FFD600',
+                  color: '#00FF88',
                   fontWeight: 600,
                   fontSize: 12,
                   textAlign: 'center',
                   padding: '8px',
                   transition: 'all 0.3s ease',
-                  boxShadow: '0 4px 20px rgba(255, 215, 0, 0.2)',
+                  boxShadow: '0 4px 20px rgba(0, 255, 136, 0.2)',
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = 'scale(1.05)';
-                  e.currentTarget.style.boxShadow = '0 6px 25px rgba(255, 215, 0, 0.3)';
+                  e.currentTarget.style.boxShadow = '0 6px 25px rgba(0, 255, 136, 0.3)';
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = 'scale(1)';
-                  e.currentTarget.style.boxShadow = '0 4px 20px rgba(255, 215, 0, 0.2)';
+                  e.currentTarget.style.boxShadow = '0 4px 20px rgba(0, 255, 136, 0.2)';
                 }}
               >
                 Starting<br/>Story
               </div>
             )}
 
-            {/* Initial Video - Hover disabled to prevent layout shift */}
+            {/* Initial Video - Neon border effect on hover */}
             <div
+              onMouseEnter={() => setIsInitialVideoHovered(true)}
+              onMouseLeave={() => setIsInitialVideoHovered(false)}
               style={{
                 padding: 8,
                 border: '3px solid #00FF88',
                 borderRadius: 16,
-                boxShadow: '0 12px 40px rgba(0, 255, 136, 0.3)',
+                boxShadow: isInitialVideoHovered 
+                  ? '0 0 30px rgba(0, 255, 136, 0.8), 0 0 60px rgba(0, 255, 136, 0.6), 0 12px 40px rgba(0, 255, 136, 0.4)' 
+                  : '0 12px 40px rgba(0, 255, 136, 0.3)',
                 transform: isHorizontal ? 'scale(1.0)' : 'scale(0.85)',
+                transition: 'box-shadow 0.3s ease, border-color 0.3s ease',
+                borderColor: isInitialVideoHovered ? '#00FFAA' : '#00FF88',
               }}
             >
               <VideoCard
@@ -323,28 +428,28 @@ export default function VideoPodium({ videos, onInfoClick, onVideoClick }: Video
                 style={{
                   width: 90,
                   height: 90,
-                  background: 'linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, rgba(255, 215, 0, 0.05) 100%)',
-                  border: '2px solid rgba(255, 215, 0, 0.6)',
+                  background: 'linear-gradient(135deg, rgba(0, 255, 136, 0.1) 0%, rgba(0, 255, 136, 0.05) 100%)',
+                  border: '2px solid rgba(0, 255, 136, 0.6)',
                   borderRadius: '50%',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   cursor: 'pointer',
-                  color: '#FFD600',
+                  color: '#00FF88',
                   fontWeight: 600,
                   fontSize: 12,
                   textAlign: 'center',
                   padding: '8px',
                   transition: 'all 0.3s ease',
-                  boxShadow: '0 4px 20px rgba(255, 215, 0, 0.2)',
+                  boxShadow: '0 4px 20px rgba(0, 255, 136, 0.2)',
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = 'scale(1.05)';
-                  e.currentTarget.style.boxShadow = '0 6px 25px rgba(255, 215, 0, 0.3)';
+                  e.currentTarget.style.boxShadow = '0 6px 25px rgba(0, 255, 136, 0.3)';
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = 'scale(1)';
-                  e.currentTarget.style.boxShadow = '0 4px 20px rgba(255, 215, 0, 0.2)';
+                  e.currentTarget.style.boxShadow = '0 4px 20px rgba(0, 255, 136, 0.2)';
                 }}
               >
                 Guideline
@@ -368,28 +473,28 @@ export default function VideoPodium({ videos, onInfoClick, onVideoClick }: Video
                 style={{
                   width: 70,
                   height: 70,
-                  background: 'linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, rgba(255, 215, 0, 0.05) 100%)',
-                  border: '2px solid rgba(255, 215, 0, 0.6)',
+                  background: 'linear-gradient(135deg, rgba(0, 255, 136, 0.1) 0%, rgba(0, 255, 136, 0.05) 100%)',
+                  border: '2px solid rgba(0, 255, 136, 0.6)',
                   borderRadius: '50%',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   cursor: 'pointer',
-                  color: '#FFD600',
+                  color: '#00FF88',
                   fontWeight: 600,
                   fontSize: 11,
                   textAlign: 'center',
                   padding: '8px',
                   transition: 'all 0.3s ease',
-                  boxShadow: '0 4px 20px rgba(255, 215, 0, 0.2)',
+                  boxShadow: '0 4px 20px rgba(0, 255, 136, 0.2)',
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = 'scale(1.05)';
-                  e.currentTarget.style.boxShadow = '0 6px 25px rgba(255, 215, 0, 0.3)';
+                  e.currentTarget.style.boxShadow = '0 6px 25px rgba(0, 255, 136, 0.3)';
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = 'scale(1)';
-                  e.currentTarget.style.boxShadow = '0 4px 20px rgba(255, 215, 0, 0.2)';
+                  e.currentTarget.style.boxShadow = '0 4px 20px rgba(0, 255, 136, 0.2)';
                 }}
               >
                 Starting<br/>Story
@@ -401,28 +506,28 @@ export default function VideoPodium({ videos, onInfoClick, onVideoClick }: Video
                 style={{
                   width: 70,
                   height: 70,
-                  background: 'linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, rgba(255, 215, 0, 0.05) 100%)',
-                  border: '2px solid rgba(255, 215, 0, 0.6)',
+                  background: 'linear-gradient(135deg, rgba(0, 255, 136, 0.1) 0%, rgba(0, 255, 136, 0.05) 100%)',
+                  border: '2px solid rgba(0, 255, 136, 0.6)',
                   borderRadius: '50%',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   cursor: 'pointer',
-                  color: '#FFD600',
+                  color: '#00FF88',
                   fontWeight: 600,
                   fontSize: 11,
                   textAlign: 'center',
                   padding: '8px',
                   transition: 'all 0.3s ease',
-                  boxShadow: '0 4px 20px rgba(255, 215, 0, 0.2)',
+                  boxShadow: '0 4px 20px rgba(0, 255, 136, 0.2)',
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = 'scale(1.05)';
-                  e.currentTarget.style.boxShadow = '0 6px 25px rgba(255, 215, 0, 0.3)';
+                  e.currentTarget.style.boxShadow = '0 6px 25px rgba(0, 255, 136, 0.3)';
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = 'scale(1)';
-                  e.currentTarget.style.boxShadow = '0 4px 20px rgba(255, 215, 0, 0.2)';
+                  e.currentTarget.style.boxShadow = '0 4px 20px rgba(0, 255, 136, 0.2)';
                 }}
               >
                 Guideline
@@ -444,11 +549,12 @@ export default function VideoPodium({ videos, onInfoClick, onVideoClick }: Video
               {topCompletions.map((video) => {
                 const rank = video.rank!;
                 const colors = {
-                  1: { primary: '#FFD700', glow: 'rgba(255, 215, 0, 0.4)' },
-                  2: { primary: '#C0C0C0', glow: 'rgba(192, 192, 192, 0.4)' },
-                  3: { primary: '#CD7F32', glow: 'rgba(205, 127, 50, 0.4)' },
+                  1: { primary: '#FFD700', glow: 'rgba(255, 215, 0, 0.4)', neonGlow: 'rgba(255, 215, 0, 0.8)' },
+                  2: { primary: '#C0C0C0', glow: 'rgba(192, 192, 192, 0.4)', neonGlow: 'rgba(192, 192, 192, 0.8)' },
+                  3: { primary: '#CD7F32', glow: 'rgba(205, 127, 50, 0.4)', neonGlow: 'rgba(205, 127, 50, 0.8)' },
                 };
                 const color = colors[rank as 1 | 2 | 3];
+                const isHovered = hoveredCompletionId === video.id;
 
                 return (
                   <div
@@ -482,14 +588,21 @@ export default function VideoPodium({ videos, onInfoClick, onVideoClick }: Video
                       {rank}
                     </div>
 
-                    {/* Completion Card */}
+                    {/* Completion Card with Neon Effect */}
                     <div
+                      onMouseEnter={() => setHoveredCompletionId(video.id)}
+                      onMouseLeave={() => setHoveredCompletionId(null)}
                       style={{
                         padding: 6,
                         border: `2px solid ${color.primary}`,
                         borderRadius: 16,
-                        boxShadow: `0 6px 20px ${color.glow}`,
+                        boxShadow: isHovered 
+                          ? `0 0 30px ${color.neonGlow}, 0 0 60px ${color.neonGlow}, 0 6px 20px ${color.glow}` 
+                          : `0 6px 20px ${color.glow}`,
                         transform: isHorizontal ? 'scale(1)' : 'scale(0.85)',
+                        transition: 'box-shadow 0.3s ease, border-color 0.3s ease',
+                        borderColor: isHovered ? color.primary : color.primary,
+                        filter: isHovered ? `brightness(1.1)` : 'brightness(1)',
                       }}
                     >
                       <VideoCard
@@ -505,6 +618,7 @@ export default function VideoPodium({ videos, onInfoClick, onVideoClick }: Video
               })}
             </div>
           )}
+        </div>
         </div>
       </div>
 
