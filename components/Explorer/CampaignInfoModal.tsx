@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Image from 'next/image';
 import { CampaignVideo } from './VideoCard';
 
 type CampaignInfoModalProps = {
@@ -94,12 +95,16 @@ export default function CampaignInfoModal({ campaign, onClose }: CampaignInfoMod
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: 24,
-              fontWeight: 900,
-              color: '#000',
+              padding: 8,
             }}
           >
-            {campaign.companyName ? '🏢' : '👤'}
+            <Image
+              src={campaign.companyName ? '/company.svg' : '/individual.svg'}
+              alt={campaign.companyName ? 'Company' : 'Individual'}
+              width={32}
+              height={32}
+              style={{ filter: 'brightness(0)' }}
+            />
           </div>
           <span style={{ color: '#00FFB0', fontWeight: 700, fontSize: 20, textShadow: '0 0 10px rgba(0, 255, 176, 0.5)' }}>
             {displayName}
@@ -191,7 +196,14 @@ export default function CampaignInfoModal({ campaign, onClose }: CampaignInfoMod
                     }}
                   />
                 </div>
-                <div style={{ color: '#FFD600', fontSize: 14, fontWeight: 700 }}>{campaign.completionPercentage}% Complete</div>
+                <div style={{ color: '#FFD600', fontSize: 14, fontWeight: 700 }}>
+                  {campaign.completionPercentage}% Complete
+                  {campaign.completionsMinted !== undefined && campaign.completionsAvailable !== undefined && (
+                    <div style={{ fontSize: 12, color: '#999', marginTop: 4 }}>
+                      {campaign.completionsMinted} / {campaign.completionsAvailable} completions
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 
@@ -199,6 +211,13 @@ export default function CampaignInfoModal({ campaign, onClose }: CampaignInfoMod
               <div style={{ flex: 1, minWidth: 140 }}>
                 <div style={{ color: '#999', fontSize: 12, fontWeight: 600, marginBottom: 6 }}>Time Left</div>
                 <div style={{ color: '#00FFB0', fontSize: 16, fontWeight: 700 }}>⏱ {campaign.timeLeft}</div>
+              </div>
+            )}
+
+            {campaign.averageScore !== undefined && (
+              <div style={{ flex: 1, minWidth: 140 }}>
+                <div style={{ color: '#999', fontSize: 12, fontWeight: 600, marginBottom: 6 }}>Average Score</div>
+                <div style={{ color: '#FFD600', fontSize: 16, fontWeight: 700 }}>⭐ {campaign.averageScore.toFixed(1)} / 10</div>
               </div>
             )}
           </div>

@@ -5,10 +5,12 @@ import React from 'react';
 type VideoPlayerModalProps = {
   videoUrl: string;
   title: string;
+  orientation?: 'horizontal' | 'vertical';
   onClose: () => void;
 };
 
-export default function VideoPlayerModal({ videoUrl, title, onClose }: VideoPlayerModalProps) {
+export default function VideoPlayerModal({ videoUrl, title, orientation = 'horizontal', onClose }: VideoPlayerModalProps) {
+  const isVertical = orientation === 'vertical';
   return (
     <div
       onClick={onClose}
@@ -83,10 +85,11 @@ export default function VideoPlayerModal({ videoUrl, title, onClose }: VideoPlay
           controls
           autoPlay
           style={{
-            maxWidth: '100%',
-            maxHeight: '100%',
-            width: 'auto',
-            height: 'auto',
+            width: isVertical ? 'auto' : '80vw',
+            height: isVertical ? '85vh' : 'auto',
+            maxWidth: isVertical ? 'calc(85vh * 9 / 16)' : '80vw',
+            maxHeight: isVertical ? '85vh' : 'calc(80vw * 9 / 16)',
+            aspectRatio: isVertical ? '9 / 16' : '16 / 9',
             objectFit: 'contain',
             borderRadius: 8,
             boxShadow: '0 20px 80px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255, 214, 0, 0.2)',

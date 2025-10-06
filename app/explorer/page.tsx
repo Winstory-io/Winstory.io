@@ -555,6 +555,7 @@ export default function ExplorerPage() {
         <VideoPlayerModal
           videoUrl={selectedVideo.videoUrl}
           title={selectedVideo.title}
+          orientation={selectedVideo.orientation}
           onClose={() => setSelectedVideo(null)}
         />
       )}

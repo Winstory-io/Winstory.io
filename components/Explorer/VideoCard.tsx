@@ -12,6 +12,8 @@ export type CampaignVideo = {
   videoUrl: string;
   orientation: 'horizontal' | 'vertical';
   completionPercentage?: number;
+  completionsMinted?: number; // Number of completions minted
+  completionsAvailable?: number; // Total completions available
   timeLeft?: string;
   standardReward?: string;
   premiumReward?: string;
@@ -19,6 +21,7 @@ export type CampaignVideo = {
   startingStory?: string;
   guidelines?: string;
   rank?: number; // For podium display
+  averageScore?: number; // Average score for Best Completions
 };
 
 type VideoCardProps = {
@@ -27,9 +30,10 @@ type VideoCardProps = {
   onVideoClick?: (video: CampaignVideo) => void;
   variant?: 'carousel' | 'mosaic' | 'podium';
   size?: 'small' | 'medium' | 'large';
+  disableHover?: boolean;
 };
 
-export default function VideoCard({ video, onInfoClick, onVideoClick, variant = 'carousel', size = 'medium' }: VideoCardProps) {
+export default function VideoCard({ video, onInfoClick, onVideoClick, variant = 'carousel', size = 'medium', disableHover = false }: VideoCardProps) {
   const [isHovered, setIsHovered] = useState(false);
 
   // Better sizing that adapts to orientation
@@ -65,8 +69,8 @@ export default function VideoCard({ video, onInfoClick, onVideoClick, variant = 
 
   return (
     <div
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      onMouseEnter={() => !disableHover && setIsHovered(true)}
+      onMouseLeave={() => !disableHover && setIsHovered(false)}
       style={{
         position: 'relative',
         width: currentSize.width,
@@ -75,12 +79,18 @@ export default function VideoCard({ video, onInfoClick, onVideoClick, variant = 
         borderRadius: variant === 'podium' ? 20 : 16,
         overflow: 'hidden',
         cursor: 'pointer',
-        transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-        transform: isHovered ? 'scale(1.05) translateY(-8px)' : 'scale(1)',
-        boxShadow: isHovered
-          ? '0 20px 40px rgba(255, 214, 0, 0.3), 0 0 0 2px rgba(255, 214, 0, 0.5), inset 0 0 20px rgba(255, 214, 0, 0.1)'
-          : '0 4px 20px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 214, 0, 0.2)',
-        zIndex: isHovered ? 10 : 1,
+        transition: disableHover ? 'none' : 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+        transform: disableHover 
+          ? 'none'
+          : (variant === 'podium' 
+            ? 'none'
+            : (isHovered ? 'scale(1.05) translateY(-8px)' : 'scale(1)')),
+        boxShadow: disableHover
+          ? '0 4px 20px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 214, 0, 0.2)'
+          : (isHovered
+            ? '0 20px 40px rgba(255, 214, 0, 0.3), 0 0 0 2px rgba(255, 214, 0, 0.5), inset 0 0 20px rgba(255, 214, 0, 0.1)'
+            : '0 4px 20px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 214, 0, 0.2)'),
+        zIndex: (isHovered && !disableHover) ? 10 : 1,
       }}
     >
 

@@ -121,18 +121,17 @@ export default function CompanyCarousel({ videos, onInfoClick, onVideoClick }: C
               alignItems: 'center',
               gap: 10,
               padding: '12px 16px',
-              background: selectedOrientation === 'all' 
-                ? 'rgba(255, 214, 0, 0.2)' 
-                : 'rgba(255, 255, 255, 0.05)',
+              background: selectedOrientation === 'all' ? '#fff' : 'rgba(255, 255, 255, 0.05)',
               border: `2px solid ${selectedOrientation === 'all' ? '#FFD600' : 'rgba(255, 255, 255, 0.1)'}`,
               borderRadius: 12,
-              color: selectedOrientation === 'all' ? '#FFD600' : '#999',
+              color: selectedOrientation === 'all' ? '#000' : '#999',
               fontSize: 14,
               fontWeight: 700,
               cursor: 'pointer',
               transition: 'all 0.3s ease',
               textAlign: 'left',
               width: '100%',
+              boxShadow: selectedOrientation === 'all' ? '0 4px 16px rgba(255, 214, 0, 0.4)' : 'none',
             }}
             onMouseEnter={(e) => {
               if (selectedOrientation !== 'all') {
@@ -158,18 +157,17 @@ export default function CompanyCarousel({ videos, onInfoClick, onVideoClick }: C
               alignItems: 'center',
               gap: 10,
               padding: '12px 16px',
-              background: selectedOrientation === 'horizontal' 
-                ? 'rgba(255, 214, 0, 0.2)' 
-                : 'rgba(255, 255, 255, 0.05)',
+              background: selectedOrientation === 'horizontal' ? '#fff' : 'rgba(255, 255, 255, 0.05)',
               border: `2px solid ${selectedOrientation === 'horizontal' ? '#FFD600' : 'rgba(255, 255, 255, 0.1)'}`,
               borderRadius: 12,
-              color: selectedOrientation === 'horizontal' ? '#FFD600' : '#999',
+              color: selectedOrientation === 'horizontal' ? '#000' : '#999',
               fontSize: 14,
               fontWeight: 700,
               cursor: 'pointer',
               transition: 'all 0.3s ease',
               textAlign: 'left',
               width: '100%',
+              boxShadow: selectedOrientation === 'horizontal' ? '0 4px 16px rgba(255, 214, 0, 0.4)' : 'none',
             }}
             onMouseEnter={(e) => {
               if (selectedOrientation !== 'horizontal') {
@@ -195,18 +193,17 @@ export default function CompanyCarousel({ videos, onInfoClick, onVideoClick }: C
               alignItems: 'center',
               gap: 10,
               padding: '12px 16px',
-              background: selectedOrientation === 'vertical' 
-                ? 'rgba(255, 214, 0, 0.2)' 
-                : 'rgba(255, 255, 255, 0.05)',
+              background: selectedOrientation === 'vertical' ? '#fff' : 'rgba(255, 255, 255, 0.05)',
               border: `2px solid ${selectedOrientation === 'vertical' ? '#FFD600' : 'rgba(255, 255, 255, 0.1)'}`,
               borderRadius: 12,
-              color: selectedOrientation === 'vertical' ? '#FFD600' : '#999',
+              color: selectedOrientation === 'vertical' ? '#000' : '#999',
               fontSize: 14,
               fontWeight: 700,
               cursor: 'pointer',
               transition: 'all 0.3s ease',
               textAlign: 'left',
               width: '100%',
+              boxShadow: selectedOrientation === 'vertical' ? '0 4px 16px rgba(255, 214, 0, 0.4)' : 'none',
             }}
             onMouseEnter={(e) => {
               if (selectedOrientation !== 'vertical') {
@@ -414,7 +411,6 @@ export default function CompanyCarousel({ videos, onInfoClick, onVideoClick }: C
                   e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255, 215, 0, 0.15) 0%, rgba(255, 215, 0, 0.08) 100%)';
                 }}
               >
-                <div style={{ fontSize: 20, marginBottom: 4 }}>📝</div>
                 <div>Starting<br/>Story</div>
               </div>
 
@@ -454,7 +450,6 @@ export default function CompanyCarousel({ videos, onInfoClick, onVideoClick }: C
                   e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255, 215, 0, 0.15) 0%, rgba(255, 215, 0, 0.08) 100%)';
                 }}
               >
-                <div style={{ fontSize: 20, marginBottom: 4 }}>📋</div>
                 <div>Guideline</div>
               </div>
             </div>
@@ -466,8 +461,8 @@ export default function CompanyCarousel({ videos, onInfoClick, onVideoClick }: C
                 onClick={() => onVideoClick && onVideoClick(currentVideo)}
                 style={{
                   position: 'relative',
-                  width: isHorizontal ? 720 : 360,
-                  height: isHorizontal ? 405 : 640,
+                  width: isHorizontal ? 800 : 360,
+                  height: isHorizontal ? 450 : 640,
                   borderRadius: 20,
                   overflow: 'hidden',
                   cursor: 'pointer',
@@ -650,30 +645,15 @@ export default function CompanyCarousel({ videos, onInfoClick, onVideoClick }: C
                         color: '#FFD600',
                         minWidth: 45,
                       }}>
-                        {currentVideo.completionPercentage}%
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Time Left */}
-                  {currentVideo.timeLeft && (
-                    <div style={{ 
-                      fontSize: 12, 
-                      color: '#FF5252',
-                      fontWeight: 700,
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 6,
-                    }}>
-                      <span>⏱</span>
-                      <span>{currentVideo.timeLeft}</span>
-                    </div>
-                  )}
+                      {currentVideo.completionPercentage}%
+                    </span>
+                  </div>
+                )}
                 </div>
               </div>
             </div>
 
-            {/* Right Bubbles - Rewards & Complete Button */}
+            {/* Right Bubbles - Rewards, Complete Button & Time Left */}
             <div style={{
               display: 'flex',
               flexDirection: isHorizontal ? 'column' : 'column',
@@ -753,6 +733,27 @@ export default function CompanyCarousel({ videos, onInfoClick, onVideoClick }: C
               >
                 Complete
               </button>
+
+              {/* Time Left - Below Complete Button */}
+              {currentVideo.timeLeft && (
+                <div style={{ 
+                  fontSize: 14, 
+                  color: '#FF5252',
+                  fontWeight: 800,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 6,
+                  padding: '8px 16px',
+                  background: 'rgba(255, 82, 82, 0.1)',
+                  border: '2px solid rgba(255, 82, 82, 0.3)',
+                  borderRadius: 12,
+                  textShadow: '0 0 10px rgba(255, 82, 82, 0.5)',
+                }}>
+                  <span>⏱</span>
+                  <span>{currentVideo.timeLeft}</span>
+                </div>
+              )}
             </div>
           </div>
         </div>

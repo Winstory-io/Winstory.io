@@ -11,8 +11,9 @@ type VideoPodiumProps = {
 
 export default function VideoPodium({ videos, onInfoClick, onVideoClick }: VideoPodiumProps) {
   // ALL HOOKS MUST BE AT THE TOP - BEFORE ANY CONDITIONAL RETURNS
-  const [selectedOrientation, setSelectedOrientation] = useState<'horizontal' | 'vertical'>('horizontal');
+  const [selectedOrientation, setSelectedOrientation] = useState<'all' | 'horizontal' | 'vertical'>('all');
   const [showBubbleContent, setShowBubbleContent] = useState<{ type: 'starting' | 'guideline'; content: string } | null>(null);
+  const [allIndex, setAllIndex] = useState(0);
   const [horizontalIndex, setHorizontalIndex] = useState(0);
   const [verticalIndex, setVerticalIndex] = useState(0);
 
@@ -44,6 +45,7 @@ export default function VideoPodium({ videos, onInfoClick, onVideoClick }: Video
   }
 
   // Group campaigns by orientation
+  const allCampaigns: CampaignVideo[][] = [];
   const horizontalCampaigns: CampaignVideo[][] = [];
   const verticalCampaigns: CampaignVideo[][] = [];
 
@@ -56,6 +58,7 @@ export default function VideoPodium({ videos, onInfoClick, onVideoClick }: Video
     
     // When we have 4 videos or reach the end, save the group
     if (currentGroup.length === 4 || i === allVideos.length - 1) {
+      allCampaigns.push([...currentGroup]);
       if (currentGroup[0].orientation === 'horizontal') {
         horizontalCampaigns.push([...currentGroup]);
       } else {
@@ -65,9 +68,9 @@ export default function VideoPodium({ videos, onInfoClick, onVideoClick }: Video
     }
   }
 
-  const activeCampaigns = selectedOrientation === 'horizontal' ? horizontalCampaigns : verticalCampaigns;
-  const currentIndex = selectedOrientation === 'horizontal' ? horizontalIndex : verticalIndex;
-  const setCurrentIndex = selectedOrientation === 'horizontal' ? setHorizontalIndex : setVerticalIndex;
+  const activeCampaigns = selectedOrientation === 'all' ? allCampaigns : (selectedOrientation === 'horizontal' ? horizontalCampaigns : verticalCampaigns);
+  const currentIndex = selectedOrientation === 'all' ? allIndex : (selectedOrientation === 'horizontal' ? horizontalIndex : verticalIndex);
+  const setCurrentIndex = selectedOrientation === 'all' ? setAllIndex : (selectedOrientation === 'horizontal' ? setHorizontalIndex : setVerticalIndex);
 
   if (activeCampaigns.length === 0) {
     return (
@@ -84,12 +87,72 @@ export default function VideoPodium({ videos, onInfoClick, onVideoClick }: Video
     rank: index + 1,
   }));
 
-  const isHorizontal = selectedOrientation === 'horizontal';
+  const isHorizontal = initialVideo.orientation === 'horizontal';
 
   return (
-    <div style={{ padding: '0 2rem', maxWidth: 1800, margin: '0 auto' }}>
-      {/* Orientation Tabs - Left Side, Compact */}
-      <div style={{ display: 'flex', gap: 12, marginBottom: 40, justifyContent: 'flex-start' }}>
+    <div style={{ padding: '0 2rem', maxWidth: 1800, margin: '0 auto', marginTop: '-3rem' }}>
+      {/* Filters Section */}
+      <div style={{ 
+        display: 'flex', 
+        flexDirection: 'column', 
+        gap: 12,
+        minWidth: 180,
+        marginTop: 80,
+        marginBottom: 40,
+        position: 'relative',
+        zIndex: 20,
+      }}>
+        <div style={{ 
+          fontSize: 14, 
+          color: '#999', 
+          fontWeight: 700, 
+          textTransform: 'uppercase', 
+          letterSpacing: '1px',
+          marginBottom: 8,
+        }}>
+          Filters
+        </div>
+
+        <button
+          onClick={() => {
+            setSelectedOrientation('all');
+            setAllIndex(0);
+          }}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
+            padding: '12px 16px',
+            background: selectedOrientation === 'all' ? '#fff' : 'rgba(255, 255, 255, 0.05)',
+            border: `2px solid ${selectedOrientation === 'all' ? '#FFD600' : 'rgba(255, 255, 255, 0.1)'}`,
+            borderRadius: 12,
+            color: selectedOrientation === 'all' ? '#000' : '#999',
+            fontSize: 14,
+            fontWeight: 700,
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+            textAlign: 'left',
+            width: '100%',
+            maxWidth: 200,
+            boxShadow: selectedOrientation === 'all' ? '0 4px 16px rgba(255, 214, 0, 0.4)' : 'none',
+          }}
+          onMouseEnter={(e) => {
+            if (selectedOrientation !== 'all') {
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+              e.currentTarget.style.color = '#FFD600';
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (selectedOrientation !== 'all') {
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+              e.currentTarget.style.color = '#999';
+            }
+          }}
+        >
+          <span style={{ fontSize: 18 }}>🎬</span>
+          <span>All Videos</span>
+        </button>
+
         <button
           onClick={() => {
             setSelectedOrientation('horizontal');
@@ -99,18 +162,33 @@ export default function VideoPodium({ videos, onInfoClick, onVideoClick }: Video
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: 8,
-            padding: '12px 20px',
-            background: selectedOrientation === 'horizontal' ? '#fff' : 'rgba(255, 255, 255, 0.1)',
-            border: `2px solid ${selectedOrientation === 'horizontal' ? '#FFD600' : 'rgba(255, 255, 255, 0.2)'}`,
+            gap: 10,
+            padding: '12px 16px',
+            background: selectedOrientation === 'horizontal' ? '#fff' : 'rgba(255, 255, 255, 0.05)',
+            border: `2px solid ${selectedOrientation === 'horizontal' ? '#FFD600' : 'rgba(255, 255, 255, 0.1)'}`,
             borderRadius: 12,
-            color: selectedOrientation === 'horizontal' ? '#000' : '#fff',
+            color: selectedOrientation === 'horizontal' ? '#000' : '#999',
             fontSize: 14,
             fontWeight: 700,
             cursor: horizontalCampaigns.length === 0 ? 'not-allowed' : 'pointer',
             transition: 'all 0.3s ease',
+            textAlign: 'left',
+            width: '100%',
+            maxWidth: 200,
             opacity: horizontalCampaigns.length === 0 ? 0.3 : 1,
             boxShadow: selectedOrientation === 'horizontal' ? '0 4px 16px rgba(255, 214, 0, 0.4)' : 'none',
+          }}
+          onMouseEnter={(e) => {
+            if (selectedOrientation !== 'horizontal' && horizontalCampaigns.length > 0) {
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+              e.currentTarget.style.color = '#FFD600';
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (selectedOrientation !== 'horizontal' && horizontalCampaigns.length > 0) {
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+              e.currentTarget.style.color = '#999';
+            }
           }}
         >
           <span style={{ fontSize: 20 }}>▬</span>
@@ -126,18 +204,33 @@ export default function VideoPodium({ videos, onInfoClick, onVideoClick }: Video
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: 8,
-            padding: '12px 20px',
-            background: selectedOrientation === 'vertical' ? '#fff' : 'rgba(255, 255, 255, 0.1)',
-            border: `2px solid ${selectedOrientation === 'vertical' ? '#FFD600' : 'rgba(255, 255, 255, 0.2)'}`,
+            gap: 10,
+            padding: '12px 16px',
+            background: selectedOrientation === 'vertical' ? '#fff' : 'rgba(255, 255, 255, 0.05)',
+            border: `2px solid ${selectedOrientation === 'vertical' ? '#FFD600' : 'rgba(255, 255, 255, 0.1)'}`,
             borderRadius: 12,
-            color: selectedOrientation === 'vertical' ? '#000' : '#fff',
+            color: selectedOrientation === 'vertical' ? '#000' : '#999',
             fontSize: 14,
             fontWeight: 700,
             cursor: verticalCampaigns.length === 0 ? 'not-allowed' : 'pointer',
             transition: 'all 0.3s ease',
+            textAlign: 'left',
+            width: '100%',
+            maxWidth: 200,
             opacity: verticalCampaigns.length === 0 ? 0.3 : 1,
             boxShadow: selectedOrientation === 'vertical' ? '0 4px 16px rgba(255, 214, 0, 0.4)' : 'none',
+          }}
+          onMouseEnter={(e) => {
+            if (selectedOrientation !== 'vertical' && verticalCampaigns.length > 0) {
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+              e.currentTarget.style.color = '#FFD600';
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (selectedOrientation !== 'vertical' && verticalCampaigns.length > 0) {
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+              e.currentTarget.style.color = '#999';
+            }
           }}
         >
           <span style={{ fontSize: 20 }}>▮</span>
@@ -145,102 +238,15 @@ export default function VideoPodium({ videos, onInfoClick, onVideoClick }: Video
         </button>
       </div>
 
-      {/* Campaign Navigation & Display */}
-      <div style={{ position: 'relative' }}>
-        {/* Navigation Arrows */}
-        {activeCampaigns.length > 1 && (
-          <>
-            <button
-              onClick={() => setCurrentIndex(Math.max(0, currentIndex - 1))}
-              disabled={currentIndex === 0}
-              style={{
-                position: 'absolute',
-                left: -60,
-                top: '50%',
-                transform: 'translateY(-50%)',
-                width: 50,
-                height: 50,
-                borderRadius: '50%',
-                background: currentIndex === 0 ? 'rgba(50, 50, 50, 0.5)' : 'rgba(0, 0, 0, 0.85)',
-                border: `2px solid ${currentIndex === 0 ? 'rgba(100, 100, 100, 0.3)' : 'rgba(255, 214, 0, 0.6)'}`,
-                color: currentIndex === 0 ? '#555' : '#FFD600',
-                fontSize: 24,
-                cursor: currentIndex === 0 ? 'not-allowed' : 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                zIndex: 10,
-                transition: 'all 0.3s ease',
-                opacity: currentIndex === 0 ? 0.3 : 1,
-              }}
-              onMouseEnter={(e) => {
-                if (currentIndex !== 0) {
-                  e.currentTarget.style.background = '#FFD600';
-                  e.currentTarget.style.color = '#000';
-                  e.currentTarget.style.transform = 'translateY(-50%) scale(1.1)';
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (currentIndex !== 0) {
-                  e.currentTarget.style.background = 'rgba(0, 0, 0, 0.85)';
-                  e.currentTarget.style.color = '#FFD600';
-                  e.currentTarget.style.transform = 'translateY(-50%) scale(1)';
-                }
-              }}
-            >
-              ‹
-            </button>
-
-            <button
-              onClick={() => setCurrentIndex(Math.min(activeCampaigns.length - 1, currentIndex + 1))}
-              disabled={currentIndex === activeCampaigns.length - 1}
-              style={{
-                position: 'absolute',
-                right: -60,
-                top: '50%',
-                transform: 'translateY(-50%)',
-                width: 50,
-                height: 50,
-                borderRadius: '50%',
-                background: currentIndex === activeCampaigns.length - 1 ? 'rgba(50, 50, 50, 0.5)' : 'rgba(0, 0, 0, 0.85)',
-                border: `2px solid ${currentIndex === activeCampaigns.length - 1 ? 'rgba(100, 100, 100, 0.3)' : 'rgba(255, 214, 0, 0.6)'}`,
-                color: currentIndex === activeCampaigns.length - 1 ? '#555' : '#FFD600',
-                fontSize: 24,
-                cursor: currentIndex === activeCampaigns.length - 1 ? 'not-allowed' : 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                zIndex: 10,
-                transition: 'all 0.3s ease',
-                opacity: currentIndex === activeCampaigns.length - 1 ? 0.3 : 1,
-              }}
-              onMouseEnter={(e) => {
-                if (currentIndex !== activeCampaigns.length - 1) {
-                  e.currentTarget.style.background = '#FFD600';
-                  e.currentTarget.style.color = '#000';
-                  e.currentTarget.style.transform = 'translateY(-50%) scale(1.1)';
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (currentIndex !== activeCampaigns.length - 1) {
-                  e.currentTarget.style.background = 'rgba(0, 0, 0, 0.85)';
-                  e.currentTarget.style.color = '#FFD600';
-                  e.currentTarget.style.transform = 'translateY(-50%) scale(1)';
-                }
-              }}
-            >
-              ›
-            </button>
-          </>
-        )}
-
-        {/* Campaign Display */}
+      {/* Campaign Display */}
+      <div style={{ position: 'relative', marginTop: isHorizontal ? -290 : -200 }}>
+        {/* Campaign Content */}
         <div
           style={{
             display: 'flex',
             flexDirection: isHorizontal ? 'column' : 'row',
-            gap: isHorizontal ? 48 : 24,
-            alignItems: isHorizontal ? 'center' : 'center',
+            gap: isHorizontal ? 24 : 16,
+            alignItems: isHorizontal ? 'center' : 'flex-start',
             justifyContent: isHorizontal ? 'center' : 'center',
             animation: 'fadeSlideIn 0.5s ease',
             width: '100%',
@@ -249,10 +255,11 @@ export default function VideoPodium({ videos, onInfoClick, onVideoClick }: Video
           {/* Initial Video with Bubbles (only for horizontal) */}
           <div style={{ 
             display: 'flex', 
-            alignItems: 'center',
+            alignItems: isHorizontal ? 'center' : 'flex-start',
             gap: isHorizontal ? 60 : 0,
             flexDirection: isHorizontal ? 'row' : 'column',
-            marginTop: isHorizontal ? -60 : 0,
+            marginTop: 0,
+            marginBottom: isHorizontal ? 20 : 20,
           }}>
             {/* Starting Story Bubble - Only for horizontal */}
             {isHorizontal && (
@@ -289,14 +296,14 @@ export default function VideoPodium({ videos, onInfoClick, onVideoClick }: Video
               </div>
             )}
 
-            {/* Initial Video */}
+            {/* Initial Video - Hover disabled to prevent layout shift */}
             <div
               style={{
                 padding: 8,
                 border: '3px solid #00FF88',
                 borderRadius: 16,
                 boxShadow: '0 12px 40px rgba(0, 255, 136, 0.3)',
-                transform: isHorizontal ? 'scale(1.15)' : 'scale(0.85)',
+                transform: isHorizontal ? 'scale(1.0)' : 'scale(0.85)',
               }}
             >
               <VideoCard
@@ -304,7 +311,8 @@ export default function VideoPodium({ videos, onInfoClick, onVideoClick }: Video
                 onInfoClick={onInfoClick}
                 onVideoClick={onVideoClick}
                 variant="podium"
-                size={isHorizontal ? "large" : "medium"}
+                size={isHorizontal ? "medium" : "small"}
+                disableHover={true}
               />
             </div>
 
@@ -351,6 +359,8 @@ export default function VideoPodium({ videos, onInfoClick, onVideoClick }: Video
               flexDirection: 'column',
               gap: 12,
               alignItems: 'center',
+              justifyContent: 'center',
+              alignSelf: 'center',
             }}>
               {/* Starting Story Bubble */}
               <div
@@ -426,8 +436,9 @@ export default function VideoPodium({ videos, onInfoClick, onVideoClick }: Video
               style={{
                 display: 'grid',
                 gridTemplateColumns: `repeat(${topCompletions.length}, 1fr)`,
-                gap: isHorizontal ? 24 : 12,
-                alignItems: 'center',
+                gap: isHorizontal ? 16 : 10,
+                alignItems: 'flex-start',
+                marginTop: 0,
               }}
             >
               {topCompletions.map((video) => {
@@ -495,19 +506,6 @@ export default function VideoPodium({ videos, onInfoClick, onVideoClick }: Video
             </div>
           )}
         </div>
-
-        {/* Page Indicator */}
-        {activeCampaigns.length > 1 && (
-          <div style={{ 
-            textAlign: 'center', 
-            marginTop: 32,
-            fontSize: 14,
-            color: '#666',
-            fontWeight: 600,
-          }}>
-            Campaign {currentIndex + 1} / {activeCampaigns.length}
-          </div>
-        )}
       </div>
 
       {/* Bubble Content Modal */}
