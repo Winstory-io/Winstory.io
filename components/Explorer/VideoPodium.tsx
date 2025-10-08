@@ -18,6 +18,8 @@ export default function VideoPodium({ videos, onInfoClick, onVideoClick }: Video
   const [verticalIndex, setVerticalIndex] = useState(0);
   const [isInitialVideoHovered, setIsInitialVideoHovered] = useState(false);
   const [hoveredCompletionId, setHoveredCompletionId] = useState<string | null>(null);
+  const [hoveredStartingStory, setHoveredStartingStory] = useState(false);
+  const [hoveredGuideline, setHoveredGuideline] = useState(false);
 
   // Empty state
   if (!videos || videos.length === 0) {
@@ -364,6 +366,8 @@ export default function VideoPodium({ videos, onInfoClick, onVideoClick }: Video
             {isHorizontal && (
               <div
                 onClick={() => setShowBubbleContent({ type: 'starting', content: initialVideo.startingStory || 'Starting story...' })}
+                onMouseEnter={() => setHoveredStartingStory(true)}
+                onMouseLeave={() => setHoveredStartingStory(false)}
                 style={{
                   width: 90,
                   height: 90,
@@ -380,15 +384,11 @@ export default function VideoPodium({ videos, onInfoClick, onVideoClick }: Video
                   textAlign: 'center',
                   padding: '8px',
                   transition: 'all 0.3s ease',
-                  boxShadow: '0 4px 20px rgba(0, 255, 136, 0.2)',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'scale(1.05)';
-                  e.currentTarget.style.boxShadow = '0 6px 25px rgba(0, 255, 136, 0.3)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'scale(1)';
-                  e.currentTarget.style.boxShadow = '0 4px 20px rgba(0, 255, 136, 0.2)';
+                  boxShadow: hoveredStartingStory 
+                    ? '0 0 30px rgba(0, 255, 136, 0.8), 0 0 60px rgba(0, 255, 136, 0.6), 0 6px 25px rgba(0, 255, 136, 0.4)'
+                    : '0 4px 20px rgba(0, 255, 136, 0.2)',
+                  transform: hoveredStartingStory ? 'scale(1.05)' : 'scale(1)',
+                  borderColor: hoveredStartingStory ? '#00FFAA' : 'rgba(0, 255, 136, 0.6)',
                 }}
               >
                 Starting<br/>Story
@@ -425,6 +425,8 @@ export default function VideoPodium({ videos, onInfoClick, onVideoClick }: Video
             {isHorizontal && (
               <div
                 onClick={() => setShowBubbleContent({ type: 'guideline', content: initialVideo.guidelines || 'Guidelines...' })}
+                onMouseEnter={() => setHoveredGuideline(true)}
+                onMouseLeave={() => setHoveredGuideline(false)}
                 style={{
                   width: 90,
                   height: 90,
@@ -441,15 +443,11 @@ export default function VideoPodium({ videos, onInfoClick, onVideoClick }: Video
                   textAlign: 'center',
                   padding: '8px',
                   transition: 'all 0.3s ease',
-                  boxShadow: '0 4px 20px rgba(0, 255, 136, 0.2)',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'scale(1.05)';
-                  e.currentTarget.style.boxShadow = '0 6px 25px rgba(0, 255, 136, 0.3)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'scale(1)';
-                  e.currentTarget.style.boxShadow = '0 4px 20px rgba(0, 255, 136, 0.2)';
+                  boxShadow: hoveredGuideline 
+                    ? '0 0 30px rgba(0, 255, 136, 0.8), 0 0 60px rgba(0, 255, 136, 0.6), 0 6px 25px rgba(0, 255, 136, 0.4)'
+                    : '0 4px 20px rgba(0, 255, 136, 0.2)',
+                  transform: hoveredGuideline ? 'scale(1.05)' : 'scale(1)',
+                  borderColor: hoveredGuideline ? '#00FFAA' : 'rgba(0, 255, 136, 0.6)',
                 }}
               >
                 Guideline
@@ -470,6 +468,8 @@ export default function VideoPodium({ videos, onInfoClick, onVideoClick }: Video
               {/* Starting Story Bubble */}
               <div
                 onClick={() => setShowBubbleContent({ type: 'starting', content: initialVideo.startingStory || 'Starting story...' })}
+                onMouseEnter={() => setHoveredStartingStory(true)}
+                onMouseLeave={() => setHoveredStartingStory(false)}
                 style={{
                   width: 70,
                   height: 70,
@@ -486,15 +486,11 @@ export default function VideoPodium({ videos, onInfoClick, onVideoClick }: Video
                   textAlign: 'center',
                   padding: '8px',
                   transition: 'all 0.3s ease',
-                  boxShadow: '0 4px 20px rgba(0, 255, 136, 0.2)',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'scale(1.05)';
-                  e.currentTarget.style.boxShadow = '0 6px 25px rgba(0, 255, 136, 0.3)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'scale(1)';
-                  e.currentTarget.style.boxShadow = '0 4px 20px rgba(0, 255, 136, 0.2)';
+                  boxShadow: hoveredStartingStory 
+                    ? '0 0 30px rgba(0, 255, 136, 0.8), 0 0 60px rgba(0, 255, 136, 0.6), 0 6px 25px rgba(0, 255, 136, 0.4)'
+                    : '0 4px 20px rgba(0, 255, 136, 0.2)',
+                  transform: hoveredStartingStory ? 'scale(1.05)' : 'scale(1)',
+                  borderColor: hoveredStartingStory ? '#00FFAA' : 'rgba(0, 255, 136, 0.6)',
                 }}
               >
                 Starting<br/>Story
@@ -503,6 +499,8 @@ export default function VideoPodium({ videos, onInfoClick, onVideoClick }: Video
               {/* Guideline Bubble */}
               <div
                 onClick={() => setShowBubbleContent({ type: 'guideline', content: initialVideo.guidelines || 'Guidelines...' })}
+                onMouseEnter={() => setHoveredGuideline(true)}
+                onMouseLeave={() => setHoveredGuideline(false)}
                 style={{
                   width: 70,
                   height: 70,
@@ -519,15 +517,11 @@ export default function VideoPodium({ videos, onInfoClick, onVideoClick }: Video
                   textAlign: 'center',
                   padding: '8px',
                   transition: 'all 0.3s ease',
-                  boxShadow: '0 4px 20px rgba(0, 255, 136, 0.2)',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'scale(1.05)';
-                  e.currentTarget.style.boxShadow = '0 6px 25px rgba(0, 255, 136, 0.3)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'scale(1)';
-                  e.currentTarget.style.boxShadow = '0 4px 20px rgba(0, 255, 136, 0.2)';
+                  boxShadow: hoveredGuideline 
+                    ? '0 0 30px rgba(0, 255, 136, 0.8), 0 0 60px rgba(0, 255, 136, 0.6), 0 6px 25px rgba(0, 255, 136, 0.4)'
+                    : '0 4px 20px rgba(0, 255, 136, 0.2)',
+                  transform: hoveredGuideline ? 'scale(1.05)' : 'scale(1)',
+                  borderColor: hoveredGuideline ? '#00FFAA' : 'rgba(0, 255, 136, 0.6)',
                 }}
               >
                 Guideline

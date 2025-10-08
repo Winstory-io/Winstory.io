@@ -186,11 +186,14 @@ export default function ExplorerPage() {
           orientation: orientation as 'horizontal' | 'vertical',
           completionPercentage: 100,
           timeLeft: undefined,
-          standardReward: undefined,
+          standardReward: rank === 1 ? `${(campaignIndex + 1) * 20} WINC` : 
+                          rank === 2 ? `${(campaignIndex + 1) * 15} WINC` :
+                          `${(campaignIndex + 1) * 10} WINC`,
           premiumReward: rank === 1 ? `${(campaignIndex + 1) * 100} USDT + Gold NFT` : 
                          rank === 2 ? `${(campaignIndex + 1) * 60} USDT + Silver NFT` :
                          `${(campaignIndex + 1) * 30} USDT + Bronze NFT`,
           rank: rank,
+          completionStory: `This is the winning completion story #${rank}. The creator took the original concept and elevated it with exceptional creativity, technical skill, and storytelling. This completion truly stands out among all submissions.`,
         });
       }
     }

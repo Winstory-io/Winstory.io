@@ -22,6 +22,7 @@ export type CampaignVideo = {
   guidelines?: string;
   rank?: number; // For podium display
   averageScore?: number; // Average score for Best Completions
+  completionStory?: string; // Completion story for Best Completions
 };
 
 type VideoCardProps = {
@@ -69,6 +70,11 @@ export default function VideoCard({ video, onInfoClick, onVideoClick, variant = 
 
   return (
     <div
+      onClick={() => {
+        if (onVideoClick) {
+          onVideoClick(video);
+        }
+      }}
       onMouseEnter={() => !disableHover && setIsHovered(true)}
       onMouseLeave={() => !disableHover && setIsHovered(false)}
       style={{

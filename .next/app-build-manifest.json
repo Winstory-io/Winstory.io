@@ -5,6 +5,21 @@
       "static/chunks/main-app.js",
       "static/chunks/app/layout.js"
     ],
+    "/explorer/layout": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/explorer/layout.js"
+    ],
+    "/explorer/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/explorer/page.js"
+    ],
+    "/api/auth/[...nextauth]/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/auth/[...nextauth]/route.js"
+    ],
     "/welcome/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
@@ -15,20 +30,20 @@
       "static/chunks/main-app.js",
       "static/chunks/app/welcome/page.js"
     ],
-    "/api/auth/[...nextauth]/route": [
+    "/mywin/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/api/auth/[...nextauth]/route.js"
+      "static/chunks/app/mywin/layout.js"
     ],
-    "/explorer/layout": [
+    "/mywin/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/explorer/layout.js"
+      "static/chunks/app/mywin/page.js"
     ],
-    "/explorer/page": [
+    "/mywin/creations/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/explorer/page.js"
+      "static/chunks/app/mywin/creations/page.js"
     ]
   }
 }

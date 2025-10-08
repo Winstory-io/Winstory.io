@@ -127,7 +127,7 @@ export default function CampaignInfoModal({ campaign, onClose }: CampaignInfoMod
 
         {/* Campaign Details */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 28 }}>
-          {campaign.startingStory && (
+          {campaign.startingStory && !campaign.rank && (
             <div>
               <div style={{ color: '#999', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', marginBottom: 6, letterSpacing: '1px' }}>
                 Starting Story
@@ -136,12 +136,31 @@ export default function CampaignInfoModal({ campaign, onClose }: CampaignInfoMod
             </div>
           )}
 
-          {campaign.guidelines && (
+          {campaign.guidelines && !campaign.rank && (
             <div>
               <div style={{ color: '#999', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', marginBottom: 6, letterSpacing: '1px' }}>
                 Guidelines
               </div>
               <div style={{ color: '#ddd', fontSize: 14, lineHeight: 1.6 }}>{campaign.guidelines}</div>
+            </div>
+          )}
+
+          {/* Completion Story for Best Completions (Top 3) */}
+          {campaign.rank && (
+            <div
+              style={{
+                background: 'rgba(0, 255, 136, 0.1)',
+                border: '2px solid rgba(0, 255, 136, 0.3)',
+                borderRadius: 16,
+                padding: 16,
+              }}
+            >
+              <div style={{ color: '#00FF88', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', marginBottom: 10, letterSpacing: '1px' }}>
+                📝 Completion Story
+              </div>
+              <div style={{ color: '#ddd', fontSize: 14, lineHeight: 1.6 }}>
+                {campaign.completionStory || 'This completion story will be displayed here once connected to the backend.'}
+              </div>
             </div>
           )}
 
@@ -160,13 +179,13 @@ export default function CampaignInfoModal({ campaign, onClose }: CampaignInfoMod
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {campaign.standardReward && (
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14 }}>
-                  <span style={{ color: '#999' }}>Standard:</span>
+                  <span style={{ color: '#999' }}>Standard{campaign.rank ? ' (Won)' : ''}:</span>
                   <span style={{ color: '#00FF88', fontWeight: 700 }}>{campaign.standardReward}</span>
                 </div>
               )}
               {campaign.premiumReward && (
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14 }}>
-                  <span style={{ color: '#999' }}>Premium (Top 3):</span>
+                  <span style={{ color: '#999' }}>Premium{campaign.rank ? ' (Won)' : ' (Top 3)'}:</span>
                   <span style={{ color: '#FFD600', fontWeight: 700 }}>{campaign.premiumReward}</span>
                 </div>
               )}
@@ -175,7 +194,7 @@ export default function CampaignInfoModal({ campaign, onClose }: CampaignInfoMod
 
           {/* Campaign Stats */}
           <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-            {campaign.completionPercentage !== undefined && (
+            {campaign.completionPercentage !== undefined && !campaign.rank && (
               <div style={{ flex: 1, minWidth: 140 }}>
                 <div style={{ color: '#999', fontSize: 12, fontWeight: 600, marginBottom: 6 }}>Progress</div>
                 <div
@@ -231,32 +250,34 @@ export default function CampaignInfoModal({ campaign, onClose }: CampaignInfoMod
         </div>
 
         {/* Action Button */}
-        <button
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
-          style={{
-            background: isHovered
-              ? 'linear-gradient(135deg, #FFD600 0%, #FFA500 100%)'
-              : 'linear-gradient(135deg, rgba(255, 214, 0, 0.2) 0%, rgba(255, 165, 0, 0.2) 100%)',
-            border: '2px solid #FFD600',
-            borderRadius: 16,
-            padding: '16px 32px',
-            color: isHovered ? '#000' : '#FFD600',
-            fontWeight: 900,
-            fontSize: 18,
-            cursor: 'pointer',
-            width: '100%',
-            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-            boxShadow: isHovered ? '0 8px 24px rgba(255, 214, 0, 0.5)' : '0 4px 16px rgba(255, 214, 0, 0.2)',
-            transform: isHovered ? 'translateY(-2px)' : 'translateY(0)',
-          }}
-          onClick={() => {
-            // TODO: Navigate to completion flow
-            console.log('Complete campaign:', campaign.id);
-          }}
-        >
-          {campaign.completionPercentage === 100 ? 'View Campaign' : '🎬 Start Completing'}
-        </button>
+        {!campaign.rank && (
+          <button
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+            style={{
+              background: 'linear-gradient(135deg, #00FF88 0%, #00CC6E 100%)',
+              border: 'none',
+              borderRadius: 16,
+              padding: '16px 32px',
+              color: '#000',
+              fontWeight: 900,
+              fontSize: 18,
+              cursor: 'pointer',
+              width: '100%',
+              transition: 'all 0.3s ease',
+              boxShadow: isHovered ? '0 12px 32px rgba(0, 255, 136, 0.6)' : '0 8px 24px rgba(0, 255, 136, 0.4)',
+              transform: isHovered ? 'translateY(-2px) scale(1.02)' : 'translateY(0) scale(1)',
+              textTransform: 'uppercase',
+              letterSpacing: '1px',
+            }}
+            onClick={() => {
+              // TODO: Navigate to completion flow
+              console.log('Complete campaign:', campaign.id);
+            }}
+          >
+            Complete
+          </button>
+        )}
       </div>
 
       <style jsx>{`
