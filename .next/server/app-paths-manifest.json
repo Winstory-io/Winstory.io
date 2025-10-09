@@ -1,7 +1,4 @@
 {
-  "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js",
-  "/mywin/creations/page": "app/mywin/creations/page.js",
-  "/mywin/page": "app/mywin/page.js",
-  "/welcome/page": "app/welcome/page.js",
-  "/explorer/page": "app/explorer/page.js"
+  "/explorer/page": "app/explorer/page.js",
+  "/moderation/page": "app/moderation/page.js"
 }
