@@ -13,6 +13,8 @@ import ExplorerSearchBar from "../../components/Explorer/ExplorerSearchBar";
 import { CampaignVideo } from "../../components/Explorer/VideoCard";
 import DevControls from "../../components/DevControls";
 import VideoPlayerModal from "../../components/Explorer/VideoPlayerModal";
+import ExplorerWalletPopup from "../../components/Explorer/ExplorerWalletPopup";
+import CompletionPopup from "../../components/CompletionPopup";
 import Image from "next/image";
 
 const LogoWinstory = () => (
@@ -92,6 +94,12 @@ export default function ExplorerPage() {
   const [headerVisible, setHeaderVisible] = useState(true);
   const lastScrollY = useRef(0);
 
+  // Auth & Completion states
+  const [showAuthPopup, setShowAuthPopup] = useState(false);
+  const [showCompletionPopup, setShowCompletionPopup] = useState(false);
+  const [selectedCampaignToComplete, setSelectedCampaignToComplete] = useState<CampaignVideo | null>(null);
+  const [isUserAuthenticated, setIsUserAuthenticated] = useState(false);
+
   // Filter states for "All" tab
   const [typeFilter, setTypeFilter] = useState<'all' | 'company' | 'community' | 'completed'>('all');
   const [formatFilter, setFormatFilter] = useState<'all' | 'horizontal' | 'vertical'>('all');
@@ -106,6 +114,44 @@ export default function ExplorerPage() {
   const [devShowCompany, setDevShowCompany] = useState(true);
   const [devShowCommunity, setDevShowCommunity] = useState(true);
   const [devPodiumCount, setDevPodiumCount] = useState(3);
+
+  // Check authentication on mount
+  useEffect(() => {
+    const checkAuth = () => {
+      const walletAddress = localStorage.getItem('walletAddress');
+      setIsUserAuthenticated(!!walletAddress);
+    };
+    checkAuth();
+  }, []);
+
+  // Handler for Complete button
+  const handleCompleteClick = (campaign: CampaignVideo) => {
+    setSelectedCampaignToComplete(campaign);
+    
+    // Check if user is authenticated
+    const walletAddress = localStorage.getItem('walletAddress');
+    if (!walletAddress) {
+      // Not authenticated - show auth popup
+      setShowAuthPopup(true);
+    } else {
+      // Already authenticated - show completion popup directly
+      setShowCompletionPopup(true);
+    }
+  };
+
+  // Handler for successful wallet connection
+  const handleWalletConnected = (walletAddress: string) => {
+    setIsUserAuthenticated(true);
+    setShowAuthPopup(false);
+    // Now show completion popup
+    setShowCompletionPopup(true);
+  };
+
+  // Handler for completion popup close
+  const handleCompletionClose = () => {
+    setShowCompletionPopup(false);
+    setSelectedCampaignToComplete(null);
+  };
 
   // Generate mock data for development
   const generateMockCampaigns = (): CampaignVideo[] => {
@@ -532,17 +578,33 @@ export default function ExplorerPage() {
           </div>
         ) : activeTab === 'active' ? (
           activeSubTab === 'company' ? (
-            <CompanyCarousel videos={campaigns} onInfoClick={setSelectedCampaign} onVideoClick={setSelectedVideo} />
+            <CompanyCarousel 
+              videos={campaigns} 
+              onInfoClick={setSelectedCampaign} 
+              onVideoClick={setSelectedVideo}
+              onCompleteClick={handleCompleteClick}
+            />
           ) : (
-            <VideoCarousel videos={campaigns} subTab={activeSubTab} onInfoClick={setSelectedCampaign} onVideoClick={setSelectedVideo} />
+            <VideoCarousel 
+              videos={campaigns} 
+              subTab={activeSubTab} 
+              onInfoClick={setSelectedCampaign} 
+              onVideoClick={setSelectedVideo}
+              onCompleteClick={handleCompleteClick}
+            />
           )
         ) : activeTab === 'best' ? (
-          <VideoPodium videos={campaigns} onInfoClick={setSelectedCampaign} onVideoClick={setSelectedVideo} />
+          <VideoPodium 
+            videos={campaigns} 
+            onInfoClick={setSelectedCampaign} 
+            onVideoClick={setSelectedVideo}
+          />
         ) : (
           <VideoMosaic 
             videos={campaigns} 
             onInfoClick={setSelectedCampaign} 
             onVideoClick={setSelectedVideo}
+            onCompleteClick={handleCompleteClick}
             externalTypeFilter={typeFilter}
             externalFormatFilter={formatFilter}
             externalSortBy={sortBy}
@@ -552,7 +614,11 @@ export default function ExplorerPage() {
 
       {/* Modals */}
       {selectedCampaign && (
-        <CampaignInfoModal campaign={selectedCampaign} onClose={() => setSelectedCampaign(null)} />
+        <CampaignInfoModal 
+          campaign={selectedCampaign} 
+          onClose={() => setSelectedCampaign(null)}
+          onCompleteClick={handleCompleteClick}
+        />
       )}
       {selectedVideo && (
         <VideoPlayerModal
@@ -564,6 +630,29 @@ export default function ExplorerPage() {
       )}
       {showIntro && <ExplorerIntroModal onClose={() => setShowIntro(false)} />}
       {showSearch && <ExplorerSearchBar onClose={() => setShowSearch(false)} />}
+
+      {/* Wallet Connection Popup */}
+      <ExplorerWalletPopup
+        isOpen={showAuthPopup}
+        onClose={() => setShowAuthPopup(false)}
+        onSuccess={handleWalletConnected}
+      />
+
+      {/* Completion Popup */}
+      {showCompletionPopup && selectedCampaignToComplete && (
+        <CompletionPopup
+          open={showCompletionPopup}
+          onClose={handleCompletionClose}
+          activeTab="b2c" // Default to b2c, you can make this dynamic based on campaign type
+          identity={selectedCampaignToComplete.companyName || 'Community'}
+          currentCampaign={selectedCampaignToComplete}
+          getTimeLeft={() => selectedCampaignToComplete.timeLeft || 'N/A'}
+          getCompletionStats={() => ({ 
+            minted: Math.floor((selectedCampaignToComplete.completionPercentage || 0) * 10), 
+            available: 1000 
+          })}
+        />
+      )}
 
       {/* Dev Controls */}
       <DevControls

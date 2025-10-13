@@ -8,9 +8,10 @@ type VideoCarouselProps = {
   subTab?: string;
   onInfoClick: (campaign: CampaignVideo) => void;
   onVideoClick?: (campaign: CampaignVideo) => void;
+  onCompleteClick?: (campaign: CampaignVideo) => void;
 };
 
-export default function VideoCarousel({ videos, subTab, onInfoClick, onVideoClick }: VideoCarouselProps) {
+export default function VideoCarousel({ videos, subTab, onInfoClick, onVideoClick, onCompleteClick }: VideoCarouselProps) {
   const [selectedOrientation, setSelectedOrientation] = useState<'all' | 'horizontal' | 'vertical'>('all');
 
   // Empty state

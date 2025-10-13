@@ -29,7 +29,9 @@
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:studio": "prisma studio",
-    "supabase:test": "tsx scripts/test-supabase-connection.ts"
+    "supabase:test": "tsx scripts/test-supabase-connection.ts",
+    "test:gcp-winstory": "tsx scripts/test-gcp-winstory.ts",
+    "gcp:test": "npm run test:gcp-winstory"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.10.0",
@@ -48,7 +50,11 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "stripe": "^19.0.0",
-    "thirdweb": "^5.105.37"
+    "thirdweb": "^5.105.37",
+    "@google-cloud/storage": "^7.12.1",
+    "@google-cloud/pubsub": "^4.8.0",
+    "google-auth-library": "^9.14.1",
+    "googleapis": "^144.0.0"
   },
   "devDependencies": {
     "@types/node": "^24.0.4",

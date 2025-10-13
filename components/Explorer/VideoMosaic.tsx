@@ -7,6 +7,7 @@ type VideoMosaicProps = {
   videos: CampaignVideo[];
   onInfoClick: (video: CampaignVideo) => void;
   onVideoClick?: (video: CampaignVideo) => void;
+  onCompleteClick?: (video: CampaignVideo) => void;
   externalTypeFilter?: 'all' | 'company' | 'community' | 'completed';
   externalFormatFilter?: 'all' | 'horizontal' | 'vertical';
   externalSortBy?: 'recent' | 'popular';
@@ -19,6 +20,7 @@ export default function VideoMosaic({
   videos, 
   onInfoClick, 
   onVideoClick,
+  onCompleteClick,
   externalTypeFilter = 'all',
   externalFormatFilter = 'all',
   externalSortBy = 'recent',

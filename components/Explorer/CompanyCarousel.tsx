@@ -7,9 +7,10 @@ type CompanyCarouselProps = {
   videos: CampaignVideo[];
   onInfoClick: (campaign: CampaignVideo) => void;
   onVideoClick?: (campaign: CampaignVideo) => void;
+  onCompleteClick?: (campaign: CampaignVideo) => void;
 };
 
-export default function CompanyCarousel({ videos, onInfoClick, onVideoClick }: CompanyCarouselProps) {
+export default function CompanyCarousel({ videos, onInfoClick, onVideoClick, onCompleteClick }: CompanyCarouselProps) {
   const [selectedOrientation, setSelectedOrientation] = useState<'all' | 'horizontal' | 'vertical'>('all');
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showBubbleContent, setShowBubbleContent] = useState<{ 
@@ -461,8 +462,8 @@ export default function CompanyCarousel({ videos, onInfoClick, onVideoClick }: C
                 onClick={() => onVideoClick && onVideoClick(currentVideo)}
                 style={{
                   position: 'relative',
-                  width: isHorizontal ? 800 : 360,
-                  height: isHorizontal ? 450 : 640,
+                  width: isHorizontal ? 800 : 315,
+                  height: isHorizontal ? 450 : 560,
                   borderRadius: 20,
                   overflow: 'hidden',
                   cursor: 'pointer',
@@ -704,8 +705,9 @@ export default function CompanyCarousel({ videos, onInfoClick, onVideoClick }: C
               {/* Complete Button */}
               <button
                 onClick={() => {
-                  // TODO: Navigate to complete page or open completion modal
-                  alert(`Complete campaign: ${currentVideo.title}`);
+                  if (onCompleteClick) {
+                    onCompleteClick(currentVideo);
+                  }
                 }}
                 style={{
                   padding: '16px 32px',

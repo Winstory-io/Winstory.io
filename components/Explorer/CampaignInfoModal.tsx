@@ -7,9 +7,10 @@ import { CampaignVideo } from './VideoCard';
 type CampaignInfoModalProps = {
   campaign: CampaignVideo;
   onClose: () => void;
+  onCompleteClick?: (campaign: CampaignVideo) => void;
 };
 
-export default function CampaignInfoModal({ campaign, onClose }: CampaignInfoModalProps) {
+export default function CampaignInfoModal({ campaign, onClose, onCompleteClick }: CampaignInfoModalProps) {
   const [isHovered, setIsHovered] = useState(false);
 
   const displayName =
@@ -249,35 +250,54 @@ export default function CampaignInfoModal({ campaign, onClose }: CampaignInfoMod
           )}
         </div>
 
-        {/* Action Button */}
-        {!campaign.rank && (
-          <button
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
-            style={{
-              background: 'linear-gradient(135deg, #00FF88 0%, #00CC6E 100%)',
-              border: 'none',
-              borderRadius: 16,
-              padding: '16px 32px',
-              color: '#000',
-              fontWeight: 900,
-              fontSize: 18,
-              cursor: 'pointer',
-              width: '100%',
-              transition: 'all 0.3s ease',
-              boxShadow: isHovered ? '0 12px 32px rgba(0, 255, 136, 0.6)' : '0 8px 24px rgba(0, 255, 136, 0.4)',
-              transform: isHovered ? 'translateY(-2px) scale(1.02)' : 'translateY(0) scale(1)',
-              textTransform: 'uppercase',
-              letterSpacing: '1px',
-            }}
-            onClick={() => {
-              // TODO: Navigate to completion flow
-              console.log('Complete campaign:', campaign.id);
-            }}
-          >
-            Complete
-          </button>
-        )}
+        {/* Action Button - Only show if campaign is active */}
+        {(() => {
+          // Check if campaign is active
+          const isTimeEnded = !campaign.timeLeft || 
+                             campaign.timeLeft === 'Ended' || 
+                             campaign.timeLeft === '0h left' ||
+                             campaign.timeLeft.includes('0h') ||
+                             campaign.timeLeft.includes('expired');
+          const isFullyCompleted = campaign.completionPercentage === 100;
+          const isCampaignActive = !campaign.rank && !isTimeEnded && !isFullyCompleted;
+
+          // Only show Complete button if campaign is active
+          if (isCampaignActive) {
+            return (
+              <button
+                onMouseEnter={() => setIsHovered(true)}
+                onMouseLeave={() => setIsHovered(false)}
+                style={{
+                  background: 'linear-gradient(135deg, #00FF88 0%, #00CC6E 100%)',
+                  border: 'none',
+                  borderRadius: 16,
+                  padding: '16px 32px',
+                  color: '#000',
+                  fontWeight: 900,
+                  fontSize: 18,
+                  cursor: 'pointer',
+                  width: '100%',
+                  transition: 'all 0.3s ease',
+                  boxShadow: isHovered ? '0 12px 32px rgba(0, 255, 136, 0.6)' : '0 8px 24px rgba(0, 255, 136, 0.4)',
+                  transform: isHovered ? 'translateY(-2px) scale(1.02)' : 'translateY(0) scale(1)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '1px',
+                }}
+                onClick={() => {
+                  if (onCompleteClick) {
+                    onCompleteClick(campaign);
+                    onClose();
+                  }
+                }}
+              >
+                Complete
+              </button>
+            );
+          }
+
+          // No message for inactive campaigns - just don't show the button
+          return null;
+        })()}
       </div>
 
       <style jsx>{`
