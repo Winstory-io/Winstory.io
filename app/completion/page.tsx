@@ -9,6 +9,28 @@ import CompletionInfo from '../../components/CompletionInfo';
 import CompletionTooltip from '../../components/CompletionTooltip';
 import DevControls from '../../components/DevControls';
 
+// Animation CSS pour l'effet de pulsation
+const pulseAnimation = `
+  @keyframes pulse {
+    0% {
+      box-shadow: 0 6px 25px rgba(255, 107, 107, 0.3), 0 0 0 2px rgba(255, 107, 107, 0.1);
+    }
+    50% {
+      box-shadow: 0 6px 25px rgba(255, 107, 107, 0.5), 0 0 0 4px rgba(255, 107, 107, 0.3);
+    }
+    100% {
+      box-shadow: 0 6px 25px rgba(255, 107, 107, 0.3), 0 0 0 2px rgba(255, 107, 107, 0.1);
+    }
+  }
+`;
+
+// Injecter l'animation CSS
+if (typeof document !== 'undefined') {
+  const style = document.createElement('style');
+  style.textContent = pulseAnimation;
+  document.head.appendChild(style);
+}
+
 interface Campaign {
   id: string;
   creatorId: string;
@@ -381,6 +403,134 @@ const CompletionPage = () => {
     return `${Math.floor(Math.random() * 14) + 1} days left`;
   };
 
+  // Progress helpers for right panel visual bars
+  const clamp = (n: number, min: number, max: number) => Math.max(min, Math.min(max, n));
+
+  const getCompletionProgressPercent = () => {
+    const { minted, available } = getCompletionStats();
+    if (!available) return 0;
+    return clamp(Math.round((minted / available) * 100), 0, 100);
+  };
+
+  const getRewardProgressPercent = () => {
+    const reward = Number(currentCampaign?.completions?.wincValue || 0);
+    // Normalize to a reasonable cap (200 $WINC like DevControls)
+    const percent = (reward / 200) * 100;
+    return clamp(Math.round(percent), 0, 100);
+  };
+
+  const getTimeProgressPercent = () => {
+    // Try to infer proportionally using units (days/hours). Fallback to 7 days.
+    const label = getTimeLeft().toLowerCase();
+    const numMatch = label.match(/(\d+(?:\.\d+)?)/);
+    const value = numMatch ? Number(numMatch[1]) : 0;
+    let remainingHours = 0;
+    if (label.includes('hour')) remainingHours = value;
+    else if (label.includes('day')) remainingHours = value * 24;
+    else remainingHours = value * 24; // fallback
+
+    // Assume campaigns run on a 7-day window if unknown; for mock dev controls we also accept bounds [0,168]
+    const totalHours = 168;
+    const elapsed = clamp(totalHours - remainingHours, 0, totalHours);
+    return clamp(Math.round((elapsed / totalHours) * 100), 0, 100);
+  };
+
+  const ProgressRow = ({ label, value, percent }: { label: string; value: string; percent: number }) => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <span style={{ fontSize: 13, color: '#9AA5A8' }}>{label}</span>
+        <span style={{ fontSize: 14, fontWeight: 700, color: '#4ECB71' }}>{value}</span>
+      </div>
+      <div style={{ width: '100%', height: 10, borderRadius: 8, background: 'rgba(78, 203, 113, 0.12)', border: '1px solid rgba(78, 203, 113, 0.25)', overflow: 'hidden' }}>
+        <div style={{ width: `${percent}%`, height: '100%', background: 'linear-gradient(90deg, #4ECB71 0%, #2EA85C 100%)' }} />
+      </div>
+    </div>
+  );
+
+  // Helpers: mint/price formatting
+  const numberToWords = (n: number): string => {
+    const ones = ['zero','one','two','three','four','five','six','seven','eight','nine','ten','eleven','twelve','thirteen','fourteen','fifteen','sixteen','seventeen','eighteen','nineteen'];
+    const tens = ['','','twenty','thirty','forty','fifty','sixty','seventy','eighty','ninety'];
+    if (n < 20) return ones[n];
+    if (n < 100) return tens[Math.floor(n/10)] + (n%10 ? `-${ones[n%10]}` : '');
+    if (n < 1000) return `${ones[Math.floor(n/100)]} hundred${n%100 ? ` ${numberToWords(n%100)}` : ''}`;
+    return String(n);
+  };
+
+  const getMintPrice = () => {
+    const price = Number(currentCampaign?.completions?.wincValue || 0);
+    return isNaN(price) ? 0 : price;
+  };
+
+  const isB2CCreator = () => {
+    if (!currentCampaign) return activeTab === 'b2c';
+    return (
+      currentCampaign.creatorType === 'B2C_AGENCIES' ||
+      currentCampaign.creatorType === 'FOR_B2C' ||
+      activeTab === 'b2c'
+    );
+  };
+
+  const getPriceUnit = () => (isB2CCreator() ? '$' : '$WINC');
+
+  const formatPriceShort = () => {
+    const price = getMintPrice();
+    const unit = getPriceUnit();
+    if (unit === '$') return `$${price.toFixed(2)}`;
+    return `${price} ${unit}`;
+  };
+
+  const formatMintPriceTextual = () => {
+    const price = getMintPrice();
+    if (price <= 0) return 'FREE';
+    const unit = getPriceUnit();
+    if (unit === '$') return `$${price.toFixed(2)}`;
+    return `${price} ${unit}`;
+  };
+
+  const formatButtonCta = () => {
+    const price = getMintPrice();
+    if (price <= 0) return 'Complete for FREE';
+    return `Complete for ${formatPriceShort()}`;
+  };
+
+  // Mock rewards for B2C companies/agencies (brand-friendly placeholders)
+  const getB2CRewardsMock = (): string[] => {
+    const brand = (currentCampaign?.creatorId || '').toLowerCase();
+    if (brand.includes('nike')) return ['Exclusive drop early access', '25% off voucher', 'Limited-edition merch'];
+    if (brand.includes('uber')) return ['Ride credits ($20)', 'Priority support badge', 'Beta access to new features'];
+    if (brand.includes('starbucks')) return ['Free drink for a week', 'Gold tier fast-track', 'Seasonal merch'];
+    if (brand.includes('adidas')) return ['Members-only raffle entry', '30% off coupon', 'Special collab merch'];
+    // generic default
+    return ['Gift card ($25)', 'Exclusive early access', 'Brand merch pack'];
+  };
+
+  const getRewardsDescription = () => {
+    if (!currentCampaign) return '';
+    if (isB2CCreator()) {
+      const items = getB2CRewardsMock();
+      return items.join(' • ');
+    }
+    const winc = currentCampaign?.completions?.wincValue || 0;
+    return `Complete this campaign to earn ${winc} $WINC tokens (Top 3 winners)`;
+  };
+
+  // Rewards modal helpers
+  const getB2CRewardsTiered = () => {
+    const standard = getB2CRewardsMock();
+    // simple premium layer for mock-up
+    const premium = ['Premium merch bundle', 'VIP experience (limited)', 'Annual subscription/credit'];
+    return { standard, premium };
+  };
+
+  const getIndividualTop3 = () => {
+    const pool = Number(currentCampaign?.completions?.wincValue || 0);
+    const first = Math.round(pool * 0.5);
+    const second = Math.round(pool * 0.3);
+    const third = Math.round(pool * 0.2);
+    return { first, second, third };
+  };
+
   // Get completion stats
   const getCompletionStats = () => {
     if (!currentCampaign) return { minted: 0, available: 100 };
@@ -573,24 +723,25 @@ const CompletionPage = () => {
         height: window.innerWidth < 1024 ? 'auto' : 'calc(100vh - 160px)', // Réduit encore l'espacement
         marginTop: 5, // Espacement minimal du header
         gap: 40,
-        alignItems: 'flex-start', // Remonte le contenu de droite vers le haut
+        alignItems: 'flex-start', // Changé de 'center' à 'flex-start' pour permettre au contenu de droite de remonter
         flexDirection: window.innerWidth < 1024 ? 'column' : 'row'
       }}>
-        {/* Section Vidéo - Plus grande et mieux utilisée */}
+        {/* Section Vidéo - Centrée avec les éléments de droite */}
         <div style={{ 
-          flex: window.innerWidth < 1024 ? '1 1 100%' : '0 0 60%', // Plus d'espace pour la vidéo
+          flex: window.innerWidth < 1024 ? '1 1 100%' : '0 0 55%', // Réduit de 60% à 55%
           position: 'relative',
           display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center'
+          alignItems: 'center', // Centre verticalement avec les éléments de droite
+          justifyContent: 'center',
+          paddingTop: isCurrentVideoVertical ? '20px' : '80px' // Plus de padding pour les vidéos horizontales
         }}>
           <div style={{
             position: 'relative',
             aspectRatio: isCurrentVideoVertical ? '9/16' : '16/9', // Format exact de la vidéo
             width: isCurrentVideoVertical ? 'auto' : '100%', // Vidéo horizontale prend toute la largeur
-            height: isCurrentVideoVertical ? 'calc(100vh - 250px)' : 'auto', // Vidéo verticale légèrement plus petite
+            height: isCurrentVideoVertical ? 'calc(100vh - 320px)' : 'auto', // Vidéo verticale encore plus petite
             maxWidth: '100%',
-            maxHeight: 'calc(100vh - 250px)', // Limite la hauteur maximale réduite
+            maxHeight: 'calc(100vh - 320px)', // Limite la hauteur maximale réduite
             background: '#000',
             borderRadius: 12,
             overflow: 'hidden',
@@ -617,7 +768,7 @@ const CompletionPage = () => {
                 border: '1px solid rgba(255, 214, 0, 0.3)'
               }}>
                 📱 Vertical Format
-              </div>
+      </div>
             )}
 
             {/* Vidéo */}
@@ -652,29 +803,29 @@ const CompletionPage = () => {
           </div>
         </div>
 
-        {/* Section Informations - Équilibrée avec la vidéo */}
+        {/* Section Informations - Plus compacte */}
         <div style={{ 
-          flex: window.innerWidth < 1024 ? '1 1 100%' : '0 0 35%', // Réduit pour laisser plus d'espace à la vidéo
+          flex: window.innerWidth < 1024 ? '1 1 100%' : '0 0 40%', // Augmenté de 35% à 40%
           padding: '20px 0',
           display: 'flex',
           flexDirection: 'column',
-          gap: 24,
-          justifyContent: 'space-between' // Distribue le contenu sur toute la hauteur
+          gap: 20, // Réduit de 24 à 20
+          justifyContent: 'flex-start' // Changé de 'center' à 'flex-start' pour permettre au bouton de remonter
         }}>
           {/* Titre de la campagne */}
           <div>
             <h1 style={{
-              fontSize: 32,
+              fontSize: 28, // Réduit de 32 à 28
               fontWeight: 800,
               color: '#4ECB71',
               margin: 0,
-              marginBottom: 8,
+              marginBottom: 6, // Réduit de 8 à 6
               lineHeight: 1.2
             }}>
               {currentCampaign?.story?.title || 'Campaign Title'}
             </h1>
             <div style={{
-              fontSize: 16,
+              fontSize: 14, // Réduit de 16 à 14
               color: '#ccc',
               fontStyle: 'italic'
             }}>
@@ -686,220 +837,268 @@ const CompletionPage = () => {
             <div style={{
             display: 'flex',
             flexDirection: 'column',
-            gap: 16,
+            gap: 16, // Réduit de 18 à 16
             background: 'rgba(78, 203, 113, 0.06)',
-            padding: 24,
+            padding: 20, // Réduit de 24 à 20
             borderRadius: 16,
             border: '1px solid rgba(78, 203, 113, 0.25)'
           }}>
-            {/* Timing */}
-            <div 
-              style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}
-              onClick={() => setShowTimeModal(true)}
-              onMouseEnter={(e) => e.currentTarget.style.opacity = '0.8'}
-              onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
-            >
-              <div style={{
-                background: 'linear-gradient(135deg, #4ECB71, #2EA85C)',
-                borderRadius: 8,
-                padding: '8px 12px',
-                fontSize: 14,
-                fontWeight: 700,
-                color: '#fff'
-              }}>
-                ⏰
-              </div>
-              <div>
-                <div style={{ fontSize: 18, fontWeight: 700, color: '#4ECB71' }}>
-                  {getTimeLeft()}
-                </div>
-                <div style={{ fontSize: 12, color: '#999' }}>Time remaining</div>
-              </div>
+            {/* Visual progress rows (clickable) */}
+            <div onClick={() => setShowTimeModal(true)} style={{ cursor: 'pointer' }}>
+              <ProgressRow label="Time remaining" value={getTimeLeft()} percent={getTimeProgressPercent()} />
             </div>
-
-            {/* Prix */}
-            <div 
-              style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}
-              onClick={() => setShowRewardModal(true)}
-              onMouseEnter={(e) => e.currentTarget.style.opacity = '0.8'}
-              onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
-            >
-              <div style={{
-                background: 'linear-gradient(135deg, #4ECB71, #2EA85C)',
-                borderRadius: 8,
-                padding: '8px 12px',
-                fontSize: 14,
-                fontWeight: 700,
-                color: '#fff'
-              }}>
-                💰
-              </div>
-              <div>
-                <div style={{ fontSize: 18, fontWeight: 700, color: '#4ECB71' }}>
-                  {currentCampaign?.completions?.wincValue || 0} $WINC
-                </div>
-                <div style={{ fontSize: 12, color: '#999' }}>Reward amount</div>
-              </div>
+            <div onClick={() => setShowCompletionModal(true)} style={{ cursor: 'pointer' }}>
+              <ProgressRow label="Completions" value={`${getCompletionStats().minted} / ${getCompletionStats().available}`} percent={getCompletionProgressPercent()} />
             </div>
-
-            {/* Completions */}
-            <div 
-              style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}
-              onClick={() => setShowCompletionModal(true)}
-              onMouseEnter={(e) => e.currentTarget.style.opacity = '0.8'}
-              onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
-            >
-              <div style={{
-                background: 'linear-gradient(135deg, #4ECB71, #2EA85C)',
-                borderRadius: 8,
-                padding: '8px 12px',
-                fontSize: 14,
-                fontWeight: 700,
-                color: '#fff'
-              }}>
-                📊
+            {/* Completion Price (numeric, at card bottom, yellow, clickable) */}
+            <div onClick={() => setShowRewardModal(true)} style={{ cursor: 'pointer', marginTop: 6, paddingTop: 10, borderTop: '1px dashed rgba(78, 203, 113, 0.25)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: 13, color: '#9AA5A8' }}>Completion Price</span>
+                <span style={{ fontSize: 16, fontWeight: 800, color: '#FFD600' }}>{formatPriceShort()}</span>
               </div>
-              <div>
-                <div style={{ fontSize: 18, fontWeight: 700, color: '#4ECB71' }}>
-                  {getCompletionStats().minted} / {getCompletionStats().available}
-                </div>
-                <div style={{ fontSize: 12, color: '#999' }}>Completions</div>
-              </div>
+              {/* micro-note removed by request */}
             </div>
           </div>
 
-          {/* Bulles d'informations */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            {/* Starting Story */}
+            {/* Rectangles d'informations élargis - avec espacement */}
+          <div style={{ display: 'flex', gap: 12, justifyContent: 'stretch', alignItems: 'stretch' }}>
+            {/* Starting Story - Rectangle vert élargi */}
             <div 
               style={{
-                background: 'rgba(255, 214, 0, 0.08)',
-                border: '1px solid rgba(255, 214, 0, 0.2)',
+                flex: 1,
+                height: 100, // Réduit de 110 à 100
                 borderRadius: 12,
-                padding: 16,
+                background: 'rgba(78, 203, 113, 0.15)',
+                border: '2px solid rgba(78, 203, 113, 0.3)',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'flex-start',
+                justifyContent: 'flex-start',
+                cursor: 'pointer',
                 position: 'relative',
-                cursor: 'pointer'
+                transition: 'all 0.3s ease',
+                boxShadow: '0 4px 20px rgba(78, 203, 113, 0.1)',
+                padding: '12px' // Réduit de 14px à 12px
               }}
               onClick={() => setShowStoryModal(true)}
-              onMouseEnter={(e) => e.currentTarget.style.opacity = '0.8'}
-              onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-4px)';
+                e.currentTarget.style.background = 'rgba(78, 203, 113, 0.25)';
+                e.currentTarget.style.boxShadow = '0 8px 30px rgba(78, 203, 113, 0.2)';
+                e.currentTarget.style.border = '2px solid rgba(78, 203, 113, 0.5)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.background = 'rgba(78, 203, 113, 0.15)';
+                e.currentTarget.style.boxShadow = '0 4px 20px rgba(78, 203, 113, 0.1)';
+                e.currentTarget.style.border = '2px solid rgba(78, 203, 113, 0.3)';
+              }}
             >
-              <div style={{
-                position: 'absolute',
-                top: -8,
-                left: 16,
-                background: '#4ECB71',
-                color: '#000',
-                padding: '4px 12px',
-                borderRadius: 12,
-                fontSize: 12,
+              <div style={{ 
+                marginBottom: 12,
+                fontSize: 18,
+                color: '#4ECB71',
                 fontWeight: 700
               }}>
-                📖 Starting Story
+                Starting Story
               </div>
               <p style={{
-                fontSize: 14,
-                color: '#ccc',
-                lineHeight: 1.5,
-                margin: '12px 0 0 0'
+                fontSize: 13,
+                color: '#4ECB71',
+                lineHeight: 1.4,
+                margin: 0,
+                opacity: 0.9,
+                display: '-webkit-box',
+                WebkitLineClamp: 4,
+                WebkitBoxOrient: 'vertical',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis'
               }}>
                 {currentCampaign?.story?.startingStory || 'No starting story available'}
               </p>
             </div>
 
-            {/* Guidelines */}
+            {/* Guidelines - Rectangle vert élargi */}
             <div 
               style={{
-                background: 'rgba(78, 203, 113, 0.08)',
-                border: '1px solid rgba(78, 203, 113, 0.2)',
+                flex: 1,
+                height: 100, // Réduit de 110 à 100
                 borderRadius: 12,
-                padding: 16,
+                background: 'rgba(78, 203, 113, 0.15)',
+                border: '2px solid rgba(78, 203, 113, 0.3)',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'flex-start',
+                justifyContent: 'flex-start',
+                cursor: 'pointer',
                 position: 'relative',
-                cursor: 'pointer'
+                transition: 'all 0.3s ease',
+                boxShadow: '0 4px 20px rgba(78, 203, 113, 0.1)',
+                padding: '12px' // Réduit de 14px à 12px
               }}
               onClick={() => setShowGuidelinesModal(true)}
-              onMouseEnter={(e) => e.currentTarget.style.opacity = '0.8'}
-              onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-4px)';
+                e.currentTarget.style.background = 'rgba(78, 203, 113, 0.25)';
+                e.currentTarget.style.boxShadow = '0 8px 30px rgba(78, 203, 113, 0.2)';
+                e.currentTarget.style.border = '2px solid rgba(78, 203, 113, 0.5)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.background = 'rgba(78, 203, 113, 0.15)';
+                e.currentTarget.style.boxShadow = '0 4px 20px rgba(78, 203, 113, 0.1)';
+                e.currentTarget.style.border = '2px solid rgba(78, 203, 113, 0.3)';
+              }}
             >
-              <div style={{
-                position: 'absolute',
-                top: -8,
-                left: 16,
-                background: '#4ECB71',
-                color: '#fff',
-                padding: '4px 12px',
-                borderRadius: 12,
-                fontSize: 12,
+              <div style={{ 
+                marginBottom: 12,
+                fontSize: 18,
+                color: '#4ECB71',
                 fontWeight: 700
               }}>
-                📋 Guidelines
+                Guidelines
               </div>
               <p style={{
-                fontSize: 14,
-                color: '#ccc',
-                lineHeight: 1.5,
-                margin: '12px 0 0 0'
+                fontSize: 13,
+                color: '#4ECB71',
+                lineHeight: 1.4,
+                margin: 0,
+                opacity: 0.9,
+                display: '-webkit-box',
+                WebkitLineClamp: 4,
+                WebkitBoxOrient: 'vertical',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis'
               }}>
                 {currentCampaign?.story?.guideline || 'Follow the campaign guidelines to complete successfully'}
               </p>
             </div>
+          </div>
 
-            {/* Rewards */}
-            <div 
-              style={{
-                background: 'rgba(255, 107, 107, 0.08)',
-                border: '1px solid rgba(255, 107, 107, 0.2)',
-                borderRadius: 12,
-                padding: 16,
-                position: 'relative',
-                cursor: 'pointer'
-              }}
-              onClick={() => setShowRewardsModal(true)}
-              onMouseEnter={(e) => e.currentTarget.style.opacity = '0.8'}
-              onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
-            >
-              <div style={{
-                position: 'absolute',
-                top: -8,
-                left: 16,
-                background: '#4ECB71',
-                color: '#fff',
-                padding: '4px 12px',
-                borderRadius: 12,
-                fontSize: 12,
-                fontWeight: 700
-              }}>
-                🎁 Rewards
-              </div>
-              <p style={{
-                fontSize: 14,
-                color: '#ccc',
-                lineHeight: 1.5,
-                margin: '12px 0 0 0'
-              }}>
-                Complete this campaign to earn {currentCampaign?.completions?.wincValue || 0} $WINC tokens
-              </p>
+          {/* Rewards - Encart jaune moderne agrandi et cliquable */}
+          <div 
+            style={{
+              background: 'linear-gradient(135deg, rgba(255, 214, 0, 0.15), rgba(255, 214, 0, 0.08))',
+              border: '2px solid rgba(255, 214, 0, 0.4)',
+              borderRadius: 16,
+              padding: 20, // Réduit de 24 à 20
+              position: 'relative',
+              cursor: 'pointer',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              boxShadow: '0 4px 20px rgba(255, 214, 0, 0.15)',
+              backdropFilter: 'blur(10px)',
+              minHeight: 130 // Réduit de 140 à 130
+            }}
+            onClick={() => setShowRewardsModal(true)}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-2px) scale(1.01)';
+              e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255, 214, 0, 0.25), rgba(255, 214, 0, 0.15))';
+              e.currentTarget.style.border = '2px solid rgba(255, 214, 0, 0.6)';
+              e.currentTarget.style.boxShadow = '0 8px 30px rgba(255, 214, 0, 0.25), 0 0 0 1px rgba(255, 214, 0, 0.1)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0) scale(1)';
+              e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255, 214, 0, 0.15), rgba(255, 214, 0, 0.08))';
+              e.currentTarget.style.border = '2px solid rgba(255, 214, 0, 0.4)';
+              e.currentTarget.style.boxShadow = '0 4px 20px rgba(255, 214, 0, 0.15)';
+            }}
+          >
+            <div style={{
+              position: 'absolute',
+              top: -8,
+              left: 20,
+              background: 'linear-gradient(135deg, #FFD600, #FFC200)',
+              color: '#000',
+              padding: '10px 18px',
+              borderRadius: 12,
+              fontSize: 16,
+              fontWeight: 800,
+              boxShadow: '0 4px 12px rgba(255, 214, 0, 0.3)'
+            }}>
+              🎁 Rewards
+            </div>
+            <div style={{
+              marginTop: 22,
+              fontSize: 16,
+              lineHeight: 1.6,
+              color: '#FFD600'
+            }}>
+              {isB2CCreator() ? (
+                (() => {
+                  const { standard, premium } = getB2CRewardsTiered();
+                  return (
+                    <div>
+                      <div style={{ fontWeight: 700, marginBottom: 8, color: '#4ECB71', fontSize: 15 }}>
+                        ✅ Standard for all Validated Completers
+                      </div>
+                      <div style={{ marginLeft: 12, marginBottom: 14, fontSize: 14, color: '#ccc' }}>
+                        {standard.join(' • ')}
+                      </div>
+                      <div style={{ fontWeight: 700, marginBottom: 8, color: '#FFD600', fontSize: 15 }}>
+                        🥇🥈🥉 Premium for Top 3
+                      </div>
+                      <div style={{ marginLeft: 12, fontSize: 14, color: '#ccc' }}>
+                        {premium.join(' • ')}
+                      </div>
+                    </div>
+                  );
+                })()
+              ) : (
+                (() => {
+                  const { first, second, third } = getIndividualTop3();
+                  return (
+                    <div>
+                      <div style={{ fontWeight: 700, marginBottom: 8, color: '#FFD600', fontSize: 15 }}>
+                        🥇🥈🥉 Top 3 Winners
+                      </div>
+                      <div style={{ marginLeft: 12, fontSize: 14, color: '#ccc' }}>
+                        1st: {first} $WINC • 2nd: {second} $WINC • 3rd: {third} $WINC
+                      </div>
+                    </div>
+                  );
+                })()
+              )}
+            </div>
+            <div style={{
+              position: 'absolute',
+              top: 12,
+              right: 12,
+              background: 'linear-gradient(135deg, #FF6B6B, #FF5252)',
+              color: '#fff',
+              borderRadius: '50%',
+              width: 22,
+              height: 22,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: 11,
+              fontWeight: 800,
+              boxShadow: '0 3px 10px rgba(255, 107, 107, 0.4)',
+              animation: 'pulse 2s infinite'
+            }}>
+              !
             </div>
           </div>
 
-          {/* Bouton Complete - En bas (jaune) */}
-          {filteredCampaigns.length > 0 ? (
+          {/* Bouton Complete - En bas (jaune) avec espacement réduit */}
+        {filteredCampaigns.length > 0 ? (
             <button
               onClick={() => setShowComplete(true)}
-              style={{
+              style={{ 
                 background: 'linear-gradient(135deg, #FFD600, #FFC200)',
-                color: '#111',
+                color: '#111', 
                 fontWeight: 800,
                 fontSize: 24,
-                border: 'none',
+                border: 'none', 
                 borderRadius: 16,
                 padding: '20px 40px',
-                cursor: 'pointer',
+                cursor: 'pointer', 
                 boxShadow: '0 8px 32px rgba(255, 214, 0, 0.35), 0 0 0 2px rgba(255, 214, 0, 0.25)',
                 transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                 position: 'relative',
                 overflow: 'hidden',
-                width: '100%'
+                width: '100%',
+                marginTop: 0 // Supprimé l'espacement pour frôler l'encart Rewards
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.transform = 'scale(1.05)';
@@ -911,26 +1110,26 @@ const CompletionPage = () => {
               }}
             >
               <span style={{ position: 'relative', zIndex: 1 }}>
-                Complete
+                {formatButtonCta()}
               </span>
             </button>
-          ) : (
-            <div style={{
-              textAlign: 'center',
-              color: '#666',
-              fontSize: 16,
+        ) : (
+          <div style={{
+            textAlign: 'center',
+            color: '#666',
+            fontSize: 16,
               padding: '40px 20px',
-              border: '2px dashed #333',
-              borderRadius: 16,
+            border: '2px dashed #333',
+            borderRadius: 16,
               background: 'rgba(255, 214, 0, 0.02)'
-            }}>
+          }}>
               <div style={{ fontSize: 48, marginBottom: 16 }}>📭</div>
               <div style={{ marginBottom: 8, fontSize: 18, fontWeight: 600 }}>No campaigns available</div>
-              <div style={{ fontSize: 14 }}>
-                Check back later or switch to {activeTab === 'b2c' ? 'Individuals' : 'B2C Companies'} tab
-              </div>
+            <div style={{ fontSize: 14 }}>
+              Check back later or switch to {activeTab === 'b2c' ? 'Individuals' : 'B2C Companies'} tab
             </div>
-          )}
+          </div>
+        )}
         </div>
       </div>
 
@@ -1079,11 +1278,44 @@ const CompletionPage = () => {
             maxWidth: 400,
             color: '#4ECB71'
           }}>
-            <h3 style={{ margin: '0 0 16px 0', fontSize: 20 }}>💰 Reward Amount</h3>
-            <p style={{ margin: 0, lineHeight: 1.5 }}>
-              Complete this campaign to earn {currentCampaign?.completions?.wincValue || 0} $WINC tokens. 
-              Rewards are distributed automatically upon successful completion.
-            </p>
+            <h3 style={{ margin: '0 0 16px 0', fontSize: 20 }}>Details</h3>
+            <p style={{ margin: 0, lineHeight: 1.5, color: '#9AA5A8' }}>Completion Price</p>
+            <p style={{ marginTop: 6 }}>Price: <span style={{ color: '#FFD600', fontWeight: 800 }}>{formatPriceShort()}</span></p>
+            <div style={{ height: 1, background: 'rgba(255, 214, 0, 0.15)', margin: '12px 0' }} />
+            {isB2CCreator() ? (
+              <div>
+                <p style={{ margin: 0, lineHeight: 1.5, color: '#9AA5A8' }}>Rewards (mock)</p>
+                {(() => {
+                  const { standard, premium } = getB2CRewardsTiered();
+                  return (
+                    <div>
+                      <div style={{ marginTop: 6, fontWeight: 700, color: '#4ECB71' }}>Standard</div>
+                      <ul style={{ margin: '6px 0 10px 18px', color: '#ccc' }}>
+                        {standard.map((r, i) => (<li key={`std-${i}`}>{r}</li>))}
+                      </ul>
+                      <div style={{ fontWeight: 700, color: '#4ECB71' }}>Premium</div>
+                      <ul style={{ margin: '6px 0 0 18px', color: '#ccc' }}>
+                        {premium.map((r, i) => (<li key={`prm-${i}`}>{r}</li>))}
+                      </ul>
+                    </div>
+                  );
+                })()}
+              </div>
+            ) : (
+              <div>
+                <p style={{ margin: 0, lineHeight: 1.5, color: '#9AA5A8' }}>Top 3 rewards (mock)</p>
+                {(() => {
+                  const { first, second, third } = getIndividualTop3();
+                  return (
+                    <ul style={{ margin: '6px 0 0 18px', color: '#ccc' }}>
+                      <li>1st: {first} $WINC</li>
+                      <li>2nd: {second} $WINC</li>
+                      <li>3rd: {third} $WINC</li>
+                    </ul>
+                  );
+                })()}
+              </div>
+            )}
             <button 
               onClick={() => setShowRewardModal(false)}
               style={{
@@ -1099,6 +1331,86 @@ const CompletionPage = () => {
             >
               Close
             </button>
+          </div>
+        </div>
+      )}
+
+      {showRewardsModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.8)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }} onClick={() => setShowRewardsModal(false)}>
+          <div style={{
+            background: '#111',
+            border: '2px solid #4ECB71',
+            borderRadius: 16,
+            padding: 24,
+            maxWidth: 520,
+            width: '90vw',
+            color: '#4ECB71',
+            position: 'relative',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5)'
+          }} onClick={e => e.stopPropagation()}>
+            <button
+              onClick={() => setShowRewardsModal(false)}
+              style={{
+                position: 'absolute',
+                top: 12,
+                right: 16,
+                background: 'none',
+                border: 'none',
+                fontSize: 24,
+                color: '#FF6B6B',
+                cursor: 'pointer',
+                fontWeight: 700
+              }}
+            >
+              ×
+            </button>
+            <h3 style={{ margin: '0 0 16px 0', fontSize: 20 }}>Rewards</h3>
+            {isB2CCreator() ? (
+              (() => {
+                const { standard, premium } = getB2CRewardsTiered();
+                return (
+                  <div>
+                    <div style={{ fontWeight: 700, marginBottom: 6, color: '#4ECB71' }}>
+                      ✅ Standard for all Validated Completers
+                    </div>
+                    <ul style={{ margin: '0 0 12px 18px', color: '#ccc' }}>
+                      {standard.map((r, i) => (<li key={`r-std-${i}`}>{r}</li>))}
+                    </ul>
+                    <div style={{ fontWeight: 700, marginBottom: 6, color: '#FFD600' }}>
+                      🥇🥈🥉 Premium for Top 3
+                    </div>
+                    <ul style={{ margin: '0 0 6px 18px', color: '#ccc' }}>
+                      {premium.map((r, i) => (<li key={`r-prm-${i}`}>{r}</li>))}
+                    </ul>
+                  </div>
+                );
+              })()
+            ) : (
+              (() => {
+                const { first, second, third } = getIndividualTop3();
+                return (
+                  <div>
+                    <div style={{ fontWeight: 700, marginBottom: 6 }}>Top 3 winners</div>
+                    <ul style={{ margin: '0 0 6px 18px', color: '#ccc' }}>
+                      <li>1st: {first} $WINC</li>
+                      <li>2nd: {second} $WINC</li>
+                      <li>3rd: {third} $WINC</li>
+                    </ul>
+                  </div>
+                );
+              })()
+            )}
           </div>
         </div>
       )}
@@ -1451,6 +1763,131 @@ const CompletionPage = () => {
           100% { transform: rotate(360deg); }
         }
       `}</style>
+
+      {/* Modals pour les informations supplémentaires */}
+      {/* Starting Story Modal */}
+      {showStoryModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          background: 'rgba(0, 0, 0, 0.8)',
+          zIndex: 1000,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }} onClick={() => setShowStoryModal(false)}>
+          <div style={{
+            background: '#111',
+            border: '2px solid #4ECB71',
+            borderRadius: 16,
+            padding: 24,
+            maxWidth: 500,
+            width: '90vw',
+            color: '#fff',
+            position: 'relative',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5)'
+          }} onClick={e => e.stopPropagation()}>
+            <button
+              onClick={() => setShowStoryModal(false)}
+              style={{
+                position: 'absolute',
+                top: 12,
+                right: 16,
+                background: 'none',
+                border: 'none',
+                fontSize: 24,
+                color: '#FF6B6B',
+                cursor: 'pointer',
+                fontWeight: 700
+              }}
+            >
+              ×
+            </button>
+            <h3 style={{
+              color: '#4ECB71',
+              fontSize: 20,
+              fontWeight: 700,
+              marginBottom: 16,
+              marginTop: 0
+            }}>
+              Starting Story
+            </h3>
+            <p style={{
+              fontSize: 14,
+              lineHeight: 1.6,
+              color: '#ccc',
+              margin: 0
+            }}>
+              {currentCampaign?.story?.startingStory || 'No starting story available'}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Guidelines Modal */}
+      {showGuidelinesModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          background: 'rgba(0, 0, 0, 0.8)',
+          zIndex: 1000,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }} onClick={() => setShowGuidelinesModal(false)}>
+          <div style={{
+            background: '#111',
+            border: '2px solid #4ECB71',
+            borderRadius: 16,
+            padding: 24,
+            maxWidth: 500,
+            width: '90vw',
+            color: '#fff',
+            position: 'relative',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5)'
+          }} onClick={e => e.stopPropagation()}>
+            <button
+              onClick={() => setShowGuidelinesModal(false)}
+              style={{
+                position: 'absolute',
+                top: 12,
+                right: 16,
+                background: 'none',
+                border: 'none',
+                fontSize: 24,
+                color: '#FF6B6B',
+                cursor: 'pointer',
+                fontWeight: 700
+              }}
+            >
+              ×
+            </button>
+            <h3 style={{
+              color: '#4ECB71',
+              fontSize: 20,
+              fontWeight: 700,
+              marginBottom: 16,
+              marginTop: 0
+            }}>
+              Guidelines
+            </h3>
+            <p style={{
+              fontSize: 14,
+              lineHeight: 1.6,
+              color: '#ccc',
+              margin: 0
+            }}>
+              {currentCampaign?.story?.guideline || 'Follow the campaign guidelines to complete successfully'}
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
