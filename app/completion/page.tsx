@@ -388,6 +388,33 @@ const CompletionPage = () => {
     }
   };
 
+  // Get company name for display (agency + client for B2C_AGENCIES, just company for FOR_B2C)
+  const getCompanyName = () => {
+    if (!currentCampaign) return '';
+    
+    if (currentCampaign.creatorType === 'B2C_AGENCIES') {
+      // For agencies, show both agency and client names
+      const agencyName = localStorage.getItem('agencyName') || '';
+      const clientName = localStorage.getItem('clientB2CName') || '';
+      
+      if (agencyName && clientName) {
+        return `${agencyName} + ${clientName}`;
+      } else if (agencyName) {
+        return agencyName;
+      } else if (clientName) {
+        return clientName;
+      } else {
+        return currentCampaign.creatorId || 'Agency + Client';
+      }
+    } else if (currentCampaign.creatorType === 'FOR_B2C') {
+      // For direct B2C companies, show company name
+      const companyName = localStorage.getItem('companyName') || currentCampaign.creatorId || 'Company';
+      return companyName;
+    }
+    
+    return '';
+  };
+
   // Calculate time left (mock implementation)
   const getTimeLeft = () => {
     if (!currentCampaign) return "7 days left";
@@ -656,7 +683,7 @@ const CompletionPage = () => {
         </button>
       </div>
 
-      {/* Identité + flèches + info */}
+      {/* Identité + flèches */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, marginTop: 12 }}>
         {filteredCampaigns.length > 1 && (
           <button
@@ -683,11 +710,6 @@ const CompletionPage = () => {
         <div style={{ background: '#4ECB71', color: '#000', borderRadius: 12, padding: '8px 18px', fontWeight: 700, fontSize: 16 }}>
           {getIdentity()}
         </div>
-        <button onClick={() => setShowInfo(true)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
-          <div style={{ background: '#4ECB71', borderRadius: '50%', width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <span style={{ color: '#000', fontWeight: 700, fontSize: 24, fontFamily: 'serif' }}>i</span>
-          </div>
-        </button>
         {filteredCampaigns.length > 1 && (
           <button
             onClick={goToNextVideo}
@@ -712,20 +734,54 @@ const CompletionPage = () => {
         )}
       </div>
 
-      {/* Titre de campagne (dynamique) */}
-      <div style={{ textAlign: 'center', marginTop: 2, fontStyle: 'italic', color: '#4ECB71', fontSize: 13 }}>
-        {currentCampaign?.story?.title || 'Title'}
-      </div>
+      {/* Points carrousel ou compteur */}
+      {filteredCampaigns.length > 1 && (
+        <div style={{ display: 'flex', gap: 6, justifyContent: 'center', marginTop: 2 }}>
+          {filteredCampaigns.length <= 10 ? (
+            // Points carrousel pour 10 contenus ou moins
+            filteredCampaigns.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setCurrentVideoIndex(index)}
+                style={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: '50%',
+                  border: 'none',
+                  background: index === currentVideoIndex ? '#4ECB71' : 'rgba(78, 203, 113, 0.3)',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+              />
+            ))
+          ) : (
+            // Compteur numérique pour plus de 10 contenus
+            <div style={{
+              background: 'rgba(78, 203, 113, 0.15)',
+              border: '1px solid rgba(78, 203, 113, 0.3)',
+              borderRadius: 12,
+              padding: '6px 12px',
+              fontSize: 12,
+              fontWeight: 600,
+              color: '#4ECB71'
+            }}>
+              {currentVideoIndex + 1}/{filteredCampaigns.length}
+            </div>
+          )}
+        </div>
+      )}
 
-      {/* Layout Netflix-style: Vidéo à gauche, Infos à droite */}
-      <div style={{ 
-        display: 'flex', 
-        height: window.innerWidth < 1024 ? 'auto' : 'calc(100vh - 160px)', // Réduit encore l'espacement
-        marginTop: 5, // Espacement minimal du header
-        gap: 40,
-        alignItems: 'flex-start', // Changé de 'center' à 'flex-start' pour permettre au contenu de droite de remonter
-        flexDirection: window.innerWidth < 1024 ? 'column' : 'row'
-      }}>
+      {/* Affichage conditionnel : avec ou sans campagnes */}
+      {filteredCampaigns.length > 0 ? (
+        /* Layout Netflix-style: Vidéo à gauche, Infos à droite */
+        <div style={{ 
+          display: 'flex', 
+          height: window.innerWidth < 1024 ? 'auto' : 'calc(100vh - 160px)', // Réduit encore l'espacement
+          marginTop: 5, // Espacement minimal du header
+          gap: 40,
+          alignItems: 'flex-start', // Changé de 'center' à 'flex-start' pour permettre au contenu de droite de remonter
+          flexDirection: window.innerWidth < 1024 ? 'column' : 'row'
+        }}>
         {/* Section Vidéo - Centrée avec les éléments de droite */}
         <div style={{ 
           flex: window.innerWidth < 1024 ? '1 1 100%' : '0 0 55%', // Réduit de 60% à 55%
@@ -812,24 +868,41 @@ const CompletionPage = () => {
           gap: 20, // Réduit de 24 à 20
           justifyContent: 'flex-start' // Changé de 'center' à 'flex-start' pour permettre au bouton de remonter
         }}>
-          {/* Titre de la campagne */}
+          {/* Titre de la campagne avec info et carrousel */}
           <div>
-            <h1 style={{
-              fontSize: 28, // Réduit de 32 à 28
-              fontWeight: 800,
-              color: '#4ECB71',
-              margin: 0,
-              marginBottom: 6, // Réduit de 8 à 6
-              lineHeight: 1.2
-            }}>
-              {currentCampaign?.story?.title || 'Campaign Title'}
-            </h1>
-            <div style={{
-              fontSize: 14, // Réduit de 16 à 14
-              color: '#ccc',
-              fontStyle: 'italic'
-            }}>
-              by {getIdentity()}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <h1 style={{
+                  fontSize: 28, // Réduit de 32 à 28
+                  fontWeight: 800,
+                  color: '#4ECB71',
+                  margin: 0,
+                  lineHeight: 1.2
+                }}>
+                  {currentCampaign?.story?.title || 'Campaign Title'}
+                </h1>
+                <button onClick={() => setShowInfo(true)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
+                  <div style={{ background: '#4ECB71', borderRadius: '50%', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <span style={{ color: '#000', fontWeight: 700, fontSize: 18, fontFamily: 'serif' }}>i</span>
+                  </div>
+                </button>
+              </div>
+              {/* Company name à droite */}
+              {getCompanyName() && (
+                <div style={{
+                  fontSize: 28,
+                  fontWeight: 800,
+                  color: '#fff',
+                  opacity: 0.9,
+                  textAlign: 'right',
+                  maxWidth: '250px',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap'
+                }}>
+                  {getCompanyName()}
+                </div>
+              )}
             </div>
           </div>
 
@@ -1059,29 +1132,9 @@ const CompletionPage = () => {
                 })()
               )}
             </div>
-            <div style={{
-              position: 'absolute',
-              top: 12,
-              right: 12,
-              background: 'linear-gradient(135deg, #FF6B6B, #FF5252)',
-              color: '#fff',
-              borderRadius: '50%',
-              width: 22,
-              height: 22,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: 11,
-              fontWeight: 800,
-              boxShadow: '0 3px 10px rgba(255, 107, 107, 0.4)',
-              animation: 'pulse 2s infinite'
-            }}>
-              !
-            </div>
           </div>
 
           {/* Bouton Complete - En bas (jaune) avec espacement réduit */}
-        {filteredCampaigns.length > 0 ? (
             <button
               onClick={() => setShowComplete(true)}
               style={{ 
@@ -1113,25 +1166,61 @@ const CompletionPage = () => {
                 {formatButtonCta()}
               </span>
             </button>
-        ) : (
-          <div style={{
-            textAlign: 'center',
-            color: '#666',
-            fontSize: 16,
-              padding: '40px 20px',
-            border: '2px dashed #333',
-            borderRadius: 16,
-              background: 'rgba(255, 214, 0, 0.02)'
-          }}>
-              <div style={{ fontSize: 48, marginBottom: 16 }}>📭</div>
-              <div style={{ marginBottom: 8, fontSize: 18, fontWeight: 600 }}>No campaigns available</div>
-            <div style={{ fontSize: 14 }}>
-              Check back later or switch to {activeTab === 'b2c' ? 'Individuals' : 'B2C Companies'} tab
-            </div>
-          </div>
-        )}
         </div>
       </div>
+      ) : (
+        /* Message simple quand pas de campagnes */
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          height: 'calc(100vh - 200px)',
+          textAlign: 'center',
+          gap: 24
+        }}>
+          <div style={{
+            fontSize: 24,
+            fontWeight: 600,
+            color: '#4ECB71',
+            marginBottom: 8
+          }}>
+            No campaigns available
+          </div>
+          <div style={{
+            fontSize: 16,
+            color: '#ccc',
+            marginBottom: 32
+          }}>
+            Check back later or switch to {activeTab === 'b2c' ? 'Individuals' : 'B2C Companies'} tab
+          </div>
+          <button
+            onClick={() => router.push('/creation')}
+            style={{
+              background: 'linear-gradient(135deg, #FFD600, #FFC200)',
+              color: '#000',
+              fontWeight: 700,
+              fontSize: 14,
+              border: 'none',
+              borderRadius: 8,
+              padding: '10px 20px',
+              cursor: 'pointer',
+              boxShadow: '0 4px 12px rgba(255, 214, 0, 0.3)',
+              transition: 'all 0.3s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.boxShadow = '0 6px 16px rgba(255, 214, 0, 0.4)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 4px 12px rgba(255, 214, 0, 0.3)';
+            }}
+          >
+            Create Your Story
+          </button>
+        </div>
+      )}
 
       {/* Tooltip modal */}
       <CompletionTooltip
@@ -1225,34 +1314,36 @@ const CompletionPage = () => {
           alignItems: 'center',
           justifyContent: 'center',
           zIndex: 1000
-        }}>
+        }} onClick={() => setShowTimeModal(false)}>
           <div style={{
             background: '#111',
             border: '2px solid #FFD600',
             borderRadius: 16,
             padding: 24,
             maxWidth: 400,
-            color: '#FFD600'
-          }}>
-            <h3 style={{ margin: '0 0 16px 0', fontSize: 20 }}>⏰ Time Remaining</h3>
-            <p style={{ margin: 0, lineHeight: 1.5 }}>
-              This campaign has {getTimeLeft()} remaining. Complete it before the deadline to earn your rewards.
-            </p>
-            <button 
+            color: '#FFD600',
+            position: 'relative'
+          }} onClick={(e) => e.stopPropagation()}>
+            <button
               onClick={() => setShowTimeModal(false)}
               style={{
-                background: '#FFD600',
-                color: '#000',
+                position: 'absolute',
+                top: 12,
+                right: 16,
+                background: 'none',
                 border: 'none',
-                borderRadius: 8,
-                padding: '8px 16px',
-                marginTop: 16,
+                fontSize: 24,
+                color: '#FF6B6B',
                 cursor: 'pointer',
                 fontWeight: 700
               }}
             >
-              Close
+              ×
             </button>
+            <h3 style={{ margin: '0 0 16px 0', fontSize: 20 }}>⏰ Time Remaining</h3>
+            <p style={{ margin: 0, lineHeight: 1.5 }}>
+              This campaign has {getTimeLeft()} remaining. Complete it before the deadline to earn your rewards.
+            </p>
           </div>
         </div>
       )}
@@ -1269,15 +1360,32 @@ const CompletionPage = () => {
           alignItems: 'center',
           justifyContent: 'center',
           zIndex: 1000
-        }}>
+        }} onClick={() => setShowRewardModal(false)}>
           <div style={{
             background: '#111',
             border: '2px solid #4ECB71',
             borderRadius: 16,
             padding: 24,
             maxWidth: 400,
-            color: '#4ECB71'
-          }}>
+            color: '#4ECB71',
+            position: 'relative'
+          }} onClick={(e) => e.stopPropagation()}>
+            <button
+              onClick={() => setShowRewardModal(false)}
+              style={{
+                position: 'absolute',
+                top: 12,
+                right: 16,
+                background: 'none',
+                border: 'none',
+                fontSize: 24,
+                color: '#FF6B6B',
+                cursor: 'pointer',
+                fontWeight: 700
+              }}
+            >
+              ×
+            </button>
             <h3 style={{ margin: '0 0 16px 0', fontSize: 20 }}>Details</h3>
             <p style={{ margin: 0, lineHeight: 1.5, color: '#9AA5A8' }}>Completion Price</p>
             <p style={{ marginTop: 6 }}>Price: <span style={{ color: '#FFD600', fontWeight: 800 }}>{formatPriceShort()}</span></p>
@@ -1316,21 +1424,6 @@ const CompletionPage = () => {
                 })()}
               </div>
             )}
-            <button 
-              onClick={() => setShowRewardModal(false)}
-              style={{
-                background: '#4ECB71',
-                color: '#fff',
-                border: 'none',
-                borderRadius: 8,
-                padding: '8px 16px',
-                marginTop: 16,
-                cursor: 'pointer',
-                fontWeight: 700
-              }}
-            >
-              Close
-            </button>
           </div>
         </div>
       )}

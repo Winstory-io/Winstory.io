@@ -1,7 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import ProtectedRoute from '@/components/ProtectedRoute';
 
 const Modal = ({ open, onClose, children }: { open: boolean, onClose: () => void, children: React.ReactNode }) => {
   if (!open) return null;
@@ -110,8 +109,7 @@ export default function RecapCompletion() {
   };
 
   return (
-    <ProtectedRoute>
-      <div style={{ minHeight: "100vh", background: "#000", color: "#fff", padding: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+    <div style={{ minHeight: "100vh", background: "#000", color: "#fff", padding: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
         {/* Croix rouge en haut à droite */}
         {(!modal.open) && (
           <button
@@ -166,24 +164,46 @@ export default function RecapCompletion() {
               <div style={{ border: "2px solid #fff", borderRadius: 12, padding: 10, textAlign: 'center', fontWeight: 600, fontSize: 15, maxWidth: '100%', background: '#181818' }}>
                 <div style={{ fontWeight: 700, fontSize: 17, color: '#FFD600', marginBottom: 8 }}>Rewards</div>
                 {/* Standard Rewards */}
-                {(recap.standardToken || recap.standardItem) && (
+                {recap.standardToken && (
                   <div style={{ background: 'rgba(0,196,108,0.08)', borderRadius: 8, padding: 8, textAlign: 'left', marginBottom: 8 }}>
                     <div style={{ color: '#00C46C', fontWeight: 700, fontSize: 14, marginBottom: 4 }}>Standard Rewards</div>
-                    {recap.standardToken && ( <div> ... </div>)}
-                    {recap.standardItem && ( <div> ... </div>)}
+                    <div style={{ color: '#fff', fontSize: 13, lineHeight: 1.4 }}>
+                      {recap.standardToken.description || 'Standard rewards for validated completers'}
+                    </div>
                     <div style={{ color: '#00C46C', marginTop: 6, fontStyle: 'italic', fontWeight: 500, fontSize: 12 }}>
                       If the Moderators validate your content, you win the Standard reward.
                     </div>
                   </div>
                 )}
                 {/* Premium Rewards */}
-                {(recap.premiumToken || recap.premiumItem) && (
+                {recap.premiumToken && (
                   <div style={{ background: 'rgba(255,215,0,0.08)', borderRadius: 8, padding: 8, textAlign: 'left' }}>
                     <div style={{ color: '#FFD600', fontWeight: 700, fontSize: 14, marginBottom: 4 }}>Premium Rewards</div>
-                    {recap.premiumToken && ( <div> ... </div>)}
-                    {recap.premiumItem && ( <div> ... </div>)}
+                    <div style={{ color: '#fff', fontSize: 13, lineHeight: 1.4 }}>
+                      {recap.premiumToken.description || 'Premium rewards for top 3 completers'}
+                    </div>
                     <div style={{ color: '#FFD600', marginTop: 6, fontStyle: 'italic', fontWeight: 500, fontSize: 12 }}>
                       If they validate your content and score you one of the 3 best average scores, you also win the Premium reward.
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+            {/* Individual Rewards Section */}
+            {completionType === 'individual' && (
+              <div style={{ border: "2px solid #fff", borderRadius: 12, padding: 10, textAlign: 'center', fontWeight: 600, fontSize: 15, maxWidth: '100%', background: '#181818' }}>
+                <div style={{ fontWeight: 700, fontSize: 17, color: '#FFD600', marginBottom: 8 }}>Rewards</div>
+                {/* Top 3 $WINC Rewards */}
+                {recap.standardToken && (
+                  <div style={{ background: 'rgba(255,215,0,0.08)', borderRadius: 8, padding: 8, textAlign: 'left' }}>
+                    <div style={{ color: '#FFD600', fontWeight: 700, fontSize: 14, marginBottom: 4 }}>Top 3 $WINC Rewards</div>
+                    <div style={{ color: '#fff', fontSize: 13, lineHeight: 1.4 }}>
+                      1st: {recap.standardToken.first} $WINC<br/>
+                      2nd: {recap.standardToken.second} $WINC<br/>
+                      3rd: {recap.standardToken.third} $WINC
+                    </div>
+                    <div style={{ color: '#FFD600', marginTop: 6, fontStyle: 'italic', fontWeight: 500, fontSize: 12 }}>
+                      Complete the campaign to compete for the top 3 positions and win $WINC tokens.
                     </div>
                   </div>
                 )}
@@ -287,6 +307,5 @@ export default function RecapCompletion() {
           </div>
         )}
       </div>
-    </ProtectedRoute>
   );
 } 

@@ -31,6 +31,44 @@ const CompletionPopup: React.FC<CompletionPopupProps> = ({ open, onClose, active
   const [orientationError, setOrientationError] = React.useState<string | null>(null);
   const [isValidatingOrientation, setIsValidatingOrientation] = React.useState(false);
 
+  // Determine if current video is vertical (same logic as main completion page)
+  const isCurrentVideoVertical = currentCampaign?.film?.format === '9:16' || 
+                                 currentCampaign?.film?.url?.includes('720x1280') ||
+                                 currentCampaign?.film?.fileName?.includes('vertical') ||
+                                 currentCampaign?.film?.fileName?.includes('9:16');
+
+  // Price calculation (same logic as main completion page)
+  const getMintPrice = () => {
+    const price = Number(currentCampaign?.completions?.wincValue || 0);
+    return isNaN(price) ? 0 : price;
+  };
+
+  const isB2CCreator = () => {
+    if (!currentCampaign) return activeTab === 'b2c';
+    return (
+      currentCampaign.creatorType === 'B2C_AGENCIES' ||
+      currentCampaign.creatorType === 'FOR_B2C' ||
+      activeTab === 'b2c'
+    );
+  };
+
+  const getPriceUnit = () => (isB2CCreator() ? '$' : '$WINC');
+
+  const formatPriceShort = () => {
+    const price = getMintPrice();
+    const unit = getPriceUnit();
+    if (unit === '$') return `$${price.toFixed(2)}`;
+    return `${price} ${unit}`;
+  };
+
+  const formatMintPriceTextual = () => {
+    const price = getMintPrice();
+    if (price <= 0) return 'FREE';
+    const unit = getPriceUnit();
+    if (unit === '$') return `$${price.toFixed(2)}`;
+    return `${price} ${unit}`;
+  };
+
   // Charger les données sauvegardées quand le popup s'ouvre
   React.useEffect(() => {
     if (open) {
@@ -120,15 +158,49 @@ const CompletionPopup: React.FC<CompletionPopupProps> = ({ open, onClose, active
       localStorage.setItem("completionText", story);
       localStorage.setItem("completionFilmUrl", ""); // On ne stocke plus la vidéo ici
       localStorage.setItem("completionType", activeTab);
-      localStorage.setItem("standardTokenReward", JSON.stringify({ name: "Standard Token", amountPerUser: 10, contractAddress: "0xabc...def" }));
-      localStorage.setItem("premiumTokenReward", JSON.stringify({ name: "Premium Token", amountPerUser: 100, contractAddress: "0x123...456" }));
-      localStorage.setItem("completionMintPrice", "0.05 ETH");
+      
+      // Stocker les vraies données de récompenses de la campagne
+      if (activeTab === 'b2c') {
+        // Pour B2C, utiliser les données de récompenses de la campagne
+        const standardRewards = currentCampaign?.rewards?.standardReward || 'Standard rewards not specified';
+        const premiumRewards = currentCampaign?.rewards?.premiumReward || 'Premium rewards not specified';
+        localStorage.setItem("standardTokenReward", JSON.stringify({ 
+          name: "Standard Rewards", 
+          description: standardRewards,
+          type: "b2c_standard"
+        }));
+        localStorage.setItem("premiumTokenReward", JSON.stringify({ 
+          name: "Premium Rewards", 
+          description: premiumRewards,
+          type: "b2c_premium"
+        }));
+      } else {
+        // Pour Individuals, utiliser les calculs de $WINC
+        const { first, second, third } = getIndividualTop3();
+        localStorage.setItem("standardTokenReward", JSON.stringify({ 
+          name: "Top 3 $WINC Rewards", 
+          first: first,
+          second: second,
+          third: third,
+          type: "individual_top3"
+        }));
+        localStorage.setItem("premiumTokenReward", JSON.stringify({ 
+          name: "Individual Completion", 
+          description: "Complete the campaign to be eligible for rewards",
+          type: "individual_completion"
+        }));
+      }
+      
+      // Stocker le vrai prix de completion de la campagne (même logique que le bouton)
+      const completionPrice = formatMintPriceTextual();
+      localStorage.setItem("completionMintPrice", completionPrice);
+      
       router.push('/completion/recap');
     }
   };
 
   const handleFileUpload = async (uploadedFile: File) => {
-    if (!currentCampaign?.content?.videoOrientation) {
+    if (!isCurrentVideoVertical && !currentCampaign?.film?.format) {
       // Si pas d'orientation spécifiée, accepter le fichier
       setFile(uploadedFile);
       setOrientationError(null);
@@ -139,9 +211,10 @@ const CompletionPopup: React.FC<CompletionPopupProps> = ({ open, onClose, active
     setOrientationError(null);
 
     try {
+      const expectedOrientation = isCurrentVideoVertical ? 'vertical' : 'horizontal';
       const { isValid, detectedOrientation } = await validateVideoOrientation(
         uploadedFile, 
-        currentCampaign.content.videoOrientation
+        expectedOrientation
       );
 
       if (isValid) {
@@ -149,7 +222,7 @@ const CompletionPopup: React.FC<CompletionPopupProps> = ({ open, onClose, active
         setOrientationError(null);
       } else {
         setFile(null);
-        const expectedText = currentCampaign.content.videoOrientation === 'vertical' ? 'vertical' : 'horizontal';
+        const expectedText = isCurrentVideoVertical ? 'vertical' : 'horizontal';
         const detectedText = detectedOrientation === 'vertical' ? 'vertical' : 'horizontal';
         setOrientationError(
           `Incorrect video format! This campaign requires a ${expectedText} video, but you uploaded a ${detectedText} video. Please upload a video with the correct orientation.`
@@ -227,7 +300,7 @@ const CompletionPopup: React.FC<CompletionPopupProps> = ({ open, onClose, active
         >
           <div style={{ color: GREEN, fontSize: 28, fontWeight: 700, textAlign: 'center', marginBottom: 8 }}>Creation</div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-            <div style={{ fontStyle: 'italic', fontSize: 18, color: '#fff' }}>{currentCampaign?.title || 'Title'}</div>
+            <div style={{ fontStyle: 'italic', fontSize: 18, color: '#fff' }}>{currentCampaign?.story?.title || 'Campaign Title'}</div>
             <div style={{ fontWeight: 700, fontSize: 18, color: '#fff' }}>{identity}</div>
           </div>
           {/* Ligne flex pour bulles et vidéo */}
@@ -253,9 +326,9 @@ const CompletionPopup: React.FC<CompletionPopupProps> = ({ open, onClose, active
             <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 320, minWidth: 0, position: 'relative' }}>
               <div style={{ 
                 width: '90%', 
-                maxWidth: currentCampaign?.content?.videoOrientation === 'vertical' ? 240 : 480, 
+                maxWidth: isCurrentVideoVertical ? 240 : 480, 
                 maxHeight: 360, 
-                aspectRatio: currentCampaign?.content?.videoOrientation === 'vertical' ? '9/16' : '16/9', 
+                aspectRatio: isCurrentVideoVertical ? '9/16' : '16/9', 
                 background: '#222', 
                 borderRadius: 16, 
                 display: 'flex', 
@@ -333,8 +406,8 @@ const CompletionPopup: React.FC<CompletionPopupProps> = ({ open, onClose, active
                   </div>
                   <div style={{ color: '#fff', fontSize: 20, textAlign: 'center', marginTop: 10, fontWeight: 500, textShadow: '0 2px 8px #000a' }}>
                     {/* Dynamic content from campaign */}
-                    {openedBubble === 'starting' && (currentCampaign?.content?.startingStory || 'Texte de démarrage de la campagne (à paramétrer)')}
-                    {openedBubble === 'guideline' && (currentCampaign?.content?.guidelines || 'Consigne créative de la campagne (à paramétrer)')}
+                    {openedBubble === 'starting' && (currentCampaign?.story?.startingStory || 'Texte de démarrage de la campagne (à paramétrer)')}
+                    {openedBubble === 'guideline' && (currentCampaign?.story?.guideline || 'Consigne créative de la campagne (à paramétrer)')}
                     {openedBubble === 'standard' && (currentCampaign?.rewards?.standardReward || 'Description des Standard Rewards (à paramétrer)')}
                     {openedBubble === 'premium' && (currentCampaign?.rewards?.premiumReward || 'Description des Premium Rewards (à paramétrer)')}
                   </div>
@@ -390,7 +463,7 @@ const CompletionPopup: React.FC<CompletionPopupProps> = ({ open, onClose, active
             height: '80%',
             boxSizing: 'border-box',
             overflow: 'visible',
-            justifyContent: 'flex-start', // Reverted from space-between
+            justifyContent: 'flex-start', // Garder le titre en haut
             alignItems: 'center',
             transition: 'opacity 0.2s',
             opacity: openedBubble ? 0.18 : 1,
@@ -424,23 +497,54 @@ const CompletionPopup: React.FC<CompletionPopupProps> = ({ open, onClose, active
             right: 16,
             background: 'rgba(0, 0, 0, 0.8)',
             border: '2px solid #4ECB71',
-            borderRadius: 8,
-            padding: '4px 8px',
-            fontSize: 12,
-            fontWeight: 700,
+            borderRadius: 12,
+            padding: '8px 16px',
+            fontSize: 16,
+            fontWeight: 800,
             color: '#4ECB71',
             display: 'flex',
             alignItems: 'center',
-            gap: 4,
-            zIndex: 1
+            gap: 6,
+            zIndex: 1,
+            boxShadow: '0 2px 8px rgba(78, 203, 113, 0.2)'
           }}>
-            <span>💰</span>
-            <span>{currentCampaign?.rewards?.completionPrice || 'Free'}</span>
+            <span style={{ fontSize: 18 }}>💰</span>
+            <span>{formatMintPriceTextual()}</span>
           </div>
 
-          <div style={{ width: '100%', display: 'flex', justifyContent: 'center', marginBottom: 20, marginTop: 8, flexDirection: 'column', alignItems: 'center' }}>
+          <div style={{ width: '100%', display: 'flex', justifyContent: 'center', marginBottom: 20, marginTop: 60, flexDirection: 'column', alignItems: 'center' }}>
             <textarea
-              style={{ width: '95%', minHeight: 110, maxHeight: 160, borderRadius: 12, border: `2px solid ${activeColor}`, padding: 16, fontSize: 17, background: '#111', color: '#fff', fontWeight: 500, resize: 'none', outline: 'none' }}
+              style={{ 
+                width: '95%', 
+                minHeight: 110, 
+                maxHeight: 160, 
+                borderRadius: 12, 
+                border: `2px solid ${activeColor}`, 
+                padding: 16, 
+                fontSize: 17, 
+                background: '#111', 
+                color: '#fff', 
+                fontWeight: 500, 
+                resize: 'none', 
+                outline: 'none',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                boxShadow: '0 0 0 rgba(255, 214, 0, 0)',
+                backdropFilter: 'blur(0px)'
+              }}
+              onFocus={(e) => {
+                e.currentTarget.style.border = `2px solid #FFD600`;
+                e.currentTarget.style.boxShadow = '0 0 20px rgba(255, 214, 0, 0.4), 0 0 40px rgba(255, 214, 0, 0.2), inset 0 0 20px rgba(255, 214, 0, 0.1)';
+                e.currentTarget.style.backdropFilter = 'blur(10px)';
+                e.currentTarget.style.transform = 'scale(1.02)';
+                e.currentTarget.style.background = 'rgba(17, 17, 17, 0.9)';
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.border = `2px solid ${activeColor}`;
+                e.currentTarget.style.boxShadow = '0 0 0 rgba(255, 214, 0, 0)';
+                e.currentTarget.style.backdropFilter = 'blur(0px)';
+                e.currentTarget.style.transform = 'scale(1)';
+                e.currentTarget.style.background = '#111';
+              }}
               placeholder={
                 storyFocused
                   ? ''
@@ -454,28 +558,45 @@ const CompletionPopup: React.FC<CompletionPopupProps> = ({ open, onClose, active
               onBlur={() => setStoryFocused(false)}
             />
             {!videoUrl && (
-              <div style={{ display: 'flex', justifyContent: 'center', width: '100%', marginBottom: 18, marginTop: 12 }}>
+              <div style={{ display: 'flex', justifyContent: 'center', width: '100%', marginBottom: 18, marginTop: 20 }}>
                 <label htmlFor="mp4-upload" style={{
-                  background: 'none',
+                  background: YELLOW,
                   border: `2px solid ${YELLOW}`,
                   borderRadius: 12,
-                  padding: '14px 28px',
-                  color: YELLOW,
+                  padding: '16px 32px',
+                  color: '#000',
                   fontWeight: 700,
                   textAlign: 'center',
                   cursor: 'pointer',
-                  fontSize: 17,
-                  boxShadow: '0 2px 8px #0008',
-                  transition: 'background 0.2s',
-                  width: 320,
+                  fontSize: 16,
+                  boxShadow: '0 4px 12px rgba(255, 214, 0, 0.3)',
+                  transition: 'all 0.3s ease',
+                  width: 360,
                   display: 'block',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#FFC200';
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 6px 16px rgba(255, 214, 0, 0.4)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = YELLOW;
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(255, 214, 0, 0.3)';
+                }}
+                onClick={(e) => {
+                  const target = e.currentTarget;
+                  target.style.transform = 'scale(0.98)';
+                  setTimeout(() => {
+                    if (target) {
+                      target.style.transform = 'scale(1)';
+                    }
+                  }, 150);
                 }}>
                   Upload MP4 film according to your Completion Text (max.100MB)
-                  {currentCampaign?.content?.videoOrientation === 'vertical' ? 
-                    <div style={{ fontSize: 14, marginTop: 4, color: '#FFD600' }}>📱 Please upload vertical video</div> :
-                    currentCampaign?.content?.videoOrientation === 'horizontal' ?
-                    <div style={{ fontSize: 14, marginTop: 4, color: '#FFD600' }}>🖥️ Please upload horizontal video</div> :
-                    <div style={{ fontSize: 14, marginTop: 4, color: '#FFD600' }}>🖥️ Please upload horizontal/vertical video</div>
+                  {isCurrentVideoVertical ? 
+                    <div style={{ fontSize: 14, marginTop: 6, color: '#000', fontWeight: 600 }}>📱 Please upload vertical 9:16 video</div> :
+                    <div style={{ fontSize: 14, marginTop: 6, color: '#000', fontWeight: 600 }}>🖥️ Please upload horizontal 16:9 video</div>
                   }
                   <input
                     id="mp4-upload"
@@ -654,8 +775,8 @@ const CompletionPopup: React.FC<CompletionPopupProps> = ({ open, onClose, active
             </div>
             <div style={{ color: '#fff', fontSize: 20, textAlign: 'center', marginTop: 10, fontWeight: 500, textShadow: '0 2px 8px #000a' }}>
               {/* Dynamic content from campaign */}
-              {openedBubble === 'starting' && (currentCampaign?.content?.startingStory || 'Texte de démarrage de la campagne (à paramétrer)')}
-              {openedBubble === 'guideline' && (currentCampaign?.content?.guidelines || 'Consigne créative de la campagne (à paramétrer)')}
+              {openedBubble === 'starting' && (currentCampaign?.story?.startingStory || 'Texte de démarrage de la campagne (à paramétrer)')}
+              {openedBubble === 'guideline' && (currentCampaign?.story?.guideline || 'Consigne créative de la campagne (à paramétrer)')}
               {openedBubble === 'standard' && (currentCampaign?.rewards?.standardReward || 'Description des Standard Rewards (à paramétrer)')}
               {openedBubble === 'premium' && (currentCampaign?.rewards?.premiumReward || 'Description des Premium Rewards (à paramétrer)')}
             </div>
