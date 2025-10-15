@@ -457,6 +457,40 @@ export const useModeration = () => {
     }
   }, [account, fetchAvailableCampaigns, fetchCampaignById]);
 
+  // Sélection rapide et synchrone (optimistic) depuis les listes déjà chargées
+  const quickSelectCampaignFor = useCallback((type: string, subtype: string): ModerationSession | null => {
+    if (!account?.address) return null;
+
+    const prismaType = type === 'completion' ? 'COMPLETION' : 'INITIAL';
+    const prismaCreatorType = subtype === 'b2c-agencies' ? 'B2C_AGENCIES' :
+                             subtype === 'individual-creators' ? 'INDIVIDUAL_CREATORS' :
+                             subtype === 'for-b2c' ? 'FOR_B2C' : 'FOR_INDIVIDUALS';
+
+    const source = (availableCampaigns && availableCampaigns.length > 0) ? availableCampaigns : allCampaigns;
+    if (!source || source.length === 0) return null;
+
+    const candidate = source.find((c: any) => c.type === prismaType && c.creatorType === prismaCreatorType);
+    if (!candidate) return null;
+
+    const session: ModerationSession = {
+      id: `session_${candidate.id}`,
+      campaignId: candidate.id,
+      moderatorWallet: account.address,
+      isEligible: true,
+      startedAt: new Date(),
+      campaign: candidate as any,
+      progress: candidate.progress as any
+    };
+    setCurrentSession(session);
+
+    // Précharger les scores utilisés si nécessaire
+    if (candidate.type === 'COMPLETION') {
+      fetchModeratorUsedScores(candidate.id);
+    }
+
+    return session;
+  }, [account, availableCampaigns, allCampaigns, fetchModeratorUsedScores]);
+
   // Mettre à jour les compteurs à partir de toutes les campagnes (pour afficher aussi les non-sélectionnées)
   useEffect(() => {
     const all = allCampaigns && allCampaigns.length > 0 ? allCampaigns : (availableCampaigns || []);
@@ -510,6 +544,7 @@ export const useModeration = () => {
     fetchAvailableCampaigns,
     checkCampaignsAvailability,
     loadCampaignForCriteria,
+    quickSelectCampaignFor,
     fetchModeratorUsedScores, // Exposer la fonction pour recharger les scores
     refreshData: () => checkCampaignsAvailability(),
     setCurrentSession,

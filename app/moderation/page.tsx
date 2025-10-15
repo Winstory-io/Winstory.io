@@ -51,6 +51,8 @@ const ModerationPage = () => {
     videoUrl: undefined
   });
   const [isLoadingCampaign, setIsLoadingCampaign] = useState(false);
+  const [isSwitching, setIsSwitching] = useState(false);
+  const switchTokenRef = useRef(0);
 
   // Only render videos from explicitly allowed prefixes in production
   const isVideoAllowed = (url?: string) => {
@@ -67,7 +69,18 @@ const ModerationPage = () => {
   // Fonction pour gérer les clics sur les bulles
   const handleBubbleClick = (bubbleType: string) => {
     if (bubbleType === 'rewards') {
-      setShowRewardsModal(true);
+      // Si creatorType = individual sur Initial Story, afficher un popup WINC Pool spécifique
+      if (currentSession?.campaign.type === 'INITIAL' && getUICreatorType(currentSession.campaign) === 'individual') {
+        setShowInfoModal({
+          isOpen: true,
+          title: '$WINC Pool (Creation - Individual)',
+          icon: '💰',
+          content: (currentSession?.campaign as any)?.rewards?.wincPoolDescription || 'Creator-defined $WINC pool: rewards for Top 3, moderators, and platform.',
+          videoUrl: undefined
+        });
+      } else {
+        setShowRewardsModal(true);
+      }
     } else if (bubbleType === 'startingText') {
       setShowInfoModal({
         isOpen: true,
@@ -91,6 +104,14 @@ const ModerationPage = () => {
         icon: '🎬',
         content: '',
         videoUrl: currentSession?.campaign.content.videoUrl
+      });
+    } else if (bubbleType === 'completingStory') {
+      setShowInfoModal({
+        isOpen: true,
+        title: 'Completing Story',
+        icon: '🟡',
+        content: (currentSession?.campaign?.content as any)?.completingStory || 'No completing story provided.',
+        videoUrl: undefined
       });
     } else {
       setShowBubble(bubbleType);
@@ -154,6 +175,7 @@ const ModerationPage = () => {
     fetchCampaignById,
     fetchAvailableCampaigns,
     loadCampaignForCriteria,
+    quickSelectCampaignFor,
     refreshData,
     setCurrentSession,
     hasAlreadyVoted,
@@ -214,22 +236,24 @@ const ModerationPage = () => {
   };
 
   // Gestionnaires d'événements pour les onglets
-  const handleTabChange = async (newTab: 'initial' | 'completion') => {
+  const handleTabChange = async (newTab: 'initial' | 'completion', desiredSubTab?: string) => {
+    // Mettre à jour l'état immédiatement pour un feedback instantané
     setActiveTab(newTab);
     console.log('Tab changed to:', newTab);
     
     // Réinitialiser le sous-onglet selon le nouvel onglet
-    const newSubTab = newTab === 'initial' ? 'b2c-agencies' : 'for-b2c';
+    const defaultSubTab = newTab === 'initial' ? 'b2c-agencies' : 'for-b2c';
+    const newSubTab = desiredSubTab || defaultSubTab;
     setActiveSubTab(newSubTab);
     
-    // Réinitialiser la session actuelle
-    setCurrentSession(null);
-    
-    // Charger immédiatement la première campagne disponible pour ce type
+    // Afficher un overlay de chargement pour éviter un contenu temporairement incorrect
     try {
+      setIsSwitching(true);
       setIsLoadingCampaign(true);
+      const token = ++switchTokenRef.current;
       const session = await loadCampaignForCriteria(newTab, newSubTab);
       
+      if (token !== switchTokenRef.current) return; // requête périmée
       if (session) {
         console.log('Loaded campaign for new tab:', session.campaign.title);
         // Mettre à jour l'URL sans redirection
@@ -243,21 +267,23 @@ const ModerationPage = () => {
       console.error('Error loading campaign for new tab:', error);
     } finally {
       setIsLoadingCampaign(false);
+      setIsSwitching(false);
     }
   };
 
   const handleSubTabChange = async (newSubTab: string) => {
+    // Mettre à jour l'état immédiatement pour un feedback instantané
     setActiveSubTab(newSubTab);
     console.log('Sub tab changed to:', newSubTab);
     
-    // Réinitialiser la session actuelle
-    setCurrentSession(null);
-    
-    // Charger immédiatement la première campagne disponible pour ce sous-type
+    // Afficher un overlay de chargement pour éviter un contenu temporairement incorrect
     try {
+      setIsSwitching(true);
       setIsLoadingCampaign(true);
+      const token = ++switchTokenRef.current;
       const session = await loadCampaignForCriteria(activeTab, newSubTab);
       
+      if (token !== switchTokenRef.current) return; // requête périmée
       if (session) {
         console.log('Loaded campaign for new sub tab:', session.campaign.title);
         // Mettre à jour l'URL sans redirection
@@ -271,6 +297,7 @@ const ModerationPage = () => {
       console.error('Error loading campaign for new sub tab:', error);
     } finally {
       setIsLoadingCampaign(false);
+      setIsSwitching(false);
     }
   };
 
@@ -504,13 +531,14 @@ const ModerationPage = () => {
                 </div>
               ) : (
                 // Interface optimisée - Completion compacte
-                <div style={{
-                  padding: '8px 12px',
-                  marginBottom: '8px',
-                  background: 'rgba(255, 215, 0, 0.1)',
-                  borderRadius: '8px',
-                  border: '1px solid rgba(255, 215, 0, 0.3)'
-                }}>
+                <div style={{ position: 'relative' }} key={`completion-header-${campaign.id || ''}-${activeTab}-${activeSubTab}`}>
+                  <div style={{
+                    padding: '8px 12px',
+                    marginBottom: '8px',
+                    background: 'rgba(255, 215, 0, 0.1)',
+                    borderRadius: '8px',
+                    border: '1px solid rgba(255, 215, 0, 0.3)'
+                  }}>
                   {/* Titre plus compact */}
                   <h2 style={{
                     fontSize: '14px',
@@ -604,6 +632,50 @@ const ModerationPage = () => {
                       </>
                     )}
                   </div>
+                  </div>
+
+                  {/* Yellow Completing Story bubble aligned to the right of the header box */}
+                  {!isSwitching && (
+                  <div
+                    role="button"
+                    onClick={() => handleBubbleClick('completingStory')}
+                    style={{
+                      position: 'absolute',
+                      right: -140,
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      width: 100,
+                      height: 100,
+                      background: 'linear-gradient(135deg, #FFD60020 0%, #FFD60010 100%)',
+                      border: '2px solid #FFD60060',
+                      borderRadius: '50%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: '#FFD600',
+                      fontWeight: 600,
+                      fontSize: 12,
+                      textAlign: 'center',
+                      lineHeight: 1.1,
+                      padding: '4px',
+                      transition: '0.3s ease',
+                      textShadow: '0 0 10px #FFD60050',
+                      boxShadow: '0 4px 20px #FFD60020',
+                      userSelect: 'none',
+                      cursor: 'pointer'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-50%) scale(1.05)';
+                      e.currentTarget.style.boxShadow = '0 6px 25px #FFD60030';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-50%) scale(1)';
+                      e.currentTarget.style.boxShadow = '0 4px 20px #FFD60020';
+                    }}
+                  >
+                    Completing Story
+                  </div>
+                  )}
                 </div>
               )}
 
@@ -635,6 +707,7 @@ const ModerationPage = () => {
                     No video provided
                   </div>
                 )}
+                {/* moved Completing Story bubble above, beside header block */}
               </div>
             </div>
 
@@ -831,6 +904,21 @@ const ModerationPage = () => {
 
   return (
     <div className={styles.moderationBg}>
+      {isSwitching && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.96)', zIndex: 9999,
+          display: 'flex', alignItems: 'center', justifyContent: 'center'
+        }}>
+          <div style={{
+            width: 96, height: 96, borderRadius: '50%',
+            border: '4px solid rgba(255,214,0,0.35)',
+            borderTopColor: '#FFD600',
+            animation: 'wspin 1s linear infinite',
+            boxShadow: '0 0 24px rgba(255,214,0,0.25)'
+          }} />
+          <style>{`@keyframes wspin { from { transform: rotate(0deg);} to { transform: rotate(360deg);} }`}</style>
+        </div>
+      )}
       <ModeratorHeader
         activeTab={activeTab}
         activeSubTab={activeSubTab}
@@ -844,6 +932,7 @@ const ModerationPage = () => {
       <div className={styles.moderationContainer}>
         {/* Colonne bulles à gauche */}
         <ModerationBubbles
+          key={`bubbles-${getUICampaignType(campaign)}-${activeTab}-${activeSubTab}`}
           userType={getUICreatorType(campaign)}
           onBubbleClick={handleBubbleClick}
                         bubbleSize={85}

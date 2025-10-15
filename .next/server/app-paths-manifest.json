@@ -1,6 +1,5 @@
 {
   "/api/moderation/moderator-scores/route": "app/api/moderation/moderator-scores/route.js",
-  "/api/moderation/dev-controls/route": "app/api/moderation/dev-controls/route.js",
-  "/welcome/page": "app/welcome/page.js",
-  "/moderation/page": "app/moderation/page.js"
+  "/moderation/page": "app/moderation/page.js",
+  "/welcome/page": "app/welcome/page.js"
 }

@@ -43,34 +43,38 @@ const ModerationBubbles: React.FC<ModerationBubblesProps> = ({
       { key: 'guideline', label: 'Guideline', onClick: () => onBubbleClick('guideline') },
     ];
 
-    // Pour les campagnes de completion, ajouter la bulle verte "Initial Video"
+    // Pour les campagnes de completion
     if (campaignType === 'completion') {
-      const completionBubbles = [
+      // Toujours afficher Rewards en vert (y compris For Individuals), et rendre Also Starting/Guideline verts
+      return [
+        { key: 'rewards', label: 'Rewards', onClick: () => onBubbleClick('rewards'), isGreen: true },
         { key: 'initialVideo', label: 'Initial Video', onClick: () => onBubbleClick('initialVideo'), isGreen: true },
-        ...commonBubbles
+        { key: 'startingText', label: 'Starting Story', onClick: () => onBubbleClick('startingText'), isGreen: true },
+        { key: 'guideline', label: 'Guideline', onClick: () => onBubbleClick('guideline'), isGreen: true },
       ];
-
-      // Si c'est un créateur B2C/Agency ET qu'il y a des récompenses, ajouter la bulle de récompenses combinée
-      if ((userType === 'b2c' || userType === 'agency') && hasRewards) {
-        return [
-          { key: 'rewards', label: 'Rewards', onClick: () => onBubbleClick('rewards') },
-          ...completionBubbles
-        ];
-      }
-
-      return completionBubbles;
     }
 
     // Pour les campagnes initiales
-    // Si c'est un créateur B2C/Agency ET qu'il y a des récompenses, ajouter la bulle de récompenses combinée
-    if ((userType === 'b2c' || userType === 'agency') && hasRewards) {
+    // B2C/Agency: Rewards si présents
+    if (userType === 'b2c' || userType === 'agency') {
+      if (hasRewards) {
+        return [
+          { key: 'rewards', label: 'Rewards', onClick: () => onBubbleClick('rewards') },
+          ...commonBubbles
+        ];
+      }
+      return commonBubbles;
+    }
+
+    // Individual Creators: toujours afficher une bulle Rewards jaune (WINC pool)
+    if (userType === 'individual') {
       return [
         { key: 'rewards', label: 'Rewards', onClick: () => onBubbleClick('rewards') },
         ...commonBubbles
       ];
     }
 
-    // Pour les créateurs individuels ou les campagnes sans récompenses
+    // fallback
     return commonBubbles;
   };
 

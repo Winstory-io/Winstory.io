@@ -7,6 +7,14 @@ interface InfoModalProps {
   icon: string;
   content: string;
   videoUrl?: string;
+  // Optional structured rewards for $WINC pool
+  wincPool?: {
+    top1?: string;
+    top2?: string;
+    top3?: string;
+    moderators?: string;
+    platform?: string;
+  };
 }
 
 const InfoModal: React.FC<InfoModalProps> = ({ 
@@ -15,7 +23,8 @@ const InfoModal: React.FC<InfoModalProps> = ({
   title,
   icon,
   content,
-  videoUrl
+  videoUrl,
+  wincPool
 }) => {
   const [videoOrientation, setVideoOrientation] = useState<'horizontal' | 'vertical' | 'square'>('horizontal');
   const [isVideoLoaded, setIsVideoLoaded] = useState(false);
@@ -307,14 +316,39 @@ const InfoModal: React.FC<InfoModalProps> = ({
                 borderRadius: '12px',
                 padding: '24px'
               }}>
-                <div style={{
-                  fontSize: '16px',
-                  lineHeight: '1.6',
-                  color: '#fff',
-                  whiteSpace: 'pre-wrap'
-                }}>
-                  {content || `No ${title.toLowerCase()} available for this campaign.`}
-                </div>
+                {title.startsWith('$WINC Pool') && wincPool ? (
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                    <div style={{ background: 'rgba(255,215,0,0.06)', border: '1px solid rgba(255,215,0,0.25)', borderRadius: 10, padding: 16 }}>
+                      <div style={{ color: '#FFD600', fontWeight: 800, marginBottom: 6 }}>Top 1</div>
+                      <div style={{ color: '#fff' }}>{wincPool.top1 || '—'}</div>
+                    </div>
+                    <div style={{ background: 'rgba(255,215,0,0.06)', border: '1px solid rgba(255,215,0,0.25)', borderRadius: 10, padding: 16 }}>
+                      <div style={{ color: '#FFD600', fontWeight: 800, marginBottom: 6 }}>Top 2</div>
+                      <div style={{ color: '#fff' }}>{wincPool.top2 || '—'}</div>
+                    </div>
+                    <div style={{ background: 'rgba(255,215,0,0.06)', border: '1px solid rgba(255,215,0,0.25)', borderRadius: 10, padding: 16 }}>
+                      <div style={{ color: '#FFD600', fontWeight: 800, marginBottom: 6 }}>Top 3</div>
+                      <div style={{ color: '#fff' }}>{wincPool.top3 || '—'}</div>
+                    </div>
+                    <div style={{ background: 'rgba(255,215,0,0.06)', border: '1px solid rgba(255,215,0,0.25)', borderRadius: 10, padding: 16 }}>
+                      <div style={{ color: '#FFD600', fontWeight: 800, marginBottom: 6 }}>Moderators</div>
+                      <div style={{ color: '#fff' }}>{wincPool.moderators || '—'}</div>
+                    </div>
+                    <div style={{ background: 'rgba(255,215,0,0.06)', border: '1px solid rgba(255,215,0,0.25)', borderRadius: 10, padding: 16, gridColumn: '1 / -1' }}>
+                      <div style={{ color: '#FFD600', fontWeight: 800, marginBottom: 6 }}>Platform</div>
+                      <div style={{ color: '#fff' }}>{wincPool.platform || '—'}</div>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{
+                    fontSize: '16px',
+                    lineHeight: '1.6',
+                    color: '#fff',
+                    whiteSpace: 'pre-wrap'
+                  }}>
+                    {content || `No ${title.toLowerCase()} available for this campaign.`}
+                  </div>
+                )}
               </div>
             )}
           </div>

@@ -62,7 +62,7 @@ export const CloseButton: React.FC = () => {
 interface ModeratorHeaderProps {
   activeTab: 'initial' | 'completion';
   activeSubTab: string;
-  onTabChange: (tab: 'initial' | 'completion') => void;
+  onTabChange: (tab: 'initial' | 'completion', desiredSubTab?: string) => void;
   onSubTabChange: (subTab: string) => void;
   onIconClick: () => void;
   onBulbClick: () => void;
@@ -163,6 +163,8 @@ const ModeratorHeader: React.FC<ModeratorHeaderProps> = ({
     return 0;
   };
 
+  const formatCount = (n: number) => (n > 99 ? '+99' : String(n));
+
   return (
     <header style={{
       display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1.5rem 1rem 1rem 1rem', background: '#000', color: '#FFD600', borderBottom: '2px solid #FFD600', position: 'relative', zIndex: 10
@@ -218,11 +220,12 @@ const ModeratorHeader: React.FC<ModeratorHeaderProps> = ({
                 alignItems: 'center',
                 gap: 8
               }}
+              onMouseDown={(e) => e.preventDefault()}
               onClick={onClick}
             >
               {label}
               {sum > 0 && (
-                <span style={{ background: '#FFD600', color: '#111', borderRadius: 999, fontSize: 12, fontWeight: 900, padding: '0 10px', lineHeight: '20px', opacity: isActive ? 1 : 0.6 }}>{sum}</span>
+                <span style={{ background: '#FFD600', color: '#111', borderRadius: 999, fontSize: 12, fontWeight: 900, padding: '0 10px', lineHeight: '20px', opacity: isActive ? 1 : 0.6 }}>{formatCount(sum)}</span>
               )}
             </span>
           );
@@ -249,15 +252,19 @@ const ModeratorHeader: React.FC<ModeratorHeaderProps> = ({
                   gap: 8,
                   opacity: itemOpacity
                 }}
+                onMouseDown={(e) => e.preventDefault()}
                 onClick={() => {
-                  onTabChange(targetTab);
-                  onSubTabChange(sub.key);
+                  if (targetTab === activeTab) {
+                    onSubTabChange(sub.key);
+                  } else {
+                    onTabChange(targetTab, sub.key);
+                  }
                 }}
                 title={sub.tooltip}
               >
                 {sub.label}
                 {count > 0 && (
-                  <span style={{ background: '#FFD600', color: '#111', borderRadius: 999, fontSize: 12, fontWeight: 800, padding: '0 8px', lineHeight: '18px', opacity: badgeOpacity }}>{count}</span>
+                  <span style={{ background: '#FFD600', color: '#111', borderRadius: 999, fontSize: 12, fontWeight: 800, padding: '0 8px', lineHeight: '18px', opacity: badgeOpacity }}>{formatCount(count)}</span>
                 )}
               </span>
             );
