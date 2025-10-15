@@ -8,8 +8,17 @@ export const useModeration = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [availableCampaigns, setAvailableCampaigns] = useState<any[]>([]);
+  // Liste complète de toutes les campagnes pour le calcul des badges
+  const [allCampaigns, setAllCampaigns] = useState<any[]>([]);
   // Nouveau state pour les scores utilisés par le modérateur actuel
   const [moderatorUsedScores, setModeratorUsedScores] = useState<number[]>([]);
+  // Suivi des contenus déjà votés par ce modérateur (client-side)
+  const [votedContentIds, setVotedContentIds] = useState<Set<string>>(new Set());
+  // Compteurs par sous-onglet pour badges
+  const [subTabCounts, setSubTabCounts] = useState<{
+    initial: { 'b2c-agencies': number; 'individual-creators': number };
+    completion: { 'for-b2c': number; 'for-individuals': number };
+  }>({ initial: { 'b2c-agencies': 0, 'individual-creators': 0 }, completion: { 'for-b2c': 0, 'for-individuals': 0 } });
 
   // Fonction pour récupérer les campagnes disponibles depuis l'API
   const fetchAvailableCampaigns = useCallback(async (type?: string, creatorType?: string) => {
@@ -19,6 +28,8 @@ export const useModeration = () => {
 
       // Pour les tests, utiliser directement les données mockées
       const { mockCampaigns } = await import('../mockData');
+      // Mémoriser la liste complète pour les compteurs
+      setAllCampaigns(mockCampaigns);
       console.log('Using mock campaigns:', mockCampaigns);
       
       // Filtrer les campagnes selon le type et créateur spécifiés
@@ -162,6 +173,15 @@ export const useModeration = () => {
     contentType: 'creation' | 'completion'
   ) => {
     if (!currentSession) return false;
+    // Empêcher un second vote pour ce contenu par ce modérateur (client-side)
+    const contentId = currentSession.campaignId;
+    const wallet = account?.address || '';
+    const storageKey = `winstory_moderation_voted_${wallet}`;
+    const votedSet = new Set<string>(votedContentIds);
+    if (votedSet.has(contentId)) {
+      console.warn('Vote déjà enregistré pour ce contenu par ce modérateur.');
+      return false;
+    }
 
     try {
       // TODO: Implémenter la vraie logique de soumission vers la blockchain
@@ -182,12 +202,38 @@ export const useModeration = () => {
         };
       });
 
+      // Marquer comme voté côté client
+      votedSet.add(contentId);
+      setVotedContentIds(votedSet);
+      try {
+        const serialized = JSON.stringify(Array.from(votedSet));
+        localStorage.setItem(storageKey, serialized);
+      } catch {}
+
       return true;
     } catch (err) {
       console.error('Failed to submit moderation decision:', err);
       return false;
     }
-  }, [currentSession]);
+  }, [currentSession, account?.address, votedContentIds]);
+
+  // Fonction pour charger les scores déjà utilisés par le modérateur pour une campagne
+  const loadModeratorUsedScores = useCallback(async (campaignId: string, moderatorWallet: string) => {
+    try {
+      const response = await fetch(`/api/moderation/moderator-scores?campaignId=${campaignId}&moderatorWallet=${moderatorWallet}`);
+      if (response.ok) {
+        const data = await response.json();
+        setModeratorUsedScores(data.usedScores || []);
+        console.log('📊 Scores déjà utilisés chargés:', data.usedScores);
+      } else {
+        console.error('Erreur lors du chargement des scores utilisés:', response.statusText);
+        setModeratorUsedScores([]);
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement des scores utilisés:', error);
+      setModeratorUsedScores([]);
+    }
+  }, []);
 
   // Fonction pour soumettre un score de complétion avec validation par modérateur
   const submitCompletionScore = useCallback(async (score: number, completionId?: string) => {
@@ -200,6 +246,16 @@ export const useModeration = () => {
     }
 
     try {
+      // Empêcher un second vote pour ce contenu par ce modérateur (client-side)
+      const contentId = currentSession.campaignId;
+      const wallet = account.address;
+      const storageKey = `winstory_moderation_voted_${wallet}`;
+      const votedSet = new Set<string>(votedContentIds);
+      if (votedSet.has(contentId)) {
+        console.warn('Vote déjà enregistré pour ce contenu par ce modérateur.');
+        return false;
+      }
+
       // Vérifier localement si le score est déjà utilisé
       if (moderatorUsedScores.includes(score)) {
         console.error('Score already used by this moderator');
@@ -239,17 +295,55 @@ export const useModeration = () => {
           };
         });
 
+        // Marquer comme voté côté client
+        votedSet.add(contentId);
+        setVotedContentIds(votedSet);
+        try {
+          const serialized = JSON.stringify(Array.from(votedSet));
+          localStorage.setItem(storageKey, serialized);
+        } catch {}
+
+        console.log('✅ Score soumis avec succès:', score);
         return true;
       } else {
         const errorData = await response.json();
-        console.error('Failed to submit completion score:', errorData.error);
+        console.error('❌ Erreur lors de la soumission du score:', errorData.error);
+        
+        // Si le score est déjà utilisé côté serveur, recharger les scores utilisés
+        if (response.status === 409) {
+          console.log('🔄 Rechargement des scores utilisés...');
+          if (currentSession && account?.address) {
+            await loadModeratorUsedScores(currentSession.id, account.address);
+          }
+        }
+        
         return false;
       }
     } catch (err) {
       console.error('Failed to submit completion score:', err);
       return false;
     }
-  }, [currentSession, account, moderatorUsedScores]);
+  }, [currentSession, account, moderatorUsedScores, loadModeratorUsedScores, votedContentIds]);
+
+  // Charger les scores utilisés quand une campagne est sélectionnée
+  useEffect(() => {
+    if (currentSession && account?.address) {
+      loadModeratorUsedScores(currentSession.id, account.address);
+      // Charger la liste des contenus déjà votés pour ce wallet
+      try {
+        const storageKey = `winstory_moderation_voted_${account.address}`;
+        const raw = localStorage.getItem(storageKey);
+        if (raw) {
+          const arr = JSON.parse(raw) as string[];
+          setVotedContentIds(new Set(arr));
+        } else {
+          setVotedContentIds(new Set());
+        }
+      } catch {
+        setVotedContentIds(new Set());
+      }
+    }
+  }, [currentSession, account?.address, loadModeratorUsedScores]);
 
   // Charger les campagnes disponibles au montage du composant
   useEffect(() => {
@@ -363,6 +457,29 @@ export const useModeration = () => {
     }
   }, [account, fetchAvailableCampaigns, fetchCampaignById]);
 
+  // Mettre à jour les compteurs à partir de toutes les campagnes (pour afficher aussi les non-sélectionnées)
+  useEffect(() => {
+    const all = allCampaigns && allCampaigns.length > 0 ? allCampaigns : (availableCampaigns || []);
+    const nextCounts = {
+      initial: {
+        'b2c-agencies': all.filter((c: any) => c.type === 'INITIAL' && c.creatorType === 'B2C_AGENCIES').length,
+        'individual-creators': all.filter((c: any) => c.type === 'INITIAL' && c.creatorType === 'INDIVIDUAL_CREATORS').length,
+      },
+      completion: {
+        'for-b2c': all.filter((c: any) => c.type === 'COMPLETION' && c.creatorType === 'FOR_B2C').length,
+        'for-individuals': all.filter((c: any) => c.type === 'COMPLETION' && c.creatorType === 'FOR_INDIVIDUALS').length,
+      }
+    };
+    // Éviter les mises à jour inutiles
+    const prev = subTabCounts;
+    const changed =
+      prev.initial['b2c-agencies'] !== nextCounts.initial['b2c-agencies'] ||
+      prev.initial['individual-creators'] !== nextCounts.initial['individual-creators'] ||
+      prev.completion['for-b2c'] !== nextCounts.completion['for-b2c'] ||
+      prev.completion['for-individuals'] !== nextCounts.completion['for-individuals'];
+    if (changed) setSubTabCounts(nextCounts);
+  }, [availableCampaigns, allCampaigns, subTabCounts]);
+
   // Charger la campagne au montage si on a un campaignId dans l'URL
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -395,6 +512,9 @@ export const useModeration = () => {
     loadCampaignForCriteria,
     fetchModeratorUsedScores, // Exposer la fonction pour recharger les scores
     refreshData: () => checkCampaignsAvailability(),
-    setCurrentSession
+    setCurrentSession,
+    // Exposer infos pour UI
+    hasAlreadyVoted: currentSession ? votedContentIds.has(currentSession.campaignId) : false,
+    subTabCounts
   };
 }; 

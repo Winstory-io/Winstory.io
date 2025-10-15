@@ -1,4 +1,5 @@
 import React from 'react';
+import { useModerationComponentConfig } from '@/lib/hooks/useModerationDevControls';
 
 interface ModerationBubblesProps {
   userType: 'b2c' | 'agency' | 'individual';
@@ -12,11 +13,29 @@ interface ModerationBubblesProps {
 const ModerationBubbles: React.FC<ModerationBubblesProps> = ({ 
   userType, 
   onBubbleClick, 
-  bubbleSize = 100, 
-  bubbleGap = 24,
+  bubbleSize, 
+  bubbleGap,
   campaignType = 'initial',
   hasRewards = false
 }) => {
+  // Utiliser les Dev Controls pour la configuration
+  const { styles, theme } = useModerationComponentConfig('bubbles');
+  
+  // Utiliser les valeurs des Dev Controls ou les props en fallback
+  const finalBubbleSize = bubbleSize || styles.defaultSize || 100;
+  const finalBubbleGap = bubbleGap || styles.defaultGap || 24;
+  const fontSize = styles.fontSize || 14;
+  const colors = styles.colors || {
+    primary: '#FFD600',
+    secondary: '#FFD600',
+    green: '#00FF00',
+    red: '#FF0000',
+    yellow: '#FFD700',
+  };
+  const animations = styles.animations || {
+    hoverScale: 1.05,
+    transitionDuration: '0.3s ease',
+  };
   const getBubbles = () => {
     // Bulles communes à tous les types
     const commonBubbles = [
@@ -56,15 +75,15 @@ const ModerationBubbles: React.FC<ModerationBubblesProps> = ({
   };
 
   const bubbles = getBubbles();
-  const totalHeight = bubbles.length * bubbleSize + (bubbles.length - 1) * bubbleGap;
+  const totalHeight = bubbles.length * finalBubbleSize + (bubbles.length - 1) * finalBubbleGap;
 
   return (
     <div
       style={{
         display: 'flex',
         flexDirection: 'column',
-        gap: bubbleGap,
-        width: bubbleSize,
+        gap: finalBubbleGap,
+        width: finalBubbleSize,
         height: totalHeight,
         justifyContent: 'center',
         alignItems: 'center'
@@ -76,45 +95,45 @@ const ModerationBubbles: React.FC<ModerationBubblesProps> = ({
           <div
             key={bubble.key}
             style={{
-              width: bubbleSize,
-              height: bubbleSize,
-              fontSize: 14, // Augmenté de 12 à 14 pour une meilleure lisibilité
+              width: finalBubbleSize,
+              height: finalBubbleSize,
+              fontSize: fontSize,
               background: isGreen 
-                ? 'linear-gradient(135deg, rgba(0, 255, 0, 0.1) 0%, rgba(0, 255, 0, 0.05) 100%)'
-                : 'linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, rgba(255, 215, 0, 0.05) 100%)',
+                ? `linear-gradient(135deg, ${colors.green}20 0%, ${colors.green}10 100%)`
+                : `linear-gradient(135deg, ${colors.primary}20 0%, ${colors.primary}10 100%)`,
               border: isGreen 
-                ? '2px solid rgba(0, 255, 0, 0.6)'
-                : '2px solid rgba(255, 215, 0, 0.6)',
+                ? `2px solid ${colors.green}60`
+                : `2px solid ${colors.primary}60`,
               borderRadius: '50%',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               cursor: 'pointer',
-              color: isGreen ? '#00FF00' : '#FFD600',
+              color: isGreen ? colors.green : colors.primary,
               fontWeight: 600,
               textAlign: 'center',
-              padding: '4px', // Réduit encore pour les bulles plus petites
-              transition: 'all 0.3s ease',
+              padding: '4px',
+              transition: animations.transitionDuration,
               textShadow: isGreen 
-                ? '0 0 10px rgba(0, 255, 0, 0.5)'
-                : '0 0 10px rgba(255, 215, 0, 0.5)',
+                ? `0 0 10px ${colors.green}50`
+                : `0 0 10px ${colors.primary}50`,
               boxShadow: isGreen 
-                ? '0 4px 20px rgba(0, 255, 0, 0.2)'
-                : '0 4px 20px rgba(255, 215, 0, 0.2)',
+                ? `0 4px 20px ${colors.green}20`
+                : `0 4px 20px ${colors.primary}20`,
               userSelect: 'none'
             }}
             onClick={bubble.onClick}
             onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'scale(1.05)';
+              e.currentTarget.style.transform = `scale(${animations.hoverScale})`;
               e.currentTarget.style.boxShadow = isGreen 
-                ? '0 6px 25px rgba(0, 255, 0, 0.3)'
-                : '0 6px 25px rgba(255, 215, 0, 0.3)';
+                ? `0 6px 25px ${colors.green}30`
+                : `0 6px 25px ${colors.primary}30`;
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = 'scale(1)';
               e.currentTarget.style.boxShadow = isGreen 
-                ? '0 4px 20px rgba(0, 255, 0, 0.2)'
-                : '0 4px 20px rgba(255, 215, 0, 0.2)';
+                ? `0 4px 20px ${colors.green}20`
+                : `0 4px 20px ${colors.primary}20`;
             }}
           >
             {bubble.label}

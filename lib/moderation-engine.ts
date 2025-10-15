@@ -1,9 +1,43 @@
 // Moderation Engine - Système hybride 50/50 avec VictoryFactor
 // Implémentation complète du système de modération Winstory
 
+// Configuration par défaut (sera remplacée par les Dev Controls)
 export const SCALE = 1e18; // Fixed-point arithmetic scale
 export const MIN_VOTERS = 22;
 export const THRESHOLD_RATIO = 2; // Majoritaire >= 2 * minoritaire
+
+// Interface pour la configuration dynamique
+export interface ModerationEngineConfig {
+  minVoters: number;
+  thresholdRatio: number;
+  scale: number;
+  autoResolvePolicy: 'escalate' | 'extend_by_hours' | 'auto_accept' | 'auto_reject';
+  voteWindowHours: number;
+  refreshIntervalMs: number;
+}
+
+// Configuration par défaut
+export const DEFAULT_ENGINE_CONFIG: ModerationEngineConfig = {
+  minVoters: MIN_VOTERS,
+  thresholdRatio: THRESHOLD_RATIO,
+  scale: SCALE,
+  autoResolvePolicy: 'escalate',
+  voteWindowHours: 168, // 7 jours
+  refreshIntervalMs: 30000, // 30 secondes
+};
+
+// Variable globale pour la configuration actuelle
+let currentEngineConfig: ModerationEngineConfig = DEFAULT_ENGINE_CONFIG;
+
+// Fonction pour mettre à jour la configuration du moteur
+export function updateEngineConfig(config: Partial<ModerationEngineConfig>) {
+  currentEngineConfig = { ...currentEngineConfig, ...config };
+}
+
+// Fonction pour obtenir la configuration actuelle
+export function getEngineConfig(): ModerationEngineConfig {
+  return currentEngineConfig;
+}
 
 // Types de contenu et répartitions
 export enum ContentType {
@@ -147,8 +181,9 @@ export function evaluateModeration(
   const totalVotes = votesYes + votesNo;
   const totalStake = stakeYes + stakeNo;
   
-  // Vérification des pré-conditions
-  if (totalVotes < MIN_VOTERS) {
+  // Vérification des pré-conditions (utilise la configuration dynamique)
+  const config = getEngineConfig();
+  if (totalVotes < config.minVoters) {
     return {
       status: ModerationStatus.PENDING_REQUIREMENTS,
       winner: '',
@@ -156,7 +191,7 @@ export function evaluateModeration(
       scoreNo: 0n,
       totalVotes,
       totalStake,
-      reason: 'MIN_22_NOT_MET'
+      reason: `MIN_${config.minVoters}_NOT_MET`
     };
   }
 
@@ -185,8 +220,8 @@ export function evaluateModeration(
   const scoreYes = (demYes + plutoYes) / 2n;
   const scoreNo = (demNo + plutoNo) / 2n;
 
-  // Décision basée sur le seuil 2:1
-  if (scoreYes >= (scoreNo * BigInt(THRESHOLD_RATIO))) {
+  // Décision basée sur le seuil configurable
+  if (scoreYes >= (scoreNo * BigInt(config.thresholdRatio))) {
     return {
       status: ModerationStatus.VALIDATED,
       winner: 'YES',
@@ -197,7 +232,7 @@ export function evaluateModeration(
       reason: 'VALIDATED',
       victoryFactor: calculateVictoryFactor(scoreYes, scoreNo)
     };
-  } else if (scoreNo >= (scoreYes * BigInt(THRESHOLD_RATIO))) {
+  } else if (scoreNo >= (scoreYes * BigInt(config.thresholdRatio))) {
     return {
       status: ModerationStatus.REJECTED,
       winner: 'NO',

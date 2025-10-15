@@ -66,6 +66,11 @@ interface ModeratorHeaderProps {
   onSubTabChange: (subTab: string) => void;
   onIconClick: () => void;
   onBulbClick: () => void;
+  // Nouveau: compteurs par sous-onglet pour badges
+  subTabCounts?: {
+    initial: { 'b2c-agencies': number; 'individual-creators': number };
+    completion: { 'for-b2c': number; 'for-individuals': number };
+  };
 }
 
 const ModeratorHeader: React.FC<ModeratorHeaderProps> = ({ 
@@ -74,7 +79,8 @@ const ModeratorHeader: React.FC<ModeratorHeaderProps> = ({
   onTabChange, 
   onSubTabChange, 
   onIconClick, 
-  onBulbClick 
+  onBulbClick,
+  subTabCounts
 }) => {
   const router = useRouter();
   const account = useActiveAccount();
@@ -148,6 +154,15 @@ const ModeratorHeader: React.FC<ModeratorHeaderProps> = ({
     }
   };
 
+  const getBadgeCount = (key: string) => {
+    if (!subTabCounts) return 0;
+    if (key === 'b2c-agencies') return subTabCounts.initial['b2c-agencies'];
+    if (key === 'individual-creators') return subTabCounts.initial['individual-creators'];
+    if (key === 'for-b2c') return subTabCounts.completion['for-b2c'];
+    if (key === 'for-individuals') return subTabCounts.completion['for-individuals'];
+    return 0;
+  };
+
   return (
     <header style={{
       display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1.5rem 1rem 1rem 1rem', background: '#000', color: '#FFD600', borderBottom: '2px solid #FFD600', position: 'relative', zIndex: 10
@@ -177,55 +192,101 @@ const ModeratorHeader: React.FC<ModeratorHeaderProps> = ({
             onClick={onBulbClick}
           />
         </span>
-        <div style={{ marginTop: 8, display: 'flex', justifyContent: 'center', gap: 32 }}>
-          <span
-            style={{
-              fontWeight: 700,
-              fontSize: 20,
-              color: activeTab === 'initial' ? '#FFD600' : '#665c2e',
-              borderBottom: activeTab === 'initial' ? '3px solid #FFD600' : 'none',
-              cursor: 'pointer',
-              marginRight: 16
-            }}
-            onClick={() => onTabChange('initial')}
-          >
-            Initial Story
-          </span>
-          <span
-            style={{
-              fontWeight: 700,
-              fontSize: 20,
-              color: activeTab === 'completion' ? '#FFD600' : '#665c2e',
-              borderBottom: activeTab === 'completion' ? '3px solid #FFD600' : 'none',
-              cursor: 'pointer'
-            }}
-            onClick={() => onTabChange('completion')}
-          >
-            Completion
-          </span>
-        </div>
-        <div style={{ marginTop: 8, display: 'flex', justifyContent: 'center', gap: 16 }}>
-          {getSubTabs().map((subTab) => (
+        {(() => {
+          const initialSum = (subTabCounts?.initial['b2c-agencies'] || 0) + (subTabCounts?.initial['individual-creators'] || 0);
+          const completionSum = (subTabCounts?.completion['for-b2c'] || 0) + (subTabCounts?.completion['for-individuals'] || 0);
+          const initialSubs = [
+            { key: 'b2c-agencies', label: 'B2C & Agencies', tooltip: 'Moderate content created by B2C companies and agencies' },
+            { key: 'individual-creators', label: 'Individual Creators', tooltip: 'Moderate content created by individual creators' }
+          ];
+          const completionSubs = [
+            { key: 'for-b2c', label: 'For B2C', tooltip: 'Moderate content created by individuals completing campaigns from B2C companies' },
+            { key: 'for-individuals', label: 'For Individuals', tooltip: 'Moderate content created by individuals completing campaigns from other individuals' }
+          ];
+          const mainTab = (label: string, sum: number, isActive: boolean, onClick: () => void) => (
             <span
-              key={subTab.key}
               style={{
-                fontWeight: 600,
-                fontSize: 16,
-                color: activeSubTab === subTab.key ? '#FFD600' : '#665c2e',
+                fontWeight: 800,
+                fontSize: 20,
+                color: isActive ? '#FFD600' : '#665c2e',
                 cursor: 'pointer',
-                padding: '4px 12px',
-                borderRadius: '12px',
-                background: activeSubTab === subTab.key ? 'rgba(255, 214, 0, 0.1)' : 'transparent',
-                transition: 'all 0.3s ease',
-                position: 'relative'
+                padding: '6px 12px',
+                borderRadius: 12,
+                background: isActive ? 'rgba(255,214,0,0.08)' : 'transparent',
+                borderBottom: isActive ? '3px solid #FFD600' : '3px solid transparent',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8
               }}
-              onClick={() => onSubTabChange(subTab.key)}
-              title={subTab.tooltip}
+              onClick={onClick}
             >
-              {subTab.label}
+              {label}
+              {sum > 0 && (
+                <span style={{ background: '#FFD600', color: '#111', borderRadius: 999, fontSize: 12, fontWeight: 900, padding: '0 10px', lineHeight: '20px', opacity: isActive ? 1 : 0.6 }}>{sum}</span>
+              )}
             </span>
-          ))}
+          );
+          const subItem = (sub: { key: string; label: string; tooltip: string }, targetTab: 'initial' | 'completion') => {
+            const isSelected = activeSubTab === sub.key && activeTab === targetTab;
+            const count = getBadgeCount(sub.key);
+            const isActiveGroup = targetTab === activeTab;
+            const itemOpacity = isSelected ? 1 : (isActiveGroup ? 0.75 : 0.6);
+            const badgeOpacity = isSelected ? 1 : (isActiveGroup ? 0.75 : 0.6);
+            return (
+              <span
+                key={sub.key}
+                style={{
+                  fontWeight: 600,
+                  fontSize: 16,
+                  color: isSelected ? '#FFD600' : '#665c2e',
+                  cursor: 'pointer',
+                  padding: '6px 12px',
+                  borderRadius: 12,
+                  background: isSelected ? 'rgba(255, 214, 0, 0.08)' : 'transparent',
+                  transition: 'all 0.2s ease',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  opacity: itemOpacity
+                }}
+                onClick={() => {
+                  onTabChange(targetTab);
+                  onSubTabChange(sub.key);
+                }}
+                title={sub.tooltip}
+              >
+                {sub.label}
+                {count > 0 && (
+                  <span style={{ background: '#FFD600', color: '#111', borderRadius: 999, fontSize: 12, fontWeight: 800, padding: '0 8px', lineHeight: '18px', opacity: badgeOpacity }}>{count}</span>
+                )}
+              </span>
+            );
+          };
+          return (
+            <div style={{ marginTop: 20 }}>
+              <div style={{ display: 'flex', justifyContent: 'center', gap: 40, marginTop: 16 }}>
+                {/* Initial group */}
+                <div style={{ minWidth: 360, opacity: activeTab === 'initial' ? 1 : 0.85 }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
+                    {mainTab('Initial Story', initialSum, activeTab === 'initial', () => onTabChange('initial'))}
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'center', gap: 12, flexWrap: 'wrap' }}>
+                    {initialSubs.map((s) => subItem(s, 'initial'))}
+                  </div>
+                </div>
+                {/* Completion group */}
+                <div style={{ minWidth: 360, opacity: activeTab === 'completion' ? 1 : 0.85 }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
+                    {mainTab('Completion', completionSum, activeTab === 'completion', () => onTabChange('completion'))}
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'center', gap: 12, flexWrap: 'wrap' }}>
+                    {completionSubs.map((s) => subItem(s, 'completion'))}
+                  </div>
+                </div>
+              </div>
         </div>
+          );
+        })()}
       </div>
 
       {/* Wallet Address Display with Disconnect Menu */}

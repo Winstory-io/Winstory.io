@@ -6,6 +6,7 @@ interface ModerationButtonsProps {
   onValid: () => void;
   onRefuse: () => void;
   onValidWithScore?: (score: number) => void;
+  usedScores?: number[];
 }
 
 const ModerationButtons: React.FC<ModerationButtonsProps> = ({
@@ -13,15 +14,13 @@ const ModerationButtons: React.FC<ModerationButtonsProps> = ({
   userType,
   onValid,
   onRefuse,
-  onValidWithScore
+  onValidWithScore,
+  usedScores = []
 }) => {
   const [showValidPopup, setShowValidPopup] = useState(false);
   const [showRefusePopup, setShowRefusePopup] = useState(false);
   const [showScoringPopup, setShowScoringPopup] = useState(false);
   const [currentScore, setCurrentScore] = useState(50);
-
-  // Scores déjà utilisés (en production, cela viendrait de la base de données)
-  const [usedScores] = useState<number[]>([25, 75, 88]); // Exemple de scores déjà utilisés
 
   const getValidPopupContent = () => {
     if (activeTab === 'initial') {

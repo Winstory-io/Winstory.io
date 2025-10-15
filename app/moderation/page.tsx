@@ -1,5 +1,5 @@
 'use client';'use client';
-import React, { useState, useEffect, useRef } from 'react';import { useRouter, useSearchParams } from 'next/navigation';
+import React, { useState, useEffect, useRef, useCallback } from 'react';import { useRouter, useSearchParams } from 'next/navigation';
 import { useActiveAccount } from 'thirdweb/react';
 import WalletConnect from '../../components/WalletConnect';
 import ModeratorHeader, { CloseButton } from '../../components/ModeratorHeader';
@@ -13,6 +13,7 @@ import CompletionRateModal from '../../components/CompletionRateModal';
 import RewardsModal from '../../components/RewardsModal';
 import InfoModal from '../../components/InfoModal';
 import ModerationStatsModal from '../../components/ModerationStatsModal';
+import ModerationStatsDevControlsButton from '../../components/ModerationStatsDevControlsButton';
 import styles from '../../styles/Moderation.module.css';
 import { useModeration } from '../../lib/hooks/useModeration';
 import { ModerationCampaign, getUICreatorType, getUICampaignType } from '../../lib/types';
@@ -50,6 +51,18 @@ const ModerationPage = () => {
     videoUrl: undefined
   });
   const [isLoadingCampaign, setIsLoadingCampaign] = useState(false);
+
+  // Only render videos from explicitly allowed prefixes in production
+  const isVideoAllowed = (url?: string) => {
+    if (!url) return false;
+    if (process.env.NODE_ENV !== 'production') return true;
+    const prefixes = (process.env.NEXT_PUBLIC_ALLOWED_VIDEO_PREFIXES || '')
+      .split(',')
+      .map(s => s.trim())
+      .filter(Boolean);
+    if (prefixes.length === 0) return false;
+    return prefixes.some(prefix => url.startsWith(prefix));
+  };
   
   // Fonction pour gérer les clics sur les bulles
   const handleBubbleClick = (bubbleType: string) => {
@@ -134,6 +147,7 @@ const ModerationPage = () => {
     isLoading, 
     error, 
     availableCampaigns,
+    moderatorUsedScores,
     submitModerationDecision, 
     submitCompletionScore,
     checkCampaignsAvailability,
@@ -141,7 +155,9 @@ const ModerationPage = () => {
     fetchAvailableCampaigns,
     loadCampaignForCriteria,
     refreshData,
-    setCurrentSession
+    setCurrentSession,
+    hasAlreadyVoted,
+    subTabCounts
   } = useModeration();
   
   // Mettre à jour les onglets quand les paramètres d'URL changent
@@ -259,6 +275,23 @@ const ModerationPage = () => {
   };
 
   // Gestionnaires pour les actions de modération
+  const goToNextAvailable = useCallback(async () => {
+    // Charger immédiatement un autre contenu disponible dans le même onglet/sous-onglet
+    try {
+      setIsLoadingCampaign(true);
+      const session = await loadCampaignForCriteria(activeTab, activeSubTab);
+      if (session) {
+        window.history.replaceState({}, '', `/moderation?campaignId=${session.campaign.id}&type=${activeTab}&subtype=${activeSubTab}`);
+      } else {
+        // Sinon, effacer la session et laisser l’écran d’attente
+        setCurrentSession(null);
+        window.history.replaceState({}, '', `/moderation?type=${activeTab}&subtype=${activeSubTab}`);
+      }
+    } finally {
+      setIsLoadingCampaign(false);
+    }
+  }, [activeTab, activeSubTab, loadCampaignForCriteria, setCurrentSession]);
+
   const handleInitialValid = async () => {
     if (!currentSession) return;
     
@@ -266,8 +299,8 @@ const ModerationPage = () => {
       const success = await submitModerationDecision('valid', 'creation');
       if (success) {
         console.log('Initial story validated successfully');
-        // Recharger les données ou rediriger
-        router.push('/moderation');
+        // Passer automatiquement au contenu suivant
+        await goToNextAvailable();
       }
     } catch (error) {
       console.error('Error validating initial story:', error);
@@ -281,8 +314,8 @@ const ModerationPage = () => {
       const success = await submitModerationDecision('valid', 'completion');
       if (success) {
         console.log('Completion validated successfully');
-        // Recharger les données ou rediriger
-        router.push('/moderation');
+        // Ouvrir le scoring si nécessaire géré par ModerationButtons; ici on auto-advance après vote ou score
+        await goToNextAvailable();
       }
     } catch (error) {
       console.error('Error validating completion:', error);
@@ -296,8 +329,7 @@ const ModerationPage = () => {
       const success = await submitModerationDecision('refuse', 'completion');
       if (success) {
         console.log('Completion refused successfully');
-        // Recharger les données ou rediriger
-        router.push('/moderation');
+        await goToNextAvailable();
       }
     } catch (error) {
       console.error('Error refusing completion:', error);
@@ -318,8 +350,7 @@ const ModerationPage = () => {
       if (success) {
         console.log('Completion score submitted successfully:', score);
         setShowScoringModal(false);
-        // Recharger les données ou rediriger
-        router.push('/moderation');
+        await goToNextAvailable();
       }
     } catch (error) {
       console.error('Error submitting completion score:', error);
@@ -399,6 +430,7 @@ const ModerationPage = () => {
             onSubTabChange={handleSubTabChange}
             onIconClick={() => router.push('/welcome')}
             onBulbClick={() => setShowBulbPopup(true)}
+            subTabCounts={subTabCounts}
           />
           
           <div className={styles.moderationContainer}>
@@ -575,16 +607,34 @@ const ModerationPage = () => {
                 </div>
               )}
 
-              {/* Zone vidéo */}
+              {/* Zone vidéo (render only if provided, otherwise neutral placeholder) */}
               <div className={styles.videoSection} style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                <video 
-                  ref={videoRef} 
-                  src={campaign.content.videoUrl} 
-                  controls 
-                  onLoadedMetadata={handleVideoLoadedMetadata}
-                  className={`${styles.campaignVideo} ${(campaign.content.videoOrientation === 'vertical' || detectedOrientation === 'vertical') ? styles.vertical : ''}`}
-                  style={{ margin: '0 0' }} 
-                />
+                {isVideoAllowed(campaign?.content?.videoUrl) ? (
+                  <video 
+                    ref={videoRef} 
+                    src={campaign.content.videoUrl} 
+                    controls 
+                    onLoadedMetadata={handleVideoLoadedMetadata}
+                    className={`${styles.campaignVideo} ${(campaign.content.videoOrientation === 'vertical' || detectedOrientation === 'vertical') ? styles.vertical : ''}`}
+                    style={{ margin: '0 0' }} 
+                  />
+                ) : (
+                  <div style={{
+                    width: '100%',
+                    maxWidth: 480,
+                    height: 270,
+                    background: '#111',
+                    borderRadius: 16,
+                    border: '2px dashed rgba(255,255,255,0.15)',
+                    color: '#999',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 14
+                  }}>
+                    No video provided
+                  </div>
+                )}
               </div>
             </div>
 
@@ -619,6 +669,7 @@ const ModerationPage = () => {
                 onValid={activeTab === 'initial' ? handleInitialValid : handleCompletionValid}
                 onRefuse={activeTab === 'initial' ? handleCompletionRefuse : handleCompletionRefuse}
                 onValidWithScore={handleCompletionScore}
+                usedScores={moderatorUsedScores}
               />
             </div>
           </div>
@@ -676,6 +727,7 @@ const ModerationPage = () => {
             onSubTabChange={handleSubTabChange}
             onIconClick={() => router.push('/welcome')}
             onBulbClick={() => setShowBulbPopup(true)}
+            subTabCounts={subTabCounts}
           />
           <div style={{ 
             display: 'flex', 
@@ -703,6 +755,7 @@ const ModerationPage = () => {
             onSubTabChange={handleSubTabChange}
             onIconClick={() => router.push('/welcome')}
             onBulbClick={() => setShowBulbPopup(true)}
+            subTabCounts={subTabCounts}
           />
           <div style={{ 
             display: 'flex', 
@@ -785,6 +838,7 @@ const ModerationPage = () => {
         onSubTabChange={handleSubTabChange}
         onIconClick={() => router.push('/welcome')}
         onBulbClick={() => setShowBulbPopup(true)}
+        subTabCounts={subTabCounts}
       />
       
       <div className={styles.moderationContainer}>
@@ -962,7 +1016,8 @@ const ModerationPage = () => {
             </div>
           )}
           
-          <div className={styles.videoSection} style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+        <div className={styles.videoSection} style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          {isVideoAllowed(campaign?.content?.videoUrl) ? (
             <video 
               ref={videoRef} 
               src={campaign.content.videoUrl} 
@@ -971,7 +1026,24 @@ const ModerationPage = () => {
               className={`${styles.campaignVideo} ${(campaign.content.videoOrientation === 'vertical' || detectedOrientation === 'vertical') ? styles.vertical : ''}`}
               style={{ margin: '0 0' }} 
             />
-          </div>
+          ) : (
+            <div style={{
+              width: '100%',
+              maxWidth: 480,
+              height: 270,
+              background: '#111',
+              borderRadius: 16,
+              border: '2px dashed rgba(255,255,255,0.15)',
+              color: '#999',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: 14
+            }}>
+              No video provided
+            </div>
+          )}
+        </div>
         </div>
 
         {/* Panneau droit : barres de progression + boutons */}
@@ -997,6 +1069,7 @@ const ModerationPage = () => {
             onValid={activeTab === 'initial' ? handleInitialValid : handleCompletionValid}
             onRefuse={activeTab === 'initial' ? handleCompletionRefuse : handleCompletionRefuse}
             onValidWithScore={handleCompletionScore}
+            usedScores={moderatorUsedScores}
           />
         </div>
       </div>
@@ -1065,6 +1138,10 @@ const ModerationPage = () => {
         stakeYes={progress.stakeYes}
         stakeNo={progress.stakeNo}
       />
+      
+      {/* Bouton Dev Controls */}
+        {/* Dev Controls pour les statistiques de modération */}
+        <ModerationStatsDevControlsButton />
     </div>
   );
 };

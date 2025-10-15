@@ -982,7 +982,7 @@ const CompletionPage = () => {
                 margin: 0,
                 opacity: 0.9,
                 display: '-webkit-box',
-                WebkitLineClamp: 4,
+                WebkitLineClamp: 3,
                 WebkitBoxOrient: 'vertical',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis'
@@ -1029,7 +1029,7 @@ const CompletionPage = () => {
                 color: '#4ECB71',
                 fontWeight: 700
               }}>
-                Guidelines
+                Guideline
               </div>
               <p style={{
                 fontSize: 13,
@@ -1038,7 +1038,7 @@ const CompletionPage = () => {
                 margin: 0,
                 opacity: 0.9,
                 display: '-webkit-box',
-                WebkitLineClamp: 4,
+                WebkitLineClamp: 3,
                 WebkitBoxOrient: 'vertical',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis'
@@ -1920,7 +1920,7 @@ const CompletionPage = () => {
         </div>
       )}
 
-      {/* Guidelines Modal */}
+      {/* Guideline Modal */}
       {showGuidelinesModal && (
         <div style={{
           position: 'fixed',
@@ -1968,7 +1968,7 @@ const CompletionPage = () => {
               marginBottom: 16,
               marginTop: 0
             }}>
-              Guidelines
+              Guideline
             </h3>
             <p style={{
               fontSize: 14,

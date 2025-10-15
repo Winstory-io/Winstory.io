@@ -2,6 +2,7 @@ import React from 'react';
 import styles from '../styles/Moderation.module.css';
 import { useRouter } from 'next/navigation';
 import { validateVideoOrientation } from '../lib/utils';
+import { useActiveAccount } from 'thirdweb/react';
 
 interface CompletionPopupProps {
   open: boolean;
@@ -18,6 +19,7 @@ const YELLOW = '#FFD600';
 
 const CompletionPopup: React.FC<CompletionPopupProps> = ({ open, onClose, activeTab, identity, currentCampaign, getTimeLeft, getCompletionStats }) => {
   const router = useRouter();
+  const account = useActiveAccount();
   const [file, setFile] = React.useState<File | null>(null);
   const [story, setStory] = React.useState('');
   const [storyFocused, setStoryFocused] = React.useState(false);
@@ -197,6 +199,11 @@ const CompletionPopup: React.FC<CompletionPopupProps> = ({ open, onClose, active
       
       router.push('/completion/recap');
     }
+  };
+
+  const truncateAddress = (address: string) => {
+    if (!address) return '';
+    return `${address.slice(0, 6)}...${address.slice(-4)}`;
   };
 
   const handleFileUpload = async (uploadedFile: File) => {
@@ -489,6 +496,39 @@ const CompletionPopup: React.FC<CompletionPopupProps> = ({ open, onClose, active
             ×
           </button>
           <div style={{ color: activeColor, fontSize: 28, fontWeight: 700, textAlign: 'center', marginBottom: 10, marginTop: 0 }}>Completion</div>
+          {/* Connected wallet badge (same visual style as /welcome) */}
+          {account?.address && (
+            <div style={{
+              marginBottom: 10,
+              display: 'flex',
+              justifyContent: 'center',
+              width: '100%'
+            }}>
+              <div
+                style={{
+                  background: 'rgba(0, 255, 0, 0.1)',
+                  border: '2px solid #00FF00',
+                  borderRadius: 20,
+                  padding: '8px 16px',
+                  color: '#00FF00',
+                  fontWeight: 700,
+                  fontSize: 14,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8
+                }}
+              >
+                <div style={{
+                  width: 8,
+                  height: 8,
+                  background: '#00FF00',
+                  borderRadius: '50%',
+                  animation: 'pulse 2s infinite'
+                }} />
+                {truncateAddress(account.address)}
+              </div>
+            </div>
+          )}
           
           {/* Prix de completion permanent - en bas à droite */}
           <div style={{
