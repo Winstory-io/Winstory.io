@@ -176,6 +176,8 @@ export async function POST(request: NextRequest) {
       const payload = {
         created_at: new Date().toISOString(),
         campaign_type: isIndividual ? 'INDIVIDUAL' : 'B2C',
+        submission_timestamp_iso: timestampIso,
+        submission_timestamp_local: timestampLocal,
         wallet_address: data.walletAddress || null,
         wallet_source: data.walletSource || null,
         user_email: data.user?.email || null,
@@ -185,12 +187,18 @@ export async function POST(request: NextRequest) {
         film_video_id: data.film?.videoId || null,
         film_file_name: data.film?.fileName || null,
         film_format: data.film?.format || null,
-        roi_unit_value: data.roiData?.unitValue ?? null,
-        roi_net_profit: data.roiData?.netProfit ?? null,
-        roi_max_completions: data.roiData?.maxCompletions ?? null,
-        individual_unit_price: data.completions?.unitPrice ?? null,
-        individual_max_completions: data.completions?.maxCompletions ?? null,
-        individual_duration_days: data.completions?.campaignDuration ?? null,
+        // B2C (fiat USD)
+        b2c_currency: !isIndividual ? 'USD' : null,
+        b2c_unit_value_usd: !isIndividual ? (data.roiData?.unitValue ?? null) : null,
+        b2c_net_profit_usd: !isIndividual ? (data.roiData?.netProfit ?? null) : null,
+        b2c_max_completions: !isIndividual ? (data.roiData?.maxCompletions ?? null) : null,
+        b2c_is_free_reward: !isIndividual ? (data.roiData?.isFreeReward ?? false) : null,
+        b2c_is_no_reward: !isIndividual ? (data.roiData?.noReward ?? false) : null,
+        // Individual ($WINC only)
+        individual_currency: isIndividual ? 'WINC' : null,
+        individual_winc_value: isIndividual ? (data.completions?.wincValue ?? null) : null,
+        individual_max_completions: isIndividual ? (data.completions?.maxCompletions ?? null) : null,
+        individual_duration_days: isIndividual ? (data.completions?.campaignDuration ?? null) : null,
         raw_payload: data,
       } as any;
 
