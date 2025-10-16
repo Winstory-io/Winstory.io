@@ -6,11 +6,16 @@ export async function POST(request: NextRequest) {
     const data = await request.json();
     
     const isIndividual = data.campaignType === 'INDIVIDUAL';
+    const now = new Date();
+    const timestampIso = now.toISOString(); // UTC with seconds
+    const timestampLocal = now.toLocaleString(); // Local time with seconds
     
     // Afficher dans le terminal Cursor avec un format clair et visible
     console.log('\n');
     console.log('═══════════════════════════════════════════════════════════════');
     console.log(`🎬 CREATE CAMPAIGN - FINAL SUBMISSION ${isIndividual ? '(INDIVIDUAL)' : '(B2C)'}`);
+    console.log(`🕒 Timestamp (ISO/UTC): ${timestampIso}`);
+    console.log(`🕒 Timestamp (Local):   ${timestampLocal}`);
     console.log('═══════════════════════════════════════════════════════════════');
     console.log('\n');
     
@@ -127,7 +132,8 @@ export async function POST(request: NextRequest) {
     if (isIndividual && data.completions) {
       console.log('🎯 INDIVIDUAL CREATOR COMPLETIONS:');
       console.log('───────────────────────────────────────────────────────────────');
-      console.log('  💵 Unit Price (data.completions.unitPrice):', data.completions.unitPrice ? `$${data.completions.unitPrice}` : 'N/A');
+      console.log('  💠 Unit Value (data.completions.wincValue):',
+        typeof data.completions.wincValue === 'number' ? `${data.completions.wincValue} $WINC` : 'N/A');
       console.log('  📊 Max Completions (data.completions.maxCompletions):', data.completions.maxCompletions || 'N/A');
       console.log('  ⏱️  Campaign Duration (data.completions.campaignDuration):', data.completions.campaignDuration || 'N/A', 'days');
       console.log('\n');
