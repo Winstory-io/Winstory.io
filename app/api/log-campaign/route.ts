@@ -202,14 +202,18 @@ export async function POST(request: NextRequest) {
         raw_payload: data,
       } as any;
 
-      const { error } = await supabaseServer
-        .from('campaign_creation_logs')
-        .insert([payload]);
-
-      if (error) {
-        console.error('Supabase insert error:', error.message);
+      if (!supabaseServer) {
+        console.warn('⚠️ Supabase server client not configured. Skipping DB insert.');
       } else {
-        console.log('🗄️  Supabase: campaign_creation_logs insert OK');
+        const { error } = await supabaseServer
+          .from('campaign_creation_logs')
+          .insert([payload]);
+
+        if (error) {
+          console.error('Supabase insert error:', error.message);
+        } else {
+          console.log('🗄️  Supabase: campaign_creation_logs insert OK');
+        }
       }
     } catch (e: any) {
       console.error('Supabase sync failed:', e?.message || e);
