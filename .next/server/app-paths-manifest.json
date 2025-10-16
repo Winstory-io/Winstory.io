@@ -1,1 +1,4 @@
-{}
+{
+  "/creation/individual/mint/page": "app/creation/individual/mint/page.js",
+  "/creation/individual/yourcompletions/page": "app/creation/individual/yourcompletions/page.js"
+}
