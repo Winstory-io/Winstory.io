@@ -140,7 +140,7 @@ export default function RecapB2C() {
 
   const rewardTotals = calculateTotalRewards();
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     console.log('=== CREATE CAMPAIGN - FINAL RECAP ===');
     console.log('--- User Information ---');
     console.log('Email:', recap.user?.email);
@@ -188,6 +188,31 @@ export default function RecapB2C() {
     console.log('==========================================');
     console.log('Proceeding to MINT page...');
     console.log('==========================================');
+    
+    // Envoyer les données au serveur pour affichage dans le terminal Cursor
+    try {
+      await fetch('/api/log-campaign', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          user: recap.user,
+          company: recap.company,
+          story: recap.story,
+          film: recap.film,
+          roiData: recap.roiData,
+          standardToken: recap.standardToken,
+          standardItem: recap.standardItem,
+          premiumToken: recap.premiumToken,
+          premiumItem: recap.premiumItem,
+          unifiedConfig: recap.unifiedConfig
+        }),
+      });
+      console.log('✅ Data sent to terminal successfully');
+    } catch (error) {
+      console.error('Failed to send data to terminal:', error);
+    }
     
     setConfirmed(true);
     setTimeout(() => {

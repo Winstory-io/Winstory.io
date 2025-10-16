@@ -434,7 +434,29 @@ export default function IndividualRecapPage() {
     setShowLeaveModal(true);
   };
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
+    // Envoyer les données au serveur pour affichage dans le terminal Cursor
+    try {
+      await fetch('/api/log-campaign', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          user: recap.user || { email: 'Individual Creator' },
+          company: { name: 'Individual Creator' },
+          story: recap.story,
+          film: recap.film,
+          completions: recap.completions,
+          economicData: economicData,
+          campaignType: 'INDIVIDUAL'
+        }),
+      });
+      console.log('✅ Individual campaign data sent to terminal successfully');
+    } catch (error) {
+      console.error('Failed to send individual campaign data to terminal:', error);
+    }
+    
     setConfirmed(true);
     setShowPayment(true);
   };
