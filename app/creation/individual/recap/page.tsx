@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import ThirdwebPayment from "@/components/ThirdwebPayment";
 import { useRouter } from 'next/navigation';
+import { useActiveAccount } from "thirdweb/react";
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { getVideoFromIndexedDB } from '@/lib/videoStorage';
 
@@ -263,6 +264,7 @@ function simulateCampaign(P: number, N: number, CR: number = N) {
 
 export default function IndividualRecapPage() {
   const router = useRouter();
+  const account = useActiveAccount();
   const [recap, setRecap] = useState<RecapData>({});
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
@@ -449,7 +451,9 @@ export default function IndividualRecapPage() {
           film: recap.film,
           completions: recap.completions,
           economicData: economicData,
-          campaignType: 'INDIVIDUAL'
+          campaignType: 'INDIVIDUAL',
+          walletAddress: account?.address || localStorage.getItem('walletAddress') || null,
+          walletSource: account?.address ? 'thirdweb_account' : (localStorage.getItem('walletAddress') ? 'localStorage.walletAddress' : null)
         }),
       });
       console.log('✅ Individual campaign data sent to terminal successfully');

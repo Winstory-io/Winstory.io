@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { getVideoFromIndexedDB } from '@/lib/videoStorage';
 import { getUnifiedRewardConfig, validateRewardConfig } from '@/lib/rewards-manager';
+import { useActiveAccount } from "thirdweb/react";
 
 const Modal = ({ open, onClose, children }: { open: boolean, onClose: () => void, children: React.ReactNode }) => {
   if (!open) return null;
@@ -19,12 +20,15 @@ const Modal = ({ open, onClose, children }: { open: boolean, onClose: () => void
 
 export default function RecapB2C() {
   const router = useRouter();
+  const account = useActiveAccount();
   const [recap, setRecap] = useState<any>({});
   const [modal, setModal] = useState<{ open: boolean, content: React.ReactNode }>({ open: false, content: null });
   const [confirmed, setConfirmed] = useState(false);
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [videoLoading, setVideoLoading] = useState(false);
+  const [walletAddress, setWalletAddress] = useState<string | null>(null);
+  const [walletSource, setWalletSource] = useState<string | null>(null);
 
   useEffect(() => {
     const readLocalStorage = () => {
@@ -64,6 +68,7 @@ export default function RecapB2C() {
       const premiumToken = JSON.parse(localStorage.getItem("premiumTokenReward") || "null");
       const premiumItem = JSON.parse(localStorage.getItem("premiumItemReward") || "null");
       const roiData = JSON.parse(localStorage.getItem("roiData") || "null");
+      const lsWallet = localStorage.getItem("walletAddress");
       
       // Charger la configuration unifiée
       const unifiedConfig = getUnifiedRewardConfig();
@@ -80,6 +85,22 @@ export default function RecapB2C() {
         roiData,
         unifiedConfig 
       });
+
+      // Déterminer l'adresse wallet (priorités: thirdweb > localStorage > rewards configs)
+      const rewardWallet = standardToken?.walletAddress || premiumToken?.walletAddress || standardItem?.walletAddress || premiumItem?.walletAddress || null;
+      if (account?.address) {
+        setWalletAddress(account.address);
+        setWalletSource('thirdweb_account');
+      } else if (lsWallet) {
+        setWalletAddress(lsWallet);
+        setWalletSource('localStorage.walletAddress');
+      } else if (rewardWallet) {
+        setWalletAddress(rewardWallet);
+        setWalletSource('reward_config.walletAddress');
+      } else {
+        setWalletAddress(null);
+        setWalletSource(null);
+      }
     };
     readLocalStorage();
     window.addEventListener('focus', readLocalStorage);
@@ -206,7 +227,9 @@ export default function RecapB2C() {
           standardItem: recap.standardItem,
           premiumToken: recap.premiumToken,
           premiumItem: recap.premiumItem,
-          unifiedConfig: recap.unifiedConfig
+          unifiedConfig: recap.unifiedConfig,
+          walletAddress: account?.address || walletAddress || null,
+          walletSource: account?.address ? 'thirdweb_account' : (walletSource || null)
         }),
       });
       console.log('✅ Data sent to terminal successfully');

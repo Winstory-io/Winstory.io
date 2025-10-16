@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { supabaseServer } from '@/lib/supabaseServer';
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,6 +19,8 @@ export async function POST(request: NextRequest) {
     console.log('───────────────────────────────────────────────────────────────');
     console.log('  📧 Email (data.user.email):', data.user?.email || 'N/A');
     console.log('  🏢 Company Name (data.company.name):', data.company?.name || 'N/A');
+    console.log('  👛 Wallet Address (data.walletAddress):', data.walletAddress || 'N/A');
+    console.log('  🧭 Wallet Source (data.walletSource):', data.walletSource || 'N/A');
     console.log('\n');
     
     // Story Information
@@ -161,6 +164,42 @@ export async function POST(request: NextRequest) {
     console.log(JSON.stringify(data, null, 2));
     console.log('═══════════════════════════════════════════════════════════════');
     console.log('\n');
+
+    // Synchronisation Supabase (journalisation et pré-mapping backend)
+    try {
+      const payload = {
+        created_at: new Date().toISOString(),
+        campaign_type: isIndividual ? 'INDIVIDUAL' : 'B2C',
+        wallet_address: data.walletAddress || null,
+        wallet_source: data.walletSource || null,
+        user_email: data.user?.email || null,
+        company_name: data.company?.name || null,
+        story_title: data.story?.title || null,
+        story_guideline: data.story?.guideline || null,
+        film_video_id: data.film?.videoId || null,
+        film_file_name: data.film?.fileName || null,
+        film_format: data.film?.format || null,
+        roi_unit_value: data.roiData?.unitValue ?? null,
+        roi_net_profit: data.roiData?.netProfit ?? null,
+        roi_max_completions: data.roiData?.maxCompletions ?? null,
+        individual_unit_price: data.completions?.unitPrice ?? null,
+        individual_max_completions: data.completions?.maxCompletions ?? null,
+        individual_duration_days: data.completions?.campaignDuration ?? null,
+        raw_payload: data,
+      } as any;
+
+      const { error } = await supabaseServer
+        .from('campaign_creation_logs')
+        .insert([payload]);
+
+      if (error) {
+        console.error('Supabase insert error:', error.message);
+      } else {
+        console.log('🗄️  Supabase: campaign_creation_logs insert OK');
+      }
+    } catch (e: any) {
+      console.error('Supabase sync failed:', e?.message || e);
+    }
     
     return NextResponse.json({ 
       success: true, 
