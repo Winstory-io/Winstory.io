@@ -141,6 +141,54 @@ export default function RecapB2C() {
   const rewardTotals = calculateTotalRewards();
 
   const handleConfirm = () => {
+    console.log('=== CREATE CAMPAIGN - FINAL RECAP ===');
+    console.log('--- User Information ---');
+    console.log('Email:', recap.user?.email);
+    console.log('Company Name:', recap.company?.name);
+    console.log('--- Story Information ---');
+    console.log('Title:', recap.story?.title);
+    console.log('Starting Story:', recap.story?.startingStory);
+    console.log('Guideline:', recap.story?.guideline);
+    console.log('--- Film Information ---');
+    console.log('AI Film Requested:', recap.film?.aiRequested);
+    console.log('Video File:', recap.film?.fileName || 'No video file');
+    console.log('Video Format:', recap.film?.format);
+    console.log('--- ROI/Rewards Data ---');
+    console.log('Unit Value:', recap.roiData?.unitValue);
+    console.log('Net Profit:', recap.roiData?.netProfit);
+    console.log('Max Completions:', recap.roiData?.maxCompletions);
+    console.log('Free Reward:', recap.roiData?.isFreeReward);
+    console.log('No Reward:', recap.roiData?.noReward);
+    console.log('--- Standard Rewards ---');
+    if (recap.standardToken) {
+      console.log('Standard Token:', recap.standardToken.name);
+      console.log('  - Contract:', recap.standardToken.contractAddress);
+      console.log('  - Blockchain:', recap.standardToken.blockchain);
+      console.log('  - Amount per user:', recap.standardToken.amountPerUser);
+    }
+    if (recap.standardItem) {
+      console.log('Standard Item:', recap.standardItem.name);
+      console.log('  - Contract:', recap.standardItem.contractAddress);
+      console.log('  - Blockchain:', recap.standardItem.blockchain);
+      console.log('  - Amount per user:', recap.standardItem.amountPerUser);
+    }
+    console.log('--- Premium Rewards ---');
+    if (recap.premiumToken) {
+      console.log('Premium Token:', recap.premiumToken.name);
+      console.log('  - Contract:', recap.premiumToken.contractAddress);
+      console.log('  - Blockchain:', recap.premiumToken.blockchain);
+      console.log('  - Amount per user:', recap.premiumToken.amountPerUser);
+    }
+    if (recap.premiumItem) {
+      console.log('Premium Item:', recap.premiumItem.name);
+      console.log('  - Contract:', recap.premiumItem.contractAddress);
+      console.log('  - Blockchain:', recap.premiumItem.blockchain);
+      console.log('  - Amount per user:', recap.premiumItem.amountPerUser);
+    }
+    console.log('==========================================');
+    console.log('Proceeding to MINT page...');
+    console.log('==========================================');
+    
     setConfirmed(true);
     setTimeout(() => {
       // TODO: Le MINT de la campagne permet de déployer sur IPFS (à améliorer ultérieurement)

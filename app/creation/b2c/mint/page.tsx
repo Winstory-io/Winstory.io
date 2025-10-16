@@ -95,6 +95,13 @@ export default function MintPage() {
   }, []);
 
   const handlePaymentMethod = (method: string) => {
+    console.log('=== CREATE CAMPAIGN - Step 6: MINT & Payment ===');
+    console.log('Payment Method Selected:', method);
+    console.log('Total Price:', totalPrice, 'USD');
+    console.log('Pricing Options:', pricingOptions.filter(opt => opt.isSelected).map(opt => opt.label));
+    console.log('User Email:', userEmail);
+    console.log('==========================================');
+    
     // Stocker la méthode de paiement choisie
     localStorage.setItem("paymentMethod", method);
     

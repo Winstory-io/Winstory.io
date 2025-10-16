@@ -76,6 +76,11 @@ export default function YourWinstoryB2C() {
     setError(newError);
     setTouched({ title: true, story: true, guideline: true });
     if (Object.keys(newError).length === 0) {
+      console.log('=== CREATE CAMPAIGN - Step 2: Your Winstory ===');
+      console.log('Starting Title:', title);
+      console.log('Starting Story:', story);
+      console.log('Guideline:', guideline);
+      console.log('==========================================');
       // Sauvegarde dans le localStorage
       localStorage.setItem("story", JSON.stringify({
         title,

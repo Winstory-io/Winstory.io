@@ -136,7 +136,13 @@ export default function YourInformationsB2C() {
                 {/* Flèche verte à l'extérieur en bas à droite de l'encart */}
                 <div style={{ position: 'relative', width: 400, maxWidth: '90vw', height: 0 }}>
                     <div style={{ position: 'absolute', right: -32, bottom: -64, zIndex: 10 }}>
-                        <GreenArrowButton onClick={() => router.push('/creation/b2c/yourwinstory')} />
+                        <GreenArrowButton onClick={() => {
+                            console.log('=== CREATE CAMPAIGN - Step 1: Your Informations ===');
+                            console.log('Company Name:', company);
+                            console.log('Contact Email:', email);
+                            console.log('==========================================');
+                            router.push('/creation/b2c/yourwinstory');
+                        }} />
                     </div>
                 </div>
             </div>

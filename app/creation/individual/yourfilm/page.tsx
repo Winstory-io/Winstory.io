@@ -133,6 +133,12 @@ export default function YourFilmPage() {
   };
 
   const handleNext = async () => {
+    console.log('=== CREATE CAMPAIGN (Individual) - Step 2: Your Film ===');
+    console.log('Video File:', video ? video.name : 'No video uploaded');
+    console.log('Video Size:', video ? `${(video.size / (1024 * 1024)).toFixed(2)} MB` : 'N/A');
+    console.log('Video Format:', videoFormat || 'N/A');
+    console.log('==========================================');
+    
     // Sauvegarde dans IndexedDB pour éviter les limites de localStorage
     if (video) {
       try {

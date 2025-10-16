@@ -177,6 +177,16 @@ export default function TokenRewardConfig({ onClose }: { onClose: () => void }) 
       walletAddress
     };
     
+    console.log('=== CREATE CAMPAIGN - Step 5: Standard Token Rewards ===');
+    console.log('Token Name:', tokenName);
+    console.log('Contract Address:', contractAddress);
+    console.log('Blockchain:', blockchain);
+    console.log('Token Standard:', tokenStandard);
+    console.log('Amount Per User:', amountPerUser);
+    console.log('Total Amount:', totalTokens);
+    console.log('Has Enough Balance:', hasEnoughBalance);
+    console.log('==========================================');
+    
     localStorage.setItem('standardTokenReward', JSON.stringify(config));
     setIsConfirmed(true);
     

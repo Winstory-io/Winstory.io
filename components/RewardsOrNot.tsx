@@ -280,6 +280,14 @@ export default function RewardsOrNot({ isAgencyB2C = false }: RewardsOrNotProps)
   };
 
   const handleNext = () => {
+    console.log('=== CREATE CAMPAIGN - Step 4: Rewards or Not ===');
+    console.log('Unit Value:', unitValue || 0);
+    console.log('Net Profit:', netProfit || 0);
+    console.log('Free Reward:', freeReward);
+    console.log('No Reward:', noReward);
+    console.log('Max Completions:', freeReward ? userMaxCompletions : maxCompletions);
+    console.log('==========================================');
+    
     // Sauvegarder les données de ROI dans tous les cas
     if (typeof window !== 'undefined') {
       let roiData;

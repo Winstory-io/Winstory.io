@@ -31,15 +31,15 @@
       "static/css/app/moderation/page.css",
       "static/chunks/app/moderation/page.js"
     ],
-    "/api/moderation/moderator-scores/route": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/api/moderation/moderator-scores/route.js"
-    ],
     "/api/moderation/dev-controls/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/api/moderation/dev-controls/route.js"
+    ],
+    "/api/moderation/moderator-scores/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/moderation/moderator-scores/route.js"
     ]
   }
 }

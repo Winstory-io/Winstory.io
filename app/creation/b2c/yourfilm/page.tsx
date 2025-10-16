@@ -138,6 +138,13 @@ export default function YourFilmPage() {
   };
 
   const handleNext = async () => {
+    console.log('=== CREATE CAMPAIGN - Step 3: Your A.I. Film ===');
+    console.log('Video File:', video ? video.name : 'No video uploaded');
+    console.log('Video Size:', video ? `${(video.size / (1024 * 1024)).toFixed(2)} MB` : 'N/A');
+    console.log('Video Format:', videoFormat || 'N/A');
+    console.log('Winstory Creates Film:', preferWinstory);
+    console.log('==========================================');
+    
     // Sauvegarde dans IndexedDB pour éviter les limites de localStorage
     if (video) {
       try {
