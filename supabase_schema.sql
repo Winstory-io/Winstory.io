@@ -359,6 +359,56 @@ CREATE TABLE verification_tokens (
 );
 
 -- =====================================================
+-- 2A. LOGS DE CREATION DE CAMPAGNE (B2C & INDIVIDUAL)
+-- =====================================================
+
+CREATE TABLE IF NOT EXISTS public.campaign_creation_logs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+  -- Horodatage explicite de soumission (utile pour audit)
+  submission_timestamp_iso TEXT,
+  submission_timestamp_local TEXT,
+
+  -- Contexte campagne
+  campaign_type TEXT,                        -- 'INDIVIDUAL' ou 'B2C'
+  wallet_address TEXT,
+  wallet_source TEXT,                        -- 'thirdweb_account' | 'localStorage.walletAddress' | 'reward_config.walletAddress'
+
+  -- Métadonnées de base
+  user_email TEXT,
+  company_name TEXT,
+  story_title TEXT,
+  story_guideline TEXT,
+
+  -- Vidéo
+  film_video_id TEXT,
+  film_file_name TEXT,
+  film_format TEXT,                          -- 'horizontal' | 'vertical'
+
+  -- B2C (fiat USD)
+  b2c_currency TEXT,                         -- 'USD' si B2C, sinon NULL
+  b2c_unit_value_usd NUMERIC,
+  b2c_net_profit_usd NUMERIC,
+  b2c_max_completions INT,
+  b2c_is_free_reward BOOLEAN,
+  b2c_is_no_reward BOOLEAN,
+
+  -- Individual ($WINC)
+  individual_currency TEXT,                  -- 'WINC' si Individual, sinon NULL
+  individual_winc_value NUMERIC,
+  individual_max_completions INT,
+  individual_duration_days INT,
+
+  -- Payload complet pour audit/debug
+  raw_payload JSONB NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_ccl_created_at ON public.campaign_creation_logs (created_at);
+CREATE INDEX IF NOT EXISTS idx_ccl_campaign_type ON public.campaign_creation_logs (campaign_type);
+CREATE INDEX IF NOT EXISTS idx_ccl_wallet_address ON public.campaign_creation_logs (wallet_address);
+
+-- =====================================================
 -- 2B. TABLES DE GESTION DES WALLETS (NOUVELLES)
 -- =====================================================
 
