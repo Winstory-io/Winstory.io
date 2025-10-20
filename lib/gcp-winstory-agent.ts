@@ -61,12 +61,10 @@ class WinstoryGCPAgent {
     // Initialisation des clients GCP
     this.storage = new Storage({
       projectId: this.projectId,
-      authClient: this.auth,
     });
 
     this.pubsub = new PubSub({
       projectId: this.projectId,
-      authClient: this.auth,
     });
   }
 
@@ -194,7 +192,7 @@ class WinstoryGCPAgent {
       
       // Authentification
       const authClient = await this.auth.getClient();
-      google.options({ auth: authClient });
+      google.options({ auth: authClient as any });
 
       // Préparation de la requête de prédiction
       const request = {
@@ -407,7 +405,8 @@ class WinstoryGCPAgent {
 }
 
 // Export de la classe et des types
-export { WinstoryGCPAgent, WinstoryInputs, WinstoryResponse, WinstoryCompleteResponse };
+export { WinstoryGCPAgent };
+export type { WinstoryInputs, WinstoryResponse, WinstoryCompleteResponse };
 
 // Instance singleton pour utilisation directe
 export const winstoryAgent = new WinstoryGCPAgent();

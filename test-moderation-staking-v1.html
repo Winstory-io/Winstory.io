@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Modération avec Staking V1 - Winstory.io</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #000;
+            color: #fff;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .test-section {
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .test-button {
+            background: #18C964;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            margin: 5px;
+        }
+        .test-button:hover {
+            background: #00B894;
+        }
+        .test-button.refuse {
+            background: #FF2D2D;
+            color: #fff;
+        }
+        .test-button.refuse:hover {
+            background: #E74C3C;
+        }
+        .log-output {
+            background: #000;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 15px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .success { color: #18C964; }
+        .error { color: #FF2D2D; }
+        .info { color: #FFD600; }
+        .warning { color: #FFA500; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test Modération avec Staking V1</h1>
+        <p>Ce test vérifie l'implémentation du système de modération avec intégration du framework de staking V1.</p>
+
+        <div class="test-section">
+            <h2>📊 Test API Vote Staking</h2>
+            <p>Teste l'API de vote avec calcul du staking selon le framework V1.</p>
+            
+            <button class="test-button" onclick="testValidVote()">✅ Test Vote VALID</button>
+            <button class="test-button refuse" onclick="testRefuseVote()">❌ Test Vote REFUSE</button>
+            <button class="test-button" onclick="testValidWithScore()">🎯 Test VALID avec Score</button>
+            
+            <div id="voteLog" class="log-output"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>👤 Test API Données Staker</h2>
+            <p>Teste la récupération des données du staker.</p>
+            
+            <button class="test-button" onclick="testStakerData()">🔍 Récupérer Données Staker</button>
+            <button class="test-button" onclick="testStakerDataUpdate()">💾 Mettre à jour Données</button>
+            
+            <div id="stakerLog" class="log-output"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>💾 Test API Sauvegarde Vote</h2>
+            <p>Teste la sauvegarde des votes en base de données.</p>
+            
+            <button class="test-button" onclick="testSaveVote()">💾 Sauvegarder Vote</button>
+            
+            <div id="saveLog" class="log-output"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>📋 Résumé des Tests</h2>
+            <div id="summaryLog" class="log-output"></div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration de test
+        const TEST_CONFIG = {
+            campaignId: 'test_campaign_123',
+            moderatorWallet: '0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6',
+            completionId: 'test_completion_456',
+            stakedAmount: 1000,
+            stakeAgeDays: 30,
+            moderatorXP: 200
+        };
+
+        // Fonction utilitaire pour logger
+        function log(elementId, message, type = 'info') {
+            const logElement = document.getElementById(elementId);
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : type === 'warning' ? 'warning' : 'info';
+            logElement.innerHTML += `<div class="${className}">[${timestamp}] ${message}</div>`;
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+
+        // Test vote VALID
+        async function testValidVote() {
+            log('voteLog', '🔍 Test vote VALID démarré...', 'info');
+            
+            try {
+                const response = await fetch('/api/moderation/vote-staking', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        campaignId: TEST_CONFIG.campaignId,
+                        moderatorWallet: TEST_CONFIG.moderatorWallet,
+                        voteDecision: 'VALID',
+                        stakedAmount: TEST_CONFIG.stakedAmount,
+                        stakeAgeDays: TEST_CONFIG.stakeAgeDays,
+                        moderatorXP: TEST_CONFIG.moderatorXP
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    log('voteLog', '✅ Vote VALID réussi!', 'success');
+                    log('voteLog', `Vote ID: ${result.voteId}`, 'info');
+                    if (result.stakingResult) {
+                        log('voteLog', `Décision: ${result.stakingResult.decision}`, 'info');
+                        log('voteLog', `Pool majoritaire: ${result.stakingResult.majority_pool_eur}€`, 'info');
+                        log('voteLog', `Pool minoritaire: ${result.stakingResult.minority_pool_eur}€`, 'info');
+                    }
+                } else {
+                    log('voteLog', `❌ Erreur: ${result.error}`, 'error');
+                }
+                
+                // Afficher les logs de l'API
+                if (result.consoleLogs) {
+                    result.consoleLogs.forEach(logMsg => {
+                        log('voteLog', logMsg, 'info');
+                    });
+                }
+            } catch (error) {
+                log('voteLog', `❌ Erreur réseau: ${error.message}`, 'error');
+            }
+        }
+
+        // Test vote REFUSE
+        async function testRefuseVote() {
+            log('voteLog', '🔍 Test vote REFUSE démarré...', 'info');
+            
+            try {
+                const response = await fetch('/api/moderation/vote-staking', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        campaignId: TEST_CONFIG.campaignId,
+                        moderatorWallet: TEST_CONFIG.moderatorWallet,
+                        voteDecision: 'REFUSE',
+                        stakedAmount: TEST_CONFIG.stakedAmount,
+                        stakeAgeDays: TEST_CONFIG.stakeAgeDays,
+                        moderatorXP: TEST_CONFIG.moderatorXP
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    log('voteLog', '✅ Vote REFUSE réussi!', 'success');
+                    log('voteLog', `Vote ID: ${result.voteId}`, 'info');
+                } else {
+                    log('voteLog', `❌ Erreur: ${result.error}`, 'error');
+                }
+                
+                // Afficher les logs de l'API
+                if (result.consoleLogs) {
+                    result.consoleLogs.forEach(logMsg => {
+                        log('voteLog', logMsg, 'info');
+                    });
+                }
+            } catch (error) {
+                log('voteLog', `❌ Erreur réseau: ${error.message}`, 'error');
+            }
+        }
+
+        // Test vote VALID avec score
+        async function testValidWithScore() {
+            log('voteLog', '🔍 Test vote VALID avec score démarré...', 'info');
+            
+            try {
+                const response = await fetch('/api/moderation/vote-staking', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        campaignId: TEST_CONFIG.campaignId,
+                        moderatorWallet: TEST_CONFIG.moderatorWallet,
+                        completionId: TEST_CONFIG.completionId,
+                        voteDecision: 'VALID',
+                        score: 85,
+                        stakedAmount: TEST_CONFIG.stakedAmount,
+                        stakeAgeDays: TEST_CONFIG.stakeAgeDays,
+                        moderatorXP: TEST_CONFIG.moderatorXP
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    log('voteLog', '✅ Vote VALID avec score réussi!', 'success');
+                    log('voteLog', `Vote ID: ${result.voteId}`, 'info');
+                    log('voteLog', `Score: 85/100`, 'info');
+                } else {
+                    log('voteLog', `❌ Erreur: ${result.error}`, 'error');
+                }
+                
+                // Afficher les logs de l'API
+                if (result.consoleLogs) {
+                    result.consoleLogs.forEach(logMsg => {
+                        log('voteLog', logMsg, 'info');
+                    });
+                }
+            } catch (error) {
+                log('voteLog', `❌ Erreur réseau: ${error.message}`, 'error');
+            }
+        }
+
+        // Test données staker
+        async function testStakerData() {
+            log('stakerLog', '🔍 Test récupération données staker démarré...', 'info');
+            
+            try {
+                const response = await fetch(`/api/moderation/staker-data?wallet=${TEST_CONFIG.moderatorWallet}&campaignId=${TEST_CONFIG.campaignId}`);
+                const result = await response.json();
+                
+                if (result.success && result.stakerData) {
+                    log('stakerLog', '✅ Données staker récupérées!', 'success');
+                    log('stakerLog', `Wallet: ${result.stakerData.wallet}`, 'info');
+                    log('stakerLog', `Stake: ${result.stakerData.stakedAmount} WINC`, 'info');
+                    log('stakerLog', `Âge: ${result.stakerData.stakeAgeDays} jours`, 'info');
+                    log('stakerLog', `XP: ${result.stakerData.xp}`, 'info');
+                    log('stakerLog', `Éligible: ${result.stakerData.isActive ? 'OUI' : 'NON'}`, result.stakerData.isActive ? 'success' : 'warning');
+                } else {
+                    log('stakerLog', `❌ Erreur: ${result.error || 'Données non trouvées'}`, 'error');
+                }
+                
+                // Afficher les logs de l'API
+                if (result.consoleLogs) {
+                    result.consoleLogs.forEach(logMsg => {
+                        log('stakerLog', logMsg, 'info');
+                    });
+                }
+            } catch (error) {
+                log('stakerLog', `❌ Erreur réseau: ${error.message}`, 'error');
+            }
+        }
+
+        // Test mise à jour données staker
+        async function testStakerDataUpdate() {
+            log('stakerLog', '🔍 Test mise à jour données staker démarré...', 'info');
+            
+            try {
+                const response = await fetch('/api/moderation/staker-data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        wallet: TEST_CONFIG.moderatorWallet,
+                        campaignId: TEST_CONFIG.campaignId,
+                        stakedAmount: 1500,
+                        stakeAgeDays: 45,
+                        xp: 250
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    log('stakerLog', '✅ Données staker mises à jour!', 'success');
+                } else {
+                    log('stakerLog', `❌ Erreur: ${result.error}`, 'error');
+                }
+                
+                // Afficher les logs de l'API
+                if (result.consoleLogs) {
+                    result.consoleLogs.forEach(logMsg => {
+                        log('stakerLog', logMsg, 'info');
+                    });
+                }
+            } catch (error) {
+                log('stakerLog', `❌ Erreur réseau: ${error.message}`, 'error');
+            }
+        }
+
+        // Test sauvegarde vote
+        async function testSaveVote() {
+            log('saveLog', '🔍 Test sauvegarde vote démarré...', 'info');
+            
+            try {
+                const response = await fetch('/api/moderation/save-vote', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        campaignId: TEST_CONFIG.campaignId,
+                        moderatorWallet: TEST_CONFIG.moderatorWallet,
+                        completionId: TEST_CONFIG.completionId,
+                        voteDecision: 'VALID',
+                        score: 90,
+                        stakedAmount: TEST_CONFIG.stakedAmount,
+                        stakeAgeDays: TEST_CONFIG.stakeAgeDays,
+                        moderatorXP: TEST_CONFIG.moderatorXP,
+                        voteTimestamp: Date.now()
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    log('saveLog', '✅ Vote sauvegardé!', 'success');
+                    log('saveLog', `Vote ID: ${result.voteId}`, 'info');
+                } else {
+                    log('saveLog', `❌ Erreur: ${result.error}`, 'error');
+                }
+                
+                // Afficher les logs de l'API
+                if (result.consoleLogs) {
+                    result.consoleLogs.forEach(logMsg => {
+                        log('saveLog', logMsg, 'info');
+                    });
+                }
+            } catch (error) {
+                log('saveLog', `❌ Erreur réseau: ${error.message}`, 'error');
+            }
+        }
+
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', function() {
+            log('summaryLog', '🧪 Tests de modération avec staking V1 initialisés', 'info');
+            log('summaryLog', '📋 Configuration de test:', 'info');
+            log('summaryLog', `   - Campaign ID: ${TEST_CONFIG.campaignId}`, 'info');
+            log('summaryLog', `   - Moderator Wallet: ${TEST_CONFIG.moderatorWallet}`, 'info');
+            log('summaryLog', `   - Stake: ${TEST_CONFIG.stakedAmount} WINC`, 'info');
+            log('summaryLog', `   - Âge: ${TEST_CONFIG.stakeAgeDays} jours`, 'info');
+            log('summaryLog', `   - XP: ${TEST_CONFIG.moderatorXP}`, 'info');
+            log('summaryLog', '', 'info');
+            log('summaryLog', '🎯 Cliquez sur les boutons pour tester les APIs', 'info');
+        });
+    </script>
+</body>
+</html>
+

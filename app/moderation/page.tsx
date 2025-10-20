@@ -1,5 +1,6 @@
-'use client';'use client';
-import React, { useState, useEffect, useRef, useCallback } from 'react';import { useRouter, useSearchParams } from 'next/navigation';
+'use client';
+import React, { useState, useEffect, useRef, useCallback, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useActiveAccount } from 'thirdweb/react';
 import WalletConnect from '../../components/WalletConnect';
 import ModeratorHeader, { CloseButton } from '../../components/ModeratorHeader';
@@ -14,11 +15,12 @@ import RewardsModal from '../../components/RewardsModal';
 import InfoModal from '../../components/InfoModal';
 import ModerationStatsModal from '../../components/ModerationStatsModal';
 import ModerationStatsDevControlsButton from '../../components/ModerationStatsDevControlsButton';
+import ModerationHeader from '../../components/ModerationHeader';
 import styles from '../../styles/Moderation.module.css';
 import { useModeration } from '../../lib/hooks/useModeration';
 import { ModerationCampaign, getUICreatorType, getUICampaignType } from '../../lib/types';
 
-const ModerationPage = () => {
+const ModerationPageContent = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const address = useActiveAccount();
@@ -37,6 +39,15 @@ const ModerationPage = () => {
   const [showScoringModal, setShowScoringModal] = useState(false);
   const [showRewardsModal, setShowRewardsModal] = useState(false);
   const [showStatsModal, setShowStatsModal] = useState(false);
+  
+  // States for staker data
+  const [stakerData, setStakerData] = useState<{
+    stakedAmount: number;
+    stakeAgeDays: number;
+    moderatorXP: number;
+    isEligible: boolean;
+  } | null>(null);
+  
   const [showInfoModal, setShowInfoModal] = useState<{
     isOpen: boolean;
     title: string;
@@ -181,6 +192,59 @@ const ModerationPage = () => {
     hasAlreadyVoted,
     subTabCounts
   } = useModeration();
+
+  // Function to fetch staker data
+  const fetchStakerData = useCallback(async (wallet: string, campaignId?: string) => {
+    if (!wallet) return;
+    
+    try {
+      console.log('🔍 [STAKER DATA] Fetching staker data:', { wallet, campaignId });
+      
+      const params = new URLSearchParams({ wallet });
+      if (campaignId) params.append('campaignId', campaignId);
+      
+      const response = await fetch(`/api/moderation/staker-data?${params}`);
+      
+      if (response.ok) {
+        const result = await response.json();
+        console.log('✅ [STAKER DATA] Data retrieved:', result);
+        
+        // Display API logs
+        if (result.consoleLogs) {
+          result.consoleLogs.forEach((log: string) => {
+            console.log(log);
+          });
+        }
+        
+        if (result.stakerData) {
+          const newStakerData = {
+            stakedAmount: result.stakerData.stakedAmount,
+            stakeAgeDays: result.stakerData.stakeAgeDays,
+            moderatorXP: result.stakerData.xp,
+            isEligible: result.stakerData.isActive
+          };
+          console.log('🎯 [STAKER DATA] Setting staker data:', newStakerData);
+          setStakerData(newStakerData);
+        } else {
+          console.log('⚠️ [STAKER DATA] No staker data in response');
+          setStakerData(null);
+        }
+      } else {
+        console.error('❌ [STAKER DATA] Error during retrieval:', response.status);
+        setStakerData(null);
+      }
+    } catch (error) {
+      console.error('❌ [STAKER DATA] Error:', error);
+      setStakerData(null);
+    }
+  }, []);
+  
+  // Fetch staker data when user connects
+  useEffect(() => {
+    if (address?.address) {
+      fetchStakerData(address.address, campaignId || undefined);
+    }
+  }, [address?.address, campaignId, fetchStakerData]);
   
   // Mettre à jour les onglets quand les paramètres d'URL changent
   useEffect(() => {
@@ -323,14 +387,31 @@ const ModerationPage = () => {
     if (!currentSession) return;
     
     try {
-      const success = await submitModerationDecision('valid', 'creation');
+      console.log('🔍 [INITIAL VALID] Starting validation:', {
+        campaignId: currentSession.campaignId,
+        stakerData
+      });
+      
+      const success = await submitModerationDecision(
+        'valid', 
+        'creation',
+        undefined, // No score for initial content
+        stakerData ? {
+          stakedAmount: stakerData.stakedAmount,
+          stakeAgeDays: stakerData.stakeAgeDays,
+          moderatorXP: stakerData.moderatorXP
+        } : undefined
+      );
+      
       if (success) {
-        console.log('Initial story validated successfully');
-        // Passer automatiquement au contenu suivant
+        console.log('✅ [INITIAL VALID] Initial content validated successfully');
+        // Automatically go to next content
         await goToNextAvailable();
+      } else {
+        console.error('❌ [INITIAL VALID] Failed to validate initial content');
       }
     } catch (error) {
-      console.error('Error validating initial story:', error);
+      console.error('❌ [INITIAL VALID] Error during validation:', error);
     }
   };
 
@@ -338,14 +419,31 @@ const ModerationPage = () => {
     if (!currentSession) return;
     
     try {
-      const success = await submitModerationDecision('valid', 'completion');
+      console.log('🔍 [COMPLETION VALID] Starting validation:', {
+        campaignId: currentSession.campaignId,
+        stakerData
+      });
+      
+      const success = await submitModerationDecision(
+        'valid', 
+        'completion',
+        undefined, // Score will be handled by scoring modal
+        stakerData ? {
+          stakedAmount: stakerData.stakedAmount,
+          stakeAgeDays: stakerData.stakeAgeDays,
+          moderatorXP: stakerData.moderatorXP
+        } : undefined
+      );
+      
       if (success) {
-        console.log('Completion validated successfully');
-        // Ouvrir le scoring si nécessaire géré par ModerationButtons; ici on auto-advance après vote ou score
+        console.log('✅ [COMPLETION VALID] Completion validated successfully');
+        // Open scoring if needed handled by ModerationButtons; here we auto-advance after vote or score
         await goToNextAvailable();
+      } else {
+        console.error('❌ [COMPLETION VALID] Failed to validate completion');
       }
     } catch (error) {
-      console.error('Error validating completion:', error);
+      console.error('❌ [COMPLETION VALID] Error during validation:', error);
     }
   };
 
@@ -353,34 +451,68 @@ const ModerationPage = () => {
     if (!currentSession) return;
     
     try {
-      const success = await submitModerationDecision('refuse', 'completion');
+      console.log('🔍 [COMPLETION REFUSE] Starting refusal:', {
+        campaignId: currentSession.campaignId,
+        stakerData
+      });
+      
+      const success = await submitModerationDecision(
+        'refuse', 
+        'completion',
+        undefined, // No score for refusals
+        stakerData ? {
+          stakedAmount: stakerData.stakedAmount,
+          stakeAgeDays: stakerData.stakeAgeDays,
+          moderatorXP: stakerData.moderatorXP
+        } : undefined
+      );
+      
       if (success) {
-        console.log('Completion refused successfully');
+        console.log('✅ [COMPLETION REFUSE] Completion refused successfully');
         await goToNextAvailable();
+      } else {
+        console.error('❌ [COMPLETION REFUSE] Failed to refuse completion');
       }
     } catch (error) {
-      console.error('Error refusing completion:', error);
+      console.error('❌ [COMPLETION REFUSE] Error during refusal:', error);
     }
   };
 
   const handleCompletionScore = async (score: number) => {
     if (!currentSession) return;
     
-    // Si 0, c'est un refus explicite
+    // If 0, it's an explicit refusal
     if (score === 0) {
       await handleCompletionRefuse();
       return;
     }
 
     try {
-      const success = await submitCompletionScore(score);
+      console.log('🔍 [COMPLETION SCORE] Starting scoring:', {
+        score,
+        campaignId: currentSession.campaignId,
+        stakerData
+      });
+      
+      const success = await submitCompletionScore(
+        score,
+        currentSession.campaignId, // completionId
+        stakerData ? {
+          stakedAmount: stakerData.stakedAmount,
+          stakeAgeDays: stakerData.stakeAgeDays,
+          moderatorXP: stakerData.moderatorXP
+        } : undefined
+      );
+      
       if (success) {
-        console.log('Completion score submitted successfully:', score);
+        console.log('✅ [COMPLETION SCORE] Score submitted successfully:', score);
         setShowScoringModal(false);
         await goToNextAvailable();
+      } else {
+        console.error('❌ [COMPLETION SCORE] Failed to submit score:', score);
       }
     } catch (error) {
-      console.error('Error submitting completion score:', error);
+      console.error('❌ [COMPLETION SCORE] Error during submission:', error);
     }
   };
 
@@ -902,8 +1034,14 @@ const ModerationPage = () => {
 
   const { campaign, progress } = currentSession;
 
+  // Debug: Log staker data before rendering
+  console.log('🔍 [MODERATION PAGE] Rendering with stakerData:', stakerData);
+
   return (
     <div className={styles.moderationBg}>
+      {/* Header with wallet connection and staker info */}
+      <ModerationHeader stakerData={stakerData} />
+      
       {isSwitching && (
         <div style={{
           position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.96)', zIndex: 9999,
@@ -1232,6 +1370,26 @@ const ModerationPage = () => {
         {/* Dev Controls pour les statistiques de modération */}
         <ModerationStatsDevControlsButton />
     </div>
+  );
+};
+
+const ModerationPage = () => {
+  return (
+    <Suspense fallback={
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: '100vh',
+        background: '#000',
+        color: '#FFD600',
+        fontSize: '18px'
+      }}>
+        Loading moderation interface...
+      </div>
+    }>
+      <ModerationPageContent />
+    </Suspense>
   );
 };
 

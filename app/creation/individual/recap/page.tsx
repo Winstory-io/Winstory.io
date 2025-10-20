@@ -445,7 +445,7 @@ export default function IndividualRecapPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          user: recap.user || { email: 'Individual Creator' },
+          user: { email: 'Individual Creator' },
           company: { name: 'Individual Creator' },
           story: recap.story,
           film: recap.film,

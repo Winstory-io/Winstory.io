@@ -76,6 +76,7 @@ export default function Home() {
   // Déterminer si le wallet est connecté (compte en compte la déconnexion forcée)
   const isWalletConnected = account && !isForceDisconnected;
 
+
   return (
     <div
       style={{

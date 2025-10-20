@@ -71,6 +71,14 @@ const CompletionPopup: React.FC<CompletionPopupProps> = ({ open, onClose, active
     return `${price} ${unit}`;
   };
 
+  const getIndividualTop3 = () => {
+    const pool = Number(currentCampaign?.completions?.wincValue || 0);
+    const first = Math.round(pool * 0.5);
+    const second = Math.round(pool * 0.3);
+    const third = Math.round(pool * 0.2);
+    return { first, second, third };
+  };
+
   // Charger les données sauvegardées quand le popup s'ouvre
   React.useEffect(() => {
     if (open) {
@@ -577,6 +585,7 @@ const CompletionPopup: React.FC<CompletionPopupProps> = ({ open, onClose, active
                 e.currentTarget.style.backdropFilter = 'blur(10px)';
                 e.currentTarget.style.transform = 'scale(1.02)';
                 e.currentTarget.style.background = 'rgba(17, 17, 17, 0.9)';
+                setStoryFocused(true);
               }}
               onBlur={(e) => {
                 e.currentTarget.style.border = `2px solid ${activeColor}`;
@@ -584,18 +593,17 @@ const CompletionPopup: React.FC<CompletionPopupProps> = ({ open, onClose, active
                 e.currentTarget.style.backdropFilter = 'blur(0px)';
                 e.currentTarget.style.transform = 'scale(1)';
                 e.currentTarget.style.background = '#111';
+                setStoryFocused(false);
               }}
               placeholder={
                 storyFocused
                   ? ''
                   : activeTab === 'b2c'
-                  ? 'Write your Completion Story according to the Starting Text and Guideline’s Company. Creativity, magical, sophistication !'
-                  : 'Write your Completion Story according to the Starting Text and Guideline’s Individual Member. Creativity, magical, sophistication !'
+                  ? 'Write your Completion Story according to the Starting Text and Guideline\'s Company. Creativity, magical, sophistication !'
+                  : 'Write your Completion Story according to the Starting Text and Guideline\'s Individual Member. Creativity, magical, sophistication !'
               }
               value={story}
               onChange={e => setStory(e.target.value)}
-              onFocus={() => setStoryFocused(true)}
-              onBlur={() => setStoryFocused(false)}
             />
             {!videoUrl && (
               <div style={{ display: 'flex', justifyContent: 'center', width: '100%', marginBottom: 18, marginTop: 20 }}>

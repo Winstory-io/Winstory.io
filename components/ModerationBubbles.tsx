@@ -25,7 +25,21 @@ const ModerationBubbles: React.FC<ModerationBubblesProps> = ({
   const finalBubbleSize = bubbleSize || styles.defaultSize || 100;
   const finalBubbleGap = bubbleGap || styles.defaultGap || 24;
   const fontSize = styles.fontSize || 14;
+  // Type guard to check if colors has the bubbles color structure
+  const isBubblesColors = (colors: any): colors is { primary: string; secondary: string; green: string; red: string; yellow: string } => {
+    return colors && typeof colors.primary === 'string';
+  };
+
   const colors = styles.colors || {
+    primary: '#FFD600',
+    secondary: '#FFD600',
+    green: '#00FF00',
+    red: '#FF0000',
+    yellow: '#FFD700',
+  };
+
+  // Ensure we have the correct color structure for bubbles
+  const bubbleColors = isBubblesColors(colors) ? colors : {
     primary: '#FFD600',
     secondary: '#FFD600',
     green: '#00FF00',
@@ -103,41 +117,41 @@ const ModerationBubbles: React.FC<ModerationBubblesProps> = ({
               height: finalBubbleSize,
               fontSize: fontSize,
               background: isGreen 
-                ? `linear-gradient(135deg, ${colors.green}20 0%, ${colors.green}10 100%)`
-                : `linear-gradient(135deg, ${colors.primary}20 0%, ${colors.primary}10 100%)`,
+                ? `linear-gradient(135deg, ${bubbleColors.green}20 0%, ${bubbleColors.green}10 100%)`
+                : `linear-gradient(135deg, ${bubbleColors.primary}20 0%, ${bubbleColors.primary}10 100%)`,
               border: isGreen 
-                ? `2px solid ${colors.green}60`
-                : `2px solid ${colors.primary}60`,
+                ? `2px solid ${bubbleColors.green}60`
+                : `2px solid ${bubbleColors.primary}60`,
               borderRadius: '50%',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               cursor: 'pointer',
-              color: isGreen ? colors.green : colors.primary,
+              color: isGreen ? bubbleColors.green : bubbleColors.primary,
               fontWeight: 600,
               textAlign: 'center',
               padding: '4px',
               transition: animations.transitionDuration,
               textShadow: isGreen 
-                ? `0 0 10px ${colors.green}50`
-                : `0 0 10px ${colors.primary}50`,
+                ? `0 0 10px ${bubbleColors.green}50`
+                : `0 0 10px ${bubbleColors.primary}50`,
               boxShadow: isGreen 
-                ? `0 4px 20px ${colors.green}20`
-                : `0 4px 20px ${colors.primary}20`,
+                ? `0 4px 20px ${bubbleColors.green}20`
+                : `0 4px 20px ${bubbleColors.primary}20`,
               userSelect: 'none'
             }}
             onClick={bubble.onClick}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = `scale(${animations.hoverScale})`;
               e.currentTarget.style.boxShadow = isGreen 
-                ? `0 6px 25px ${colors.green}30`
-                : `0 6px 25px ${colors.primary}30`;
+                ? `0 6px 25px ${bubbleColors.green}30`
+                : `0 6px 25px ${bubbleColors.primary}30`;
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = 'scale(1)';
               e.currentTarget.style.boxShadow = isGreen 
-                ? `0 4px 20px ${colors.green}20`
-                : `0 4px 20px ${colors.primary}20`;
+                ? `0 4px 20px ${bubbleColors.green}20`
+                : `0 4px 20px ${bubbleColors.primary}20`;
             }}
           >
             {bubble.label}

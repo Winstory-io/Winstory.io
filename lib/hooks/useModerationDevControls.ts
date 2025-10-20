@@ -42,30 +42,30 @@ export function useModerationDevControlsIntegration() {
     switch (component) {
       case 'bubbles':
         return {
-          defaultSize: componentConfig.defaultSize,
-          defaultGap: componentConfig.defaultGap,
-          fontSize: componentConfig.fontSize,
-          colors: componentConfig.colors,
-          animations: componentConfig.animations,
+          defaultSize: (componentConfig as any).defaultSize,
+          defaultGap: (componentConfig as any).defaultGap,
+          fontSize: (componentConfig as any).fontSize,
+          colors: (componentConfig as any).colors,
+          animations: (componentConfig as any).animations,
         };
       
       case 'buttons':
         return {
-          padding: componentConfig.padding,
-          fontSize: componentConfig.fontSize,
-          borderRadius: componentConfig.borderRadius,
-          colors: componentConfig.colors,
-          animations: componentConfig.animations,
+          padding: (componentConfig as any).padding,
+          fontSize: (componentConfig as any).fontSize,
+          borderRadius: (componentConfig as any).borderRadius,
+          colors: (componentConfig as any).colors,
+          animations: (componentConfig as any).animations,
         };
       
       case 'progressPanel':
         return {
-          minWidth: componentConfig.minWidth,
-          maxHeight: componentConfig.maxHeight,
-          padding: componentConfig.padding,
-          borderRadius: componentConfig.borderRadius,
-          colors: componentConfig.colors,
-          thresholds: componentConfig.thresholds,
+          minWidth: (componentConfig as any).minWidth,
+          maxHeight: (componentConfig as any).maxHeight,
+          padding: (componentConfig as any).padding,
+          borderRadius: (componentConfig as any).borderRadius,
+          colors: (componentConfig as any).colors,
+          thresholds: (componentConfig as any).thresholds,
         };
       
       default:

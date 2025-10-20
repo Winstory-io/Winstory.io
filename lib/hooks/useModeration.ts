@@ -167,57 +167,121 @@ export const useModeration = () => {
     }
   }, [fetchAvailableCampaigns]);
 
-  // Fonction pour soumettre une décision de modération
+  // Fonction pour soumettre une décision de modération avec intégration du staking
   const submitModerationDecision = useCallback(async (
     decision: 'valid' | 'refuse', 
-    contentType: 'creation' | 'completion'
+    contentType: 'creation' | 'completion',
+    score?: number,
+    stakingData?: {
+      stakedAmount: number;
+      stakeAgeDays: number;
+      moderatorXP: number;
+    }
   ) => {
     if (!currentSession) return false;
+    
     // Empêcher un second vote pour ce contenu par ce modérateur (client-side)
     const contentId = currentSession.campaignId;
     const wallet = account?.address || '';
     const storageKey = `winstory_moderation_voted_${wallet}`;
     const votedSet = new Set<string>(votedContentIds);
     if (votedSet.has(contentId)) {
-      console.warn('Vote déjà enregistré pour ce contenu par ce modérateur.');
+      console.warn('⚠️ Vote déjà enregistré pour ce contenu par ce modérateur.');
       return false;
     }
 
     try {
-      // TODO: Implémenter la vraie logique de soumission vers la blockchain
-      // Pour l'instant, on met à jour localement
-      setCurrentSession(prev => {
-        if (!prev) return null;
-        const newProgress = { ...prev.progress };
-        if (decision === 'valid') {
-          newProgress.validVotes += 1;
-        } else {
-          newProgress.refuseVotes += 1;
-        }
-        newProgress.totalVotes += 1;
-        
-        return {
-          ...prev,
-          progress: newProgress
-        };
+      console.log('🔍 [MODERATION DECISION] Starting submission:', {
+        decision,
+        contentType,
+        score,
+        campaignId: currentSession.campaignId,
+        moderatorWallet: wallet,
+        stakingData
       });
 
-      // Marquer comme voté côté client
-      votedSet.add(contentId);
-      setVotedContentIds(votedSet);
-      try {
-        const serialized = JSON.stringify(Array.from(votedSet));
-        localStorage.setItem(storageKey, serialized);
-      } catch {}
+      // Préparer les données pour l'API
+      const voteData = {
+        campaignId: currentSession.campaignId,
+        moderatorWallet: wallet,
+        completionId: contentType === 'completion' ? currentSession.campaignId : undefined,
+        voteDecision: decision === 'valid' ? 'VALID' : 'REFUSE',
+        score: score,
+        stakedAmount: stakingData?.stakedAmount || 0,
+        stakeAgeDays: stakingData?.stakeAgeDays || 0,
+        moderatorXP: stakingData?.moderatorXP || 0,
+        transactionHash: undefined // TODO: Ajouter le hash de transaction blockchain
+      };
 
-      return true;
+      console.log('📤 [MODERATION DECISION] Sending to API:', voteData);
+
+      // Call the new vote API with staking
+      const response = await fetch('/api/moderation/vote-staking', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(voteData),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('✅ [MODERATION DECISION] Vote registered successfully:', result);
+        
+        // Display API logs
+        if (result.consoleLogs) {
+          result.consoleLogs.forEach((log: string) => {
+            console.log(log);
+          });
+        }
+
+        // Mettre à jour la session locale
+        setCurrentSession(prev => {
+          if (!prev) return null;
+          const newProgress = { ...prev.progress };
+          if (decision === 'valid') {
+            newProgress.validVotes += 1;
+          } else {
+            newProgress.refuseVotes += 1;
+          }
+          newProgress.totalVotes += 1;
+          
+          return {
+            ...prev,
+            progress: newProgress
+          };
+        });
+
+        // Marquer comme voté côté client
+        votedSet.add(contentId);
+        setVotedContentIds(votedSet);
+        try {
+          const serialized = JSON.stringify(Array.from(votedSet));
+          localStorage.setItem(storageKey, serialized);
+        } catch {}
+
+        console.log('🎉 [MODERATION DECISION] Vote finalized successfully');
+        return true;
+      } else {
+        const errorData = await response.json();
+        console.error('❌ [MODERATION DECISION] API Error:', errorData);
+        
+        // Display API error logs
+        if (errorData.consoleLogs) {
+          errorData.consoleLogs.forEach((log: string) => {
+            console.error(log);
+          });
+        }
+        
+        return false;
+      }
     } catch (err) {
-      console.error('Failed to submit moderation decision:', err);
+      console.error('❌ [MODERATION DECISION] Error during submission:', err);
       return false;
     }
   }, [currentSession, account?.address, votedContentIds]);
 
-  // Fonction pour charger les scores déjà utilisés par le modérateur pour une campagne
+  // Function to load scores already used by moderator for a campaign
   const loadModeratorUsedScores = useCallback(async (campaignId: string, moderatorWallet: string) => {
     try {
       const response = await fetch(`/api/moderation/moderator-scores?campaignId=${campaignId}&moderatorWallet=${moderatorWallet}`);
@@ -235,48 +299,83 @@ export const useModeration = () => {
     }
   }, []);
 
-  // Fonction pour soumettre un score de complétion avec validation par modérateur
-  const submitCompletionScore = useCallback(async (score: number, completionId?: string) => {
+  // Fonction pour soumettre un score de complétion avec validation par modérateur et staking
+  const submitCompletionScore = useCallback(async (
+    score: number, 
+    completionId?: string,
+    stakingData?: {
+      stakedAmount: number;
+      stakeAgeDays: number;
+      moderatorXP: number;
+    }
+  ) => {
     if (!currentSession || !account?.address) return false;
 
     // 0 = Refus (ne pas soumettre comme score)
     if (score === 0) {
-      console.error('0/100 équivaut à un refus. Utilisez l’option Refuser.');
+      console.error('❌ 0/100 équivaut à un refus. Utilisez l\'option Refuser.');
       return false;
     }
 
     try {
+      console.log('🔍 [COMPLETION SCORE] Starting submission:', {
+        score,
+        completionId,
+        campaignId: currentSession.campaignId,
+        moderatorWallet: account.address,
+        stakingData
+      });
+
       // Empêcher un second vote pour ce contenu par ce modérateur (client-side)
       const contentId = currentSession.campaignId;
       const wallet = account.address;
       const storageKey = `winstory_moderation_voted_${wallet}`;
       const votedSet = new Set<string>(votedContentIds);
       if (votedSet.has(contentId)) {
-        console.warn('Vote déjà enregistré pour ce contenu par ce modérateur.');
+        console.warn('⚠️ Vote déjà enregistré pour ce contenu par ce modérateur.');
         return false;
       }
 
       // Vérifier localement si le score est déjà utilisé
       if (moderatorUsedScores.includes(score)) {
-        console.error('Score already used by this moderator');
+        console.error('❌ Score déjà utilisé par ce modérateur:', score);
         return false;
       }
 
-      // Soumettre le score via l'API
-      const response = await fetch('/api/moderation/moderator-scores', {
+      // Utiliser la nouvelle API de vote avec staking pour les scores
+      const voteData = {
+        campaignId: currentSession.campaignId,
+        moderatorWallet: account.address,
+        completionId: completionId || currentSession.campaignId,
+        voteDecision: 'VALID' as const,
+        score: score,
+        stakedAmount: stakingData?.stakedAmount || 0,
+        stakeAgeDays: stakingData?.stakeAgeDays || 0,
+        moderatorXP: stakingData?.moderatorXP || 0,
+        transactionHash: undefined // TODO: Ajouter le hash de transaction blockchain
+      };
+
+      console.log('📤 [COMPLETION SCORE] Sending to API:', voteData);
+
+      const response = await fetch('/api/moderation/vote-staking', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          campaignId: currentSession.id,
-          moderatorWallet: account.address,
-          score,
-          completionId,
-        }),
+        body: JSON.stringify(voteData),
       });
 
       if (response.ok) {
+        const result = await response.json();
+        console.log('✅ [COMPLETION SCORE] Score registered successfully:', result);
+        
+        // Display API logs
+        if (result.consoleLogs) {
+          result.consoleLogs.forEach((log: string) => {
+            console.log(log);
+          });
+        }
+
         // Mettre à jour la liste locale des scores utilisés
         setModeratorUsedScores(prev => [...prev, score]);
         
@@ -303,11 +402,18 @@ export const useModeration = () => {
           localStorage.setItem(storageKey, serialized);
         } catch {}
 
-        console.log('✅ Score soumis avec succès:', score);
+        console.log('🎉 [COMPLETION SCORE] Score finalized successfully:', score);
         return true;
       } else {
         const errorData = await response.json();
-        console.error('❌ Erreur lors de la soumission du score:', errorData.error);
+        console.error('❌ [COMPLETION SCORE] API Error:', errorData);
+        
+        // Display API error logs
+        if (errorData.consoleLogs) {
+          errorData.consoleLogs.forEach((log: string) => {
+            console.error(log);
+          });
+        }
         
         // Si le score est déjà utilisé côté serveur, recharger les scores utilisés
         if (response.status === 409) {
@@ -320,16 +426,16 @@ export const useModeration = () => {
         return false;
       }
     } catch (err) {
-      console.error('Failed to submit completion score:', err);
+      console.error('❌ [COMPLETION SCORE] Error during submission:', err);
       return false;
     }
   }, [currentSession, account, moderatorUsedScores, loadModeratorUsedScores, votedContentIds]);
 
-  // Charger les scores utilisés quand une campagne est sélectionnée
+  // Load used scores when a campaign is selected
   useEffect(() => {
     if (currentSession && account?.address) {
       loadModeratorUsedScores(currentSession.id, account.address);
-      // Charger la liste des contenus déjà votés pour ce wallet
+      // Load list of content already voted for this wallet
       try {
         const storageKey = `winstory_moderation_voted_${account.address}`;
         const raw = localStorage.getItem(storageKey);

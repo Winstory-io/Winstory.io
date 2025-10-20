@@ -1,5 +1,7 @@
 // Styles réutilisables pour les Dev Controls
-export const devControlsStyles = {
+import { CSSProperties } from 'react';
+
+export const devControlsStyles: Record<string, CSSProperties> = {
   container: {
     display: 'flex',
     flexDirection: 'column',

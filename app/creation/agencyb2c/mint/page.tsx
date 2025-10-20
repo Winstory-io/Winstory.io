@@ -20,6 +20,9 @@ export default function AgencyB2CMintPage() {
   const [userEmail, setUserEmail] = useState('');
 
   useEffect(() => {
+    // Only access localStorage on client side
+    if (typeof window === 'undefined') return;
+    
     try {
       // Mark current flow as AgencyB2C to keep context coherent
       localStorage.setItem("currentCreationFlow", "AgencyB2C");
@@ -60,12 +63,16 @@ export default function AgencyB2CMintPage() {
     setTotalPrice(price);
 
     // Stocker le prix final pour le paiement
-    localStorage.setItem("finalPrice", price.toString());
+    if (typeof window !== 'undefined') {
+      localStorage.setItem("finalPrice", price.toString());
+    }
   }, []);
 
   const handlePaymentMethod = (method: string) => {
     // Stocker la méthode de paiement choisie
-    localStorage.setItem("paymentMethod", method);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem("paymentMethod", method);
+    }
     
     if (method === 'USDC_Base') {
       // TODO: Implement USDC payment (coming soon)
@@ -177,8 +184,8 @@ export default function AgencyB2CMintPage() {
         userEmail={userEmail}
         metadata={{
           pricingOptions: pricingOptions.filter(opt => opt.isSelected).map(opt => opt.label),
-          agencyName: localStorage.getItem("agencyName") || '',
-          clientB2CName: localStorage.getItem("clientB2CName") || '',
+          agencyName: typeof window !== 'undefined' ? localStorage.getItem("agencyName") || '' : '',
+          clientB2CName: typeof window !== 'undefined' ? localStorage.getItem("clientB2CName") || '' : '',
         }}
       />
     </div>

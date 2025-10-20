@@ -1,10 +1,10 @@
 import { useEffect } from 'react';
-import { useModerationDevControls } from '@/lib/config/moderation-dev-controls';
+import { useModerationDevControlsIntegration } from '@/lib/hooks/useModerationDevControls';
 import { updateEngineConfig } from '@/lib/moderation-engine';
 
 // Hook pour synchroniser les Dev Controls avec le moteur de modération
 export function useModerationEngineSync() {
-  const { config, isLoading } = useModerationDevControls();
+  const { config, isLoading } = useModerationDevControlsIntegration();
 
   useEffect(() => {
     if (!isLoading && config) {
@@ -34,7 +34,7 @@ export function useModerationEngineSync() {
 
 // Hook pour les composants qui utilisent le moteur de modération
 export function useModerationEngineWithDevControls() {
-  const { config, isLoading } = useModerationDevControls();
+  const { config, isLoading } = useModerationDevControlsIntegration();
   const { isSynced } = useModerationEngineSync();
 
   return {

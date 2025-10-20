@@ -11,8 +11,9 @@ const nextConfig = {
   },
   
   // Optimisations des packages
+  // Désactivation temporaire de optimizePackageImports pour éviter les erreurs de chunks manquants
   experimental: {
-    optimizePackageImports: ['thirdweb', '@thirdweb-dev/react'],
+    // optimizePackageImports: ['thirdweb', '@thirdweb-dev/react'],
   },
   
   // Externaliser certains packages côté serveur

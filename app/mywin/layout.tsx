@@ -80,6 +80,7 @@ export default function MyWinLayout({
     }
   }, [account, isForceDisconnected, router]);
 
+
   // Si pas de compte connecté OU si déconnexion forcée, afficher l'écran d'authentification
   if (!account || isForceDisconnected) {
     return (
@@ -258,7 +259,8 @@ export default function MyWinLayout({
               </span>
             </button>
             
-            {/* Simple Disconnect Menu */}
+            {/* Simple Disconnect Menu */
+            }
             {showDisconnectMenu && (
               <div
                 style={{

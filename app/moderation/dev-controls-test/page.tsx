@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
-import ModerationDevControlsTest from '../../components/ModerationDevControlsTest';
-import DevControlsPanel from '../../components/DevControlsPanel';
-import DevControlsButton from '../../components/DevControlsButton';
+import ModerationDevControlsTest from '@/components/ModerationDevControlsTest';
+import DevControlsPanel from '@/components/DevControlsPanel';
+import DevControlsButton from '@/components/DevControlsButton';
 
 const DevControlsTestPage: React.FC = () => {
   const [isPanelOpen, setIsPanelOpen] = useState(false);
