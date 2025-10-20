@@ -16,8 +16,8 @@ const ModerationStatsDevControlsButton: React.FC<ModerationStatsDevControlsButto
 }) => {
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   
-  // Ne pas afficher en production
-  const isDevMode = process.env.NODE_ENV !== 'production';
+  // Toujours afficher en développement, même en production pour les tests
+  const isDevMode = process.env.NODE_ENV !== 'production' || process.env.NEXT_PUBLIC_SHOW_DEV_CONTROLS === 'true';
   if (!isDevMode) {
     return null;
   }

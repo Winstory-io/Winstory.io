@@ -10,22 +10,7 @@ interface StakerInfoProps {
 }
 
 const StakerInfo: React.FC<StakerInfoProps> = ({ stakerData }) => {
-  if (!stakerData) {
-    return (
-      <div style={{
-        background: 'rgba(255, 214, 0, 0.1)',
-        border: '1px solid #FFD600',
-        borderRadius: 8,
-        padding: 12,
-        marginBottom: 16,
-        textAlign: 'center'
-      }}>
-        <div style={{ fontSize: 14, color: '#FFD600', fontWeight: 600 }}>
-          🔍 Loading staker data...
-        </div>
-      </div>
-    );
-  }
+  if (!stakerData) return null;
 
   const { stakedAmount, stakeAgeDays, moderatorXP, isEligible } = stakerData;
 
@@ -51,7 +36,7 @@ const StakerInfo: React.FC<StakerInfoProps> = ({ stakerData }) => {
       
       <div style={{ 
         display: 'grid', 
-        gridTemplateColumns: '1fr 1fr', 
+        gridTemplateColumns: '1fr 1fr 1fr', 
         gap: 8,
         fontSize: 12
       }}>
@@ -84,16 +69,6 @@ const StakerInfo: React.FC<StakerInfoProps> = ({ stakerData }) => {
             {moderatorXP}
           </div>
         </div>
-        
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ color: '#888', marginBottom: 2 }}>Vote Weight</div>
-          <div style={{ 
-            fontWeight: 600, 
-            color: isEligible ? '#18C964' : '#FF2D2D' 
-          }}>
-            {isEligible ? '50% + 50%' : '0%'}
-          </div>
-        </div>
       </div>
       
       {!isEligible && (
@@ -105,18 +80,6 @@ const StakerInfo: React.FC<StakerInfoProps> = ({ stakerData }) => {
           fontStyle: 'italic'
         }}>
           Minimum: 50 WINC + 7 days age
-        </div>
-      )}
-      
-      {isEligible && (
-        <div style={{ 
-          fontSize: 11, 
-          color: '#18C964', 
-          marginTop: 8,
-          textAlign: 'center',
-          fontStyle: 'italic'
-        }}>
-          Framework V1: Plutocracy + Democracy
         </div>
       )}
     </div>

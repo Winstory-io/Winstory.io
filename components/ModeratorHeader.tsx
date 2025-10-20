@@ -2,6 +2,7 @@ import { useActiveAccount, ConnectButton } from 'thirdweb/react';
 import { createThirdwebClient } from "thirdweb";
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import StakerInfo from './StakerInfo';
 
 const client = createThirdwebClient({
   clientId: "4ddc5eed2e073e550a7307845d10f348",
@@ -71,6 +72,13 @@ interface ModeratorHeaderProps {
     initial: { 'b2c-agencies': number; 'individual-creators': number };
     completion: { 'for-b2c': number; 'for-individuals': number };
   };
+  // Nouveau: données du staker pour affichage dans le modal Connected
+  stakerData?: {
+    stakedAmount: number;
+    stakeAgeDays: number;
+    moderatorXP: number;
+    isEligible: boolean;
+  } | null;
 }
 
 const ModeratorHeader: React.FC<ModeratorHeaderProps> = ({ 
@@ -80,13 +88,46 @@ const ModeratorHeader: React.FC<ModeratorHeaderProps> = ({
   onSubTabChange, 
   onIconClick, 
   onBulbClick,
-  subTabCounts
+  subTabCounts,
+  stakerData
 }) => {
   const router = useRouter();
   const account = useActiveAccount();
   const [showDisconnectMenu, setShowDisconnectMenu] = useState(false);
   const [isForceDisconnected, setIsForceDisconnected] = useState(false);
+  const [localStakerData, setLocalStakerData] = useState(stakerData);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  // Synchroniser avec les données du localStorage
+  useEffect(() => {
+    const savedData = localStorage.getItem('dev-controls-staker-data');
+    if (savedData) {
+      try {
+        const parsed = JSON.parse(savedData);
+        console.log('🎮 [MODERATOR HEADER] Loaded staker data from localStorage:', parsed);
+        setLocalStakerData(parsed);
+      } catch (error) {
+        console.error('🎮 [MODERATOR HEADER] Error loading staker data:', error);
+      }
+    }
+  }, []);
+
+  // Écouter les événements de mise à jour
+  useEffect(() => {
+    const handleDevControlsUpdate = (event: CustomEvent) => {
+      console.log('🎮 [MODERATOR HEADER] Received Dev Controls update:', event.detail);
+      setLocalStakerData(event.detail);
+    };
+
+    window.addEventListener('dev-controls-staker-update', handleDevControlsUpdate as EventListener);
+    
+    return () => {
+      window.removeEventListener('dev-controls-staker-update', handleDevControlsUpdate as EventListener);
+    };
+  }, []);
+
+  // Utiliser les données locales ou les données passées en prop
+  const currentStakerData = localStakerData || stakerData;
 
   const truncateAddress = (address: string) => {
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
@@ -362,12 +403,20 @@ const ModeratorHeader: React.FC<ModeratorHeaderProps> = ({
               }}>
                 Connected
               </div>
-              <div style={{ padding: '0 8px' }}>
+              
+              <div style={{ padding: '0 8px', marginBottom: '8px' }}>
                 <ConnectButton 
                   client={client}
                   theme="dark"
                 />
               </div>
+              
+              {/* Staker information card - only in moderation */}
+              {currentStakerData && (
+                <div style={{ padding: '0 8px', marginBottom: '8px' }}>
+                  <StakerInfo stakerData={currentStakerData} />
+                </div>
+              )}
             </div>
           )}
         </div>

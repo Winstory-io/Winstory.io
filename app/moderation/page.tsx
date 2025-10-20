@@ -15,7 +15,8 @@ import RewardsModal from '../../components/RewardsModal';
 import InfoModal from '../../components/InfoModal';
 import ModerationStatsModal from '../../components/ModerationStatsModal';
 import ModerationStatsDevControlsButton from '../../components/ModerationStatsDevControlsButton';
-import ModerationHeader from '../../components/ModerationHeader';
+import DevControlsButton from '../../components/DevControlsButton';
+import UltimateDevControls from '../../components/UltimateDevControls';
 import styles from '../../styles/Moderation.module.css';
 import { useModeration } from '../../lib/hooks/useModeration';
 import { ModerationCampaign, getUICreatorType, getUICampaignType } from '../../lib/types';
@@ -199,6 +200,18 @@ const ModerationPageContent = () => {
     
     try {
       console.log('🔍 [STAKER DATA] Fetching staker data:', { wallet, campaignId });
+      // Respect Dev Controls override first (do not overwrite with API)
+      try {
+        const overrideRaw = typeof window !== 'undefined' ? localStorage.getItem('dev-controls-staker-data') : null;
+        if (overrideRaw) {
+          const overrideData = JSON.parse(overrideRaw);
+          console.log('🎮 [STAKER DATA] Dev Controls override detected, using it:', overrideData);
+          setStakerData(overrideData);
+          return;
+        }
+      } catch (e) {
+        console.warn('⚠️ [STAKER DATA] Failed reading Dev Controls override:', e);
+      }
       
       const params = new URLSearchParams({ wallet });
       if (campaignId) params.append('campaignId', campaignId);
@@ -227,14 +240,17 @@ const ModerationPageContent = () => {
           setStakerData(newStakerData);
         } else {
           console.log('⚠️ [STAKER DATA] No staker data in response');
+          // Keep null so gating can block access – do not force eligibility
           setStakerData(null);
         }
       } else {
         console.error('❌ [STAKER DATA] Error during retrieval:', response.status);
+        // Keep null so gating can block access – do not force eligibility
         setStakerData(null);
       }
     } catch (error) {
       console.error('❌ [STAKER DATA] Error:', error);
+      // Keep null so gating can block access – do not force eligibility
       setStakerData(null);
     }
   }, []);
@@ -245,6 +261,34 @@ const ModerationPageContent = () => {
       fetchStakerData(address.address, campaignId || undefined);
     }
   }, [address?.address, campaignId, fetchStakerData]);
+
+  // Listen for Dev Controls updates
+  useEffect(() => {
+    const handleDevControlsUpdate = (event: CustomEvent) => {
+      console.log('🎮 [MODERATION PAGE] Received Dev Controls update:', event.detail);
+      setStakerData(event.detail);
+    };
+
+    window.addEventListener('dev-controls-staker-update', handleDevControlsUpdate as EventListener);
+    
+    return () => {
+      window.removeEventListener('dev-controls-staker-update', handleDevControlsUpdate as EventListener);
+    };
+  }, []);
+
+  // Load staker data from localStorage on mount
+  useEffect(() => {
+    const savedData = localStorage.getItem('dev-controls-staker-data');
+    if (savedData) {
+      try {
+        const parsed = JSON.parse(savedData);
+        console.log('🎮 [MODERATION PAGE] Loaded staker data from localStorage:', parsed);
+        setStakerData(parsed);
+      } catch (error) {
+        console.error('🎮 [MODERATION PAGE] Error loading staker data:', error);
+      }
+    }
+  }, []);
   
   // Mettre à jour les onglets quand les paramètres d'URL changent
   useEffect(() => {
@@ -539,6 +583,27 @@ const ModerationPageContent = () => {
   if (!address?.address) {
     return (
       <div className={styles.moderationBg}>
+        {/* Dev Controls - TOUJOURS VISIBLE */}
+      <UltimateDevControls />
+        
+        {/* Bouton de debug temporaire pour forcer l'affichage */}
+        {process.env.NODE_ENV !== 'production' && (
+          <div style={{
+            position: 'fixed',
+            right: 20,
+            bottom: 200,
+            zIndex: 200,
+            background: '#FF0000',
+            color: '#fff',
+            padding: '8px 12px',
+            borderRadius: 8,
+            fontSize: 12,
+            fontWeight: 'bold'
+          }}>
+            DEBUG: Dev Controls Active
+          </div>
+        )}
+        
         <div style={{
           display: 'flex',
           flexDirection: 'column',
@@ -571,6 +636,122 @@ const ModerationPageContent = () => {
     );
   }
 
+  // VÉRIFICATION D'ÉLIGIBILITÉ APRÈS AUTHENTIFICATION
+  console.log('🔍 [ELIGIBILITY CHECK] stakerData:', stakerData);
+  console.log('🔍 [ELIGIBILITY CHECK] isEligible:', stakerData?.isEligible);
+  console.log('🔍 [ELIGIBILITY CHECK] campaignId:', campaignId);
+  console.log('🔍 [ELIGIBILITY CHECK] address:', address?.address);
+
+  // Si on a un campaignId et des données de staker, vérifier l'éligibilité
+  if (campaignId && stakerData && stakerData.isEligible === false) {
+    console.log('🚫 [ELIGIBILITY BLOCK] User is NOT eligible, blocking ALL access to moderation');
+    return (
+      <div className={styles.moderationBg}>
+        <ModeratorHeader
+          activeTab={activeTab}
+          activeSubTab={activeSubTab}
+          onTabChange={handleTabChange}
+          onSubTabChange={handleSubTabChange}
+          onIconClick={() => router.push('/welcome')}
+          onBulbClick={() => setShowBulbPopup(true)}
+          subTabCounts={subTabCounts}
+          stakerData={stakerData}
+        />
+        
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          height: '60vh',
+          padding: '40px',
+          textAlign: 'center'
+        }}>
+          <div style={{
+            background: 'rgba(255, 45, 45, 0.1)',
+            border: '2px solid #FF2D2D',
+            borderRadius: 16,
+            padding: '32px',
+            maxWidth: 600,
+            color: '#fff'
+          }}>
+            <div style={{
+              fontSize: 48,
+              marginBottom: 16,
+              color: '#FF2D2D'
+            }}>
+              ❌
+            </div>
+            
+            <h2 style={{
+              color: '#FF2D2D',
+              fontSize: 24,
+              fontWeight: 700,
+              marginBottom: 16
+            }}>
+              Not Eligible for Moderation
+            </h2>
+            
+            <p style={{
+              fontSize: 16,
+              lineHeight: 1.5,
+              marginBottom: 24,
+              color: '#ccc'
+            }}>
+              You need to stake at least <strong style={{ color: '#FFD600' }}>50 WINC</strong> for a minimum of <strong style={{ color: '#FFD600' }}>7 days</strong> to participate in content moderation.
+            </p>
+            
+            <div style={{
+              background: 'rgba(0, 0, 0, 0.3)',
+              border: '1px solid #444',
+              borderRadius: 8,
+              padding: 16,
+              marginBottom: 24
+            }}>
+              <h3 style={{ color: '#FFD600', fontSize: 16, marginBottom: 12 }}>
+                Your Current Status:
+              </h3>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16, fontSize: 14 }}>
+                <div>
+                  <div style={{ color: '#888', marginBottom: 4 }}>Staked</div>
+                  <div style={{ color: '#FF2D2D', fontWeight: 600 }}>
+                    {stakerData.stakedAmount} WINC
+                  </div>
+                </div>
+                <div>
+                  <div style={{ color: '#888', marginBottom: 4 }}>Age</div>
+                  <div style={{ color: '#FF2D2D', fontWeight: 600 }}>
+                    {stakerData.stakeAgeDays} days
+                  </div>
+                </div>
+                <div>
+                  <div style={{ color: '#888', marginBottom: 4 }}>XP</div>
+                  <div style={{ color: '#FF2D2D', fontWeight: 600 }}>
+                    {stakerData.moderatorXP}
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div style={{
+              background: 'rgba(0, 255, 0, 0.1)',
+              border: '1px solid #00FF00',
+              borderRadius: 8,
+              padding: 16,
+              fontSize: 14,
+              color: '#00FF00'
+            }}>
+              <strong>💡 How to become eligible:</strong><br />
+              • Increase your stake to at least 50 WINC<br />
+              • Wait for your stake to mature for 7+ days<br />
+              • Return to this page once eligible
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // FORCER l'affichage de l'interface de modération optimisée
   // Cette condition doit être vérifiée APRÈS l'authentification
   if (campaignId) {
@@ -590,6 +771,7 @@ const ModerationPageContent = () => {
             onIconClick={() => router.push('/welcome')}
             onBulbClick={() => setShowBulbPopup(true)}
             subTabCounts={subTabCounts}
+            stakerData={stakerData}
           />
           
           <div className={styles.moderationContainer}>
@@ -933,6 +1115,7 @@ const ModerationPageContent = () => {
             onIconClick={() => router.push('/welcome')}
             onBulbClick={() => setShowBulbPopup(true)}
             subTabCounts={subTabCounts}
+            stakerData={stakerData}
           />
           <div style={{ 
             display: 'flex', 
@@ -961,6 +1144,7 @@ const ModerationPageContent = () => {
             onIconClick={() => router.push('/welcome')}
             onBulbClick={() => setShowBulbPopup(true)}
             subTabCounts={subTabCounts}
+            stakerData={stakerData}
           />
           <div style={{ 
             display: 'flex', 
@@ -984,6 +1168,27 @@ const ModerationPageContent = () => {
     loadFirstAvailableCampaign();
     return (
       <div className={styles.moderationBg}>
+        {/* Dev Controls - TOUJOURS VISIBLE */}
+      <UltimateDevControls />
+        
+        {/* Bouton de debug temporaire pour forcer l'affichage */}
+        {process.env.NODE_ENV !== 'production' && (
+          <div style={{
+            position: 'fixed',
+            right: 20,
+            bottom: 200,
+            zIndex: 200,
+            background: '#FF0000',
+            color: '#fff',
+            padding: '8px 12px',
+            borderRadius: 8,
+            fontSize: 12,
+            fontWeight: 'bold'
+          }}>
+            DEBUG: Dev Controls Active
+          </div>
+        )}
+        
         <ModeratorHeader
           activeTab={activeTab}
           activeSubTab={activeSubTab}
@@ -991,6 +1196,8 @@ const ModerationPageContent = () => {
           onSubTabChange={handleSubTabChange}
           onIconClick={() => router.push('/welcome')}
           onBulbClick={() => setShowBulbPopup(true)}
+          subTabCounts={subTabCounts}
+          stakerData={stakerData}
         />
         <div style={{ 
           display: 'flex', 
@@ -1010,6 +1217,27 @@ const ModerationPageContent = () => {
   if (!currentSession) {
     return (
       <div className={styles.moderationBg}>
+        {/* Dev Controls - TOUJOURS VISIBLE */}
+      <UltimateDevControls />
+        
+        {/* Bouton de debug temporaire pour forcer l'affichage */}
+        {process.env.NODE_ENV !== 'production' && (
+          <div style={{
+            position: 'fixed',
+            right: 20,
+            bottom: 200,
+            zIndex: 200,
+            background: '#FF0000',
+            color: '#fff',
+            padding: '8px 12px',
+            borderRadius: 8,
+            fontSize: 12,
+            fontWeight: 'bold'
+          }}>
+            DEBUG: Dev Controls Active
+          </div>
+        )}
+        
         <ModeratorHeader
           activeTab={activeTab}
           activeSubTab={activeSubTab}
@@ -1017,6 +1245,8 @@ const ModerationPageContent = () => {
           onSubTabChange={handleSubTabChange}
           onIconClick={() => router.push('/welcome')}
           onBulbClick={() => setShowBulbPopup(true)}
+          subTabCounts={subTabCounts}
+          stakerData={stakerData}
         />
         <div style={{ 
           display: 'flex', 
@@ -1034,13 +1264,28 @@ const ModerationPageContent = () => {
 
   const { campaign, progress } = currentSession;
 
-  // Debug: Log staker data before rendering
-  console.log('🔍 [MODERATION PAGE] Rendering with stakerData:', stakerData);
-
   return (
     <div className={styles.moderationBg}>
-      {/* Header with wallet connection and staker info */}
-      <ModerationHeader stakerData={stakerData} />
+      {/* Dev Controls - TOUJOURS VISIBLE */}
+      <UltimateDevControls />
+      
+      {/* Bouton de debug temporaire pour forcer l'affichage */}
+      {process.env.NODE_ENV !== 'production' && (
+        <div style={{
+          position: 'fixed',
+          right: 20,
+          bottom: 200,
+          zIndex: 200,
+          background: '#FF0000',
+          color: '#fff',
+          padding: '8px 12px',
+          borderRadius: 8,
+          fontSize: 12,
+          fontWeight: 'bold'
+        }}>
+          DEBUG: Dev Controls Active
+        </div>
+      )}
       
       {isSwitching && (
         <div style={{
@@ -1065,6 +1310,7 @@ const ModerationPageContent = () => {
         onIconClick={() => router.push('/welcome')}
         onBulbClick={() => setShowBulbPopup(true)}
         subTabCounts={subTabCounts}
+        stakerData={stakerData}
       />
       
       <div className={styles.moderationContainer}>
@@ -1366,30 +1612,37 @@ const ModerationPageContent = () => {
         stakeNo={progress.stakeNo}
       />
       
-      {/* Bouton Dev Controls */}
-        {/* Dev Controls pour les statistiques de modération */}
-        <ModerationStatsDevControlsButton />
+      {/* Bouton Dev Controls principal */}
+      <DevControlsButton />
+      
+      {/* Dev Controls pour les statistiques de modération */}
+      <ModerationStatsDevControlsButton />
     </div>
   );
 };
 
 const ModerationPage = () => {
   return (
-    <Suspense fallback={
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        height: '100vh',
-        background: '#000',
-        color: '#FFD600',
-        fontSize: '18px'
-      }}>
-        Loading moderation interface...
-      </div>
-    }>
-      <ModerationPageContent />
-    </Suspense>
+    <>
+      {/* Dev Controls au niveau le plus haut - ne peut jamais disparaître */}
+      <UltimateDevControls />
+      
+      <Suspense fallback={
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          height: '100vh',
+          background: '#000',
+          color: '#FFD600',
+          fontSize: '18px'
+        }}>
+          Loading moderation interface...
+        </div>
+      }>
+        <ModerationPageContent />
+      </Suspense>
+    </>
   );
 };
 
