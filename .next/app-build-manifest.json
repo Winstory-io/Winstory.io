@@ -5,61 +5,30 @@
       "static/chunks/main-app.js",
       "static/chunks/app/layout.js"
     ],
-    "/moderation/layout": [
+    "/mywin/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/moderation/layout.js"
+      "static/chunks/app/mywin/layout.js"
     ],
-    "/moderation/page": [
+    "/mywin/community-completions/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/css/app/moderation/page.css",
-      "static/chunks/app/moderation/page.js"
-    ],
-    "/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/page.js"
-    ],
-    "/welcome/layout": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/welcome/layout.js"
-    ],
-    "/welcome/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/welcome/page.js"
+      "static/chunks/app/mywin/community-completions/page.js"
     ],
     "/api/auth/[...nextauth]/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/api/auth/[...nextauth]/route.js"
     ],
-    "/api/moderation/staker-data/route": [
+    "/api/moderation/verify-super-moderator/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/api/moderation/staker-data/route.js"
+      "static/chunks/app/api/moderation/verify-super-moderator/route.js"
     ],
-    "/api/moderation/moderator-scores/route": [
+    "/mywin/creations/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/api/moderation/moderator-scores/route.js"
-    ],
-    "/api/moderation/dev-controls/route": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/api/moderation/dev-controls/route.js"
-    ],
-    "/api/moderation/vote-staking/route": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/api/moderation/vote-staking/route.js"
-    ],
-    "/api/moderation/save-vote/route": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/api/moderation/save-vote/route.js"
+      "static/chunks/app/mywin/creations/page.js"
     ]
   }
 }

@@ -1,223 +1,381 @@
-import React from 'react';
+'use client';
+
+import React, { useState, useEffect } from 'react';
 
 interface ModerationStatsProps {
-  stakers: {
-    current: number;
-    required: number;
-  };
-  staking: {
-    stakedAmount: number;
-    mintPrice: number;
-  };
-  voting: {
+  campaignId: string;
+  completionId: string;
+  communityData: {
     validVotes: number;
     refuseVotes: number;
-    requiredRatio: number; // 2:1 = 2, 3:1 = 3, etc.
-    totalVotes: number;
+    averageScore: number;
+    decision: 'VALID' | 'REFUSE';
+    stakersCount: number;
+    stakingPool: number;
   };
-  contentType: 'b2c' | 'agency' | 'individual';
+  superModeratorData?: {
+    voteDecision: 'VALID' | 'REFUSE';
+    score?: number;
+    finalScore?: number;
+    finalDecision?: 'VALID' | 'REFUSE';
+    timestamp: string;
+  };
+  showDetailedBreakdown?: boolean;
 }
 
-const ModerationStats: React.FC<ModerationStatsProps> = ({
-  stakers,
-  staking,
-  voting,
-  contentType
-}) => {
-  // Calculs des pourcentages
-  const stakersPercentage = Math.min((stakers.current / 22) * 100, 100);
-  const stakedPercentage = Math.min((staking.stakedAmount / staking.mintPrice) * 100, 100);
-  const validPercentage = voting.totalVotes > 0 ? (voting.validVotes / voting.totalVotes) * 100 : 0;
-  const refusePercentage = voting.totalVotes > 0 ? (voting.refuseVotes / voting.totalVotes) * 100 : 0;
+interface ScoreBreakdown {
+  communityScore: number;
+  communityWeight: number;
+  superModeratorScore?: number;
+  superModeratorWeight?: number;
+  finalScore: number;
+  calculationFormula: string;
+}
 
-  const getContentTypeLabel = () => {
-    switch (contentType) {
-      case 'b2c': return 'B2C Creation';
-      case 'agency': return 'Agency B2C';
-      case 'individual': return 'Individual Creation';
-      default: return 'Content';
-    }
+export default function ModerationStats({
+  campaignId,
+  completionId,
+  communityData,
+  superModeratorData,
+  showDetailedBreakdown = false
+}: ModerationStatsProps) {
+  const [scoreBreakdown, setScoreBreakdown] = useState<ScoreBreakdown | null>(null);
+  const [isCalculating, setIsCalculating] = useState(false);
+
+  // Calculer le breakdown du score
+  useEffect(() => {
+    const calculateScoreBreakdown = async () => {
+      if (!superModeratorData?.score) {
+        // Pas de Super-Modérateur
+        setScoreBreakdown({
+          communityScore: communityData.averageScore,
+          communityWeight: 1.0,
+          finalScore: communityData.averageScore,
+          calculationFormula: 'Score final = Score communautaire (100%)'
+        });
+        return;
+      }
+
+      setIsCalculating(true);
+
+      try {
+        const response = await fetch('/api/moderation/final-score', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            campaignId,
+            completionId,
+            communityScore: communityData.averageScore,
+            communityDecision: communityData.decision,
+            superModeratorScore: superModeratorData.score,
+            superModeratorDecision: superModeratorData.voteDecision
+          }),
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          setScoreBreakdown({
+            communityScore: result.calculationBreakdown.communityScore,
+            communityWeight: result.calculationBreakdown.communityWeight,
+            superModeratorScore: result.calculationBreakdown.superModeratorScore,
+            superModeratorWeight: result.calculationBreakdown.superModeratorWeight,
+            finalScore: result.finalScore,
+            calculationFormula: 'Score final = (Communauté × 49%) + (Super-Modérateur × 51%)'
+          });
+        }
+      } catch (error) {
+        console.error('Erreur lors du calcul du score:', error);
+      } finally {
+        setIsCalculating(false);
+      }
+    };
+
+    calculateScoreBreakdown();
+  }, [campaignId, completionId, communityData, superModeratorData]);
+
+  const getDecisionColor = (decision: 'VALID' | 'REFUSE') => {
+    return decision === 'VALID' ? '#00FF00' : '#FF2D2D';
+  };
+
+  const getDecisionIcon = (decision: 'VALID' | 'REFUSE') => {
+    return decision === 'VALID' ? '✅' : '❌';
   };
 
   return (
-    <div className="moderation-stats">
-      <div className="stats-header">
-        <h3>Moderation Progress - {getContentTypeLabel()}</h3>
-      </div>
-      
-      <div className="stats-container">
-        {/* Stakers Progress */}
-        <div className="stat-item">
-          <div className="stat-header">
-            <span>22 modérateurs minimum ont voté</span>
-            <span className="stat-value">{stakers.current}/22</span>
-          </div>
-          <div className="progress-bar">
-            <div 
-              className="progress-fill primary" 
-              style={{ width: `${Math.min((stakers.current / 22) * 100, 100)}%` }}
-            />
-          </div>
-        </div>
-
-        {/* Staking Progress */}
-        <div className="stat-item">
-          <div className="stat-header">
-            <span>Total staked amount exceeds MINT price</span>
-          </div>
-          <div className="progress-bar">
-            <div 
-              className="progress-fill secondary" 
-              style={{ width: `${stakedPercentage}%` }}
-            />
-          </div>
-          <div className="staking-comparison">
-            <span className="staked-amount">{staking.stakedAmount.toLocaleString()} $WINC</span>
-            <span className="mint-price">{staking.mintPrice.toLocaleString()} $WINC</span>
-          </div>
-        </div>
-
-        {/* Vote Results */}
-        <div className="stat-item">
-          <div className="stat-header">
-            <span>Vote results</span>
-            <span className="stat-value">{voting.requiredRatio}:1 ratio needed</span>
-          </div>
-          <div className="vote-results">
-            <div 
-              className="vote-valid" 
-              style={{ width: `${validPercentage}%` }}
-              title={`Valid votes: ${voting.validVotes}`}
-            />
-            <div 
-              className="vote-refuse" 
-              style={{ width: `${refusePercentage}%` }}
-              title={`Refuse votes: ${voting.refuseVotes}`}
-            />
-          </div>
-          <div className="vote-summary">
-            <span className="valid-count">{voting.validVotes} valid</span>
-            <span className="refuse-count">{voting.refuseVotes} refuse</span>
-          </div>
+    <div style={{
+      background: 'rgba(0, 0, 0, 0.8)',
+      border: '2px solid rgba(255, 215, 0, 0.3)',
+      borderRadius: '12px',
+      padding: '20px',
+      margin: '16px 0'
+    }}>
+      {/* En-tête */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: '20px',
+        paddingBottom: '12px',
+        borderBottom: '1px solid rgba(255, 215, 0, 0.3)'
+      }}>
+        <h3 style={{
+          color: '#FFD600',
+          fontSize: '18px',
+          fontWeight: 'bold',
+          margin: 0
+        }}>
+          📊 Statistiques de Modération
+        </h3>
+        <div style={{
+          fontSize: '14px',
+          color: '#ccc'
+        }}>
+          {completionId}
         </div>
       </div>
 
-      <style jsx>{`
-        .moderation-stats {
-          background: rgba(0, 0, 0, 0.3);
-          border-radius: 16px;
-          padding: 20px;
-          margin-bottom: 20px;
-        }
+      {/* Données communautaires */}
+      <div style={{
+        background: 'rgba(0, 255, 0, 0.1)',
+        border: '1px solid rgba(0, 255, 0, 0.3)',
+        borderRadius: '8px',
+        padding: '16px',
+        marginBottom: '16px'
+      }}>
+        <div style={{
+          fontSize: '16px',
+          fontWeight: 'bold',
+          color: '#00FF00',
+          marginBottom: '12px'
+        }}>
+          🏘️ Modération Communautaire
+        </div>
         
-        .stats-header h3 {
-          color: #FFD700;
-          font-size: 18px;
-          margin: 0 0 20px 0;
-          text-align: center;
-        }
-        
-        .stats-container {
-          display: flex;
-          flex-direction: column;
-          gap: 20px;
-        }
-        
-        .stat-item {
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-        }
-        
-        .stat-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          font-size: 14px;
-          color: #ddd;
-        }
-        
-        .stat-value {
-          font-weight: bold;
-          color: #FFD700;
-        }
-        
-        .progress-bar {
-          width: 100%;
-          height: 8px;
-          background: rgba(255, 255, 255, 0.1);
-          border-radius: 4px;
-          overflow: hidden;
-          position: relative;
-        }
-        
-        .progress-fill {
-          height: 100%;
-          border-radius: 4px;
-          transition: width 0.3s ease;
-        }
-        
-        .progress-fill.primary {
-          background: #FFD700;
-        }
-        
-        .progress-fill.secondary {
-          background: #00ff88;
-        }
-        
-        .staking-comparison {
-          display: flex;
-          justify-content: space-between;
-          font-size: 12px;
-          color: #aaa;
-        }
-        
-        .staked-amount {
-          color: #00ff88;
-          font-weight: bold;
-        }
-        
-        .mint-price {
-          color: #FFD700;
-        }
-        
-        .vote-results {
-          width: 100%;
-          height: 8px;
-          border-radius: 4px;
-          overflow: hidden;
-          display: flex;
-        }
-        
-        .vote-valid {
-          height: 100%;
-          background: #37FF00;
-          transition: width 0.3s ease;
-        }
-        
-        .vote-refuse {
-          height: 100%;
-          background: #FF0000;
-          transition: width 0.3s ease;
-        }
-        
-        .vote-summary {
-          display: flex;
-          justify-content: space-between;
-          font-size: 12px;
-          color: #aaa;
-        }
-        
-        .valid-count {
-          color: #37FF00;
-        }
-        
-        .refuse-count {
-          color: #FF0000;
-        }
-      `}</style>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
+          gap: '12px',
+          fontSize: '14px'
+        }}>
+          <div>
+            <div style={{ color: '#ccc', marginBottom: '4px' }}>Votes OUI</div>
+            <div style={{ color: '#00FF00', fontWeight: 'bold', fontSize: '16px' }}>
+              {communityData.validVotes}
+            </div>
+          </div>
+          <div>
+            <div style={{ color: '#ccc', marginBottom: '4px' }}>Votes NON</div>
+            <div style={{ color: '#FF2D2D', fontWeight: 'bold', fontSize: '16px' }}>
+              {communityData.refuseVotes}
+            </div>
+          </div>
+          <div>
+            <div style={{ color: '#ccc', marginBottom: '4px' }}>Score moyen</div>
+            <div style={{ color: '#FFD600', fontWeight: 'bold', fontSize: '16px' }}>
+              {communityData.averageScore}/100
+            </div>
+          </div>
+          <div>
+            <div style={{ color: '#ccc', marginBottom: '4px' }}>Décision</div>
+            <div style={{ 
+              color: getDecisionColor(communityData.decision), 
+              fontWeight: 'bold', 
+              fontSize: '16px' 
+            }}>
+              {getDecisionIcon(communityData.decision)} {communityData.decision}
+            </div>
+          </div>
+          <div>
+            <div style={{ color: '#ccc', marginBottom: '4px' }}>Stakers</div>
+            <div style={{ color: '#fff', fontWeight: 'bold', fontSize: '16px' }}>
+              {communityData.stakersCount}
+            </div>
+          </div>
+          <div>
+            <div style={{ color: '#ccc', marginBottom: '4px' }}>Pool staking</div>
+            <div style={{ color: '#fff', fontWeight: 'bold', fontSize: '16px' }}>
+              ${communityData.stakingPool.toFixed(2)}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Données Super-Modérateur */}
+      {superModeratorData && (
+        <div style={{
+          background: 'rgba(255, 215, 0, 0.1)',
+          border: '1px solid rgba(255, 215, 0, 0.3)',
+          borderRadius: '8px',
+          padding: '16px',
+          marginBottom: '16px'
+        }}>
+          <div style={{
+            fontSize: '16px',
+            fontWeight: 'bold',
+            color: '#FFD600',
+            marginBottom: '12px'
+          }}>
+            👑 Super-Modérateur
+          </div>
+          
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
+            gap: '12px',
+            fontSize: '14px'
+          }}>
+            <div>
+              <div style={{ color: '#ccc', marginBottom: '4px' }}>Vote</div>
+              <div style={{ 
+                color: getDecisionColor(superModeratorData.voteDecision), 
+                fontWeight: 'bold', 
+                fontSize: '16px' 
+              }}>
+                {getDecisionIcon(superModeratorData.voteDecision)} {superModeratorData.voteDecision}
+              </div>
+            </div>
+            <div>
+              <div style={{ color: '#ccc', marginBottom: '4px' }}>Score</div>
+              <div style={{ color: '#FFD600', fontWeight: 'bold', fontSize: '16px' }}>
+                {superModeratorData.score || 'N/A'}/100
+              </div>
+            </div>
+            <div>
+              <div style={{ color: '#ccc', marginBottom: '4px' }}>Date</div>
+              <div style={{ color: '#fff', fontWeight: 'bold', fontSize: '14px' }}>
+                {new Date(superModeratorData.timestamp).toLocaleDateString()}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Breakdown détaillé du score */}
+      {showDetailedBreakdown && scoreBreakdown && (
+        <div style={{
+          background: 'rgba(255, 215, 0, 0.05)',
+          border: '1px solid rgba(255, 215, 0, 0.2)',
+          borderRadius: '8px',
+          padding: '16px'
+        }}>
+          <div style={{
+            fontSize: '16px',
+            fontWeight: 'bold',
+            color: '#FFD600',
+            marginBottom: '12px'
+          }}>
+            🧮 Calcul du Score Final
+          </div>
+          
+          {isCalculating ? (
+            <div style={{
+              color: '#FFD600',
+              fontSize: '14px',
+              textAlign: 'center',
+              padding: '20px'
+            }}>
+              ⏳ Calcul en cours...
+            </div>
+          ) : (
+            <div style={{ fontSize: '14px' }}>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: '12px',
+                marginBottom: '12px'
+              }}>
+                <div>
+                  <div style={{ color: '#ccc', marginBottom: '4px' }}>Score Communauté</div>
+                  <div style={{ color: '#00FF00', fontWeight: 'bold' }}>
+                    {scoreBreakdown.communityScore}/100
+                  </div>
+                </div>
+                <div>
+                  <div style={{ color: '#ccc', marginBottom: '4px' }}>Poids Communauté</div>
+                  <div style={{ color: '#00FF00', fontWeight: 'bold' }}>
+                    {(scoreBreakdown.communityWeight * 100).toFixed(0)}%
+                  </div>
+                </div>
+                {scoreBreakdown.superModeratorScore !== undefined && (
+                  <>
+                    <div>
+                      <div style={{ color: '#ccc', marginBottom: '4px' }}>Score Super-Mod</div>
+                      <div style={{ color: '#FFD600', fontWeight: 'bold' }}>
+                        {scoreBreakdown.superModeratorScore}/100
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ color: '#ccc', marginBottom: '4px' }}>Poids Super-Mod</div>
+                      <div style={{ color: '#FFD600', fontWeight: 'bold' }}>
+                        {((scoreBreakdown.superModeratorWeight || 0) * 100).toFixed(0)}%
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+              
+              <div style={{
+                background: 'rgba(255, 215, 0, 0.1)',
+                border: '1px solid rgba(255, 215, 0, 0.3)',
+                borderRadius: '6px',
+                padding: '12px',
+                marginTop: '12px'
+              }}>
+                <div style={{ color: '#ccc', marginBottom: '8px' }}>Formule:</div>
+                <div style={{ color: '#FFD600', fontWeight: 'bold', fontSize: '12px' }}>
+                  {scoreBreakdown.calculationFormula}
+                </div>
+                <div style={{ 
+                  color: '#FFD600', 
+                  fontWeight: 'bold', 
+                  fontSize: '18px',
+                  marginTop: '8px',
+                  textAlign: 'center'
+                }}>
+                  Score Final: {scoreBreakdown.finalScore}/100
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Résultat final */}
+      <div style={{
+        background: 'rgba(255, 215, 0, 0.1)',
+        border: '2px solid rgba(255, 215, 0, 0.5)',
+        borderRadius: '8px',
+        padding: '16px',
+        textAlign: 'center'
+      }}>
+        <div style={{
+          fontSize: '16px',
+          fontWeight: 'bold',
+          color: '#FFD600',
+          marginBottom: '8px'
+        }}>
+          🎯 Résultat Final
+        </div>
+        <div style={{
+          fontSize: '20px',
+          fontWeight: 'bold',
+          color: getDecisionColor(superModeratorData?.finalDecision || communityData.decision),
+          marginBottom: '4px'
+        }}>
+          {getDecisionIcon(superModeratorData?.finalDecision || communityData.decision)} {' '}
+          {superModeratorData?.finalDecision || communityData.decision}
+        </div>
+        <div style={{
+          fontSize: '18px',
+          fontWeight: 'bold',
+          color: '#FFD600'
+        }}>
+          Score: {superModeratorData?.finalScore || communityData.averageScore}/100
+        </div>
+      </div>
     </div>
   );
-};
-
-export default ModerationStats; 
+}

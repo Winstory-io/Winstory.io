@@ -1,4 +1,5 @@
 {
-  "/welcome/page": "app/welcome/page.js",
-  "/moderation/page": "app/moderation/page.js"
+  "/api/moderation/verify-super-moderator/route": "app/api/moderation/verify-super-moderator/route.js",
+  "/mywin/community-completions/page": "app/mywin/community-completions/page.js",
+  "/mywin/creations/page": "app/mywin/creations/page.js"
 }

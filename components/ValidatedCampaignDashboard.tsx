@@ -735,10 +735,9 @@ export default function ValidatedCampaignDashboard({ forceValidated, onForceVali
 
 	// Handle Community Completions click
 	const handleCommunityCompletionsClick = () => {
-		// Navigate to minted completions view
-		console.log('Navigating to Community Completions - showing minted completions for user interaction');
-		// In a real app, this would navigate to /mywin/community-completions or similar
-		alert('Navigation to Community Completions (minted completions) - Feature coming soon!');
+		// Navigate to Community Completions Super-Moderator interface
+		console.log('Navigating to Community Completions - Super-Moderator interface');
+		window.location.href = '/mywin/community-completions';
 	};
 
 	// Handle chart click for modal

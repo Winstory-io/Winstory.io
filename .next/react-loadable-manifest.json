@@ -1,6 +1,34 @@
 {
-  "lib/hooks/useModeration.ts -> ../mockData": {
-    "id": "lib/hooks/useModeration.ts -> ../mockData",
+  "app/mywin/community-completions/page.tsx -> @/components/DevControls": {
+    "id": "app/mywin/community-completions/page.tsx -> @/components/DevControls",
+    "files": [
+      "static/chunks/_app-pages-browser_components_DevControls_tsx.js"
+    ]
+  },
+  "app/mywin/community-completions/page.tsx -> @/components/SuperModeratorInterface": {
+    "id": "app/mywin/community-completions/page.tsx -> @/components/SuperModeratorInterface",
+    "files": [
+      "static/chunks/_app-pages-browser_components_SuperModeratorInterface_tsx.js"
+    ]
+  },
+  "app/mywin/creations/page.tsx -> ../../../components/ActiveCampaignDashboard": {
+    "id": "app/mywin/creations/page.tsx -> ../../../components/ActiveCampaignDashboard",
+    "files": []
+  },
+  "app/mywin/creations/page.tsx -> ../../../components/ValidatedCampaignDashboard": {
+    "id": "app/mywin/creations/page.tsx -> ../../../components/ValidatedCampaignDashboard",
+    "files": [
+      "static/chunks/_app-pages-browser_components_ValidatedCampaignDashboard_tsx.js"
+    ]
+  },
+  "app/mywin/creations/page.tsx -> ../../../lib/mockData": {
+    "id": "app/mywin/creations/page.tsx -> ../../../lib/mockData",
+    "files": [
+      "static/chunks/_app-pages-browser_lib_mockData_ts.js"
+    ]
+  },
+  "components/ActiveCampaignDashboard.tsx -> ../lib/mockData": {
+    "id": "components/ActiveCampaignDashboard.tsx -> ../lib/mockData",
     "files": [
       "static/chunks/_app-pages-browser_lib_mockData_ts.js"
     ]
