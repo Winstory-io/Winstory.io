@@ -5,6 +5,11 @@
       "static/chunks/main-app.js",
       "static/chunks/app/layout.js"
     ],
+    "/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/page.js"
+    ],
     "/welcome/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
@@ -20,40 +25,20 @@
       "static/chunks/main-app.js",
       "static/chunks/app/api/auth/[...nextauth]/route.js"
     ],
-    "/creation/youare/page": [
+    "/mywin/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/creation/youare/page.js"
+      "static/chunks/app/mywin/layout.js"
     ],
-    "/creation/individual/login/page": [
+    "/mywin/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/creation/individual/login/page.js"
+      "static/chunks/app/mywin/page.js"
     ],
-    "/creation/individual/yourwinstory/page": [
+    "/mywin/completions/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/creation/individual/yourwinstory/page.js"
-    ],
-    "/creation/individual/yourfilm/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/creation/individual/yourfilm/page.js"
-    ],
-    "/creation/individual/yourcompletions/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/creation/individual/yourcompletions/page.js"
-    ],
-    "/creation/individual/recap/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/creation/individual/recap/page.js"
-    ],
-    "/api/log-campaign/route": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/api/log-campaign/route.js"
+      "static/chunks/app/mywin/completions/page.js"
     ]
   }
 }

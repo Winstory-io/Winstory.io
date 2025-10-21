@@ -1,6 +1,4 @@
 {
-  "/api/log-campaign/route": "app/api/log-campaign/route.js",
-  "/creation/individual/yourfilm/page": "app/creation/individual/yourfilm/page.js",
-  "/creation/individual/yourcompletions/page": "app/creation/individual/yourcompletions/page.js",
-  "/creation/individual/recap/page": "app/creation/individual/recap/page.js"
+  "/mywin/completions/page": "app/mywin/completions/page.js",
+  "/mywin/page": "app/mywin/page.js"
 }

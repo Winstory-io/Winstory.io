@@ -35,6 +35,8 @@
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.10.0",
+    "@google-cloud/pubsub": "^4.8.0",
+    "@google-cloud/storage": "^7.12.1",
     "@prisma/client": "^6.11.1",
     "@stripe/react-stripe-js": "^5.0.0",
     "@stripe/stripe-js": "^8.0.0",
@@ -42,6 +44,9 @@
     "@tanstack/react-query": "^4.36.1",
     "axios": "^1.10.0",
     "ethers": "^5.8.0",
+    "google-auth-library": "^9.14.1",
+    "googleapis": "^144.0.0",
+    "lucide-react": "^0.546.0",
     "next": "^15.3.4",
     "next-auth": "^4.24.11",
     "nodemailer": "^6.10.1",
@@ -50,11 +55,7 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "stripe": "^19.0.0",
-    "thirdweb": "^5.105.37",
-    "@google-cloud/storage": "^7.12.1",
-    "@google-cloud/pubsub": "^4.8.0",
-    "google-auth-library": "^9.14.1",
-    "googleapis": "^144.0.0"
+    "thirdweb": "^5.105.37"
   },
   "devDependencies": {
     "@types/node": "^24.0.4",
