@@ -5,30 +5,55 @@
       "static/chunks/main-app.js",
       "static/chunks/app/layout.js"
     ],
-    "/mywin/layout": [
+    "/welcome/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/mywin/layout.js"
+      "static/chunks/app/welcome/layout.js"
     ],
-    "/mywin/community-completions/page": [
+    "/welcome/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/mywin/community-completions/page.js"
+      "static/chunks/app/welcome/page.js"
     ],
     "/api/auth/[...nextauth]/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/api/auth/[...nextauth]/route.js"
     ],
-    "/api/moderation/verify-super-moderator/route": [
+    "/creation/youare/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/api/moderation/verify-super-moderator/route.js"
+      "static/chunks/app/creation/youare/page.js"
     ],
-    "/mywin/creations/page": [
+    "/creation/individual/login/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/mywin/creations/page.js"
+      "static/chunks/app/creation/individual/login/page.js"
+    ],
+    "/creation/individual/yourwinstory/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/creation/individual/yourwinstory/page.js"
+    ],
+    "/creation/individual/yourfilm/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/creation/individual/yourfilm/page.js"
+    ],
+    "/creation/individual/yourcompletions/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/creation/individual/yourcompletions/page.js"
+    ],
+    "/creation/individual/recap/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/creation/individual/recap/page.js"
+    ],
+    "/api/log-campaign/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/log-campaign/route.js"
     ]
   }
 }

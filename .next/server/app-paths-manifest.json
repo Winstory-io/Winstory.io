@@ -1,5 +1,6 @@
 {
-  "/api/moderation/verify-super-moderator/route": "app/api/moderation/verify-super-moderator/route.js",
-  "/mywin/community-completions/page": "app/mywin/community-completions/page.js",
-  "/mywin/creations/page": "app/mywin/creations/page.js"
+  "/api/log-campaign/route": "app/api/log-campaign/route.js",
+  "/creation/individual/yourfilm/page": "app/creation/individual/yourfilm/page.js",
+  "/creation/individual/yourcompletions/page": "app/creation/individual/yourcompletions/page.js",
+  "/creation/individual/recap/page": "app/creation/individual/recap/page.js"
 }

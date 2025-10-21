@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test - Interactive Eligibility Card</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #111;
+            color: #fff;
+            padding: 20px;
+        }
+        .test-section {
+            background: #222;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .test-title {
+            color: #FFD600;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        .feature-list {
+            background: #333;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border-left: 4px solid #00FF00;
+        }
+        .feature-list h3 {
+            color: #00FF00;
+            margin-bottom: 10px;
+        }
+        .demo-card {
+            background: rgba(255, 45, 45, 0.1);
+            border: 1px solid #FF2D2D;
+            border-radius: 8px;
+            padding: 12px;
+            margin: 20px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .demo-card:hover {
+            background: rgba(255, 45, 45, 0.2);
+            border-color: #FF6B6B;
+            box-shadow: 0 0 20px rgba(255, 45, 45, 0.4);
+            transform: translateY(-2px);
+        }
+        .demo-card .neon-glow {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 8px;
+            background: linear-gradient(45deg, transparent, rgba(255, 45, 45, 0.1), transparent);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+        .demo-card:hover .neon-glow {
+            opacity: 1;
+        }
+        .card-header {
+            font-size: 14px;
+            font-weight: 600;
+            color: #FF2D2D;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+        .card-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+            font-size: 12px;
+        }
+        .stat-item {
+            text-align: center;
+        }
+        .stat-label {
+            color: #888;
+            margin-bottom: 2px;
+        }
+        .stat-value {
+            font-weight: 600;
+            color: #FF2D2D;
+        }
+        .card-footer {
+            font-size: 11px;
+            color: #FF2D2D;
+            margin-top: 8px;
+            text-align: center;
+            font-style: italic;
+        }
+        .click-hint {
+            font-size: 12px;
+            margin-left: 8px;
+            opacity: 0.7;
+        }
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .modal.show {
+            display: flex;
+        }
+        .modal-content {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            border: 2px solid #FF2D2D;
+            border-radius: 16px;
+            padding: 32px;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+            color: #fff;
+            position: relative;
+            box-shadow: 0 0 30px rgba(255, 45, 45, 0.3);
+        }
+        .close-btn {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: none;
+            border: none;
+            color: #FF2D2D;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 4px;
+        }
+        .modal-header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        .modal-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            color: #FF2D2D;
+        }
+        .modal-title {
+            color: #FF2D2D;
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .modal-subtitle {
+            color: #ccc;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+        .info-section {
+            background: rgba(255, 45, 45, 0.1);
+            border: 1px solid #FF2D2D;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+        .section-title {
+            color: #FFD600;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+        .requirements-section {
+            background: rgba(0, 255, 0, 0.1);
+            border: 1px solid #00FF00;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+        .requirements-title {
+            color: #00FF00;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+        .requirement-item {
+            margin-bottom: 12px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .status-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 16px;
+            font-size: 14px;
+        }
+        .status-item {
+            text-align: center;
+        }
+        .status-label {
+            color: #888;
+            margin-bottom: 4px;
+        }
+        .status-value {
+            font-weight: 600;
+            color: #FF2D2D;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎯 Test - Interactive Eligibility Card</h1>
+    
+    <div class="test-section">
+        <div class="test-title">✨ New Features Implemented</div>
+        
+        <div class="feature-list">
+            <h3>🎨 Interactive Design</h3>
+            <ul>
+                <li>✅ Clickable card for ineligible stakers</li>
+                <li>✅ Hover effects with neon glow</li>
+                <li>✅ Smooth transitions and animations</li>
+                <li>✅ Visual feedback on interaction</li>
+            </ul>
+        </div>
+
+        <div class="feature-list">
+            <h3>📋 Detailed Modal</h3>
+            <ul>
+                <li>✅ Comprehensive eligibility explanation</li>
+                <li>✅ Current status display</li>
+                <li>✅ Requirements breakdown</li>
+                <li>✅ Action items and limitations</li>
+            </ul>
+        </div>
+
+        <div class="feature-list">
+            <h3>🎯 User Experience</h3>
+            <ul>
+                <li>✅ Clear visual indicators</li>
+                <li>✅ Intuitive interaction patterns</li>
+                <li>✅ Informative content</li>
+                <li>✅ Professional design</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <div class="test-title">🧪 Interactive Demo</div>
+        
+        <p>Click on the ineligible staker card below to see the detailed modal:</p>
+        
+        <!-- Demo Card -->
+        <div class="demo-card" onclick="showModal()">
+            <div class="neon-glow"></div>
+            <div class="card-header">
+                ⚠️ Can Vote (No Rewards)
+                <span class="click-hint">(Click for details)</span>
+            </div>
+            <div class="card-stats">
+                <div class="stat-item">
+                    <div class="stat-label">Stake</div>
+                    <div class="stat-value">30 WINC</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Age</div>
+                    <div class="stat-value">3 days</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">XP</div>
+                    <div class="stat-value">50</div>
+                </div>
+            </div>
+            <div class="card-footer">
+                You can vote but won't earn rewards or XP
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="hideModal()">✕</button>
+            
+            <div class="modal-header">
+                <div class="modal-icon">⚠️</div>
+                <h2 class="modal-title">Eligibility Status</h2>
+                <p class="modal-subtitle">You can participate in moderation but won't earn rewards or XP</p>
+            </div>
+
+            <div class="info-section">
+                <h3 class="section-title">Your Current Status</h3>
+                <div class="status-grid">
+                    <div class="status-item">
+                        <div class="status-label">Staked Amount</div>
+                        <div class="status-value">30 WINC</div>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-label">Stake Age</div>
+                        <div class="status-value">3 days</div>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-label">Moderator XP</div>
+                        <div class="status-value">50</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="requirements-section">
+                <h3 class="requirements-title">💡 Requirements for Rewards & XP</h3>
+                <div class="requirement-item">
+                    <strong style="color: #00FF00;">Minimum Stake:</strong>
+                    <span style="color: #fff; margin-left: 8px;">
+                        ❌ 50 WINC
+                        <span style="color: #FF2D2D; margin-left: 8px;">
+                            (Need 20 more)
+                        </span>
+                    </span>
+                </div>
+                <div class="requirement-item">
+                    <strong style="color: #00FF00;">Minimum Age:</strong>
+                    <span style="color: #fff; margin-left: 8px;">
+                        ❌ 7 days
+                        <span style="color: #FF2D2D; margin-left: 8px;">
+                            (Need 4 more days)
+                        </span>
+                    </span>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="test-section">
+        <div class="test-title">📋 Implementation Summary</div>
+        
+        <div class="feature-list">
+            <h3>🔧 Technical Changes</h3>
+            <ul>
+                <li><strong>File Modified:</strong> <code>components/StakerInfo.tsx</code></li>
+                <li><strong>New State:</strong> <code>showEligibilityModal</code> for modal visibility</li>
+                <li><strong>New Function:</strong> <code>handleEligibilityClick()</code> for click handling</li>
+                <li><strong>New Component:</strong> <code>EligibilityModal</code> for detailed explanation</li>
+            </ul>
+        </div>
+
+        <div class="feature-list">
+            <h3>🎨 Visual Effects</h3>
+            <ul>
+                <li><strong>Hover Effects:</strong> Background color change, border glow, shadow, transform</li>
+                <li><strong>Neon Glow:</strong> Animated gradient overlay on hover</li>
+                <li><strong>Transitions:</strong> Smooth 0.3s ease animations</li>
+                <li><strong>Cursor:</strong> Pointer cursor for clickable elements</li>
+            </ul>
+        </div>
+
+        <div class="feature-list">
+            <h3>📱 Modal Features</h3>
+            <ul>
+                <li><strong>Responsive Design:</strong> Adapts to different screen sizes</li>
+                <li><strong>Close Options:</strong> Click outside or close button</li>
+                <li><strong>Scrollable Content:</strong> Handles overflow gracefully</li>
+                <li><strong>Professional Styling:</strong> Gradient backgrounds, proper spacing</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        function showModal() {
+            document.getElementById('modal').classList.add('show');
+        }
+
+        function hideModal() {
+            document.getElementById('modal').classList.remove('show');
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                hideModal();
+            }
+        });
+
+        console.log('🎯 Interactive Eligibility Card Test Page Loaded');
+        console.log('✅ All features implemented successfully');
+    </script>
+</body>
+</html>

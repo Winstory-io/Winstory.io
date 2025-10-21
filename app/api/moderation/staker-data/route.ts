@@ -98,7 +98,7 @@ export async function GET(request: NextRequest) {
     consoleLogs.push(`   - Stake: ${mockStakerData.stakedAmount} WINC`);
     consoleLogs.push(`   - Âge du stake: ${mockStakerData.stakeAgeDays} jours`);
     consoleLogs.push(`   - XP: ${mockStakerData.xp}`);
-    consoleLogs.push(`   - Éligible: ${isEligible ? '✅ OUI' : '❌ NON'}`);
+    consoleLogs.push(`   - Éligible pour rémunération: ${isEligible ? '✅ OUI' : '❌ NON'}`);
     
     if (!isEligible) {
       const reasons = [];
@@ -109,6 +109,7 @@ export async function GET(request: NextRequest) {
         reasons.push(`Âge du stake insuffisant (${mockStakerData.stakeAgeDays} < ${stakeAgeMinDays} jours)`);
       }
       mockStakerData.eligibilityReason = reasons.join(', ');
+      consoleLogs.push(`⚠️ Note: Ce staker peut voter mais ne recevra aucune rémunération ni XP`);
     }
 
     // Logs détaillés pour le debugging

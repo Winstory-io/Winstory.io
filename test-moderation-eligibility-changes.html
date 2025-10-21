@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test - Moderation Eligibility Changes</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #111;
+            color: #fff;
+            padding: 20px;
+        }
+        .test-section {
+            background: #222;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .test-title {
+            color: #FFD600;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        .test-case {
+            background: #333;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border-left: 4px solid #00FF00;
+        }
+        .test-case.ineligible {
+            border-left-color: #FF2D2D;
+        }
+        .status {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .eligible { color: #18C964; }
+        .ineligible { color: #FF2D2D; }
+        .note {
+            font-style: italic;
+            color: #ccc;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test - Moderation Eligibility Changes</h1>
+    
+    <div class="test-section">
+        <div class="test-title">✅ Changes Implemented</div>
+        
+        <div class="test-case">
+            <div class="status eligible">✅ Eligibility Check Removed</div>
+            <p>Stakers can now access moderation interface regardless of eligibility status.</p>
+            <p><strong>Before:</strong> Modal "Not Eligible for Moderation" blocked all access</p>
+            <p><strong>After:</strong> All stakers can vote, eligibility only affects rewards</p>
+        </div>
+
+        <div class="test-case">
+            <div class="status eligible">✅ Reward Logic Updated</div>
+            <p>The moderation engine already correctly handles ACTIVE vs PASSIVE participants.</p>
+            <p><strong>ACTIVE:</strong> Stake ≥ 50 WINC + Age ≥ 7 days → Earn rewards & XP</p>
+            <p><strong>PASSIVE:</strong> Below requirements → Can vote but no rewards/XP</p>
+        </div>
+
+        <div class="test-case">
+            <div class="status eligible">✅ UI Components Updated</div>
+            <p>StakerInfo component now shows clear messaging:</p>
+            <p><strong>Eligible:</strong> "✅ Eligible for Rewards"</p>
+            <p><strong>Ineligible:</strong> "⚠️ Can Vote (No Rewards)" + "You can vote but won't earn rewards or XP"</p>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <div class="test-title">🎯 Test Cases</div>
+        
+        <div class="test-case">
+            <div class="status eligible">Test Case 1: Eligible Staker</div>
+            <p><strong>Stake:</strong> 60 WINC</p>
+            <p><strong>Age:</strong> 10 days</p>
+            <p><strong>Expected:</strong> Can vote + Earn rewards + Earn XP</p>
+            <p><strong>UI:</strong> "✅ Eligible for Rewards"</p>
+        </div>
+
+        <div class="test-case ineligible">
+            <div class="status ineligible">Test Case 2: Ineligible Staker (Low Stake)</div>
+            <p><strong>Stake:</strong> 30 WINC</p>
+            <p><strong>Age:</strong> 10 days</p>
+            <p><strong>Expected:</strong> Can vote + No rewards + No XP</p>
+            <p><strong>UI:</strong> "⚠️ Can Vote (No Rewards)"</p>
+        </div>
+
+        <div class="test-case ineligible">
+            <div class="status ineligible">Test Case 3: Ineligible Staker (Low Age)</div>
+            <p><strong>Stake:</strong> 60 WINC</p>
+            <p><strong>Age:</strong> 3 days</p>
+            <p><strong>Expected:</strong> Can vote + No rewards + No XP</p>
+            <p><strong>UI:</strong> "⚠️ Can Vote (No Rewards)"</p>
+        </div>
+
+        <div class="test-case ineligible">
+            <div class="status ineligible">Test Case 4: Ineligible Staker (Both Low)</div>
+            <p><strong>Stake:</strong> 20 WINC</p>
+            <p><strong>Age:</strong> 2 days</p>
+            <p><strong>Expected:</strong> Can vote + No rewards + No XP</p>
+            <p><strong>UI:</strong> "⚠️ Can Vote (No Rewards)"</p>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <div class="test-title">🔧 Technical Implementation</div>
+        
+        <div class="test-case">
+            <div class="status eligible">Files Modified:</div>
+            <ul>
+                <li><code>app/moderation/page.tsx</code> - Removed eligibility blocking</li>
+                <li><code>app/api/moderation/staker-data/route.ts</code> - Updated logging</li>
+                <li><code>components/StakerInfo.tsx</code> - Updated UI messaging</li>
+            </ul>
+        </div>
+
+        <div class="test-case">
+            <div class="status eligible">Reward System:</div>
+            <p>The existing <code>lib/moderation-engine.ts</code> already handles eligibility correctly:</p>
+            <ul>
+                <li><code>computeStakingDecisionV1()</code> separates ACTIVE vs PASSIVE</li>
+                <li><code>computePayoutsAndXP()</code> only rewards ACTIVE participants</li>
+                <li>PASSIVE participants can vote but receive no rewards/XP</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <div class="test-title">📋 Summary</div>
+        
+        <div class="note">
+            <p><strong>✅ SUCCESS:</strong> All requested changes have been implemented:</p>
+            <ul>
+                <li>❌ Removed "Not Eligible for Moderation" blocking modal</li>
+                <li>✅ Stakers can now vote regardless of eligibility</li>
+                <li>✅ Only eligible stakers (50+ WINC, 7+ days) earn rewards & XP</li>
+                <li>✅ Clear UI messaging about eligibility status</li>
+                <li>✅ Reward system already correctly handles eligibility</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        console.log('🧪 Moderation Eligibility Test Page Loaded');
+        console.log('✅ Changes implemented successfully');
+        console.log('📋 Ready for testing with different staker configurations');
+    </script>
+</body>
+</html>

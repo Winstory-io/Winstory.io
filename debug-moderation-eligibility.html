@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug - Moderation Eligibility Issue</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #111;
+            color: #fff;
+            padding: 20px;
+        }
+        .debug-section {
+            background: #222;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .debug-title {
+            color: #FFD600;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        .debug-step {
+            background: #333;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border-left: 4px solid #00FF00;
+        }
+        .debug-step.warning {
+            border-left-color: #FF2D2D;
+        }
+        .debug-step.info {
+            border-left-color: #FFD600;
+        }
+        .code {
+            background: #000;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            margin: 10px 0;
+        }
+        .button {
+            background: #FFD600;
+            color: #000;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 10px 5px;
+        }
+        .button:hover {
+            background: #FFA500;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 Debug - Moderation Eligibility Issue</h1>
+    
+    <div class="debug-section">
+        <div class="debug-title">🚨 Problem Description</div>
+        <p>You're still seeing the "Not Eligible for Moderation" modal even though the code has been updated to allow ineligible stakers to vote.</p>
+    </div>
+
+    <div class="debug-section">
+        <div class="debug-title">🔍 Debugging Steps</div>
+        
+        <div class="debug-step info">
+            <strong>Step 1: Clear Browser Cache</strong>
+            <p>Press <kbd>Ctrl+Shift+R</kbd> (or <kbd>Cmd+Shift+R</kbd> on Mac) to hard refresh the page and clear the cache.</p>
+        </div>
+
+        <div class="debug-step info">
+            <strong>Step 2: Check Developer Console</strong>
+            <p>Open Developer Tools (F12) and check the Console tab for any error messages or logs.</p>
+            <p>Look for messages starting with "🔍 [ELIGIBILITY CHECK]" or "✅ [ELIGIBILITY CHECK]".</p>
+        </div>
+
+        <div class="debug-step info">
+            <strong>Step 3: Verify Server Restart</strong>
+            <p>Make sure the development server has been restarted after the code changes.</p>
+            <div class="code">
+                # Stop the server (Ctrl+C)
+                # Then restart:
+                npm run dev
+            </div>
+        </div>
+
+        <div class="debug-step warning">
+            <strong>Step 4: Check Network Tab</strong>
+            <p>In Developer Tools, go to the Network tab and refresh the page.</p>
+            <p>Look for any failed requests or cached responses that might be serving old code.</p>
+        </div>
+
+        <div class="debug-step info">
+            <strong>Step 5: Verify Code Changes</strong>
+            <p>Check that the following files have been updated:</p>
+            <ul>
+                <li><code>app/moderation/page.tsx</code> - Should not have eligibility blocking</li>
+                <li><code>components/StakerInfo.tsx</code> - Should show "⚠️ Can Vote (No Rewards)"</li>
+                <li><code>app/api/moderation/staker-data/route.ts</code> - Should log eligibility info</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="debug-section">
+        <div class="debug-title">🛠️ Quick Fixes</div>
+        
+        <div class="debug-step">
+            <strong>Fix 1: Force Cache Clear</strong>
+            <p>Try opening the page in an incognito/private window to bypass all cache.</p>
+            <button class="button" onclick="window.open(window.location.href, '_blank')">Open in New Incognito Window</button>
+        </div>
+
+        <div class="debug-step">
+            <strong>Fix 2: Check Dev Controls</strong>
+            <p>If you're using Dev Controls, make sure they're not overriding the eligibility status.</p>
+            <p>Look for any Dev Controls components that might be setting <code>isEligible: false</code>.</p>
+        </div>
+
+        <div class="debug-step">
+            <strong>Fix 3: Verify URL Parameters</strong>
+            <p>Make sure you're accessing the correct URL with the campaignId parameter:</p>
+            <div class="code">
+                /moderation?campaignId=YOUR_CAMPAIGN_ID&type=initial&subtype=b2c-agencies
+            </div>
+        </div>
+    </div>
+
+    <div class="debug-section">
+        <div class="debug-title">📋 Expected Behavior After Fix</div>
+        
+        <div class="debug-step">
+            <strong>✅ What Should Happen:</strong>
+            <ul>
+                <li>No "Not Eligible for Moderation" modal should appear</li>
+                <li>You should see the moderation interface with content to moderate</li>
+                <li>In the header, you should see "⚠️ Can Vote (No Rewards)" if you're ineligible</li>
+                <li>You should be able to vote on content (but won't earn rewards/XP)</li>
+            </ul>
+        </div>
+
+        <div class="debug-step warning">
+            <strong>❌ What Should NOT Happen:</strong>
+            <ul>
+                <li>No blocking modal with "Not Eligible for Moderation"</li>
+                <li>No "You need to stake at least 50 WINC" message</li>
+                <li>No "How to become eligible" instructions</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="debug-section">
+        <div class="debug-title">🔧 Manual Verification</div>
+        
+        <div class="debug-step">
+            <strong>Check Console Logs:</strong>
+            <p>After refreshing the page, you should see these logs in the console:</p>
+            <div class="code">
+                🔍 [ELIGIBILITY CHECK] stakerData: {stakedAmount: 30, stakeAgeDays: 3, ...}
+                🔍 [ELIGIBILITY CHECK] isEligible: false
+                ✅ [ELIGIBILITY CHECK] User can access moderation (eligible or not)
+                DEBUG: Forcing moderation interface display with optimizations
+            </div>
+        </div>
+    </div>
+
+    <script>
+        console.log('🔧 Debug page loaded');
+        console.log('Current URL:', window.location.href);
+        console.log('Timestamp:', new Date().toISOString());
+        
+        // Check if we're on the moderation page
+        if (window.location.pathname.includes('/moderation')) {
+            console.log('✅ On moderation page');
+        } else {
+            console.log('⚠️ Not on moderation page');
+        }
+    </script>
+</body>
+</html>

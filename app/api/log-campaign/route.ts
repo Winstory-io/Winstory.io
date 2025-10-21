@@ -173,7 +173,8 @@ export async function POST(request: NextRequest) {
 
     // Synchronisation Supabase (journalisation et pré-mapping backend)
     try {
-      const payload = {
+      // Payload minimal pour éviter les erreurs de colonnes manquantes
+      const payloadMinimal = {
         created_at: new Date().toISOString(),
         campaign_type: isIndividual ? 'INDIVIDUAL' : 'B2C',
         submission_timestamp_iso: timestampIso,
@@ -187,6 +188,12 @@ export async function POST(request: NextRequest) {
         film_video_id: data.film?.videoId || null,
         film_file_name: data.film?.fileName || null,
         film_format: data.film?.format || null,
+        raw_payload: data,
+      } as any;
+
+      // Payload complet avec toutes les colonnes (si la table est à jour)
+      const payloadComplet = {
+        ...payloadMinimal,
         // B2C (fiat USD)
         b2c_currency: !isIndividual ? 'USD' : null,
         b2c_unit_value_usd: !isIndividual ? (data.roiData?.unitValue ?? null) : null,
@@ -199,20 +206,32 @@ export async function POST(request: NextRequest) {
         individual_winc_value: isIndividual ? (data.completions?.wincValue ?? null) : null,
         individual_max_completions: isIndividual ? (data.completions?.maxCompletions ?? null) : null,
         individual_duration_days: isIndividual ? (data.completions?.campaignDuration ?? null) : null,
-        raw_payload: data,
       } as any;
 
       if (!supabaseServer) {
         console.warn('⚠️ Supabase server client not configured. Skipping DB insert.');
       } else {
-        const { error } = await supabaseServer
+        // Essayer d'abord avec le payload complet
+        let { error } = await supabaseServer
           .from('campaign_creation_logs')
-          .insert([payload]);
+          .insert([payloadComplet]);
 
-        if (error) {
+        // Si erreur de colonne manquante, essayer avec le payload minimal
+        if (error && error.message.includes('column') && error.message.includes('does not exist')) {
+          console.warn('⚠️ Table structure outdated, using minimal payload...');
+          const { error: errorMinimal } = await supabaseServer
+            .from('campaign_creation_logs')
+            .insert([payloadMinimal]);
+          
+          if (errorMinimal) {
+            console.error('Supabase insert error (minimal):', errorMinimal.message);
+          } else {
+            console.log('🗄️  Supabase: campaign_creation_logs insert OK (minimal payload)');
+          }
+        } else if (error) {
           console.error('Supabase insert error:', error.message);
         } else {
-          console.log('🗄️  Supabase: campaign_creation_logs insert OK');
+          console.log('🗄️  Supabase: campaign_creation_logs insert OK (complete payload)');
         }
       }
     } catch (e: any) {
