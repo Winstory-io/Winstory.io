@@ -37,7 +37,49 @@ export default function MyCreationsPage() {
 
   useEffect(() => {
     if (account) {
-      setCampaigns([]);
+      // Récupérer les campagnes créées par cet utilisateur
+      const fetchUserCampaigns = async () => {
+        try {
+          console.log('Fetching created campaigns for wallet:', account.address);
+          
+          const response = await fetch(`/api/campaigns/user?walletAddress=${account.address}&type=created`);
+          
+          if (!response.ok) {
+            throw new Error('Failed to fetch user campaigns');
+          }
+          
+          const result = await response.json();
+          
+          if (result.success) {
+            // Transformer les données pour l'interface
+            const transformedCampaigns: Campaign[] = result.campaigns.map((campaign: any) => ({
+              id: campaign.id,
+              title: campaign.title,
+              description: campaign.description || '',
+              creationDate: campaign.createdAt,
+              targetCompletions: campaign.metadata?.maxCompletions || 0,
+              currentCompletions: 0, // TODO: Calculer depuis les completions réelles
+              averageScore: 0, // TODO: Calculer depuis les scores de modération
+              rewardsDistributed: 0, // TODO: Calculer depuis les récompenses distribuées
+              roi: campaign.metadata?.netProfit || 0,
+              status: campaign.status === 'PENDING_MODERATION' ? 'active' : 
+                     campaign.status === 'APPROVED' ? 'active' : 
+                     campaign.status === 'COMPLETED' ? 'completed' : 'paused'
+            }));
+            
+            setCampaigns(transformedCampaigns);
+            console.log('✅ User campaigns loaded:', transformedCampaigns.length);
+          } else {
+            throw new Error(result.error || 'Failed to fetch user campaigns');
+          }
+          
+        } catch (error) {
+          console.error('Error fetching user campaigns:', error);
+          setCampaigns([]);
+        }
+      };
+      
+      fetchUserCampaigns();
     }
   }, [account]);
 

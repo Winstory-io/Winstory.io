@@ -1,4 +1,5 @@
 {
-  "/mywin/completions/page": "app/mywin/completions/page.js",
-  "/mywin/page": "app/mywin/page.js"
+  "/api/campaigns/create/route": "app/api/campaigns/create/route.js",
+  "/creation/b2c/mint/page": "app/creation/b2c/mint/page.js",
+  "/creation/b2c/recap/page": "app/creation/b2c/recap/page.js"
 }

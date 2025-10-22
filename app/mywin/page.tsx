@@ -30,26 +30,79 @@ export default function MyWinPage() {
   // Utiliser useCallback pour éviter les re-créations de fonction
   const fetchUserStats = useCallback(async () => {
     if (account) {
-      // TODO: Fetch user stats from blockchain/database based on user's actual behavior
-      // This will be replaced with real API calls to get:
-      // - Number of campaigns created by this user
-      // - Number of contents moderated by this user  
-      // - Number of campaigns completed by this user
-      // - Total $WINC earned from all activities
-      // - Total XP points accumulated
-      
-      // For now, initialize with 0 - will be populated with real data
-      setStats({
-        creations: 0,
-        completions: 0,
-        moderations: 0,
-        totalWinc: 0,
-        totalXp: 0,
-      });
-      
-      // TODO: Implement real data fetching:
-      // const userStats = await fetchUserStatsFromBlockchain(account.address);
-      // setStats(userStats);
+      try {
+        console.log('Fetching user stats for wallet:', account.address);
+        
+        // D'abord, vérifier si l'utilisateur existe et l'initialiser si nécessaire
+        const checkResponse = await fetch(`/api/user/initialize?walletAddress=${account.address}`);
+        
+        if (!checkResponse.ok) {
+          throw new Error('Failed to check user status');
+        }
+        
+        const checkResult = await checkResponse.json();
+        
+        if (!checkResult.userExists) {
+          console.log('🆕 New user detected, initializing...');
+          
+          // Initialiser l'utilisateur
+          const initResponse = await fetch('/api/user/initialize', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              walletAddress: account.address,
+              email: null, // TODO: Récupérer l'email si disponible
+              displayName: `User_${account.address.slice(-6)}`
+            }),
+          });
+          
+          if (!initResponse.ok) {
+            console.warn('⚠️ Failed to initialize user, continuing to fetch stats anyway');
+          }
+          
+          const initResult = await initResponse.json();
+          console.log('✅ User initialized:', initResult.message);
+        } else {
+          console.log('✅ Existing user found');
+        }
+        
+        // Maintenant récupérer les statistiques
+        const response = await fetch(`/api/user/stats?walletAddress=${account.address}`);
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch user stats');
+        }
+        
+        const result = await response.json();
+        
+        if (result.success) {
+          setStats({
+            creations: result.stats.creations,
+            completions: result.stats.completions,
+            moderations: result.stats.moderations,
+            totalWinc: result.stats.totalWinc,
+            totalXp: result.stats.totalXp
+          });
+          
+          console.log('✅ User stats loaded:', result.stats);
+        } else {
+          throw new Error(result.error || 'Failed to fetch user stats');
+        }
+        
+      } catch (error) {
+        console.error('Error fetching user stats:', error);
+        
+        // Fallback avec des valeurs par défaut en cas d'erreur
+        setStats({
+          creations: 0,
+          completions: 0,
+          moderations: 0,
+          totalWinc: 0,
+          totalXp: 0
+        });
+      }
     }
   }, [account]);
 

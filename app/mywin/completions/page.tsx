@@ -129,32 +129,60 @@ export default function MyCompletionsPage() {
 
   useEffect(() => {
     if (account) {
-      // Use manual cards if any exist, otherwise use dynamic completion
-      if (devManualCards.length > 0) {
-        setCompletions(devManualCards);
-      } else {
-        const dynamicCompletion: Completion = {
-          id: 'dev-completion-1',
-          campaignTitle: devCampaignTitle,
-          completionTitle: devCompletionTitle,
-          date: new Date().toISOString().split('T')[0],
-          status: devCompletionStatus,
-          score: devCompletionStatus === 'refused' ? undefined : devCompletionScore,
-          ranking: ['top1', 'top2', 'top3'].includes(devCompletionStatus) ? devCompletionRanking : undefined,
-          roiEarned: ['top1', 'top2', 'top3'].includes(devCompletionStatus) ? devCompletionScore * 1.5 : undefined,
-          standardReward: devCompletionStatus === 'refused' ? 'No reward' : 
-                          devCampaignType === 'individual' ? 'XP Gain' : devStandardReward,
-          premiumReward: ['top1', 'top2', 'top3'].includes(devCompletionStatus) ? devPremiumReward : undefined,
-          campaignCreatorType: devCampaignType,
-          videoUrl: '/sample-video.mp4',
-          story: 'Dynamic completion story based on dev controls...',
-          isBurned: devIsBurned || (devCompletionStatus === 'refused') || (devCompletionStatus === 'validated' && !['top1', 'top2', 'top3'].includes(devCompletionStatus))
-        };
-        
-        setCompletions([dynamicCompletion]);
-      }
+      // Récupérer les campagnes complétées par cet utilisateur
+      const fetchUserCompletions = async () => {
+        try {
+          console.log('Fetching completed campaigns for wallet:', account.address);
+          
+          const response = await fetch(`/api/campaigns/user?walletAddress=${account.address}&type=completed`);
+          
+          if (!response.ok) {
+            throw new Error('Failed to fetch user completions');
+          }
+          
+          const result = await response.json();
+          
+          if (result.success) {
+            // Transformer les données pour l'interface
+            const transformedCompletions: Completion[] = result.campaigns.map((campaign: any) => ({
+              id: campaign.id,
+              campaignTitle: campaign.title,
+              completionTitle: `${campaign.title} - Completion`,
+              date: campaign.createdAt.split('T')[0],
+              status: campaign.status === 'COMPLETED' ? 'validated' : 
+                     campaign.status === 'PENDING_MODERATION' ? 'in_moderation' : 'completed',
+              score: 85, // TODO: Calculer depuis les scores de modération réels
+              ranking: undefined, // TODO: Calculer depuis le classement réel
+              roiEarned: campaign.metadata?.netProfit || 0,
+              standardReward: campaign.rewards?.standardReward || 'No reward',
+              premiumReward: campaign.rewards?.premiumReward || undefined,
+              campaignEndDate: undefined, // TODO: Calculer depuis les métadonnées
+              completionTarget: campaign.metadata?.maxCompletions || 0,
+              currentCompletions: 0, // TODO: Calculer depuis les completions réelles
+              usdcRevenue: 0, // TODO: Calculer depuis les revenus réels
+              campaignCreatorType: campaign.creatorType === 'FOR_B2C' ? 'company' : 
+                                 campaign.creatorType === 'B2C_AGENCIES' ? 'agency' : 'individual',
+              moderatorScores: [], // TODO: Récupérer depuis les scores de modération
+              videoUrl: campaign.content?.videoUrl || '/sample-video.mp4',
+              story: campaign.content?.startingStory || 'Completion story...',
+              isBurned: campaign.status === 'REJECTED'
+            }));
+            
+            setCompletions(transformedCompletions);
+            console.log('✅ User completions loaded:', transformedCompletions.length);
+          } else {
+            throw new Error(result.error || 'Failed to fetch user completions');
+          }
+          
+        } catch (error) {
+          console.error('Error fetching user completions:', error);
+          setCompletions([]);
+        }
+      };
+      
+      fetchUserCompletions();
     }
-  }, [account, devManualCards, devCompletionStatus, devCompletionScore, devCompletionRanking, devCampaignTitle, devCompletionTitle, devCampaignType, devStandardReward, devPremiumReward, devIsBurned]);
+  }, [account]);
 
   // Auto-update top 3 status based on ranking
   useEffect(() => {

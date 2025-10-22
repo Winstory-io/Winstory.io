@@ -210,9 +210,9 @@ export default function RecapB2C() {
     console.log('Proceeding to MINT page...');
     console.log('==========================================');
     
-    // Envoyer les données au serveur pour affichage dans le terminal Cursor
+    // Créer la campagne dans la base de données
     try {
-      await fetch('/api/log-campaign', {
+      const response = await fetch('/api/campaigns/create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -227,14 +227,25 @@ export default function RecapB2C() {
           standardItem: recap.standardItem,
           premiumToken: recap.premiumToken,
           premiumItem: recap.premiumItem,
-          unifiedConfig: recap.unifiedConfig,
+          campaignType: 'B2C',
           walletAddress: account?.address || walletAddress || null,
           walletSource: account?.address ? 'thirdweb_account' : (walletSource || null)
         }),
       });
-      console.log('✅ Data sent to terminal successfully');
+
+      if (!response.ok) {
+        throw new Error('Failed to create campaign in database');
+      }
+
+      const result = await response.json();
+      console.log('✅ B2C campaign created successfully:', result.campaignId);
+      
+      // Stocker l'ID de la campagne pour utilisation ultérieure
+      localStorage.setItem('currentCampaignId', result.campaignId);
+      
     } catch (error) {
-      console.error('Failed to send data to terminal:', error);
+      console.error('Failed to create B2C campaign:', error);
+      // Continuer même si la création échoue pour l'instant
     }
     
     setConfirmed(true);

@@ -437,9 +437,32 @@ export default function IndividualRecapPage() {
   };
 
   const handleConfirm = async () => {
-    // Envoyer les données au serveur pour affichage dans le terminal Cursor
+    console.log('=== CREATE INDIVIDUAL CAMPAIGN - FINAL RECAP ===');
+    console.log('--- User Information ---');
+    console.log('Email: Individual Creator');
+    console.log('Company Name: Individual Creator');
+    console.log('--- Story Information ---');
+    console.log('Title:', recap.story?.title);
+    console.log('Starting Story:', recap.story?.startingStory);
+    console.log('Guideline:', recap.story?.guideline);
+    console.log('--- Film Information ---');
+    console.log('AI Film Requested:', recap.film?.aiRequested);
+    console.log('Video File:', recap.film?.fileName || 'No video file');
+    console.log('Video Format:', recap.film?.format);
+    console.log('--- Completions Data ---');
+    console.log('WINC Value:', recap.completions?.wincValue);
+    console.log('Max Completions:', recap.completions?.maxCompletions);
+    console.log('--- Economic Data ---');
+    console.log('MINT Price:', economicData?.mint);
+    console.log('Creator Gain:', economicData?.creatorGain);
+    console.log('Top1 Reward:', economicData?.top1);
+    console.log('Top2 Reward:', economicData?.top2);
+    console.log('Top3 Reward:', economicData?.top3);
+    console.log('=== END RECAP ===');
+
+    // Créer la campagne dans la base de données
     try {
-      await fetch('/api/log-campaign', {
+      const response = await fetch('/api/campaigns/create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -456,9 +479,20 @@ export default function IndividualRecapPage() {
           walletSource: account?.address ? 'thirdweb_account' : (localStorage.getItem('walletAddress') ? 'localStorage.walletAddress' : null)
         }),
       });
-      console.log('✅ Individual campaign data sent to terminal successfully');
+
+      if (!response.ok) {
+        throw new Error('Failed to create campaign in database');
+      }
+
+      const result = await response.json();
+      console.log('✅ Individual campaign created successfully:', result.campaignId);
+      
+      // Stocker l'ID de la campagne pour utilisation ultérieure
+      localStorage.setItem('currentCampaignId', result.campaignId);
+      
     } catch (error) {
-      console.error('Failed to send individual campaign data to terminal:', error);
+      console.error('Failed to create Individual campaign:', error);
+      // Continuer même si la création échoue pour l'instant
     }
     
     setConfirmed(true);

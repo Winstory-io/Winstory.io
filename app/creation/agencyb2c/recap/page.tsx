@@ -122,7 +122,95 @@ export default function AgencyB2CRecap() {
 
   const rewardTotals = calculateTotalRewards();
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
+    console.log('=== CREATE AGENCY B2C CAMPAIGN - FINAL RECAP ===');
+    console.log('--- User Information ---');
+    console.log('Email:', recap.user?.email);
+    console.log('Company Name:', recap.company?.name);
+    console.log('--- Story Information ---');
+    console.log('Title:', recap.story?.title);
+    console.log('Starting Story:', recap.story?.startingStory);
+    console.log('Guideline:', recap.story?.guideline);
+    console.log('--- Film Information ---');
+    console.log('AI Film Requested:', recap.film?.aiRequested);
+    console.log('Video File:', recap.film?.fileName || 'No video file');
+    console.log('Video Format:', recap.film?.format);
+    console.log('--- ROI/Rewards Data ---');
+    console.log('Unit Value:', recap.roiData?.unitValue);
+    console.log('Net Profit:', recap.roiData?.netProfit);
+    console.log('Max Completions:', recap.roiData?.maxCompletions);
+    console.log('Free Reward:', recap.roiData?.isFreeReward);
+    console.log('No Reward:', recap.roiData?.noReward);
+    console.log('--- Standard Rewards ---');
+    if (recap.standardToken) {
+      console.log('Standard Token:', recap.standardToken.name);
+      console.log('  - Contract:', recap.standardToken.contractAddress);
+      console.log('  - Blockchain:', recap.standardToken.blockchain);
+      console.log('  - Amount per user:', recap.standardToken.amountPerUser);
+    }
+    if (recap.standardItem) {
+      console.log('Standard Item:', recap.standardItem.name);
+      console.log('  - Contract:', recap.standardItem.contractAddress);
+      console.log('  - Blockchain:', recap.standardItem.blockchain);
+      console.log('  - Amount per user:', recap.standardItem.amountPerUser);
+    }
+    console.log('--- Premium Rewards ---');
+    if (recap.premiumToken) {
+      console.log('Premium Token:', recap.premiumToken.name);
+      console.log('  - Contract:', recap.premiumToken.contractAddress);
+      console.log('  - Blockchain:', recap.premiumToken.blockchain);
+      console.log('  - Amount per user:', recap.premiumToken.amountPerUser);
+    }
+    if (recap.premiumItem) {
+      console.log('Premium Item:', recap.premiumItem.name);
+      console.log('  - Contract:', recap.premiumItem.contractAddress);
+      console.log('  - Blockchain:', recap.premiumItem.blockchain);
+      console.log('  - Amount per user:', recap.premiumItem.amountPerUser);
+    }
+    console.log('--- Economic Data ---');
+    console.log('Total Standard Rewards:', rewardTotals.totalStandard);
+    console.log('Total Premium Rewards:', rewardTotals.totalPremium);
+    console.log('Total Rewards:', rewardTotals.total);
+    console.log('=== END RECAP ===');
+
+    // Créer la campagne dans la base de données
+    try {
+      const response = await fetch('/api/campaigns/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          user: recap.user,
+          company: recap.company,
+          story: recap.story,
+          film: recap.film,
+          roiData: recap.roiData,
+          standardToken: recap.standardToken,
+          standardItem: recap.standardItem,
+          premiumToken: recap.premiumToken,
+          premiumItem: recap.premiumItem,
+          campaignType: 'AGENCY_B2C',
+          walletAddress: localStorage.getItem('walletAddress') || null,
+          walletSource: 'localStorage.walletAddress'
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create campaign in database');
+      }
+
+      const result = await response.json();
+      console.log('✅ Agency B2C campaign created successfully:', result.campaignId);
+      
+      // Stocker l'ID de la campagne pour utilisation ultérieure
+      localStorage.setItem('currentCampaignId', result.campaignId);
+      
+    } catch (error) {
+      console.error('Failed to create Agency B2C campaign:', error);
+      // Continuer même si la création échoue pour l'instant
+    }
+    
     setConfirmed(true);
     setTimeout(() => {
       // TODO: Le MINT de la campagne permet de déployer sur IPFS (à améliorer ultérieurement)
