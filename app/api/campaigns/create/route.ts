@@ -188,6 +188,15 @@ export async function POST(request: NextRequest) {
     const maxCompletions = !hasRewards ? 100 : (data.roiData?.maxCompletions || data.completions?.maxCompletions || 0);
     console.log('Max Completions:', maxCompletions, !hasRewards ? '(Limited to 100 for complete ranking)' : '(Custom)');
 
+    // TODO: En production, vérifier le statut de paiement avant de créer la campagne
+    // const paymentStatus = await checkPaymentStatus(data.paymentId);
+    // if (!paymentStatus.confirmed) {
+    //   return NextResponse.json(
+    //     { success: false, error: 'Payment not confirmed' },
+    //     { status: 402 }
+    //   );
+    // }
+
     // Vérifier et créer les enregistrements utilisateur nécessaires
     await ensureUserExists(data.walletAddress, data.user?.email);
 

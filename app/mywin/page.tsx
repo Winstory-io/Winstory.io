@@ -125,21 +125,8 @@ export default function MyWinPage() {
   const handleLoginSuccess = useCallback((data: { email: string, walletAddress: string }) => {
     // L'utilisateur s'est connecté avec succès
     setIsConnected(true);
-    // TODO: Fetch user stats from blockchain/database based on actual user behavior
-    // This will be replaced with real API calls to get user's actual stats
-    
-    // For now, initialize with 0 - will be populated with real data
-    setStats({
-      creations: 0,
-      completions: 0,
-      moderations: 0,
-      totalWinc: 0,
-      totalXp: 0,
-    });
-    
-    // TODO: Implement real data fetching:
-    // const userStats = await fetchUserStatsFromBlockchain(data.walletAddress);
-    // setStats(userStats);
+    // Les stats seront automatiquement récupérées par fetchUserStats() dans useEffect
+    console.log('✅ Login successful, stats will be fetched automatically');
   }, []);
 
   // Si pas connecté, laisser le layout afficher l'écran d'authentification

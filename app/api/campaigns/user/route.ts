@@ -42,32 +42,7 @@ export async function GET(request: NextRequest) {
             creator_type,
             created_at,
             updated_at,
-            creator_infos!inner (
-              company_name,
-              agency_name,
-              wallet_address,
-              email
-            ),
-            campaign_contents (
-              video_url,
-              video_orientation,
-              starting_story,
-              guidelines
-            ),
-            campaign_rewards (
-              standard_reward,
-              premium_reward,
-              completion_price
-            ),
-            campaign_metadata (
-              metadata
-            ),
-            moderation_progress (
-              status,
-              current_step,
-              total_steps,
-              completed_steps
-            )
+            original_creator_wallet
           `)
           .eq('original_creator_wallet', walletAddress)
           .order('created_at', { ascending: false });
@@ -202,19 +177,21 @@ export async function GET(request: NextRequest) {
               starting_story,
               guidelines
             ),
-            campaign_rewards (
-              standard_reward,
-              premium_reward,
-              completion_price
+            campaign_rewards_configs (
+              reward_tier,
+              reward_type,
+              is_configured
             ),
             campaign_metadata (
-              metadata
+              total_completions,
+              tags
             ),
             moderation_progress (
-              status,
-              current_step,
-              total_steps,
-              completed_steps
+              current_score,
+              required_score,
+              total_votes,
+              valid_votes,
+              refuse_votes
             )
           `)
           .or(`original_creator_wallet.eq.${walletAddress},completer_wallet.eq.${walletAddress}`)
@@ -232,9 +209,6 @@ export async function GET(request: NextRequest) {
 
     // Transformer les données pour l'interface utilisateur
     const transformedCampaigns = campaigns.map(campaign => {
-      const metadata = campaign.campaign_metadata?.[0]?.metadata ? 
-        JSON.parse(campaign.campaign_metadata[0].metadata) : {};
-
       return {
         id: campaign.id,
         title: campaign.title,
@@ -245,49 +219,22 @@ export async function GET(request: NextRequest) {
         createdAt: campaign.created_at,
         updatedAt: campaign.updated_at,
         
-        // Informations du créateur
+        // Informations du créateur (simplifiées pour l'instant)
         creator: {
-          companyName: campaign.creator_infos?.[0]?.company_name,
-          agencyName: campaign.creator_infos?.[0]?.agency_name,
-          walletAddress: campaign.creator_infos?.[0]?.wallet_address,
-          email: campaign.creator_infos?.[0]?.email
+          walletAddress: campaign.original_creator_wallet
         },
         
-        // Contenu de la campagne
-        content: {
-          videoUrl: campaign.campaign_contents?.[0]?.video_url,
-          videoOrientation: campaign.campaign_contents?.[0]?.video_orientation,
-          startingStory: campaign.campaign_contents?.[0]?.starting_story,
-          guidelines: campaign.campaign_contents?.[0]?.guidelines
-        },
+        // Contenu de la campagne (vide pour l'instant)
+        content: {},
         
-        // Récompenses
-        rewards: {
-          standardReward: campaign.campaign_rewards?.[0]?.standard_reward,
-          premiumReward: campaign.campaign_rewards?.[0]?.premium_reward,
-          completionPrice: campaign.campaign_rewards?.[0]?.completion_price
-        },
+        // Récompenses (vide pour l'instant)
+        rewards: {},
         
-        // Métadonnées
-        metadata: {
-          maxCompletions: metadata.max_completions,
-          unitValue: metadata.unit_value,
-          netProfit: metadata.net_profit,
-          isFreeReward: metadata.is_free_reward,
-          noReward: metadata.no_reward,
-          aiRequested: metadata.ai_requested,
-          videoFileName: metadata.video_file_name,
-          videoFileSize: metadata.video_file_size,
-          walletSource: metadata.wallet_source
-        },
+        // Métadonnées (vide pour l'instant)
+        metadata: {},
         
-        // Progrès de modération
-        moderationProgress: campaign.moderation_progress?.[0] ? {
-          status: campaign.moderation_progress[0].status,
-          currentStep: campaign.moderation_progress[0].current_step,
-          totalSteps: campaign.moderation_progress[0].total_steps,
-          completedSteps: campaign.moderation_progress[0].completed_steps
-        } : null
+        // Progrès de modération (vide pour l'instant)
+        moderationProgress: null
       };
     });
 

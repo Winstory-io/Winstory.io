@@ -57,11 +57,11 @@ export default function MyCreationsPage() {
               title: campaign.title,
               description: campaign.description || '',
               creationDate: campaign.createdAt,
-              targetCompletions: campaign.metadata?.maxCompletions || 0,
+              targetCompletions: 100, // Valeur par défaut pour les campagnes B2C avec options payantes
               currentCompletions: 0, // TODO: Calculer depuis les completions réelles
               averageScore: 0, // TODO: Calculer depuis les scores de modération
               rewardsDistributed: 0, // TODO: Calculer depuis les récompenses distribuées
-              roi: campaign.metadata?.netProfit || 0,
+              roi: 0, // TODO: Calculer depuis les métadonnées réelles
               status: campaign.status === 'PENDING_MODERATION' ? 'active' : 
                      campaign.status === 'APPROVED' ? 'active' : 
                      campaign.status === 'COMPLETED' ? 'completed' : 'paused'
