@@ -6,6 +6,8 @@ import WalletConnect from '@/components/WalletConnect';
 import { useRouter } from 'next/navigation';
 import CreationIcon from '@/components/icons/CreationIcon';
 import CompletionIcon from '@/components/icons/CompletionIcon';
+import MyWinIntroModal from '@/components/MyWin/MyWinIntroModal';
+import Image from 'next/image';
 
 interface DashboardStats {
   creations: number;
@@ -18,6 +20,7 @@ interface DashboardStats {
 export default function MyWinPage() {
   const account = useActiveAccount();
   const [isConnected, setIsConnected] = useState(false);
+  const [showIntro, setShowIntro] = useState(false);
   const [stats, setStats] = useState<DashboardStats>({
     creations: 0,
     completions: 0,
@@ -159,34 +162,45 @@ export default function MyWinPage() {
             fontSize: '48px', 
             fontWeight: 900, 
             color: '#00FF00',
-            margin: 0
+            margin: 0,
+            display: 'flex',
+            alignItems: 'center',
+            letterSpacing: '1px',
           }}>
             My Win
+            <button
+              onClick={() => setShowIntro(true)}
+              style={{
+                background: 'rgba(0, 255, 0, 0.1)',
+                border: '2px solid rgba(0, 255, 0, 0.3)',
+                borderRadius: '50%',
+                padding: 8,
+                marginLeft: 12,
+                display: 'flex',
+                alignItems: 'center',
+                cursor: 'pointer',
+                transition: 'all 0.3s',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(0, 255, 0, 0.2)';
+                e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.6)';
+                e.currentTarget.style.transform = 'scale(1.1)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'rgba(0, 255, 0, 0.1)';
+                e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.3)';
+                e.currentTarget.style.transform = 'scale(1)';
+              }}
+            >
+              <Image
+                src="/tooltip.svg"
+                alt="Info"
+                width={28}
+                height={28}
+                style={{ display: 'inline-block', verticalAlign: 'middle' }}
+              />
+            </button>
           </h1>
-        </div>
-        <div style={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'center', 
-          gap: 8, // Réduit de 16 à 8 pour rapprocher l'icône et la phrase
-          marginBottom: 0,
-          marginLeft: '-80px' // Décalage augmenté pour centrer parfaitement "Brainpowered by You"
-        }}>
-          <img
-            src="/clienticon.svg"
-            alt="My Win Icon"
-            width="96" // Doublé de 48 à 96
-            height="96" // Doublé de 48 à 96
-            style={{ display: 'block' }}
-          />
-          <p style={{ 
-            fontSize: '20px', 
-            color: '#00FF00', 
-            fontWeight: 600,
-            margin: 0
-          }}>
-            Brainpowered by You
-          </p>
         </div>
       </div>
 
@@ -194,17 +208,24 @@ export default function MyWinPage() {
       <div style={{ 
         display: 'grid', 
         gridTemplateColumns: 'repeat(3, 1fr)', 
-        gap: 24, 
-        marginBottom: 48 
+        gap: 32, 
+        marginBottom: 48,
+        maxWidth: '1200px',
+        width: '100%',
+        padding: '0 24px'
       }}>
         {/* My Creations */}
         <div style={{
           background: 'rgba(0, 0, 0, 0.8)',
           border: '2px solid #00FF00',
           borderRadius: '16px',
-          padding: '24px',
+          padding: '40px 32px',
           textAlign: 'center',
-          transition: 'all 0.3s ease'
+          transition: 'all 0.3s ease',
+          minHeight: '320px',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between'
         }}
         onMouseEnter={(e) => {
           e.currentTarget.style.transform = 'translateY(-8px)';
@@ -216,13 +237,13 @@ export default function MyWinPage() {
         }}
         onClick={() => router.push('/mywin/creations')}
         >
-          <div style={{ fontSize: '48px', marginBottom: '16px' }}>
+          <div style={{ fontSize: '56px', marginBottom: '24px' }}>
             <CreationIcon />
           </div>
-          <h3 style={{ color: '#00FF00', fontSize: '24px', fontWeight: 800, marginBottom: '8px' }}>
+          <h3 style={{ color: '#00FF00', fontSize: '28px', fontWeight: 800, marginBottom: '16px' }}>
             My Creations
           </h3>
-          <p style={{ color: '#fff', fontSize: '18px', marginBottom: '16px' }}>
+          <p style={{ color: '#fff', fontSize: '20px', marginBottom: '24px' }}>
             {stats.creations} campaigns created
           </p>
           <button style={{
@@ -230,8 +251,8 @@ export default function MyWinPage() {
             color: '#000',
             border: 'none',
             borderRadius: '8px',
-            padding: '12px 24px',
-            fontSize: '16px',
+            padding: '14px 28px',
+            fontSize: '18px',
             fontWeight: 700,
             cursor: 'pointer',
             transition: 'all 0.3s ease'
@@ -252,9 +273,13 @@ export default function MyWinPage() {
           background: 'rgba(0, 0, 0, 0.8)',
           border: '2px solid #00FF00',
           borderRadius: '16px',
-          padding: '24px',
+          padding: '40px 32px',
           textAlign: 'center',
-          transition: 'all 0.3s ease'
+          transition: 'all 0.3s ease',
+          minHeight: '320px',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between'
         }}
         onMouseEnter={(e) => {
           e.currentTarget.style.transform = 'translateY(-8px)';
@@ -266,19 +291,19 @@ export default function MyWinPage() {
         }}
         onClick={() => router.push('/mywin/moderations')}
         >
-          <div style={{ fontSize: '48px', marginBottom: '16px' }}>
+          <div style={{ fontSize: '56px', marginBottom: '24px' }}>
             <img
               src="/moderation.svg"
               alt="Moderation Icon"
-              width="96"
-              height="96"
+              width="112"
+              height="112"
               style={{ display: 'block', margin: '0 auto' }}
             />
           </div>
-          <h3 style={{ color: '#00FF00', fontSize: '24px', fontWeight: 800, marginBottom: '8px' }}>
+          <h3 style={{ color: '#00FF00', fontSize: '28px', fontWeight: 800, marginBottom: '16px' }}>
             My Moderations
           </h3>
-          <p style={{ color: '#fff', fontSize: '18px', marginBottom: '16px' }}>
+          <p style={{ color: '#fff', fontSize: '20px', marginBottom: '24px' }}>
             {stats.moderations} contents moderated
           </p>
           <button style={{
@@ -286,8 +311,8 @@ export default function MyWinPage() {
             color: '#000',
             border: 'none',
             borderRadius: '8px',
-            padding: '12px 24px',
-            fontSize: '16px',
+            padding: '14px 28px',
+            fontSize: '18px',
             fontWeight: 700,
             cursor: 'pointer',
             transition: 'all 0.3s ease'
@@ -308,9 +333,13 @@ export default function MyWinPage() {
           background: 'rgba(0, 0, 0, 0.8)',
           border: '2px solid #00FF00',
           borderRadius: '16px',
-          padding: '24px',
+          padding: '40px 32px',
           textAlign: 'center',
-          transition: 'all 0.3s ease'
+          transition: 'all 0.3s ease',
+          minHeight: '320px',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between'
         }}
         onMouseEnter={(e) => {
           e.currentTarget.style.transform = 'translateY(-8px)';
@@ -322,13 +351,13 @@ export default function MyWinPage() {
         }}
         onClick={() => router.push('/mywin/completions')}
         >
-          <div style={{ fontSize: '48px', marginBottom: '16px' }}>
+          <div style={{ fontSize: '56px', marginBottom: '24px' }}>
             <CompletionIcon />
           </div>
-          <h3 style={{ color: '#00FF00', fontSize: '24px', fontWeight: 800, marginBottom: '8px' }}>
+          <h3 style={{ color: '#00FF00', fontSize: '28px', fontWeight: 800, marginBottom: '16px' }}>
             My Completions
           </h3>
-          <p style={{ color: '#fff', fontSize: '18px', marginBottom: '16px' }}>
+          <p style={{ color: '#fff', fontSize: '20px', marginBottom: '24px' }}>
             {stats.completions} campaigns completed
           </p>
           <button style={{
@@ -336,8 +365,8 @@ export default function MyWinPage() {
             color: '#000',
             border: 'none',
             borderRadius: '8px',
-            padding: '12px 24px',
-            fontSize: '16px',
+            padding: '14px 28px',
+            fontSize: '18px',
             fontWeight: 700,
             cursor: 'pointer',
             transition: 'all 0.3s ease'
@@ -387,6 +416,11 @@ export default function MyWinPage() {
           <div style={{ color: '#fff', fontSize: '16px' }}>XP Points</div>
         </div>
       </div>
+
+      {/* My Win Intro Modal */}
+      {showIntro && (
+        <MyWinIntroModal onClose={() => setShowIntro(false)} />
+      )}
     </div>
   );
 } 
