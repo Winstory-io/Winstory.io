@@ -1,1 +1,4 @@
-{}
+{
+  "/mywin/page": "app/mywin/page.js",
+  "/mywin/creations/page": "app/mywin/creations/page.js"
+}

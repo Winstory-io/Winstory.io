@@ -244,9 +244,10 @@ function RequirementItem({ label, ok }: Requirement) {
 interface ActiveCampaignDashboardProps {
 	externalProgressData?: any;
 	campaignTitle?: string;
+	devForceValidated?: boolean;
 }
 
-export default function ActiveCampaignDashboard({ externalProgressData, campaignTitle }: ActiveCampaignDashboardProps) {
+export default function ActiveCampaignDashboard({ externalProgressData, campaignTitle, devForceValidated }: ActiveCampaignDashboardProps) {
 	const account = useActiveAccount();
 	const [campaign, setCampaign] = useState<CampaignLike | null>(null);
 
@@ -254,6 +255,7 @@ export default function ActiveCampaignDashboard({ externalProgressData, campaign
 		console.log('=== ActiveCampaignDashboard useEffect ===');
 		console.log('externalProgressData:', externalProgressData);
 		console.log('campaignTitle:', campaignTitle);
+		console.log('devForceValidated:', devForceValidated);
 		
 		if (externalProgressData) {
 			console.log('✅ Using external progress data');
@@ -272,26 +274,38 @@ export default function ActiveCampaignDashboard({ externalProgressData, campaign
 				}
 			});
 		} else {
-			console.log('⚠️ No external data, using mock data');
-			// Fallback vers les données mockées si pas de données externes
-			let mounted = true;
-			(async () => {
-				try {
-					const data = await import('../lib/mockData');
-					const firstInitial = (data.mockCampaigns as any[]).find((c) => c.type === 'INITIAL');
-					if (mounted) {
-						setCampaign(firstInitial ? { id: firstInitial.id, title: firstInitial.title, type: firstInitial.type, creatorType: firstInitial.creatorType, progress: firstInitial.progress } : null);
-					}
-				} catch (e) {
-					console.error(e);
-				}
-			})();
-			return () => { mounted = false; };
+			console.log('⚠️ No external data available - showing empty state');
+			// Pas de données externes = pas de campagne active
+			setCampaign(null);
 		}
-	}, [externalProgressData, campaignTitle]);
+	}, [externalProgressData, campaignTitle, devForceValidated]);
 
 	const stats = useMemo(() => {
 		if (!campaign) return null;
+		
+		// Si Dev Controls force la validation, simuler un état validé
+		if (devForceValidated) {
+			const requirements: Requirement[] = [
+				{ label: `Minimum ${MIN_REQUIRED_VOTES} Stakers moderations votes`, ok: true },
+				{ label: `Pool Staking by Moderators > MINT Price $`, ok: true },
+				{ label: `Hybrid (Majority / Minority) ≥ 2`, ok: true },
+			];
+			return { 
+				requirements, 
+				title: 'Moderators validated your Initial Campaign ! (Dev Override)', 
+				validVotes: 10, 
+				refuseVotes: 0, 
+				totalVotes: 10, 
+				computed: { 
+					allOk: true, 
+					votesOk: true, 
+					stakingOk: true, 
+					ratioOk: true,
+					hybridResult: { status: 'VALIDATED' as const, ratio: 2.5 }
+				} 
+			};
+		}
+		
 		// Use external progress data if available, otherwise use campaign's own progress
 		const progressData = externalProgressData || campaign.progress;
 		const { validVotes, refuseVotes, totalVotes } = progressData;
@@ -305,7 +319,7 @@ export default function ActiveCampaignDashboard({ externalProgressData, campaign
 		if (computed.allOk) title = 'Moderators validated your Initial Campaign !';
 		else if (computed.hybridResult.status === 'REJECTED') title = 'Moderators refused your Initial Campaign';
 		return { requirements, title, validVotes, refuseVotes, totalVotes, computed };
-	}, [campaign, externalProgressData]);
+	}, [campaign, externalProgressData, devForceValidated]);
 
 	if (!campaign) {
 		return (

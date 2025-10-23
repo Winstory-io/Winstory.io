@@ -355,10 +355,11 @@ export default function MyCreationsPage() {
                   onForceValidated={setDevForceValidated}
                 />
               ) : (
-                <ActiveCampaignDashboard 
-                  externalProgressData={activeInitialProgress}
-                  campaignTitle={activeInitialProgress?.campaignTitle || 'Campaign Title'}
-                />
+            <ActiveCampaignDashboard 
+              externalProgressData={activeInitialProgress}
+              campaignTitle={activeInitialProgress?.campaignTitle || 'Campaign Title'}
+              devForceValidated={devForceValidated}
+            />
               )}
             </div>
           </>
