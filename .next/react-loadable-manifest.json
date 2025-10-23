@@ -1,4 +1,22 @@
 {
+  "app/mywin/completions/page.tsx -> ../../../components/ActiveCompletionDashboard": {
+    "id": "app/mywin/completions/page.tsx -> ../../../components/ActiveCompletionDashboard",
+    "files": [
+      "static/chunks/_app-pages-browser_components_ActiveCompletionDashboard_tsx.js"
+    ]
+  },
+  "app/mywin/completions/page.tsx -> ../../../components/AllCompletionsDashboard": {
+    "id": "app/mywin/completions/page.tsx -> ../../../components/AllCompletionsDashboard",
+    "files": [
+      "static/chunks/_app-pages-browser_components_AllCompletionsDashboard_tsx.js"
+    ]
+  },
+  "app/mywin/completions/page.tsx -> ../../../components/ValidatedCompletionDashboard": {
+    "id": "app/mywin/completions/page.tsx -> ../../../components/ValidatedCompletionDashboard",
+    "files": [
+      "static/chunks/_app-pages-browser_components_ValidatedCompletionDashboard_tsx.js"
+    ]
+  },
   "app/mywin/creations/page.tsx -> ../../../components/ActiveCampaignDashboard": {
     "id": "app/mywin/creations/page.tsx -> ../../../components/ActiveCampaignDashboard",
     "files": []

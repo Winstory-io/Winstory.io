@@ -81,13 +81,14 @@ export async function GET(request: NextRequest) {
               starting_story,
               guidelines
             ),
-            campaign_rewards (
-              standard_reward,
-              premium_reward,
-              completion_price
+            campaign_rewards_configs (
+              reward_tier,
+              reward_type,
+              is_configured
             ),
             campaign_metadata (
-              metadata
+              total_completions,
+              tags
             )
           `)
           .eq('completer_wallet', walletAddress)
@@ -133,10 +134,10 @@ export async function GET(request: NextRequest) {
                 starting_story,
                 guidelines
               ),
-              campaign_rewards (
-                standard_reward,
-                premium_reward,
-                completion_price
+              campaign_rewards_configs (
+                reward_tier,
+                reward_type,
+                is_configured
               )
             )
           `)
@@ -224,14 +225,14 @@ export async function GET(request: NextRequest) {
           walletAddress: campaign.original_creator_wallet
         },
         
-        // Contenu de la campagne (vide pour l'instant)
-        content: {},
+        // Contenu de la campagne
+        content: campaign.campaign_contents || {},
         
-        // Récompenses (vide pour l'instant)
-        rewards: {},
+        // Récompenses
+        rewards: campaign.campaign_rewards_configs || {},
         
-        // Métadonnées (vide pour l'instant)
-        metadata: {},
+        // Métadonnées
+        metadata: campaign.campaign_metadata || {},
         
         // Progrès de modération (vide pour l'instant)
         moderationProgress: null

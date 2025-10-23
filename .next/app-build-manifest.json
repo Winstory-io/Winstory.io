@@ -75,6 +75,21 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/api/campaigns/moderation/route.js"
+    ],
+    "/mywin/completions/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/mywin/completions/page.js"
+    ],
+    "/api/campaigns/user/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/campaigns/user/route.js"
+    ],
+    "/mywin/moderations/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/mywin/moderations/page.js"
     ]
   }
 }

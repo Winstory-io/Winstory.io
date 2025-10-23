@@ -1,4 +1,5 @@
 {
-  "/mywin/page": "app/mywin/page.js",
-  "/mywin/creations/page": "app/mywin/creations/page.js"
+  "/api/campaigns/user/route": "app/api/campaigns/user/route.js",
+  "/mywin/moderations/page": "app/mywin/moderations/page.js",
+  "/mywin/completions/page": "app/mywin/completions/page.js"
 }
