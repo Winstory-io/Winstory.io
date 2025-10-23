@@ -245,7 +245,7 @@ export default function ThirdwebEmailAuth({
                     textAlign: 'center',
                     fontSize: 14
                 }}>
-                    Redirecting to your dashboard...
+                    Redirecting to your informations & creation story...
                 </div>
             </div>
         );

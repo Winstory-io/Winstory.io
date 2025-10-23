@@ -195,7 +195,9 @@ export function evaluateModeration(
     };
   }
 
-  const mintPriceWINC = BigInt(Math.floor(mintPriceUSDC * Number(wincPerUSDC) / SCALE));
+  // Vérifier que mintPriceUSDC est un nombre valide
+  const safeMintPriceUSDC = isNaN(mintPriceUSDC) || mintPriceUSDC <= 0 ? 100 : mintPriceUSDC; // Valeur par défaut de 100 USDC
+  const mintPriceWINC = BigInt(Math.floor(safeMintPriceUSDC * Number(wincPerUSDC) / SCALE));
   if (totalStake <= mintPriceWINC) {
     return {
       status: ModerationStatus.PENDING_REQUIREMENTS,

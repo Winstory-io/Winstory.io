@@ -18,25 +18,32 @@ export function computeValidationState(progress: {
 }) {
 	const { validVotes, refuseVotes, totalVotes, stakedAmount, mintPrice, stakeYes = 0, stakeNo = 0 } = progress;
 	
+	// Vérifier que mintPrice est un nombre valide
+	const safeMintPrice = isNaN(mintPrice) || mintPrice <= 0 ? 100 : mintPrice; // Valeur par défaut de 100 USDC
+	
 	// Use the hybrid moderation engine for intrinsic validation
 	const hybridResult = evaluateModeration(
-		validVotes, // votesYes
-		refuseVotes, // votesNo  
-		BigInt(Math.floor(stakeYes * SCALE)), // stakeYes in WINC (scaled)
-		BigInt(Math.floor(stakeNo * SCALE)), // stakeNo in WINC (scaled)
-		mintPrice, // mintPriceUSDC
+		validVotes || 0, // votesYes
+		refuseVotes || 0, // votesNo  
+		BigInt(Math.floor((stakeYes || 0) * SCALE)), // stakeYes in WINC (scaled)
+		BigInt(Math.floor((stakeNo || 0) * SCALE)), // stakeNo in WINC (scaled)
+		safeMintPrice, // mintPriceUSDC
 		Date.now(), // currentTimestamp
 		Date.now() + 7 * 24 * 3600 * 1000, // voteWindowEnd (7 days)
 		BigInt(SCALE) // wincPerUSDC (1 WINC = 1 USDC)
 	);
 	
 	// Extract hybrid validation results
-	const votesOk = totalVotes >= MIN_REQUIRED_VOTES;
-	const stakingOk = stakedAmount > mintPrice; // Must be greater than MINT price
+	const votesOk = (totalVotes || 0) >= MIN_REQUIRED_VOTES;
+	const stakingOk = (stakedAmount || 0) > safeMintPrice; // Must be greater than MINT price
 	const hybridScoreYes = Number(hybridResult.scoreYes) / SCALE;
 	const hybridScoreNo = Number(hybridResult.scoreNo) / SCALE;
-	// Fix: Use same logic as moderation engine
-	const ratioOk = (hybridScoreYes >= (hybridScoreNo * 2.0)) || (hybridScoreNo >= (hybridScoreYes * 2.0));
+	
+	// Fix: Hybrid ratio should only be OK if there are actual votes and a clear majority
+	// If no votes or insufficient votes, ratio should be false
+	const ratioOk = (totalVotes || 0) >= MIN_REQUIRED_VOTES && 
+					((hybridScoreYes >= (hybridScoreNo * 2.0)) || (hybridScoreNo >= (hybridScoreYes * 2.0)));
+	
 	const majorityValid = hybridResult.status === ModerationStatus.VALIDATED || 
 						  (hybridResult.status === ModerationStatus.PENDING_REQUIREMENTS && hybridScoreYes > hybridScoreNo);
 	
@@ -236,27 +243,52 @@ function RequirementItem({ label, ok }: Requirement) {
 
 interface ActiveCampaignDashboardProps {
 	externalProgressData?: any;
+	campaignTitle?: string;
 }
 
-export default function ActiveCampaignDashboard({ externalProgressData }: ActiveCampaignDashboardProps) {
+export default function ActiveCampaignDashboard({ externalProgressData, campaignTitle }: ActiveCampaignDashboardProps) {
 	const account = useActiveAccount();
 	const [campaign, setCampaign] = useState<CampaignLike | null>(null);
 
 	useEffect(() => {
-		let mounted = true;
-		(async () => {
-			try {
-				const data = await import('../lib/mockData');
-				const firstInitial = (data.mockCampaigns as any[]).find((c) => c.type === 'INITIAL');
-				if (mounted) {
-					setCampaign(firstInitial ? { id: firstInitial.id, title: firstInitial.title, type: firstInitial.type, creatorType: firstInitial.creatorType, progress: firstInitial.progress } : null);
+		console.log('=== ActiveCampaignDashboard useEffect ===');
+		console.log('externalProgressData:', externalProgressData);
+		console.log('campaignTitle:', campaignTitle);
+		
+		if (externalProgressData) {
+			console.log('✅ Using external progress data');
+			// Utiliser les données externes (vraies données de modération)
+			setCampaign({
+				id: externalProgressData.campaignId || 'unknown',
+				title: campaignTitle || externalProgressData.campaignTitle || 'Campaign Title',
+				type: 'INITIAL',
+				creatorType: 'FOR_B2C',
+				progress: {
+					validVotes: externalProgressData.validVotes || 0,
+					refuseVotes: externalProgressData.refuseVotes || 0,
+					totalVotes: externalProgressData.totalVotes || 0,
+					stakedAmount: externalProgressData.stakedAmount || 0,
+					mintPrice: externalProgressData.mintPrice || 100
 				}
-			} catch (e) {
-				console.error(e);
-			}
-		})();
-		return () => { mounted = false; };
-	}, [account]);
+			});
+		} else {
+			console.log('⚠️ No external data, using mock data');
+			// Fallback vers les données mockées si pas de données externes
+			let mounted = true;
+			(async () => {
+				try {
+					const data = await import('../lib/mockData');
+					const firstInitial = (data.mockCampaigns as any[]).find((c) => c.type === 'INITIAL');
+					if (mounted) {
+						setCampaign(firstInitial ? { id: firstInitial.id, title: firstInitial.title, type: firstInitial.type, creatorType: firstInitial.creatorType, progress: firstInitial.progress } : null);
+					}
+				} catch (e) {
+					console.error(e);
+				}
+			})();
+			return () => { mounted = false; };
+		}
+	}, [externalProgressData, campaignTitle]);
 
 	const stats = useMemo(() => {
 		if (!campaign) return null;
@@ -287,7 +319,7 @@ export default function ActiveCampaignDashboard({ externalProgressData }: Active
 	return (
 		<div style={{ width: '100%', maxWidth: 1200 }}>
 			<h2 style={{ color: stats?.computed.hybridResult.status === 'REJECTED' ? '#FF3B30' : '#FFD600', fontSize: 40, fontWeight: 900, textAlign: 'center', marginBottom: 8 }}>{stats?.title}</h2>
-			<p style={{ color: '#C0C0C0', textAlign: 'center', marginBottom: 20 }}>Title</p>
+			<p style={{ color: '#C0C0C0', textAlign: 'center', marginBottom: 20 }}>{campaign?.title || 'Campaign Title'}</p>
 
 			<div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: 24 }}>
 				<div style={{ color: '#FFD600', justifySelf: 'start' }}>
