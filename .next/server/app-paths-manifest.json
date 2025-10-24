@@ -1,4 +1,6 @@
 {
-  "/mywin/completions/page": "app/mywin/completions/page.js",
+  "/api/user/initialize/route": "app/api/user/initialize/route.js",
+  "/api/user/stats/route": "app/api/user/stats/route.js",
+  "/welcome/page": "app/welcome/page.js",
   "/mywin/page": "app/mywin/page.js"
 }

@@ -25,6 +25,11 @@
       "static/chunks/main-app.js",
       "static/chunks/app/api/auth/[...nextauth]/route.js"
     ],
+    "/creation/youare/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/creation/youare/page.js"
+    ],
     "/mywin/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
@@ -35,60 +40,15 @@
       "static/chunks/main-app.js",
       "static/chunks/app/mywin/page.js"
     ],
-    "/mywin/completions/page": [
+    "/api/user/initialize/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/mywin/completions/page.js"
+      "static/chunks/app/api/user/initialize/route.js"
     ],
-    "/creation/youare/page": [
+    "/api/user/stats/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/creation/youare/page.js"
-    ],
-    "/creation/b2c/login/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/creation/b2c/login/page.js"
-    ],
-    "/creation/b2c/yourinformations/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/creation/b2c/yourinformations/page.js"
-    ],
-    "/creation/b2c/yourwinstory/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/creation/b2c/yourwinstory/page.js"
-    ],
-    "/creation/b2c/yourfilm/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/creation/b2c/yourfilm/page.js"
-    ],
-    "/creation/b2c/rewardsornot/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/creation/b2c/rewardsornot/page.js"
-    ],
-    "/creation/b2c/recap/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/creation/b2c/recap/page.js"
-    ],
-    "/api/log-campaign/route": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/api/log-campaign/route.js"
-    ],
-    "/creation/b2c/mint/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/creation/b2c/mint/page.js"
-    ],
-    "/creation/agencyb2c/mint/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/creation/agencyb2c/mint/page.js"
+      "static/chunks/app/api/user/stats/route.js"
     ]
   }
 }
