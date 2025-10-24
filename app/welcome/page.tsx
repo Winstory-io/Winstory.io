@@ -311,7 +311,7 @@ export default function Home() {
           }}
           onClick={() => router.push('/creation/youare')}
         >
-          <span style={{ fontSize: 56 }}>
+          <span style={{ fontSize: 56, marginLeft: -29 }}>
             <CreationIcon />
           </span>
           Create Campaign
@@ -331,7 +331,7 @@ export default function Home() {
           // TODO: restreindre l'accès à /moderation à la possession d'un token spécifique dans le wallet
           onClick={() => router.push('/moderation')}
         >
-          <span style={{ fontSize: 56 }}>
+          <span style={{ fontSize: 56, marginLeft: -201 }}>
             <ModerationIcon />
           </span>
           Moderate
