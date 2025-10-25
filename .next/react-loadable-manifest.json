@@ -1,8 +1,8 @@
 {
-  "lib/hooks/useModeration.ts -> ../mockData": {
-    "id": "lib/hooks/useModeration.ts -> ../mockData",
+  "components/ThirdwebPayment.tsx -> thirdweb/wallets/in-app": {
+    "id": "components/ThirdwebPayment.tsx -> thirdweb/wallets/in-app",
     "files": [
-      "static/chunks/_app-pages-browser_lib_mockData_ts.js"
+      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_exports_wallets_in-app_js.js"
     ]
   },
   "node_modules/thirdweb/dist/esm/chains/constants.js -> ./utils.js": {
@@ -17,7 +17,9 @@
   },
   "node_modules/thirdweb/dist/esm/contract/actions/resolve-abi.js -> ../../transaction/read-contract.js": {
     "id": "node_modules/thirdweb/dist/esm/contract/actions/resolve-abi.js -> ../../transaction/read-contract.js",
-    "files": []
+    "files": [
+      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_transaction_read-contract_js.js"
+    ]
   },
   "node_modules/thirdweb/dist/esm/contract/actions/resolve-abi.js -> ../../utils/bytecode/extractIPFS.js": {
     "id": "node_modules/thirdweb/dist/esm/contract/actions/resolve-abi.js -> ../../utils/bytecode/extractIPFS.js",
@@ -47,9 +49,7 @@
   },
   "node_modules/thirdweb/dist/esm/extensions/erc721/read/getNFT.js -> ../__generated__/IERC721A/read/ownerOf.js": {
     "id": "node_modules/thirdweb/dist/esm/extensions/erc721/read/getNFT.js -> ../__generated__/IERC721A/read/ownerOf.js",
-    "files": [
-      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_extensions_erc721___generated___IERC721A_re-780d32.js"
-    ]
+    "files": []
   },
   "node_modules/thirdweb/dist/esm/extensions/marketplace/direct-listings/utils.js -> ../../erc1155/__generated__/IERC1155/read/balanceOf.js": {
     "id": "node_modules/thirdweb/dist/esm/extensions/marketplace/direct-listings/utils.js -> ../../erc1155/__generated__/IERC1155/read/balanceOf.js",
@@ -125,21 +125,15 @@
   },
   "node_modules/thirdweb/dist/esm/insight/get-nfts.js -> ./common.js": {
     "id": "node_modules/thirdweb/dist/esm/insight/get-nfts.js -> ./common.js",
-    "files": [
-      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_insight_common_js.js"
-    ]
+    "files": []
   },
   "node_modules/thirdweb/dist/esm/insight/get-nfts.js -> @thirdweb-dev/insight": {
     "id": "node_modules/thirdweb/dist/esm/insight/get-nfts.js -> @thirdweb-dev/insight",
-    "files": [
-      "static/chunks/_app-pages-browser_node_modules_thirdweb-dev_insight_dist_esm_exports_thirdweb_js.js"
-    ]
+    "files": []
   },
   "node_modules/thirdweb/dist/esm/insight/get-nfts.js -> viem": {
     "id": "node_modules/thirdweb/dist/esm/insight/get-nfts.js -> viem",
-    "files": [
-      "static/chunks/_app-pages-browser_node_modules_thirdweb_node_modules_viem__esm_index_js.js"
-    ]
+    "files": []
   },
   "node_modules/thirdweb/dist/esm/insight/get-tokens.js -> ../utils/domains.js": {
     "id": "node_modules/thirdweb/dist/esm/insight/get-tokens.js -> ../utils/domains.js",
@@ -159,15 +153,11 @@
   },
   "node_modules/thirdweb/dist/esm/insight/get-tokens.js -> ./common.js": {
     "id": "node_modules/thirdweb/dist/esm/insight/get-tokens.js -> ./common.js",
-    "files": [
-      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_insight_common_js.js"
-    ]
+    "files": []
   },
   "node_modules/thirdweb/dist/esm/insight/get-tokens.js -> @thirdweb-dev/insight": {
     "id": "node_modules/thirdweb/dist/esm/insight/get-tokens.js -> @thirdweb-dev/insight",
-    "files": [
-      "static/chunks/_app-pages-browser_node_modules_thirdweb-dev_insight_dist_esm_exports_thirdweb_js.js"
-    ]
+    "files": []
   },
   "node_modules/thirdweb/dist/esm/insight/get-transactions.js -> ../utils/domains.js": {
     "id": "node_modules/thirdweb/dist/esm/insight/get-transactions.js -> ../utils/domains.js",
@@ -195,9 +185,7 @@
   },
   "node_modules/thirdweb/dist/esm/react/core/hooks/auth/useSiweAuth.js -> ../../../../auth/core/sign-login-payload.js": {
     "id": "node_modules/thirdweb/dist/esm/react/core/hooks/auth/useSiweAuth.js -> ../../../../auth/core/sign-login-payload.js",
-    "files": [
-      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_auth_core_sign-login-payload_js.js"
-    ]
+    "files": []
   },
   "node_modules/thirdweb/dist/esm/react/core/hooks/others/useTokenInfo.js -> ../../../../chains/utils.js": {
     "id": "node_modules/thirdweb/dist/esm/react/core/hooks/others/useTokenInfo.js -> ../../../../chains/utils.js",
@@ -209,21 +197,15 @@
   },
   "node_modules/thirdweb/dist/esm/react/core/hooks/useStepExecutor.js -> ../../../bridge/Status.js": {
     "id": "node_modules/thirdweb/dist/esm/react/core/hooks/useStepExecutor.js -> ../../../bridge/Status.js",
-    "files": [
-      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_bridge_Status_js.js"
-    ]
+    "files": []
   },
   "node_modules/thirdweb/dist/esm/react/core/hooks/useStepExecutor.js -> ../../../bridge/index.js": {
     "id": "node_modules/thirdweb/dist/esm/react/core/hooks/useStepExecutor.js -> ../../../bridge/index.js",
-    "files": [
-      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_bridge_index_js.js"
-    ]
+    "files": []
   },
   "node_modules/thirdweb/dist/esm/react/core/hooks/useStepExecutor.js -> ../../../transaction/actions/send-batch-transaction.js": {
     "id": "node_modules/thirdweb/dist/esm/react/core/hooks/useStepExecutor.js -> ../../../transaction/actions/send-batch-transaction.js",
-    "files": [
-      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_transaction_actions_send-batch-transaction_js.js"
-    ]
+    "files": []
   },
   "node_modules/thirdweb/dist/esm/react/core/hooks/useStepExecutor.js -> ../../../transaction/actions/send-transaction.js": {
     "id": "node_modules/thirdweb/dist/esm/react/core/hooks/useStepExecutor.js -> ../../../transaction/actions/send-transaction.js",
@@ -239,7 +221,9 @@
   },
   "node_modules/thirdweb/dist/esm/react/core/utils/walletIcon.js -> ../../../wallets/injected/mipdStore.js": {
     "id": "node_modules/thirdweb/dist/esm/react/core/utils/walletIcon.js -> ../../../wallets/injected/mipdStore.js",
-    "files": []
+    "files": [
+      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_wallets_injected_mipdStore_js.js"
+    ]
   },
   "node_modules/thirdweb/dist/esm/react/web/ui/ConnectWallet/Details.js -> ../../../../wallets/in-app/web/lib/auth/index.js": {
     "id": "node_modules/thirdweb/dist/esm/react/web/ui/ConnectWallet/Details.js -> ../../../../wallets/in-app/web/lib/auth/index.js",
@@ -251,15 +235,11 @@
   },
   "node_modules/thirdweb/dist/esm/react/web/ui/ConnectWallet/Modal/AnyWalletConnectUI.js -> ../../../wallets/in-app/InAppWalletConnectUI.js": {
     "id": "node_modules/thirdweb/dist/esm/react/web/ui/ConnectWallet/Modal/AnyWalletConnectUI.js -> ../../../wallets/in-app/InAppWalletConnectUI.js",
-    "files": [
-      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_react_web_wallets_in-app_InAppWalletConnectUI_js.js"
-    ]
+    "files": []
   },
   "node_modules/thirdweb/dist/esm/react/web/ui/ConnectWallet/Modal/AnyWalletConnectUI.js -> ../../../wallets/shared/CoinbaseSDKConnection.js": {
     "id": "node_modules/thirdweb/dist/esm/react/web/ui/ConnectWallet/Modal/AnyWalletConnectUI.js -> ../../../wallets/shared/CoinbaseSDKConnection.js",
-    "files": [
-      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_react_web_wallets_shared_CoinbaseSDKConnection_js.js"
-    ]
+    "files": []
   },
   "node_modules/thirdweb/dist/esm/react/web/ui/ConnectWallet/Modal/ConnectModalContent.js -> ./AllWalletsUI.js": {
     "id": "node_modules/thirdweb/dist/esm/react/web/ui/ConnectWallet/Modal/ConnectModalContent.js -> ./AllWalletsUI.js",
@@ -267,21 +247,15 @@
   },
   "node_modules/thirdweb/dist/esm/react/web/ui/ConnectWallet/WalletSelector.js -> ../../wallets/in-app/InAppWalletSelectionUI.js": {
     "id": "node_modules/thirdweb/dist/esm/react/web/ui/ConnectWallet/WalletSelector.js -> ../../wallets/in-app/InAppWalletSelectionUI.js",
-    "files": [
-      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_react_web_wallets_in-app_InAppWalletSelecti-c07871.js"
-    ]
+    "files": []
   },
   "node_modules/thirdweb/dist/esm/react/web/ui/ConnectWallet/locale/getConnectLocale.js -> ./br.js": {
     "id": "node_modules/thirdweb/dist/esm/react/web/ui/ConnectWallet/locale/getConnectLocale.js -> ./br.js",
-    "files": [
-      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_react_web_ui_ConnectWallet_locale_br_js.js"
-    ]
+    "files": []
   },
   "node_modules/thirdweb/dist/esm/react/web/ui/ConnectWallet/locale/getConnectLocale.js -> ./de.js": {
     "id": "node_modules/thirdweb/dist/esm/react/web/ui/ConnectWallet/locale/getConnectLocale.js -> ./de.js",
-    "files": [
-      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_react_web_ui_ConnectWallet_locale_de_js.js"
-    ]
+    "files": []
   },
   "node_modules/thirdweb/dist/esm/react/web/ui/ConnectWallet/locale/getConnectLocale.js -> ./en.js": {
     "id": "node_modules/thirdweb/dist/esm/react/web/ui/ConnectWallet/locale/getConnectLocale.js -> ./en.js",
@@ -289,63 +263,43 @@
   },
   "node_modules/thirdweb/dist/esm/react/web/ui/ConnectWallet/locale/getConnectLocale.js -> ./es.js": {
     "id": "node_modules/thirdweb/dist/esm/react/web/ui/ConnectWallet/locale/getConnectLocale.js -> ./es.js",
-    "files": [
-      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_react_web_ui_ConnectWallet_locale_es_js.js"
-    ]
+    "files": []
   },
   "node_modules/thirdweb/dist/esm/react/web/ui/ConnectWallet/locale/getConnectLocale.js -> ./fr.js": {
     "id": "node_modules/thirdweb/dist/esm/react/web/ui/ConnectWallet/locale/getConnectLocale.js -> ./fr.js",
-    "files": [
-      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_react_web_ui_ConnectWallet_locale_fr_js.js"
-    ]
+    "files": []
   },
   "node_modules/thirdweb/dist/esm/react/web/ui/ConnectWallet/locale/getConnectLocale.js -> ./ja.js": {
     "id": "node_modules/thirdweb/dist/esm/react/web/ui/ConnectWallet/locale/getConnectLocale.js -> ./ja.js",
-    "files": [
-      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_react_web_ui_ConnectWallet_locale_ja_js.js"
-    ]
+    "files": []
   },
   "node_modules/thirdweb/dist/esm/react/web/ui/ConnectWallet/locale/getConnectLocale.js -> ./kr.js": {
     "id": "node_modules/thirdweb/dist/esm/react/web/ui/ConnectWallet/locale/getConnectLocale.js -> ./kr.js",
-    "files": [
-      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_react_web_ui_ConnectWallet_locale_kr_js.js"
-    ]
+    "files": []
   },
   "node_modules/thirdweb/dist/esm/react/web/ui/ConnectWallet/locale/getConnectLocale.js -> ./ru.js": {
     "id": "node_modules/thirdweb/dist/esm/react/web/ui/ConnectWallet/locale/getConnectLocale.js -> ./ru.js",
-    "files": [
-      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_react_web_ui_ConnectWallet_locale_ru_js.js"
-    ]
+    "files": []
   },
   "node_modules/thirdweb/dist/esm/react/web/ui/ConnectWallet/locale/getConnectLocale.js -> ./tl.js": {
     "id": "node_modules/thirdweb/dist/esm/react/web/ui/ConnectWallet/locale/getConnectLocale.js -> ./tl.js",
-    "files": [
-      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_react_web_ui_ConnectWallet_locale_tl_js.js"
-    ]
+    "files": []
   },
   "node_modules/thirdweb/dist/esm/react/web/ui/ConnectWallet/locale/getConnectLocale.js -> ./vi.js": {
     "id": "node_modules/thirdweb/dist/esm/react/web/ui/ConnectWallet/locale/getConnectLocale.js -> ./vi.js",
-    "files": [
-      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_react_web_ui_ConnectWallet_locale_vi_js.js"
-    ]
+    "files": []
   },
   "node_modules/thirdweb/dist/esm/react/web/ui/ConnectWallet/locale/getConnectLocale.js -> ./zh.js": {
     "id": "node_modules/thirdweb/dist/esm/react/web/ui/ConnectWallet/locale/getConnectLocale.js -> ./zh.js",
-    "files": [
-      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_react_web_ui_ConnectWallet_locale_zh_js.js"
-    ]
+    "files": []
   },
   "node_modules/thirdweb/dist/esm/react/web/ui/ConnectWallet/screens/LinkProfileScreen.js -> ../../../wallets/in-app/InAppWalletConnectUI.js": {
     "id": "node_modules/thirdweb/dist/esm/react/web/ui/ConnectWallet/screens/LinkProfileScreen.js -> ../../../wallets/in-app/InAppWalletConnectUI.js",
-    "files": [
-      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_react_web_wallets_in-app_InAppWalletConnectUI_js.js"
-    ]
+    "files": []
   },
   "node_modules/thirdweb/dist/esm/react/web/ui/components/QRCode.js -> ./QRCode/QRCodeRenderer.js": {
     "id": "node_modules/thirdweb/dist/esm/react/web/ui/components/QRCode.js -> ./QRCode/QRCodeRenderer.js",
-    "files": [
-      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_react_web_ui_components_QRCode_QRCodeRenderer_js.js"
-    ]
+    "files": []
   },
   "node_modules/thirdweb/dist/esm/react/web/ui/prebuilt/thirdweb/BuyDirectListingButton/index.js -> ../../../../../../extensions/erc20/write/getApprovalForTransaction.js": {
     "id": "node_modules/thirdweb/dist/esm/react/web/ui/prebuilt/thirdweb/BuyDirectListingButton/index.js -> ../../../../../../extensions/erc20/write/getApprovalForTransaction.js",
@@ -409,201 +363,135 @@
   },
   "node_modules/thirdweb/dist/esm/react/web/wallets/injected/locale/getInjectedWalletLocale.js -> ./br.js": {
     "id": "node_modules/thirdweb/dist/esm/react/web/wallets/injected/locale/getInjectedWalletLocale.js -> ./br.js",
-    "files": [
-      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_react_web_wallets_injected_locale_br_js.js"
-    ]
+    "files": []
   },
   "node_modules/thirdweb/dist/esm/react/web/wallets/injected/locale/getInjectedWalletLocale.js -> ./de.js": {
     "id": "node_modules/thirdweb/dist/esm/react/web/wallets/injected/locale/getInjectedWalletLocale.js -> ./de.js",
-    "files": [
-      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_react_web_wallets_injected_locale_de_js.js"
-    ]
+    "files": []
   },
   "node_modules/thirdweb/dist/esm/react/web/wallets/injected/locale/getInjectedWalletLocale.js -> ./en.js": {
     "id": "node_modules/thirdweb/dist/esm/react/web/wallets/injected/locale/getInjectedWalletLocale.js -> ./en.js",
-    "files": [
-      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_react_web_wallets_injected_locale_en_js.js"
-    ]
+    "files": []
   },
   "node_modules/thirdweb/dist/esm/react/web/wallets/injected/locale/getInjectedWalletLocale.js -> ./es.js": {
     "id": "node_modules/thirdweb/dist/esm/react/web/wallets/injected/locale/getInjectedWalletLocale.js -> ./es.js",
-    "files": [
-      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_react_web_wallets_injected_locale_es_js.js"
-    ]
+    "files": []
   },
   "node_modules/thirdweb/dist/esm/react/web/wallets/injected/locale/getInjectedWalletLocale.js -> ./fr.js": {
     "id": "node_modules/thirdweb/dist/esm/react/web/wallets/injected/locale/getInjectedWalletLocale.js -> ./fr.js",
-    "files": [
-      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_react_web_wallets_injected_locale_fr_js.js"
-    ]
+    "files": []
   },
   "node_modules/thirdweb/dist/esm/react/web/wallets/injected/locale/getInjectedWalletLocale.js -> ./ja.js": {
     "id": "node_modules/thirdweb/dist/esm/react/web/wallets/injected/locale/getInjectedWalletLocale.js -> ./ja.js",
-    "files": [
-      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_react_web_wallets_injected_locale_ja_js.js"
-    ]
+    "files": []
   },
   "node_modules/thirdweb/dist/esm/react/web/wallets/injected/locale/getInjectedWalletLocale.js -> ./kr.js": {
     "id": "node_modules/thirdweb/dist/esm/react/web/wallets/injected/locale/getInjectedWalletLocale.js -> ./kr.js",
-    "files": [
-      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_react_web_wallets_injected_locale_kr_js.js"
-    ]
+    "files": []
   },
   "node_modules/thirdweb/dist/esm/react/web/wallets/injected/locale/getInjectedWalletLocale.js -> ./ru.js": {
     "id": "node_modules/thirdweb/dist/esm/react/web/wallets/injected/locale/getInjectedWalletLocale.js -> ./ru.js",
-    "files": [
-      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_react_web_wallets_injected_locale_ru_js.js"
-    ]
+    "files": []
   },
   "node_modules/thirdweb/dist/esm/react/web/wallets/injected/locale/getInjectedWalletLocale.js -> ./tl.js": {
     "id": "node_modules/thirdweb/dist/esm/react/web/wallets/injected/locale/getInjectedWalletLocale.js -> ./tl.js",
-    "files": [
-      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_react_web_wallets_injected_locale_tl_js.js"
-    ]
+    "files": []
   },
   "node_modules/thirdweb/dist/esm/react/web/wallets/injected/locale/getInjectedWalletLocale.js -> ./vi.js": {
     "id": "node_modules/thirdweb/dist/esm/react/web/wallets/injected/locale/getInjectedWalletLocale.js -> ./vi.js",
-    "files": [
-      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_react_web_wallets_injected_locale_vi_js.js"
-    ]
+    "files": []
   },
   "node_modules/thirdweb/dist/esm/react/web/wallets/injected/locale/getInjectedWalletLocale.js -> ./zh.js": {
     "id": "node_modules/thirdweb/dist/esm/react/web/wallets/injected/locale/getInjectedWalletLocale.js -> ./zh.js",
-    "files": [
-      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_react_web_wallets_injected_locale_zh_js.js"
-    ]
+    "files": []
   },
   "node_modules/thirdweb/dist/esm/react/web/wallets/shared/locale/getConnectLocale.js -> ./br.js": {
     "id": "node_modules/thirdweb/dist/esm/react/web/wallets/shared/locale/getConnectLocale.js -> ./br.js",
-    "files": [
-      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_react_web_wallets_shared_locale_br_js.js"
-    ]
+    "files": []
   },
   "node_modules/thirdweb/dist/esm/react/web/wallets/shared/locale/getConnectLocale.js -> ./de.js": {
     "id": "node_modules/thirdweb/dist/esm/react/web/wallets/shared/locale/getConnectLocale.js -> ./de.js",
-    "files": [
-      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_react_web_wallets_shared_locale_de_js.js"
-    ]
+    "files": []
   },
   "node_modules/thirdweb/dist/esm/react/web/wallets/shared/locale/getConnectLocale.js -> ./en.js": {
     "id": "node_modules/thirdweb/dist/esm/react/web/wallets/shared/locale/getConnectLocale.js -> ./en.js",
-    "files": [
-      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_react_web_wallets_shared_locale_en_js.js"
-    ]
+    "files": []
   },
   "node_modules/thirdweb/dist/esm/react/web/wallets/shared/locale/getConnectLocale.js -> ./es.js": {
     "id": "node_modules/thirdweb/dist/esm/react/web/wallets/shared/locale/getConnectLocale.js -> ./es.js",
-    "files": [
-      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_react_web_wallets_shared_locale_es_js.js"
-    ]
+    "files": []
   },
   "node_modules/thirdweb/dist/esm/react/web/wallets/shared/locale/getConnectLocale.js -> ./fr.js": {
     "id": "node_modules/thirdweb/dist/esm/react/web/wallets/shared/locale/getConnectLocale.js -> ./fr.js",
-    "files": [
-      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_react_web_wallets_shared_locale_fr_js.js"
-    ]
+    "files": []
   },
   "node_modules/thirdweb/dist/esm/react/web/wallets/shared/locale/getConnectLocale.js -> ./ja.js": {
     "id": "node_modules/thirdweb/dist/esm/react/web/wallets/shared/locale/getConnectLocale.js -> ./ja.js",
-    "files": [
-      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_react_web_wallets_shared_locale_ja_js.js"
-    ]
+    "files": []
   },
   "node_modules/thirdweb/dist/esm/react/web/wallets/shared/locale/getConnectLocale.js -> ./kr.js": {
     "id": "node_modules/thirdweb/dist/esm/react/web/wallets/shared/locale/getConnectLocale.js -> ./kr.js",
-    "files": [
-      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_react_web_wallets_shared_locale_kr_js.js"
-    ]
+    "files": []
   },
   "node_modules/thirdweb/dist/esm/react/web/wallets/shared/locale/getConnectLocale.js -> ./ru.js": {
     "id": "node_modules/thirdweb/dist/esm/react/web/wallets/shared/locale/getConnectLocale.js -> ./ru.js",
-    "files": [
-      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_react_web_wallets_shared_locale_ru_js.js"
-    ]
+    "files": []
   },
   "node_modules/thirdweb/dist/esm/react/web/wallets/shared/locale/getConnectLocale.js -> ./tl.js": {
     "id": "node_modules/thirdweb/dist/esm/react/web/wallets/shared/locale/getConnectLocale.js -> ./tl.js",
-    "files": [
-      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_react_web_wallets_shared_locale_tl_js.js"
-    ]
+    "files": []
   },
   "node_modules/thirdweb/dist/esm/react/web/wallets/shared/locale/getConnectLocale.js -> ./vi.js": {
     "id": "node_modules/thirdweb/dist/esm/react/web/wallets/shared/locale/getConnectLocale.js -> ./vi.js",
-    "files": [
-      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_react_web_wallets_shared_locale_vi_js.js"
-    ]
+    "files": []
   },
   "node_modules/thirdweb/dist/esm/react/web/wallets/shared/locale/getConnectLocale.js -> ./zh.js": {
     "id": "node_modules/thirdweb/dist/esm/react/web/wallets/shared/locale/getConnectLocale.js -> ./zh.js",
-    "files": [
-      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_react_web_wallets_shared_locale_zh_js.js"
-    ]
+    "files": []
   },
   "node_modules/thirdweb/dist/esm/react/web/wallets/smartWallet/locale/getSmartWalletLocale.js -> ./br.js": {
     "id": "node_modules/thirdweb/dist/esm/react/web/wallets/smartWallet/locale/getSmartWalletLocale.js -> ./br.js",
-    "files": [
-      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_react_web_wallets_smartWallet_locale_br_js.js"
-    ]
+    "files": []
   },
   "node_modules/thirdweb/dist/esm/react/web/wallets/smartWallet/locale/getSmartWalletLocale.js -> ./de.js": {
     "id": "node_modules/thirdweb/dist/esm/react/web/wallets/smartWallet/locale/getSmartWalletLocale.js -> ./de.js",
-    "files": [
-      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_react_web_wallets_smartWallet_locale_de_js.js"
-    ]
+    "files": []
   },
   "node_modules/thirdweb/dist/esm/react/web/wallets/smartWallet/locale/getSmartWalletLocale.js -> ./en.js": {
     "id": "node_modules/thirdweb/dist/esm/react/web/wallets/smartWallet/locale/getSmartWalletLocale.js -> ./en.js",
-    "files": [
-      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_react_web_wallets_smartWallet_locale_en_js.js"
-    ]
+    "files": []
   },
   "node_modules/thirdweb/dist/esm/react/web/wallets/smartWallet/locale/getSmartWalletLocale.js -> ./es.js": {
     "id": "node_modules/thirdweb/dist/esm/react/web/wallets/smartWallet/locale/getSmartWalletLocale.js -> ./es.js",
-    "files": [
-      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_react_web_wallets_smartWallet_locale_es_js.js"
-    ]
+    "files": []
   },
   "node_modules/thirdweb/dist/esm/react/web/wallets/smartWallet/locale/getSmartWalletLocale.js -> ./fr.js": {
     "id": "node_modules/thirdweb/dist/esm/react/web/wallets/smartWallet/locale/getSmartWalletLocale.js -> ./fr.js",
-    "files": [
-      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_react_web_wallets_smartWallet_locale_fr_js.js"
-    ]
+    "files": []
   },
   "node_modules/thirdweb/dist/esm/react/web/wallets/smartWallet/locale/getSmartWalletLocale.js -> ./ja.js": {
     "id": "node_modules/thirdweb/dist/esm/react/web/wallets/smartWallet/locale/getSmartWalletLocale.js -> ./ja.js",
-    "files": [
-      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_react_web_wallets_smartWallet_locale_ja_js.js"
-    ]
+    "files": []
   },
   "node_modules/thirdweb/dist/esm/react/web/wallets/smartWallet/locale/getSmartWalletLocale.js -> ./kr.js": {
     "id": "node_modules/thirdweb/dist/esm/react/web/wallets/smartWallet/locale/getSmartWalletLocale.js -> ./kr.js",
-    "files": [
-      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_react_web_wallets_smartWallet_locale_kr_js.js"
-    ]
+    "files": []
   },
   "node_modules/thirdweb/dist/esm/react/web/wallets/smartWallet/locale/getSmartWalletLocale.js -> ./ru.js": {
     "id": "node_modules/thirdweb/dist/esm/react/web/wallets/smartWallet/locale/getSmartWalletLocale.js -> ./ru.js",
-    "files": [
-      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_react_web_wallets_smartWallet_locale_ru_js.js"
-    ]
+    "files": []
   },
   "node_modules/thirdweb/dist/esm/react/web/wallets/smartWallet/locale/getSmartWalletLocale.js -> ./tl.js": {
     "id": "node_modules/thirdweb/dist/esm/react/web/wallets/smartWallet/locale/getSmartWalletLocale.js -> ./tl.js",
-    "files": [
-      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_react_web_wallets_smartWallet_locale_tl_js.js"
-    ]
+    "files": []
   },
   "node_modules/thirdweb/dist/esm/react/web/wallets/smartWallet/locale/getSmartWalletLocale.js -> ./vi.js": {
     "id": "node_modules/thirdweb/dist/esm/react/web/wallets/smartWallet/locale/getSmartWalletLocale.js -> ./vi.js",
-    "files": [
-      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_react_web_wallets_smartWallet_locale_vi_js.js"
-    ]
+    "files": []
   },
   "node_modules/thirdweb/dist/esm/react/web/wallets/smartWallet/locale/getSmartWalletLocale.js -> ./zh.js": {
     "id": "node_modules/thirdweb/dist/esm/react/web/wallets/smartWallet/locale/getSmartWalletLocale.js -> ./zh.js",
-    "files": [
-      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_react_web_wallets_smartWallet_locale_zh_js.js"
-    ]
+    "files": []
   },
   "node_modules/thirdweb/dist/esm/storage/download.js -> ../utils/arweave.js": {
     "id": "node_modules/thirdweb/dist/esm/storage/download.js -> ../utils/arweave.js",
@@ -619,7 +507,9 @@
   },
   "node_modules/thirdweb/dist/esm/transaction/actions/encode.js -> ../../utils/encoding/helpers/concat-hex.js": {
     "id": "node_modules/thirdweb/dist/esm/transaction/actions/encode.js -> ../../utils/encoding/helpers/concat-hex.js",
-    "files": []
+    "files": [
+      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_utils_encoding_helpers_concat-hex_js.js"
+    ]
   },
   "node_modules/thirdweb/dist/esm/transaction/actions/estimate-gas-cost.js -> ../../gas/estimate-l1-fee.js": {
     "id": "node_modules/thirdweb/dist/esm/transaction/actions/estimate-gas-cost.js -> ../../gas/estimate-l1-fee.js",
@@ -639,7 +529,9 @@
   },
   "node_modules/thirdweb/dist/esm/transaction/actions/estimate-gas.js -> ./encode.js": {
     "id": "node_modules/thirdweb/dist/esm/transaction/actions/estimate-gas.js -> ./encode.js",
-    "files": []
+    "files": [
+      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_transaction_actions_encode_js.js"
+    ]
   },
   "node_modules/thirdweb/dist/esm/transaction/actions/gasless/send-gasless-transaction.js -> ./providers/biconomy.js": {
     "id": "node_modules/thirdweb/dist/esm/transaction/actions/gasless/send-gasless-transaction.js -> ./providers/biconomy.js",
@@ -667,7 +559,9 @@
   },
   "node_modules/thirdweb/dist/esm/transaction/actions/send-transaction.js -> ./zksync/send-eip712-transaction.js": {
     "id": "node_modules/thirdweb/dist/esm/transaction/actions/send-transaction.js -> ./zksync/send-eip712-transaction.js",
-    "files": []
+    "files": [
+      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_transaction_actions_zksync_send-eip712-tran-25b4721.js"
+    ]
   },
   "node_modules/thirdweb/dist/esm/transaction/actions/to-serializable-transaction.js -> ../../rpc/actions/eth_getTransactionCount.js": {
     "id": "node_modules/thirdweb/dist/esm/transaction/actions/to-serializable-transaction.js -> ../../rpc/actions/eth_getTransactionCount.js",
@@ -677,7 +571,9 @@
   },
   "node_modules/thirdweb/dist/esm/transaction/actions/to-serializable-transaction.js -> ./zksync/send-eip712-transaction.js": {
     "id": "node_modules/thirdweb/dist/esm/transaction/actions/to-serializable-transaction.js -> ./zksync/send-eip712-transaction.js",
-    "files": []
+    "files": [
+      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_transaction_actions_zksync_send-eip712-tran-25b4720.js"
+    ]
   },
   "node_modules/thirdweb/dist/esm/utils/any-evm/zksync/isZkSyncChain.js -> ../../../chains/utils.js": {
     "id": "node_modules/thirdweb/dist/esm/utils/any-evm/zksync/isZkSyncChain.js -> ../../../chains/utils.js",
@@ -6133,6 +6029,10 @@
       "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_wallets_wallet-connect_qr-overlay_js.js"
     ]
   },
+  "node_modules/thirdweb/dist/esm/wallets/getAllWalletsList.js -> ./__generated__/wallet-infos.js": {
+    "id": "node_modules/thirdweb/dist/esm/wallets/getAllWalletsList.js -> ./__generated__/wallet-infos.js",
+    "files": []
+  },
   "node_modules/thirdweb/dist/esm/wallets/in-app/core/eip7702/minimal-account.js -> ../../../../rpc/actions/eth_getTransactionCount.js": {
     "id": "node_modules/thirdweb/dist/esm/wallets/in-app/core/eip7702/minimal-account.js -> ../../../../rpc/actions/eth_getTransactionCount.js",
     "files": [
@@ -6142,7 +6042,7 @@
   "node_modules/thirdweb/dist/esm/wallets/in-app/core/eip7702/minimal-account.js -> ../eip5792/in-app-wallet-calls.js": {
     "id": "node_modules/thirdweb/dist/esm/wallets/in-app/core/eip7702/minimal-account.js -> ../eip5792/in-app-wallet-calls.js",
     "files": [
-      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_wallets_in-app_core_eip5792_in-app-wallet-c-4f1eb6.js"
+      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_wallets_in-app_core_eip5792_in-app-wallet-c-a4387a1.js"
     ]
   },
   "node_modules/thirdweb/dist/esm/wallets/in-app/core/wallet/enclave-wallet.js -> ../../../../rpc/actions/eth_getTransactionCount.js": {
@@ -6154,12 +6054,14 @@
   "node_modules/thirdweb/dist/esm/wallets/in-app/core/wallet/enclave-wallet.js -> ../eip5792/in-app-wallet-calls.js": {
     "id": "node_modules/thirdweb/dist/esm/wallets/in-app/core/wallet/enclave-wallet.js -> ../eip5792/in-app-wallet-calls.js",
     "files": [
-      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_wallets_in-app_core_eip5792_in-app-wallet-c-4f1eb6.js"
+      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_wallets_in-app_core_eip5792_in-app-wallet-c-a4387a0.js"
     ]
   },
   "node_modules/thirdweb/dist/esm/wallets/in-app/core/wallet/in-app-core.js -> ./index.js": {
     "id": "node_modules/thirdweb/dist/esm/wallets/in-app/core/wallet/in-app-core.js -> ./index.js",
-    "files": []
+    "files": [
+      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_wallets_in-app_core_wallet_index_js.js"
+    ]
   },
   "node_modules/thirdweb/dist/esm/wallets/in-app/core/wallet/index.js -> ../../../smart/index.js": {
     "id": "node_modules/thirdweb/dist/esm/wallets/in-app/core/wallet/index.js -> ../../../smart/index.js",
@@ -6168,29 +6070,31 @@
   "node_modules/thirdweb/dist/esm/wallets/in-app/web/ecosystem.js -> ./lib/web-connector.js": {
     "id": "node_modules/thirdweb/dist/esm/wallets/in-app/web/ecosystem.js -> ./lib/web-connector.js",
     "files": [
-      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_wallets_in-app_web_lib_web-connector_js.js"
+      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_wallets_in-app_web_lib_web-connector_js-_a8062.js"
     ]
   },
   "node_modules/thirdweb/dist/esm/wallets/in-app/web/in-app.js -> ./lib/web-connector.js": {
     "id": "node_modules/thirdweb/dist/esm/wallets/in-app/web/in-app.js -> ./lib/web-connector.js",
     "files": [
-      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_wallets_in-app_web_lib_web-connector_js.js"
+      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_wallets_in-app_web_lib_web-connector_js-_a8060.js"
     ]
   },
   "node_modules/thirdweb/dist/esm/wallets/in-app/web/lib/auth/index.js -> ../web-connector.js": {
     "id": "node_modules/thirdweb/dist/esm/wallets/in-app/web/lib/auth/index.js -> ../web-connector.js",
     "files": [
-      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_wallets_in-app_web_lib_web-connector_js.js"
+      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_wallets_in-app_web_lib_web-connector_js-_a8061.js"
     ]
   },
   "node_modules/thirdweb/dist/esm/wallets/in-app/web/lib/web-connector.js -> ./auth/passkeys.js": {
     "id": "node_modules/thirdweb/dist/esm/wallets/in-app/web/lib/web-connector.js -> ./auth/passkeys.js",
-    "files": []
+    "files": [
+      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_wallets_in-app_web_lib_auth_passkeys_js.js"
+    ]
   },
   "node_modules/thirdweb/dist/esm/wallets/smart/index.js -> ../in-app/core/eip5792/in-app-wallet-calls.js": {
     "id": "node_modules/thirdweb/dist/esm/wallets/smart/index.js -> ../in-app/core/eip5792/in-app-wallet-calls.js",
     "files": [
-      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_wallets_in-app_core_eip5792_in-app-wallet-c-4f1eb6.js"
+      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_wallets_in-app_core_eip5792_in-app-wallet-c-a4387a1.js"
     ]
   },
   "node_modules/thirdweb/dist/esm/wallets/smart/index.js -> ./lib/signing.js": {
@@ -6219,15 +6123,11 @@
   },
   "node_modules/thirdweb/dist/esm/wallets/utils/getTokenBalance.js -> ../../extensions/erc20/read/getBalance.js": {
     "id": "node_modules/thirdweb/dist/esm/wallets/utils/getTokenBalance.js -> ../../extensions/erc20/read/getBalance.js",
-    "files": [
-      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_extensions_erc20_read_getBalance_js.js"
-    ]
+    "files": []
   },
   "node_modules/thirdweb/dist/esm/wallets/utils/getWalletBalance.js -> ../../extensions/erc20/read/getBalance.js": {
     "id": "node_modules/thirdweb/dist/esm/wallets/utils/getWalletBalance.js -> ../../extensions/erc20/read/getBalance.js",
-    "files": [
-      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_extensions_erc20_read_getBalance_js.js"
-    ]
+    "files": []
   },
   "node_modules/thirdweb/dist/esm/wallets/wallet-connect/controller.js -> @walletconnect/universal-provider": {
     "id": "node_modules/thirdweb/dist/esm/wallets/wallet-connect/controller.js -> @walletconnect/universal-provider",
@@ -6243,15 +6143,11 @@
   },
   "node_modules/thirdweb/dist/esm/wallets/wallet-connect/receiver/index.js -> ./session-proposal.js": {
     "id": "node_modules/thirdweb/dist/esm/wallets/wallet-connect/receiver/index.js -> ./session-proposal.js",
-    "files": [
-      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_wallets_wallet-connect_receiver_session-pro-2afa22.js"
-    ]
+    "files": []
   },
   "node_modules/thirdweb/dist/esm/wallets/wallet-connect/receiver/index.js -> ./session-request.js": {
     "id": "node_modules/thirdweb/dist/esm/wallets/wallet-connect/receiver/index.js -> ./session-request.js",
-    "files": [
-      "static/chunks/_app-pages-browser_node_modules_thirdweb_dist_esm_wallets_wallet-connect_receiver_session-req-2d98ba.js"
-    ]
+    "files": []
   },
   "node_modules/thirdweb/dist/esm/wallets/wallet-connect/receiver/session-request.js -> ./request-handlers/switch-chain.js": {
     "id": "node_modules/thirdweb/dist/esm/wallets/wallet-connect/receiver/session-request.js -> ./request-handlers/switch-chain.js",
@@ -6281,9 +6177,7 @@
   },
   "node_modules/thirdweb/node_modules/@walletconnect/utils/node_modules/viem/_esm/utils/signature/recoverPublicKey.js -> @noble/curves/secp256k1": {
     "id": "node_modules/thirdweb/node_modules/@walletconnect/utils/node_modules/viem/_esm/utils/signature/recoverPublicKey.js -> @noble/curves/secp256k1",
-    "files": [
-      "static/chunks/_app-pages-browser_node_modules_thirdweb_node_modules_walletconnect_utils_node_modules_noble_-0842b2.js"
-    ]
+    "files": []
   },
   "node_modules/thirdweb/node_modules/viem/_esm/actions/public/call.js -> ../../utils/ccip.js": {
     "id": "node_modules/thirdweb/node_modules/viem/_esm/actions/public/call.js -> ../../utils/ccip.js",
@@ -6291,9 +6185,7 @@
   },
   "node_modules/thirdweb/node_modules/viem/_esm/utils/rpc/webSocket.js -> isows": {
     "id": "node_modules/thirdweb/node_modules/viem/_esm/utils/rpc/webSocket.js -> isows",
-    "files": [
-      "static/chunks/_app-pages-browser_node_modules_isows__esm_native_js.js"
-    ]
+    "files": []
   },
   "node_modules/thirdweb/node_modules/viem/_esm/utils/signature/recoverPublicKey.js -> @noble/curves/secp256k1": {
     "id": "node_modules/thirdweb/node_modules/viem/_esm/utils/signature/recoverPublicKey.js -> @noble/curves/secp256k1",

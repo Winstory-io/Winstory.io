@@ -1,5 +1,6 @@
 {
+  "/api/campaigns/create/route": "app/api/campaigns/create/route.js",
+  "/_not-found/page": "app/_not-found/page.js",
   "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js",
-  "/creation/individual/yourwinstory/page": "app/creation/individual/yourwinstory/page.js",
-  "/creation/youare/page": "app/creation/youare/page.js"
+  "/creation/individual/recap/page": "app/creation/individual/recap/page.js"
 }

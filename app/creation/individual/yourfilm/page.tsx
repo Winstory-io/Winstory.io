@@ -316,6 +316,17 @@ export default function YourFilmPage() {
                 maxWidth: 500,
                 marginBottom: 40,
                 marginTop: 100,
+                transition: 'all 0.3s ease',
+                transform: 'scale(1)',
+                boxShadow: '0 0 5px rgba(255, 214, 0, 0.3)',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'scale(1.02)';
+                e.currentTarget.style.boxShadow = '0 0 15px rgba(255, 214, 0, 0.7)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'scale(1)';
+                e.currentTarget.style.boxShadow = '0 0 5px rgba(255, 214, 0, 0.3)';
               }}
             >
               <input
