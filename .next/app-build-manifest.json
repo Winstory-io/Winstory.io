@@ -5,11 +5,6 @@
       "static/chunks/main-app.js",
       "static/chunks/app/layout.js"
     ],
-    "/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/page.js"
-    ],
     "/welcome/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
@@ -25,30 +20,35 @@
       "static/chunks/main-app.js",
       "static/chunks/app/api/auth/[...nextauth]/route.js"
     ],
-    "/creation/youare/page": [
+    "/welcome/tooltip/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/creation/youare/page.js"
+      "static/chunks/app/welcome/tooltip/page.js"
     ],
-    "/mywin/layout": [
+    "/completion/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/mywin/layout.js"
+      "static/chunks/app/completion/layout.js"
     ],
-    "/mywin/page": [
+    "/completion/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/mywin/page.js"
+      "static/chunks/app/completion/page.js"
     ],
-    "/api/user/initialize/route": [
+    "/api/campaigns/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/api/user/initialize/route.js"
+      "static/chunks/app/api/campaigns/route.js"
     ],
-    "/api/user/stats/route": [
+    "/explorer/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/api/user/stats/route.js"
+      "static/chunks/app/explorer/layout.js"
+    ],
+    "/explorer/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/explorer/page.js"
     ]
   }
 }

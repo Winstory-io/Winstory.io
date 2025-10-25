@@ -112,6 +112,17 @@ export default function Home() {
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
+            transition: 'all 0.3s ease',
+            transform: 'scale(1)',
+            filter: 'drop-shadow(0 0 5px rgba(255, 214, 0, 0.3))',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.filter = 'drop-shadow(0 0 15px rgba(255, 214, 0, 0.7))';
+            e.currentTarget.style.transform = 'scale(1.05)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.filter = 'drop-shadow(0 0 5px rgba(255, 214, 0, 0.3))';
+            e.currentTarget.style.transform = 'scale(1)';
           }}
           aria-label="Home"
         >
@@ -265,6 +276,17 @@ export default function Home() {
         <div
           style={{
             cursor: 'pointer',
+            transition: 'all 0.3s ease',
+            transform: 'scale(1)',
+            filter: 'drop-shadow(0 0 5px rgba(255, 214, 0, 0.3))',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'scale(1.1)';
+            e.currentTarget.style.filter = 'drop-shadow(0 0 20px rgba(255, 214, 0, 0.8))';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'scale(1)';
+            e.currentTarget.style.filter = 'drop-shadow(0 0 5px rgba(255, 214, 0, 0.3))';
           }}
           onClick={() => router.push('/welcome/tooltip')}
         >
@@ -308,10 +330,25 @@ export default function Home() {
             alignItems: 'center',
             gap: 24,
             cursor: 'pointer',
+            transition: 'all 0.3s ease',
+            textShadow: '0 0 10px rgba(255, 214, 0, 0.5)',
+            transform: 'scale(1)',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.color = '#FFF8DC';
+            e.currentTarget.style.textShadow = '0 0 20px rgba(255, 214, 0, 0.8), 0 0 40px rgba(255, 214, 0, 0.6), 0 0 60px rgba(255, 214, 0, 0.4)';
+            e.currentTarget.style.transform = 'scale(1.05)';
+            e.currentTarget.style.filter = 'drop-shadow(0 0 15px rgba(255, 214, 0, 0.7))';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.color = '#FFD600';
+            e.currentTarget.style.textShadow = '0 0 10px rgba(255, 214, 0, 0.5)';
+            e.currentTarget.style.transform = 'scale(1)';
+            e.currentTarget.style.filter = 'none';
           }}
           onClick={() => router.push('/creation/youare')}
         >
-          <span style={{ fontSize: 56, marginLeft: -29 }}>
+          <span style={{ fontSize: 56, marginLeft: -29, transition: 'all 0.3s ease' }}>
             <CreationIcon />
           </span>
           Create Campaign
@@ -327,11 +364,26 @@ export default function Home() {
             alignItems: 'center',
             gap: 24,
             cursor: 'pointer',
+            transition: 'all 0.3s ease',
+            textShadow: '0 0 10px rgba(255, 214, 0, 0.5)',
+            transform: 'scale(1)',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.color = '#FFF8DC';
+            e.currentTarget.style.textShadow = '0 0 20px rgba(255, 214, 0, 0.8), 0 0 40px rgba(255, 214, 0, 0.6), 0 0 60px rgba(255, 214, 0, 0.4)';
+            e.currentTarget.style.transform = 'scale(1.05)';
+            e.currentTarget.style.filter = 'drop-shadow(0 0 15px rgba(255, 214, 0, 0.7))';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.color = '#FFD600';
+            e.currentTarget.style.textShadow = '0 0 10px rgba(255, 214, 0, 0.5)';
+            e.currentTarget.style.transform = 'scale(1)';
+            e.currentTarget.style.filter = 'none';
           }}
           // TODO: restreindre l'accès à /moderation à la possession d'un token spécifique dans le wallet
           onClick={() => router.push('/moderation')}
         >
-          <span style={{ fontSize: 56, marginLeft: -201 }}>
+          <span style={{ fontSize: 56, marginLeft: -201, transition: 'all 0.3s ease' }}>
             <ModerationIcon />
           </span>
           Moderate
@@ -347,13 +399,28 @@ export default function Home() {
             alignItems: 'center',
             gap: 24,
             cursor: 'pointer',
+            transition: 'all 0.3s ease',
+            textShadow: '0 0 10px rgba(255, 214, 0, 0.5)',
+            transform: 'scale(1)',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.color = '#FFF8DC';
+            e.currentTarget.style.textShadow = '0 0 20px rgba(255, 214, 0, 0.8), 0 0 40px rgba(255, 214, 0, 0.6), 0 0 60px rgba(255, 214, 0, 0.4)';
+            e.currentTarget.style.transform = 'scale(1.05)';
+            e.currentTarget.style.filter = 'drop-shadow(0 0 15px rgba(255, 214, 0, 0.7))';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.color = '#FFD600';
+            e.currentTarget.style.textShadow = '0 0 10px rgba(255, 214, 0, 0.5)';
+            e.currentTarget.style.transform = 'scale(1)';
+            e.currentTarget.style.filter = 'none';
           }}
           onClick={() => router.push('/completion/login')}
         >
-          <span style={{ fontSize: 56 }}>
+          <span style={{ fontSize: 56, transition: 'all 0.3s ease', marginLeft: -18 }}>
             <CompletionIcon />
           </span>
-          Complete Campaign
+          <span style={{ marginLeft: -35 }}>Complete Campaign</span>
         </button>
         
         {/* My Win - Positioned separately with green color */}
@@ -440,10 +507,25 @@ export default function Home() {
             alignItems: 'center',
             gap: 20,
             cursor: 'pointer',
+            transition: 'all 0.3s ease',
+            textShadow: '0 0 10px rgba(255, 214, 0, 0.5)',
+            transform: 'scale(1)',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.color = '#FFF8DC';
+            e.currentTarget.style.textShadow = '0 0 20px rgba(255, 214, 0, 0.8), 0 0 40px rgba(255, 214, 0, 0.6), 0 0 60px rgba(255, 214, 0, 0.4)';
+            e.currentTarget.style.transform = 'scale(1.05)';
+            e.currentTarget.style.filter = 'drop-shadow(0 0 15px rgba(255, 214, 0, 0.7))';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.color = '#FFD600';
+            e.currentTarget.style.textShadow = '0 0 10px rgba(255, 214, 0, 0.5)';
+            e.currentTarget.style.transform = 'scale(1)';
+            e.currentTarget.style.filter = 'none';
           }}
           onClick={() => router.push('/explorer')}
         >
-          <span style={{ fontSize: 48 }}>
+          <span style={{ fontSize: 48, transition: 'all 0.3s ease' }}>
             <ExplorerIcon />
           </span>
           Explorer

@@ -2,6 +2,10 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
+import CreationIcon from '@/components/icons/CreationIcon';
+import ModerationIcon from '@/components/icons/ModerationIcon';
+import CompletionIcon from '@/components/icons/CompletionIcon';
+import ExplorerIcon from '@/components/icons/ExplorerIcon';
 
 const listItem = 'text-white font-inter';
 
@@ -65,7 +69,24 @@ const TooltipPage = () => {
           {/* Explorer */}
           <div>
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: 4 }}>
-              <span style={{ fontSize: 20, marginRight: 8 }} role="img" aria-label="compass">🌐</span>
+              <div 
+                style={{ 
+                  fontSize: 5, 
+                  marginRight: 8, 
+                  transition: 'all 0.3s ease',
+                  transform: 'scale(1)',
+                  cursor: 'pointer'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'scale(1.1)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'scale(1)';
+                }}
+                onClick={() => router.push('/explorer')}
+              >
+                <ExplorerIcon />
+              </div>
               <h2 style={{ color: '#FFD600', fontSize: 20, fontWeight: 800, marginBottom: 0 }}>Explorer</h2>
             </div>
             <h3 style={{ color: '#FFD600', fontWeight: 700, marginBottom: 4 }}>For You. Humanity. With Love <span style={{ color: '#FF2D2D' }}>❤️</span></h3>
@@ -78,7 +99,24 @@ const TooltipPage = () => {
           {/* Create Campaign */}
           <div>
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: 4 }}>
-              <span style={{ fontSize: 20, marginRight: 8 }} role="img" aria-label="play">▶️</span>
+              <div 
+                style={{ 
+                  fontSize: 5, 
+                  marginRight: 8, 
+                  transition: 'all 0.3s ease',
+                  transform: 'scale(1)',
+                  cursor: 'pointer'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'scale(1.1)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'scale(1)';
+                }}
+                onClick={() => router.push('/creation/youare')}
+              >
+                <CreationIcon />
+              </div>
               <h2 style={{ color: '#FFD600', fontSize: 20, fontWeight: 800, marginBottom: 0 }}>Create Campaign</h2>
             </div>
             <h3 style={{ color: '#FFD600', fontWeight: 700, marginBottom: 4 }}>For B2C Companies & creative individuals</h3>
@@ -93,7 +131,24 @@ const TooltipPage = () => {
           {/* Moderate */}
           <div>
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: 4 }}>
-              <span style={{ fontSize: 20, marginRight: 8 }} role="img" aria-label="check and cross">✅❌</span>
+              <div 
+                style={{ 
+                  fontSize: 5, 
+                  marginRight: 8, 
+                  transition: 'all 0.3s ease',
+                  transform: 'scale(1)',
+                  cursor: 'pointer'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'scale(1.1)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'scale(1)';
+                }}
+                onClick={() => router.push('/moderation')}
+              >
+                <ModerationIcon />
+              </div>
               <h2 style={{ color: '#FFD600', fontSize: 20, fontWeight: 800, marginBottom: 0 }}>Moderate</h2>
             </div>
             <h3 style={{ color: '#FFD600', fontWeight: 700, marginBottom: 4 }}>For $WINC Stakers / DAO members only</h3>
@@ -107,7 +162,24 @@ const TooltipPage = () => {
           {/* Complete Campaign */}
           <div>
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: 4 }}>
-              <span style={{ fontSize: 20, marginRight: 8 }} role="img" aria-label="fast forward">⏩️</span>
+              <div 
+                style={{ 
+                  fontSize: 5, 
+                  marginRight: 8, 
+                  transition: 'all 0.3s ease',
+                  transform: 'scale(1)',
+                  cursor: 'pointer'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'scale(1.1)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'scale(1)';
+                }}
+                onClick={() => router.push('/completion')}
+              >
+                <CompletionIcon />
+              </div>
               <h2 style={{ color: '#FFD600', fontSize: 20, fontWeight: 800, marginBottom: 0 }}>Complete Campaign</h2>
             </div>
             <h3 style={{ color: '#FFD600', fontWeight: 700, marginBottom: 4 }}>For Community Members</h3>
@@ -122,7 +194,29 @@ const TooltipPage = () => {
           {/* My Win */}
           <div>
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: 4 }}>
-              <span style={{ fontSize: 20, marginRight: 8 }} role="img" aria-label="client">👤</span>
+              <div 
+                style={{ 
+                  fontSize: 5, 
+                  marginRight: 8, 
+                  transition: 'all 0.3s ease',
+                  transform: 'scale(1)',
+                  cursor: 'pointer',
+                  width: 5,
+                  height: 5,
+                  borderRadius: '50%',
+                  backgroundColor: '#00FF00',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'scale(1.1)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'scale(1)';
+                }}
+                onClick={() => router.push('/mywin')}
+              />
               <h2 style={{ color: '#00FF00', fontSize: 20, fontWeight: 800, marginBottom: 0 }}>My Win</h2>
             </div>
             <h3 style={{ color: '#00FF00', fontWeight: 700, marginBottom: 4 }}>Track your actions & rewards</h3>
