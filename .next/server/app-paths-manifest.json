@@ -1,6 +1,4 @@
 {
-  "/api/campaigns/create/route": "app/api/campaigns/create/route.js",
-  "/_not-found/page": "app/_not-found/page.js",
-  "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js",
-  "/creation/individual/recap/page": "app/creation/individual/recap/page.js"
+  "/welcome/page": "app/welcome/page.js",
+  "/welcome/tooltip/page": "app/welcome/tooltip/page.js"
 }

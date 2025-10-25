@@ -1,5 +1,14 @@
 const CreationIcon = () => (
-  <img src="/creation.svg" alt="Creation Icon" width="178" height="116" />
+  <img 
+    src="/creation.svg" 
+    alt="Creation Icon" 
+    width="178" 
+    height="116"
+    style={{
+      filter: 'drop-shadow(0 0 10px rgba(255, 214, 0, 0.6))',
+      transition: 'all 0.3s ease'
+    }}
+  />
 );
-  export default CreationIcon;
+export default CreationIcon;
   

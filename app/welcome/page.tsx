@@ -339,12 +339,22 @@ export default function Home() {
             e.currentTarget.style.textShadow = '0 0 20px rgba(255, 214, 0, 0.8), 0 0 40px rgba(255, 214, 0, 0.6), 0 0 60px rgba(255, 214, 0, 0.4)';
             e.currentTarget.style.transform = 'scale(1.05)';
             e.currentTarget.style.filter = 'drop-shadow(0 0 15px rgba(255, 214, 0, 0.7))';
+            // Appliquer l'effet de luminescence à l'icône Creation
+            const icon = e.currentTarget.querySelector('img');
+            if (icon) {
+              icon.style.filter = 'drop-shadow(0 0 20px rgba(255, 214, 0, 0.9)) brightness(1.2)';
+            }
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.color = '#FFD600';
             e.currentTarget.style.textShadow = '0 0 10px rgba(255, 214, 0, 0.5)';
             e.currentTarget.style.transform = 'scale(1)';
             e.currentTarget.style.filter = 'none';
+            // Restaurer l'effet normal de l'icône
+            const icon = e.currentTarget.querySelector('img');
+            if (icon) {
+              icon.style.filter = 'drop-shadow(0 0 10px rgba(255, 214, 0, 0.6))';
+            }
           }}
           onClick={() => router.push('/creation/youare')}
         >
@@ -408,12 +418,22 @@ export default function Home() {
             e.currentTarget.style.textShadow = '0 0 20px rgba(255, 214, 0, 0.8), 0 0 40px rgba(255, 214, 0, 0.6), 0 0 60px rgba(255, 214, 0, 0.4)';
             e.currentTarget.style.transform = 'scale(1.05)';
             e.currentTarget.style.filter = 'drop-shadow(0 0 15px rgba(255, 214, 0, 0.7))';
+            // Appliquer l'effet de luminescence à l'icône Completion
+            const icon = e.currentTarget.querySelector('img');
+            if (icon) {
+              icon.style.filter = 'drop-shadow(0 0 20px rgba(255, 214, 0, 0.9)) brightness(1.2)';
+            }
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.color = '#FFD600';
             e.currentTarget.style.textShadow = '0 0 10px rgba(255, 214, 0, 0.5)';
             e.currentTarget.style.transform = 'scale(1)';
             e.currentTarget.style.filter = 'none';
+            // Restaurer l'effet normal de l'icône
+            const icon = e.currentTarget.querySelector('img');
+            if (icon) {
+              icon.style.filter = 'drop-shadow(0 0 10px rgba(255, 214, 0, 0.6))';
+            }
           }}
           onClick={() => router.push('/completion/login')}
         >
