@@ -1,4 +1,4 @@
 {
-  "/welcome/page": "app/welcome/page.js",
-  "/explorer/page": "app/explorer/page.js"
+  "/creation/youare/page": "app/creation/youare/page.js",
+  "/welcome/page": "app/welcome/page.js"
 }

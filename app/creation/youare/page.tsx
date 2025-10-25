@@ -22,6 +22,9 @@ const cardStyle = {
   width: '400px',
   maxWidth: '95vw',
   margin: '0 auto 40px auto',
+  transition: 'all 0.3s ease',
+  transform: 'scale(1)',
+  filter: 'drop-shadow(0 0 5px rgba(255, 214, 0, 0.3))',
 };
 
 export default function YouAre() {
@@ -45,7 +48,24 @@ export default function YouAre() {
         </span>
         <button
           aria-label="Show tooltip"
-          style={{ background: 'none', border: 'none', cursor: 'pointer', marginLeft: 8, padding: 0 }}
+          style={{ 
+            background: 'none', 
+            border: 'none', 
+            cursor: 'pointer', 
+            marginLeft: 8, 
+            padding: 0,
+            transition: 'all 0.3s ease',
+            transform: 'scale(1)',
+            filter: 'drop-shadow(0 0 5px rgba(255, 214, 0, 0.3))',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'scale(1.1)';
+            e.currentTarget.style.filter = 'drop-shadow(0 0 20px rgba(255, 214, 0, 0.8))';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'scale(1)';
+            e.currentTarget.style.filter = 'drop-shadow(0 0 5px rgba(255, 214, 0, 0.3))';
+          }}
           onClick={() => setShowTooltip(true)}
         >
           <img src="/tooltip.svg" alt="Help" style={{ width: 36, height: 36 }} />
@@ -123,7 +143,19 @@ export default function YouAre() {
 
         {/* B2C Brand */}
         <Link href="/creation/b2c/login" style={{ textDecoration: 'none' }}>
-          <div style={{ ...cardStyle, marginBottom: 48 }}>
+          <div 
+            style={{ ...cardStyle, marginBottom: 48 }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'scale(1.05)';
+              e.currentTarget.style.filter = 'drop-shadow(0 0 20px rgba(255, 214, 0, 0.8))';
+              e.currentTarget.style.background = 'rgba(255, 214, 0, 0.1)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'scale(1)';
+              e.currentTarget.style.filter = 'drop-shadow(0 0 5px rgba(255, 214, 0, 0.3))';
+              e.currentTarget.style.background = 'rgba(0,0,0,0.85)';
+            }}
+          >
             <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, width: '100%' }}>
               {/* Company SVG icon replaced with image */}
               <span>
@@ -136,14 +168,49 @@ export default function YouAre() {
 
         {/* Agency question */}
         <div style={{ textAlign: 'center', margin: '0 0 48px 0', minHeight: 32, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <Link href="/creation/agencyb2c/login" style={{ color: yellow, fontStyle: 'italic', textDecoration: 'underline', fontWeight: 600, fontSize: 20, display: 'inline-block', margin: '0 auto', padding: '12px 0' }}>
+          <Link 
+            href="/creation/agencyb2c/login" 
+            style={{ 
+              color: yellow, 
+              fontStyle: 'italic', 
+              textDecoration: 'underline', 
+              fontWeight: 600, 
+              fontSize: 20, 
+              display: 'inline-block', 
+              margin: '0 auto', 
+              padding: '12px 0',
+              transition: 'all 0.3s ease',
+              transform: 'scale(1)',
+              textShadow: '0 0 5px rgba(255, 214, 0, 0.3)',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'scale(1.05)';
+              e.currentTarget.style.textShadow = '0 0 15px rgba(255, 214, 0, 0.8)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'scale(1)';
+              e.currentTarget.style.textShadow = '0 0 5px rgba(255, 214, 0, 0.3)';
+            }}
+          >
             You are an agency working with a B2C client ?
           </Link>
         </div>
 
         {/* Individual Member */}
         <Link href="/creation/individual/login" style={{ textDecoration: 'none' }}>
-          <div style={cardStyle}>
+          <div 
+            style={cardStyle}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'scale(1.05)';
+              e.currentTarget.style.filter = 'drop-shadow(0 0 20px rgba(255, 214, 0, 0.8))';
+              e.currentTarget.style.background = 'rgba(255, 214, 0, 0.1)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'scale(1)';
+              e.currentTarget.style.filter = 'drop-shadow(0 0 5px rgba(255, 214, 0, 0.3))';
+              e.currentTarget.style.background = 'rgba(0,0,0,0.85)';
+            }}
+          >
             <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, width: '100%' }}>
               {/* Individual SVG icon replaced with image */}
               <span>
