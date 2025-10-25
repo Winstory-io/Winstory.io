@@ -177,14 +177,27 @@ export default function YourWinstoryB2C() {
             textAlign: 'center',
             marginBottom: 16
           }}>Starting Title</h2>
-          <div style={{
-            border: `2px solid ${showTitleError ? '#F31260' : getColor(isTitleValid, touched.title, focus.title)}`,
-            borderRadius: 6,
-            padding: 18,
-            background: 'rgba(0,0,0,0.7)',
-            marginBottom: 8,
-            position: 'relative',
-          }}>
+          <div 
+            style={{
+              border: `2px solid ${showTitleError ? '#F31260' : getColor(isTitleValid, touched.title, focus.title)}`,
+              borderRadius: 6,
+              padding: 18,
+              background: 'rgba(0,0,0,0.7)',
+              marginBottom: 8,
+              position: 'relative',
+              transition: 'all 0.3s ease',
+              transform: 'scale(1)',
+              boxShadow: '0 0 5px rgba(255, 214, 0, 0.3)',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'scale(1.02)';
+              e.currentTarget.style.boxShadow = '0 0 15px rgba(255, 214, 0, 0.7)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'scale(1)';
+              e.currentTarget.style.boxShadow = '0 0 5px rgba(255, 214, 0, 0.3)';
+            }}
+          >
             <input
               type="text"
               value={title}
@@ -218,14 +231,27 @@ export default function YourWinstoryB2C() {
             textAlign: 'center',
             marginBottom: 16
           }}>Starting Story</h2>
-          <div style={{
-            border: `2px solid ${showStoryError ? '#F31260' : getColor(isStoryValid, touched.story, focus.story)}`,
-            borderRadius: 6,
-            padding: 18,
-            background: 'rgba(0,0,0,0.7)',
-            marginBottom: 8,
-            position: 'relative',
-          }}>
+          <div 
+            style={{
+              border: `2px solid ${showStoryError ? '#F31260' : getColor(isStoryValid, touched.story, focus.story)}`,
+              borderRadius: 6,
+              padding: 18,
+              background: 'rgba(0,0,0,0.7)',
+              marginBottom: 8,
+              position: 'relative',
+              transition: 'all 0.3s ease',
+              transform: 'scale(1)',
+              boxShadow: '0 0 5px rgba(255, 214, 0, 0.3)',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'scale(1.02)';
+              e.currentTarget.style.boxShadow = '0 0 15px rgba(255, 214, 0, 0.7)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'scale(1)';
+              e.currentTarget.style.boxShadow = '0 0 5px rgba(255, 214, 0, 0.3)';
+            }}
+          >
             <textarea
               value={story}
               onChange={e => { setStory(e.target.value); if (touched.story) setTouched(t => ({ ...t, story: false })); setError(e => ({ ...e, story: undefined })); }}
@@ -260,13 +286,26 @@ export default function YourWinstoryB2C() {
             textAlign: 'center',
             marginBottom: 16
           }}>Guideline</h2>
-          <div style={{
-            border: `2px solid ${showGuidelineError ? '#F31260' : getColor(isGuidelineValid, touched.guideline, focus.guideline)}`,
-            borderRadius: 6,
-            padding: 9,
-            background: 'rgba(0,0,0,0.7)',
-            minHeight: 60,
-          }}>
+          <div 
+            style={{
+              border: `2px solid ${showGuidelineError ? '#F31260' : getColor(isGuidelineValid, touched.guideline, focus.guideline)}`,
+              borderRadius: 6,
+              padding: 9,
+              background: 'rgba(0,0,0,0.7)',
+              minHeight: 60,
+              transition: 'all 0.3s ease',
+              transform: 'scale(1)',
+              boxShadow: '0 0 5px rgba(255, 214, 0, 0.3)',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'scale(1.02)';
+              e.currentTarget.style.boxShadow = '0 0 15px rgba(255, 214, 0, 0.7)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'scale(1)';
+              e.currentTarget.style.boxShadow = '0 0 5px rgba(255, 214, 0, 0.3)';
+            }}
+          >
             <textarea
               value={guideline}
               onChange={e => { setGuideline(e.target.value); if (touched.guideline) setTouched(t => ({ ...t, guideline: false })); setError(e => ({ ...e, guideline: undefined })); }}

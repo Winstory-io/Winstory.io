@@ -1,4 +1,5 @@
 {
-  "/creation/youare/page": "app/creation/youare/page.js",
-  "/welcome/page": "app/welcome/page.js"
+  "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js",
+  "/creation/individual/yourwinstory/page": "app/creation/individual/yourwinstory/page.js",
+  "/creation/youare/page": "app/creation/youare/page.js"
 }
