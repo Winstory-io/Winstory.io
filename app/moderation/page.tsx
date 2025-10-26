@@ -946,6 +946,7 @@ const ModerationPageContent = () => {
               {/* Boutons de modération */}
               <ModerationButtons
                 activeTab={activeTab}
+                activeSubTab={activeSubTab}
                 userType={getUICreatorType(campaign)}
                 onValid={activeTab === 'initial' ? handleInitialValid : handleCompletionValid}
                 onRefuse={activeTab === 'initial' ? handleCompletionRefuse : handleCompletionRefuse}
@@ -1432,6 +1433,7 @@ const ModerationPageContent = () => {
           
           <ModerationButtons
             activeTab={activeTab}
+            activeSubTab={activeSubTab}
             userType={getUICreatorType(campaign)}
             onValid={activeTab === 'initial' ? handleInitialValid : handleCompletionValid}
             onRefuse={activeTab === 'initial' ? handleCompletionRefuse : handleCompletionRefuse}

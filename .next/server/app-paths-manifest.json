@@ -1,4 +1,5 @@
 {
-  "/welcome/page": "app/welcome/page.js",
-  "/welcome/tooltip/page": "app/welcome/tooltip/page.js"
+  "/api/campaigns/moderation/route": "app/api/campaigns/moderation/route.js",
+  "/creation/agencyb2c/thanks/page": "app/creation/agencyb2c/thanks/page.js",
+  "/mywin/creations/page": "app/mywin/creations/page.js"
 }

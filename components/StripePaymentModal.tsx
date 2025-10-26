@@ -5,8 +5,8 @@ import { loadStripe } from '@stripe/stripe-js';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { STRIPE_CONFIG } from '@/lib/config/stripe-config';
 
-// Initialiser Stripe
-const stripePromise = loadStripe(STRIPE_CONFIG.publishableKey);
+// Initialiser Stripe seulement si la clé est configurée
+const stripePromise = STRIPE_CONFIG.publishableKey ? loadStripe(STRIPE_CONFIG.publishableKey) : null;
 
 interface StripePaymentModalProps {
   isOpen: boolean;
@@ -170,6 +170,79 @@ export default function StripePaymentModal({
   };
 
   if (!isOpen) return null;
+
+  // Check if Stripe is configured
+  if (!stripePromise) {
+    return (
+      <div
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0, 0, 0, 0.85)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          padding: 20,
+        }}
+        onClick={onClose}
+      >
+        <div
+          style={{
+            background: '#181818',
+            borderRadius: 24,
+            padding: 32,
+            maxWidth: 500,
+            width: '100%',
+            border: '2px solid #ff4444',
+            boxShadow: '0 8px 64px rgba(255, 68, 68, 0.2)',
+            position: 'relative',
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button
+            onClick={onClose}
+            style={{
+              position: 'absolute',
+              top: 16,
+              right: 16,
+              background: 'none',
+              border: 'none',
+              color: '#fff',
+              fontSize: 24,
+              cursor: 'pointer',
+              padding: 8,
+            }}
+          >
+            ✕
+          </button>
+          
+          <h2 style={{ color: '#ff4444', fontSize: 24, fontWeight: 700, marginBottom: 16, textAlign: 'center' }}>
+            Configuration Error
+          </h2>
+          
+          <p style={{ color: '#fff', marginBottom: 16, textAlign: 'center' }}>
+            Stripe payment keys are not configured.
+          </p>
+          
+          <div style={{ background: '#3c1717', border: '1px solid #ff4444', borderRadius: 8, padding: 16, marginBottom: 16 }}>
+            <p style={{ color: '#ff4444', fontSize: 14, marginBottom: 8, fontWeight: 600 }}>
+              To fix this issue:
+            </p>
+            <ol style={{ color: '#ccc', fontSize: 13, marginLeft: 20, lineHeight: 1.8 }}>
+              <li>Create a <code style={{ background: '#2a2a2a', padding: '2px 6px', borderRadius: 4 }}>.env.local</code> file in the project root</li>
+              <li>Add your Stripe TEST keys from dashboard.stripe.com</li>
+              <li>Add: <code style={{ background: '#2a2a2a', padding: '2px 6px', borderRadius: 4 }}>NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...</code></li>
+              <li>Restart the development server</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const options = {
     clientSecret,

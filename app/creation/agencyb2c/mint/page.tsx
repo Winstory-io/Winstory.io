@@ -27,9 +27,29 @@ export default function AgencyB2CMintPage() {
       // Mark current flow as AgencyB2C to keep context coherent
       localStorage.setItem("currentCreationFlow", "AgencyB2C");
       
-      // Récupérer l'email de l'utilisateur
-      const email = localStorage.getItem("userEmail") || '';
-      setUserEmail(email);
+      // Récupérer l'email de l'utilisateur depuis localStorage
+      const userData = localStorage.getItem("user");
+      if (userData) {
+        try {
+          const parsed = JSON.parse(userData);
+          setUserEmail(parsed.email || '');
+        } catch (e) {
+          console.error('Failed to parse user data:', e);
+        }
+      }
+      
+      // Fallback: try to get from agency info
+      if (!userEmail) {
+        const agencyInfo = localStorage.getItem("agencyB2CContext");
+        if (agencyInfo) {
+          try {
+            const parsed = JSON.parse(agencyInfo);
+            setUserEmail(parsed.agency?.email || '');
+          } catch (e) {
+            console.error('Failed to parse agency info:', e);
+          }
+        }
+      }
     } catch {}
 
     // Récupérer les données nécessaires du localStorage (sans utiliser les clés legacy de B2C)

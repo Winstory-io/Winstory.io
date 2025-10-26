@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 
 interface ModerationButtonsProps {
   activeTab: 'initial' | 'completion';
+  activeSubTab?: string;
   userType: 'b2c' | 'agency' | 'individual';
   onValid: () => void;
   onRefuse: () => void;
@@ -11,6 +12,7 @@ interface ModerationButtonsProps {
 
 const ModerationButtons: React.FC<ModerationButtonsProps> = ({
   activeTab,
+  activeSubTab,
   userType,
   onValid,
   onRefuse,
@@ -36,19 +38,24 @@ const ModerationButtons: React.FC<ModerationButtonsProps> = ({
             : '✅ For company stories: follows the brand\'s creative structure and purpose'
         ],
         additionalInfo: 'Once validated, this content will be eligible for community completions.',
-        warning: 'V1 Staking: Only ACTIVE voters (stake ≥ 50 and stake age ≥ 7 days) earn XP and are subject to proportional slashing if they vote against the final decision. Your vote weight = 50% stake share + 50% democracy factors (stake, XP, age). If YES wins and you voted YES, you share the majority pool (e.g. 459 $/€) proportional to your stake among majority ACTIVE. Minority ACTIVE + PASSIVE share the minority pool (e.g. 51 $/€). If there is no minority+passive stake, the minority pool goes to the majority. If NO wins while you validated, you lose a proportional part of your stake.'
+        warning: 'Only ACTIVE voters (≥50 WINC, ≥7 days) earn XP. Vote weight: 50% stake + 50% experience/age. If you vote with the majority, you share the larger reward pool. If you vote with the minority, you share the smaller pool.'
       };
     } else {
+      // Distinguer les contextes B2C vs Individuals pour les completions
+      const isB2CContext = activeSubTab === 'for-b2c';
+      
       return {
         title: '🟢 Validate & Score this Completion',
         description: 'By validating this content, you confirm that it:',
         criteria: [
           '✅ Complies with Winstory\'s moderation standards (overall coherence)',
-          '✅ Follows the narrative, visual, and guideline defined by the initial company',
+          isB2CContext 
+            ? '✅ Follows the narrative, visual, and guideline defined by the initial company'
+            : '✅ Follows the narrative, visual, and guideline defined by the initial individual creator',
           '✅ Does not violate any of the listed refusal rules'
         ],
-        additionalInfo: 'Once validated, you\'ll assign a score from 1/100 to 100/100 based on the overall quality of the completion. Each score can only be used once per campaign. This scoring system helps identify the top 3 highest-rated contributions; they will win the 3 Premium Rewards.',
-        warning: 'V1 Staking: Only ACTIVE voters (stake ≥ 50 and stake age ≥ 7 days) earn XP and are subject to proportional slashing if they vote against the final decision. Your weight combines 50% ploutocracy (stake share) + 50% democracy (stake, XP, age). If YES wins and you voted YES, you receive part of the majority pool (e.g. 459 $/€) proportional to your stake among majority ACTIVE. Minority ACTIVE + PASSIVE split the minority pool (e.g. 51 $/€). If there is no minority+passive stake, the minority pool is added to the majority. If NO wins while you validated, you lose a proportional part of your stake.'
+        additionalInfo: 'Once validated, you\'ll assign a score from 1/100 to 100/100 based on the overall quality of the completion. Each score can only be used once per campaign. This helps identify the top 3 completions for Premium Rewards.',
+        warning: 'Only ACTIVE voters (≥50 WINC, ≥7 days) earn XP. Vote weight: 50% stake + 50% experience/age. If you vote with the majority, you share the larger reward pool. If you vote with the minority, you share the smaller pool.'
       };
     }
   };
@@ -68,22 +75,27 @@ const ModerationButtons: React.FC<ModerationButtonsProps> = ({
           '🚫 It has clearly not been enhanced, assisted, or post-produced using generative AI or similar post-prod technologies'
         ],
         additionalInfo: 'Refusing content is a strong decision. Make sure it clearly meets at least one of these criteria.',
-        warning: 'V1 Staking: Only ACTIVE voters (stake ≥ 50 and stake age ≥ 7 days) earn XP and may be slashed if they vote against the final decision. Weight = 50% stake share + 50% democracy (stake, XP, age). If NO wins and you voted NO, you receive a share of the majority pool (e.g. 459 $/€) proportional to your stake among majority ACTIVE. Minority ACTIVE + PASSIVE share the minority pool (e.g. 51 $/€). If there is no minority+passive stake, the minority pool goes to the majority. If YES wins while you refused, you lose a proportional part of your stake.'
+        warning: 'Only ACTIVE voters (≥50 WINC, ≥7 days) earn XP. Vote weight: 50% stake + 50% experience/age. If you vote with the majority, you share the larger reward pool. If you vote with the minority, you share the smaller pool.'
       };
     } else {
+      // Distinguer les contextes B2C vs Individuals pour les refus de completions
+      const isB2CContext = activeSubTab === 'for-b2c';
+      
       return {
         title: '🔴 Refuse this Completion',
         description: 'You should refuse this content if it falls under any of the following criteria:',
         criteria: [
           '🚫 The film was not created, assisted, or enhanced by Generative A.I. or digital post-production',
-          '🚫 The film or text does not follow the company\'s initial creative guidelines',
+          isB2CContext 
+            ? '🚫 The film or text does not follow the company\'s initial creative guidelines'
+            : '🚫 The film or text does not follow the individual creator\'s initial creative guidelines',
           '🚫 The content promotes hate, racism, xenophobia, or harassment',
           '🚫 The content includes a deepfake that may threaten the dignity or integrity of a person',
           '🚫 It presents clear geopolitical risks',
           '🚫 It contains explicit pornography'
         ],
         additionalInfo: 'Refusing content is a strong decision. Make sure it clearly meets at least one of these criteria.',
-        warning: 'V1 Staking: Only ACTIVE voters (stake ≥ 50 and stake age ≥ 7 days) earn XP and may be slashed if they vote against the final decision. Weight = 50% stake share + 50% democracy (stake, XP, age). If NO wins and you voted NO, you receive a share of the majority pool (e.g. 459 $/€) proportional to your stake among majority ACTIVE. Minority ACTIVE + PASSIVE share the minority pool (e.g. 51 $/€). If there is no minority+passive stake, the minority pool goes to the majority. If YES wins while you refused, you lose a proportional part of your stake.'
+        warning: 'Only ACTIVE voters (≥50 WINC, ≥7 days) earn XP. Vote weight: 50% stake + 50% experience/age. If you vote with the majority, you share the larger reward pool. If you vote with the minority, you share the smaller pool.'
       };
     }
   };

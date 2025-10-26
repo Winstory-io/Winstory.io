@@ -31,12 +31,24 @@ export default function AgencyB2CRecap() {
       const company = JSON.parse(localStorage.getItem("company") || "null");
       const story = JSON.parse(localStorage.getItem("story") || "null");
       const film = JSON.parse(localStorage.getItem("film") || "null");
+      
+      // Charger les infos du client B2C pour agencyb2c
+      const agencyB2CContext = JSON.parse(localStorage.getItem("agencyB2CContext") || "null");
+      const b2cClient = JSON.parse(localStorage.getItem("b2cClient") || "null");
+      
+      // Extraire les infos de l'agence et du client B2C
+      const agencyInfo = agencyB2CContext?.agency || { name: company?.name || '', email: user?.email || '' };
+      const clientInfo = agencyB2CContext?.b2c || b2cClient || { companyName: '', contactEmail: '' };
+      
       console.log("Agency B2C Film data loaded:", {
         hasUrl: !!film?.url,
         hasVideoId: !!film?.videoId,
         urlType: film?.url ? (film.url.startsWith('data:') ? 'base64' : 'blob') : 'none',
         urlLength: film?.url?.length || 0,
-        fileName: film?.fileName
+        fileName: film?.fileName,
+        aiRequested: film?.aiRequested,
+        agencyInfo,
+        clientInfo
       });
       
       // Charger la vidéo depuis IndexedDB si on a un videoId
@@ -61,7 +73,19 @@ export default function AgencyB2CRecap() {
       const premiumToken = JSON.parse(localStorage.getItem("premiumTokenReward") || "null");
       const premiumItem = JSON.parse(localStorage.getItem("premiumItemReward") || "null");
       const roiData = JSON.parse(localStorage.getItem("roiData") || "null");
-      setRecap({ user, company, story, film, standardToken, standardItem, premiumToken, premiumItem, roiData });
+      setRecap({ 
+        user, 
+        company, 
+        story, 
+        film, 
+        standardToken, 
+        standardItem, 
+        premiumToken, 
+        premiumItem, 
+        roiData,
+        agencyInfo,
+        clientInfo 
+      });
     };
     readLocalStorage();
     window.addEventListener('focus', readLocalStorage);
@@ -84,16 +108,17 @@ export default function AgencyB2CRecap() {
   }, [videoUrl]);
 
   // Pour la maquette, fallback si pas de données
-  const email = recap.user?.email || '';
-  const companyName = recap.company?.name || '';
+  const agencyEmail = recap.agencyInfo?.email || recap.user?.email || '';
+  const agencyCompanyName = recap.agencyInfo?.name || recap.company?.name || '';
+  const clientEmail = recap.clientInfo?.contactEmail || '';
+  const clientCompanyName = recap.clientInfo?.companyName || '';
   const title = recap.story?.title || "@startingtitle";
   const startingStory = recap.story?.startingStory || "@startingstory";
   const guideline = recap.story?.guideline || "@guideline";
-  const filmLabel = recap.film?.aiRequested
-    ? "The video will be delivered within 24h after payment."
-    : (videoUrl || recap.film?.url)
-      ? "View your film"
-      : "@yourfilm";
+  // Pour les agences B2C, toujours afficher "View your film" si une vidéo existe
+  const filmLabel = (videoUrl || recap.film?.url) 
+    ? "View your film"
+    : "@yourfilm";
   const rewardLabel = recap.reward?.rewardLabel || "No Rewards";
 
   // Calcul du nombre total de récompenses à distribuer
@@ -124,9 +149,12 @@ export default function AgencyB2CRecap() {
 
   const handleConfirm = async () => {
     console.log('=== CREATE AGENCY B2C CAMPAIGN - FINAL RECAP ===');
-    console.log('--- User Information ---');
-    console.log('Email:', recap.user?.email);
-    console.log('Company Name:', recap.company?.name);
+    console.log('--- Agency Information ---');
+    console.log('Agency Email:', agencyEmail);
+    console.log('Agency Name:', agencyCompanyName);
+    console.log('--- B2C Client Information ---');
+    console.log('Client Email:', clientEmail);
+    console.log('Client Company Name:', clientCompanyName);
     console.log('--- Story Information ---');
     console.log('Title:', recap.story?.title);
     console.log('Starting Story:', recap.story?.startingStory);
@@ -192,7 +220,15 @@ export default function AgencyB2CRecap() {
           premiumItem: recap.premiumItem,
           campaignType: 'AGENCY_B2C',
           walletAddress: localStorage.getItem('walletAddress') || null,
-          walletSource: 'localStorage.walletAddress'
+          walletSource: 'localStorage.walletAddress',
+          agencyInfo: {
+            name: agencyCompanyName,
+            email: agencyEmail
+          },
+          clientInfo: {
+            companyName: clientCompanyName,
+            contactEmail: clientEmail
+          }
         }),
       });
 
@@ -286,9 +322,32 @@ export default function AgencyB2CRecap() {
 
   return (
     <ProtectedRoute>
-      <div style={{ minHeight: '100vh', background: '#000', color: 'white', fontFamily: 'Inter, sans-serif', padding: 40 }}>
+      {/* Croix rouge en haut à droite */}
+      <button
+        onClick={() => setShowLeaveModal(true)}
+        aria-label="Quitter la création"
+        style={{
+          position: 'fixed',
+          top: 24,
+          right: 24,
+          zIndex: 1200,
+          background: 'none',
+          border: 'none',
+          cursor: 'pointer',
+          padding: 0,
+        }}
+      >
+        {/* Croix SVG rouge */}
+        <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="18" cy="18" r="18" fill="#181818"/>
+          <path d="M12 12L24 24" stroke="#FF2D2D" strokeWidth="3" strokeLinecap="round"/>
+          <path d="M24 12L12 24" stroke="#FF2D2D" strokeWidth="3" strokeLinecap="round"/>
+        </svg>
+      </button>
+      {/* Overlay Recap transparent si modale leave ouverte */}
+      <div style={{ minHeight: "100vh", background: "#000", color: "#fff", fontFamily: 'Inter, sans-serif', padding: 40, opacity: showLeaveModal ? 0.3 : 1, transition: 'opacity 0.2s' }}>
         <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 60, textAlign: 'center', position: 'relative' }}>
-          <h1 style={{ fontSize: 32, fontWeight: 700, margin: 0 }}>Campaign Recap</h1>
+          <h1 style={{ fontSize: 32, fontWeight: 700, margin: 0 }}>Recap</h1>
           <button
             onClick={openHelpModal}
             style={{
@@ -308,17 +367,32 @@ export default function AgencyB2CRecap() {
         </header>
 
         <main style={{ maxWidth: 800, margin: '0 auto' }}>
-          {/* Informations de base */}
+          {/* Informations de l'agence */}
           <div style={{ marginBottom: 40 }}>
-            <h2 style={{ color: '#FFD600', fontSize: 24, fontWeight: 700, marginBottom: 20 }}>Campaign Information</h2>
+            <h2 style={{ color: '#FFD600', fontSize: 24, fontWeight: 700, marginBottom: 20 }}>Agency Information</h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 20 }}>
               <div style={{ border: "2px solid #333", borderRadius: 16, padding: 24, background: '#181818' }}>
-                <h3 style={{ color: '#FFD600', marginBottom: 12, fontSize: 18 }}>Company</h3>
-                <p style={{ margin: 0, fontSize: 16 }}>{companyName || 'Not specified'}</p>
+                <h3 style={{ color: '#FFD600', marginBottom: 12, fontSize: 18 }}>Agency Name</h3>
+                <p style={{ margin: 0, fontSize: 16 }}>{agencyCompanyName || 'Not specified'}</p>
               </div>
               <div style={{ border: "2px solid #333", borderRadius: 16, padding: 24, background: '#181818' }}>
-                <h3 style={{ color: '#FFD600', marginBottom: 12, fontSize: 18 }}>Contact Email</h3>
-                <p style={{ margin: 0, fontSize: 16 }}>{email || 'Not specified'}</p>
+                <h3 style={{ color: '#FFD600', marginBottom: 12, fontSize: 18 }}>Agency Email</h3>
+                <p style={{ margin: 0, fontSize: 16 }}>{agencyEmail || 'Not specified'}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Informations du client B2C */}
+          <div style={{ marginBottom: 40 }}>
+            <h2 style={{ color: '#FFD600', fontSize: 24, fontWeight: 700, marginBottom: 20 }}>B2C Client Information</h2>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 20 }}>
+              <div style={{ border: "2px solid #333", borderRadius: 16, padding: 24, background: '#181818' }}>
+                <h3 style={{ color: '#00C46C', marginBottom: 12, fontSize: 18 }}>Client Company</h3>
+                <p style={{ margin: 0, fontSize: 16 }}>{clientCompanyName || 'Not specified'}</p>
+              </div>
+              <div style={{ border: "2px solid #333", borderRadius: 16, padding: 24, background: '#181818' }}>
+                <h3 style={{ color: '#00C46C', marginBottom: 12, fontSize: 18 }}>Client Contact Email</h3>
+                <p style={{ margin: 0, fontSize: 16 }}>{clientEmail || 'Not specified'}</p>
               </div>
             </div>
           </div>
@@ -354,14 +428,43 @@ export default function AgencyB2CRecap() {
           {/* Film Information */}
           <div style={{ marginBottom: 40 }}>
             <h2 style={{ color: '#FFD600', fontSize: 24, fontWeight: 700, marginBottom: 20 }}>Film</h2>
-            <div 
-              style={{ border: "2px solid #333", borderRadius: 16, padding: 24, background: '#181818', cursor: videoLoading ? 'default' : 'pointer' }}
-              onClick={videoLoading ? undefined : () => openModal("Your Film", filmLabel, true)}
-            >
-              <h3 style={{ color: '#FFD600', marginBottom: 12, fontSize: 18 }}>Film</h3>
-              <p style={{ margin: 0, fontSize: 16 }}>
-                {videoLoading ? 'Loading video...' : filmLabel}
-              </p>
+            <div style={{ border: "2px solid #333", borderRadius: 16, padding: 24, background: '#181818' }}>
+              {videoLoading ? (
+                <div style={{ textAlign: 'center', color: '#FFD600' }}>
+                  Loading video...
+                </div>
+              ) : (videoUrl || recap.film?.url) ? (
+                <div>
+                  <video 
+                    controls 
+                    style={{ 
+                      maxWidth: '100%', 
+                      maxHeight: '400px',
+                      borderRadius: 8,
+                      objectFit: 'contain',
+                      width: '100%'
+                    }}
+                    onError={(e) => {
+                      console.warn('Video failed to load:', videoUrl || recap.film.url);
+                    }}
+                  >
+                    <source src={videoUrl || recap.film.url} type="video/mp4" />
+                    Your browser does not support the video tag.
+                  </video>
+                  {/* Informations sur le fichier */}
+                  {recap.film?.fileName && (
+                    <div style={{ marginTop: 12, padding: 8, background: 'rgba(255,215,0,0.1)', borderRadius: 4 }}>
+                      <div style={{ fontSize: 12, color: '#FFD600' }}>
+                        📁 {recap.film.fileName} • {recap.film.fileSize ? Math.round(recap.film.fileSize / (1024*1024) * 100)/100 + ' MB' : ''} • {recap.film.format || 'unknown format'}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div style={{ textAlign: 'center', color: '#999' }}>
+                  No video provided
+                </div>
+              )}
             </div>
           </div>
 
@@ -403,7 +506,7 @@ export default function AgencyB2CRecap() {
           </div>
 
           {/* ROI Information */}
-          {recap.roiData && (
+          {recap.roiData && !recap.roiData.noReward && (
             <div style={{ marginBottom: 40 }}>
               <h2 style={{ color: '#FFD600', fontSize: 24, fontWeight: 700, marginBottom: 20 }}>ROI Configuration</h2>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 20 }}>
@@ -429,48 +532,105 @@ export default function AgencyB2CRecap() {
             </div>
           )}
 
-          {/* Confirmation Button */}
-          <div style={{ textAlign: 'center', marginTop: 60 }}>
-            <button
-              onClick={handleConfirm}
-              disabled={confirmed}
-              style={{
-                background: confirmed ? '#18C964' : '#FFD600',
-                color: '#000',
-                border: 'none',
-                borderRadius: 12,
-                padding: '16px 32px',
-                fontSize: 18,
-                fontWeight: 700,
-                cursor: confirmed ? 'default' : 'pointer',
-                transition: 'all 0.2s',
-                minWidth: 200,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 12,
-                margin: '0 auto'
-              }}
-            >
-              {confirmed ? (
-                <>
-                  <span>✓</span>
-                  <span>Confirmed!</span>
-                </>
-              ) : (
-                <>
-                  <span>🚀</span>
-                  <span>Confirm Campaign</span>
-                </>
-              )}
-            </button>
-          </div>
         </main>
+        
+        {/* Bouton Confirm flottant (bulle en bas à droite, toujours un cercle) */}
+        <button
+          onClick={handleConfirm}
+          disabled={confirmed}
+          style={{
+            position: 'fixed',
+            right: 24,
+            bottom: 24,
+            zIndex: 1100,
+            background: '#18C964',
+            border: 'none',
+            color: '#fff',
+            borderRadius: '50%',
+            fontSize: confirmed ? 32 : 20,
+            fontWeight: 700,
+            width: 88,
+            height: 88,
+            boxShadow: '0 4px 32px rgba(24,201,100,0.35)',
+            cursor: confirmed ? 'default' : 'pointer',
+            transition: 'background 0.2s, color 0.2s, box-shadow 0.2s, width 0.2s, height 0.2s, font-size 0.2s',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textAlign: 'center',
+            whiteSpace: 'pre-line',
+            padding: 0,
+          }}
+          className="confirm-fab"
+          aria-label="Confirm"
+        >
+          {confirmed ? '✓' : 'Confirm'}
+        </button>
 
         <Modal open={modal.open} onClose={() => setModal({ open: false, content: null })}>
           {modal.content}
         </Modal>
       </div>
+      {/* Pop-up centrale rouge/noir pour quitter */}
+      {showLeaveModal && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+            background: 'rgba(0,0,0,0.7)',
+            zIndex: 2000,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+          onClick={() => setShowLeaveModal(false)}
+        >
+          <div
+            style={{
+              background: '#181818',
+              border: '3px solid #FF2D2D',
+              color: '#FF2D2D',
+              padding: 40,
+              borderRadius: 20,
+              minWidth: 340,
+              maxWidth: '90vw',
+              boxShadow: '0 0 32px #FF2D2D55',
+              textAlign: 'center',
+              position: 'relative',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 24,
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{ fontWeight: 700, fontSize: 28, color: '#FF2D2D', marginBottom: 8 }}>Back to home ?</div>
+            <div style={{ color: '#FF2D2D', background: '#000', border: '2px solid #FF2D2D', borderRadius: 12, padding: 18, fontSize: 18, fontWeight: 500, marginBottom: 12 }}>
+              You're about to leave this campaign creation process.<br/>Your current progress won't be saved
+            </div>
+            <button
+              onClick={() => router.push('/welcome')}
+              style={{
+                background: '#FF2D2D',
+                color: '#fff',
+                border: 'none',
+                borderRadius: 12,
+                padding: '14px 32px',
+                fontWeight: 700,
+                fontSize: 18,
+                cursor: 'pointer',
+                marginTop: 8,
+                boxShadow: '0 2px 12px #FF2D2D55',
+                transition: 'background 0.2s',
+              }}
+            >
+              Confirm & leave
+            </button>
+          </div>
+        </div>
+      )}
     </ProtectedRoute>
   );
 } 

@@ -25,15 +25,22 @@ export async function createPaymentIntent(params: {
   customerEmail?: string;
 }) {
   try {
-    const paymentIntent = await stripe.paymentIntents.create({
+    // Build payment intent options
+    const paymentIntentOptions: any = {
       amount: params.amount,
       currency: params.currency,
       metadata: params.metadata,
-      receipt_email: params.customerEmail,
       automatic_payment_methods: {
         enabled: true,
       },
-    });
+    };
+
+    // Only add receipt_email if it's a valid email address
+    if (params.customerEmail && params.customerEmail.trim() !== '' && params.customerEmail.includes('@')) {
+      paymentIntentOptions.receipt_email = params.customerEmail.trim();
+    }
+
+    const paymentIntent = await stripe.paymentIntents.create(paymentIntentOptions);
 
     return {
       success: true,

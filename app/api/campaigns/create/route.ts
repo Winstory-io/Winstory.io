@@ -265,17 +265,11 @@ export async function POST(request: NextRequest) {
         creatorType = 'INDIVIDUAL_CREATORS';
     }
 
-    // WORKAROUND: Generate a unique wallet address to avoid conflicts
-    // This is a temporary solution until the database trigger issue is resolved
-    console.log('🔧 Using unique wallet address to avoid conflicts...');
+    // IMPORTANT: Keep the original wallet address to track campaigns by the same user
+    // Previous workaround added timestamp which prevented tracking multiple campaigns from same wallet
     const originalWalletAddress = data.walletAddress;
-    const uniqueWalletAddress = `${originalWalletAddress}_${Date.now()}`;
     
-    console.log('Original wallet:', originalWalletAddress);
-    console.log('Unique wallet:', uniqueWalletAddress);
-    
-    // Update the wallet address for this campaign
-    data.walletAddress = uniqueWalletAddress;
+    console.log('💰 Wallet address for campaign:', originalWalletAddress);
 
     // 1. Créer la campagne principale avec gestion d'erreur pour le trigger
     console.log('🎯 Creating campaign with trigger error handling...');
@@ -293,7 +287,7 @@ export async function POST(request: NextRequest) {
           type: 'INITIAL',
           creator_type: creatorType,
           original_campaign_company_name: data.company?.name || null,
-          original_creator_wallet: data.walletAddress,
+          original_creator_wallet: originalWalletAddress,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })
@@ -334,7 +328,7 @@ export async function POST(request: NextRequest) {
         campaign_id: campaignId,
         company_name: data.company?.name || null,
         agency_name: data.campaignType === 'AGENCY_B2C' ? data.company?.name : null,
-        wallet_address: data.walletAddress,
+        wallet_address: originalWalletAddress,
         email: data.user?.email || null
       });
 
@@ -508,7 +502,7 @@ export async function POST(request: NextRequest) {
       submission_timestamp_iso: new Date().toISOString(),
       submission_timestamp_local: new Date().toLocaleString(),
       campaign_type: data.campaignType,
-      wallet_address: data.walletAddress,
+      wallet_address: originalWalletAddress,
       wallet_source: data.walletSource,
       user_email: data.user?.email || null,
       company_name: data.company?.name || null,

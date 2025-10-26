@@ -23,14 +23,28 @@ export async function POST(request: NextRequest) {
     // Convert amount to cents
     const amountInCents = dollarsToCents(amount);
 
-    // Create PaymentIntent
+    // Helper function to convert metadata values to strings
+    const normalizeMetadata = (meta: Record<string, any>): Record<string, string> => {
+      const normalized: Record<string, string> = {};
+      for (const [key, value] of Object.entries(meta)) {
+        if (typeof value === 'string') {
+          normalized[key] = value;
+        } else if (value !== null && value !== undefined) {
+          // Convert objects, arrays, etc. to JSON strings
+          normalized[key] = JSON.stringify(value);
+        }
+      }
+      return normalized;
+    };
+
+    // Create PaymentIntent with normalized metadata
     const result = await createPaymentIntent({
       amount: amountInCents,
       currency: 'usd',
       customerEmail: userEmail,
       metadata: {
         flowType,
-        ...metadata,
+        ...normalizeMetadata(metadata || {}),
       },
     });
 
