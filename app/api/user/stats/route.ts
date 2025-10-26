@@ -70,19 +70,37 @@ export async function GET(request: NextRequest) {
 
     const totalWinc = wincRewards?.reduce((sum, reward) => sum + parseFloat(reward.winc_amount || '0'), 0) || 0;
 
-    // 5. Calculer le total XP
+    // 5. Récupérer la progression XP depuis le nouveau système xp_balances
     const { data: xpData, error: xpError } = await supabase
-      .from('user_xp_progression')
-      .select('total_xp')
+      .from('xp_balances')
+      .select('total_xp, current_level, xp_to_next_level, xp_in_current_level')
       .eq('user_wallet', walletAddress)
       .single();
 
+    let xpBalanceData;
     if (xpError && xpError.code !== 'PGRST116') { // PGRST116 = no rows found
-      console.error('Error fetching XP data:', xpError);
-      throw new Error(`Failed to fetch XP data: ${xpError.message}`);
+      console.warn('⚠️ Error fetching XP data from xp_balances, trying old table:', xpError);
+      // Fallback vers l'ancienne table user_xp_progression
+      const { data: oldXpData } = await supabase
+        .from('user_xp_progression')
+        .select('total_xp')
+        .eq('user_wallet', walletAddress)
+        .single();
+      
+      xpBalanceData = {
+        total_xp: oldXpData?.total_xp || 0,
+        current_level: 1,
+        xp_to_next_level: 100,
+        xp_in_current_level: oldXpData?.total_xp || 0
+      };
+    } else {
+      xpBalanceData = xpData || {
+        total_xp: 0,
+        current_level: 1,
+        xp_to_next_level: 100,
+        xp_in_current_level: 0
+      };
     }
-
-    const totalXp = xpData?.total_xp || 0;
 
     // 6. Récupérer les récompenses gagnées
     const { data: earnedRewards, error: rewardsError } = await supabase
@@ -121,7 +139,8 @@ export async function GET(request: NextRequest) {
       completions: completedCount || 0,
       moderations: moderatedCount || 0,
       totalWinc: Math.round(totalWinc * 100) / 100, // Arrondir à 2 décimales
-      totalXp: totalXp,
+      totalXp: xpBalanceData.total_xp,
+      xpBalance: xpBalanceData, // Inclure toutes les données XP
       rewards: rewardsStats,
       achievements: achievements?.length || 0,
       lastActivity: earnedRewards?.[0]?.earned_at || null
@@ -133,6 +152,8 @@ export async function GET(request: NextRequest) {
     console.log('Moderations:', stats.moderations);
     console.log('Total WINC:', stats.totalWinc);
     console.log('Total XP:', stats.totalXp);
+    console.log('XP Level:', xpBalanceData.current_level);
+    console.log('XP to Next Level:', xpBalanceData.xp_to_next_level);
     console.log('Achievements:', stats.achievements);
 
     return NextResponse.json({

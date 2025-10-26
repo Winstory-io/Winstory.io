@@ -546,6 +546,84 @@ export async function POST(request: NextRequest) {
     console.log('Status:', campaignStatus);
     console.log('Creator Type:', creatorType);
 
+    // ===================================
+    // 9. AWARD XP FOR CAMPAIGN CREATION
+    // ===================================
+    console.log('🎯 [XP] Starting XP award for campaign creation...');
+    try {
+      // Determine mint value
+      const mintValueUSD = data.roiData?.unitValue || 1000; // Default to 1000 USD for B2C/Agency
+      const mintValueWINC = data.completions?.wincValue || data.economicData?.totalCost || mintValueUSD;
+      
+      // Determine options
+      const winstoryCreatesVideo = !data.film?.videoId; // No videoId means Winstory creates
+      const noRewards = !hasRewards; // No custom rewards means Winstory manages
+      
+      console.log('💰 [XP] Mint Value:', { mintValueUSD, mintValueWINC });
+      console.log('⚙️ [XP] Options:', { winstoryCreatesVideo, noRewards });
+      
+      // Call XP award API
+      const xpResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/xp/award-campaign-creation`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userWallet: originalWalletAddress,
+          campaignType: data.campaignType,
+          campaignId: campaignId,
+          mintValueUSD,
+          options: {
+            winstoryCreatesVideo,
+            noRewards,
+            mintValueWINC
+          }
+        })
+      });
+
+      if (xpResponse.ok) {
+        const xpResult = await xpResponse.json();
+        console.log('✅ [XP] Campaign creation XP awarded:', xpResult.data?.summary);
+      } else {
+        console.warn('⚠️ [XP] Failed to award XP, but campaign was created successfully');
+      }
+    } catch (xpError) {
+      console.error('❌ [XP] Error awarding campaign creation XP:', xpError);
+      // Don't fail the campaign creation if XP award fails
+      console.warn('⚠️ [XP] Campaign created but XP award failed');
+    }
+
+    // ===================================
+    // 10. REGISTER AGENCY B2C CLIENT (if applicable)
+    // ===================================
+    if (data.campaignType === 'AGENCY_B2C' && data.clientInfo?.contactEmail) {
+      console.log('🏢 [XP] Registering Agency B2C client for future XP...');
+      try {
+        const clientResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/xp/agency-client`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            action: 'register',
+            agencyWallet: originalWalletAddress,
+            agencyEmail: data.agencyInfo?.email || data.user?.email || '',
+            clientEmail: data.clientInfo.contactEmail,
+            clientName: data.clientInfo.companyName || 'Client',
+            campaignId: campaignId
+          })
+        });
+
+        if (clientResponse.ok) {
+          console.log('✅ [XP] Agency client registered for future XP award');
+        } else {
+          console.warn('⚠️ [XP] Failed to register agency client');
+        }
+      } catch (clientError) {
+        console.error('❌ [XP] Error registering agency client:', clientError);
+      }
+    }
+
     return NextResponse.json({
       success: true,
       campaignId: campaignId,

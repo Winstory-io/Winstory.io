@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 import { 
   computeStakingDecisionV1,
   StakerInputV1,
@@ -179,6 +180,59 @@ export async function POST(request: NextRequest) {
             consoleLogs.push(log);
           });
         }
+
+        // ===================================
+        // AWARD XP FOR MODERATION VOTE
+        // ===================================
+        consoleLogs.push(`🎯 [XP] Awarding moderation vote XP...`);
+        try {
+          // Get campaign info to determine campaign type
+          const supabase = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+          );
+          
+          const { data: campaign } = await supabase
+            .from('campaigns')
+            .select('creator_type')
+            .eq('id', campaignId)
+            .single();
+          
+          // Map creator_type to campaign type
+          let campaignType = 'B2C';
+          if (campaign) {
+            if (campaign.creator_type === 'B2C_AGENCIES') {
+              campaignType = 'AGENCY_B2C';
+            } else if (campaign.creator_type === 'INDIVIDUAL_CREATORS') {
+              campaignType = 'INDIVIDUAL';
+            }
+          }
+          
+          const xpResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/xp/award-moderation`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              type: 'vote',
+              moderatorWallet,
+              campaignId,
+              campaignType,
+              voteDecision,
+              completionId
+            })
+          });
+
+          if (xpResponse.ok) {
+            const xpResult = await xpResponse.json();
+            consoleLogs.push(`✅ [XP] Moderation vote XP awarded: ${xpResult.data?.xpAmount || 0} XP`);
+          } else {
+            consoleLogs.push(`⚠️ [XP] Failed to award moderation XP`);
+          }
+        } catch (xpError) {
+          consoleLogs.push(`⚠️ [XP] Error awarding moderation XP: ${xpError}`);
+        }
+
       } else {
         consoleLogs.push(`⚠️ Error during save: ${saveResponse.status}`);
       }
