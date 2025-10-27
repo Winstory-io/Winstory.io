@@ -128,12 +128,6 @@ export default function MyWinPage() {
   useEffect(() => {
     if (account) {
       fetchUserStats();
-      
-      // Définir l'intervalle de rafraîchissement
-      const intervalId = setInterval(fetchUserStats, 30000); // Rafraîchir toutes les 30 secondes
-      
-      // Nettoyer l'intervalle lors du démontage
-      return () => clearInterval(intervalId);
     }
   }, [account, fetchUserStats]);
 

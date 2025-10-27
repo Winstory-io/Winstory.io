@@ -6,7 +6,7 @@
  */
 
 export type UserType = 'B2C' | 'AGENCY_B2C' | 'INDIVIDUAL';
-export type RecipientType = 'creator' | 'moderator' | 'completer' | 'agency' | 'b2c_client';
+export type RecipientType = 'creator' | 'moderator' | 'completer' | 'agency' | 'b2c_client' | 'staker';
 
 export interface XPAction {
   action: string;
@@ -77,19 +77,70 @@ export const XP_SYSTEM_CONFIG: XPRules = {
         recipient: 'creator',
         description: 'Campaign refused (final NO vote) loses 500 XP'
       },
+      // ========== COMPLETION XP FOR B2C ==========
       {
-        action: 'Completion_By_1_Completer',
-        earn_xp: 10,
-        lose_xp: 0,
-        recipient: 'completer',
-        description: 'Each completer earns 10 XP'
-      },
-      {
-        action: 'Completion_100Percent_Validated',
+        action: 'Completion_Submit_B2C_Free',
         earn_xp: 100,
         lose_xp: 0,
         recipient: 'completer',
-        description: 'Completion validated at 100% earns 100 XP'
+        description: 'Submit completion for free B2C campaign earns 100 XP'
+      },
+      {
+        action: 'Completion_Submit_B2C_Paid',
+        earn_xp: '100 + PRICE_COMPLETION',
+        lose_xp: 0,
+        recipient: 'completer',
+        description: 'Submit completion for paid B2C campaign earns 100 XP + price value'
+      },
+      {
+        action: 'Completion_Validated_B2C',
+        earn_xp: 100,
+        lose_xp: 0,
+        recipient: 'completer',
+        description: 'Completion validated earns 100 XP bonus'
+      },
+      {
+        action: 'Completion_Refused_B2C',
+        earn_xp: 0,
+        lose_xp: 50,
+        recipient: 'completer',
+        description: 'Completion refused loses 50 XP'
+      },
+      {
+        action: 'Completion_Moderation_Validated',
+        earn_xp: 2,
+        lose_xp: 0,
+        recipient: 'moderator',
+        description: 'Moderator validates completion earns 2 XP'
+      },
+      {
+        action: 'Completion_Moderation_Refused',
+        earn_xp: 0,
+        lose_xp: 1,
+        recipient: 'moderator',
+        description: 'Moderator refuses completion loses 1 XP'
+      },
+      // ========== STAKING XP FOR B2C ==========
+      {
+        action: 'STAKING_MAJOR',
+        earn_xp: 'STAKING_XP_MAJOR',
+        lose_xp: 0,
+        recipient: 'staker',
+        description: 'Major staker earns XP based on stake amount and duration'
+      },
+      {
+        action: 'STAKING_MINOR',
+        earn_xp: 'STAKING_XP_MINOR',
+        lose_xp: 0,
+        recipient: 'staker',
+        description: 'Minor staker earns XP based on stake amount and duration'
+      },
+      {
+        action: 'STAKING_INELIGIBLE',
+        earn_xp: 0,
+        lose_xp: 0,
+        recipient: 'staker',
+        description: 'Ineligible staker earns 0 XP'
       }
     ]
   },
@@ -116,6 +167,71 @@ export const XP_SYSTEM_CONFIG: XPRules = {
         lose_xp: 0,
         recipient: 'b2c_client',
         description: 'When B2C client connects to Winstory, they earn 1000 XP (not the agency)'
+      },
+      // ========== COMPLETION XP FOR AGENCY B2C ==========
+      {
+        action: 'Completion_Submit_Agency_Free',
+        earn_xp: 100,
+        lose_xp: 0,
+        recipient: 'completer',
+        description: 'Submit completion for free Agency B2C campaign earns 100 XP'
+      },
+      {
+        action: 'Completion_Submit_Agency_Paid',
+        earn_xp: '100 + PRICE_COMPLETION',
+        lose_xp: 0,
+        recipient: 'completer',
+        description: 'Submit completion for paid Agency B2C campaign earns 100 XP + price value'
+      },
+      {
+        action: 'Completion_Validated_Agency',
+        earn_xp: 100,
+        lose_xp: 0,
+        recipient: 'completer',
+        description: 'Completion validated earns 100 XP bonus'
+      },
+      {
+        action: 'Completion_Refused_Agency',
+        earn_xp: 0,
+        lose_xp: 50,
+        recipient: 'completer',
+        description: 'Completion refused loses 50 XP'
+      },
+      {
+        action: 'Completion_Moderation_Validated',
+        earn_xp: 2,
+        lose_xp: 0,
+        recipient: 'moderator',
+        description: 'Moderator validates completion earns 2 XP'
+      },
+      {
+        action: 'Completion_Moderation_Refused',
+        earn_xp: 0,
+        lose_xp: 1,
+        recipient: 'moderator',
+        description: 'Moderator refuses completion loses 1 XP'
+      },
+      // ========== STAKING XP FOR AGENCY B2C ==========
+      {
+        action: 'STAKING_MAJOR',
+        earn_xp: 'STAKING_XP_MAJOR',
+        lose_xp: 0,
+        recipient: 'staker',
+        description: 'Major staker earns XP based on stake amount and duration'
+      },
+      {
+        action: 'STAKING_MINOR',
+        earn_xp: 'STAKING_XP_MINOR',
+        lose_xp: 0,
+        recipient: 'staker',
+        description: 'Minor staker earns XP based on stake amount and duration'
+      },
+      {
+        action: 'STAKING_INELIGIBLE',
+        earn_xp: 0,
+        lose_xp: 0,
+        recipient: 'staker',
+        description: 'Ineligible staker earns 0 XP'
       }
     ]
   },
@@ -156,6 +272,64 @@ export const XP_SYSTEM_CONFIG: XPRules = {
         lose_xp: 'MINT_VALUE_$WINC / 2',
         recipient: 'creator',
         description: 'Campaign refused loses XP equivalent to half the $WINC minted'
+      },
+      // ========== COMPLETION XP FOR INDIVIDUAL ==========
+      {
+        action: 'Completion_Submit_Individual',
+        earn_xp: 'MINT_VALUE_$WINC',
+        lose_xp: 0,
+        recipient: 'completer',
+        description: 'Submit completion for Individual campaign earns XP = MINT $WINC value'
+      },
+      {
+        action: 'Completion_Validated_Individual',
+        earn_xp: 100,
+        lose_xp: 0,
+        recipient: 'completer',
+        description: 'Completion validated earns 100 XP bonus'
+      },
+      {
+        action: 'Completion_Refused_Individual',
+        earn_xp: 0,
+        lose_xp: 'MINT_VALUE_$WINC / 2',
+        recipient: 'completer',
+        description: 'Completion refused loses XP = MINT $WINC / 2'
+      },
+      {
+        action: 'Completion_Moderation_Validated',
+        earn_xp: 2,
+        lose_xp: 0,
+        recipient: 'moderator',
+        description: 'Moderator validates completion earns 2 XP'
+      },
+      {
+        action: 'Completion_Moderation_Refused',
+        earn_xp: 0,
+        lose_xp: 1,
+        recipient: 'moderator',
+        description: 'Moderator refuses completion loses 1 XP'
+      },
+      // ========== STAKING XP FOR INDIVIDUAL ==========
+      {
+        action: 'STAKING_MAJOR',
+        earn_xp: 'STAKING_XP_MAJOR',
+        lose_xp: 0,
+        recipient: 'staker',
+        description: 'Major staker earns XP based on stake amount and duration'
+      },
+      {
+        action: 'STAKING_MINOR',
+        earn_xp: 'STAKING_XP_MINOR',
+        lose_xp: 0,
+        recipient: 'staker',
+        description: 'Minor staker earns XP based on stake amount and duration'
+      },
+      {
+        action: 'STAKING_INELIGIBLE',
+        earn_xp: 0,
+        lose_xp: 0,
+        recipient: 'staker',
+        description: 'Ineligible staker earns 0 XP'
       }
     ]
   }
@@ -262,6 +436,31 @@ export function getXPAction(userType: UserType, actionName: string): XPAction | 
 }
 
 /**
+ * Calculate staking XP based on Excel formula
+ */
+function calculateStakingXP(
+  stakerType: 'MAJOR' | 'MINOR', 
+  stakeAmount: number, 
+  stakeAgeDays: number
+): number {
+  if (stakerType === 'MAJOR') {
+    // Formula: 50 + 400 * (stakeAmount / 1000)^1.8 * (1 + (stakeAgeDays / 90)^0.7)
+    const baseXP = 50;
+    const amountFactor = 400 * Math.pow(stakeAmount / 1000, 1.8);
+    const ageFactor = 1 + Math.pow(stakeAgeDays / 90, 0.7);
+    return Math.floor(baseXP + amountFactor * ageFactor);
+  } else if (stakerType === 'MINOR') {
+    // Formula: 30 + 150 * (stakeAmount / 1000)^1.5 * (1 + (stakeAgeDays / 90)^0.5)
+    const baseXP = 30;
+    const amountFactor = 150 * Math.pow(stakeAmount / 1000, 1.5);
+    const ageFactor = 1 + Math.pow(stakeAgeDays / 90, 0.5);
+    return Math.floor(baseXP + amountFactor * ageFactor);
+  }
+  
+  return 0;
+}
+
+/**
  * Calculate XP amount from a formula or fixed value
  */
 export function calculateXPAmount(
@@ -269,6 +468,10 @@ export function calculateXPAmount(
   context: {
     mintValueWINC?: number;
     mintValueUSD?: number;
+    priceCompletion?: number;
+    stakeAmount?: number;
+    stakeAgeDays?: number;
+    stakerType?: 'MAJOR' | 'MINOR' | 'PASSIVE' | 'INELIGIBLE';
   }
 ): number {
   // If it's a number, return it directly
@@ -279,6 +482,28 @@ export function calculateXPAmount(
   // If it's a formula string, evaluate it
   const formula = xpValue.toString();
   
+  // Handle staking formulas
+  if (formula.includes('STAKING_XP_MAJOR')) {
+    return calculateStakingXP('MAJOR', context.stakeAmount || 0, context.stakeAgeDays || 0);
+  }
+  
+  if (formula.includes('STAKING_XP_MINOR')) {
+    return calculateStakingXP('MINOR', context.stakeAmount || 0, context.stakeAgeDays || 0);
+  }
+  
+  // Handle "100 + PRICE_COMPLETION"
+  if (formula.includes('PRICE_COMPLETION')) {
+    const priceValue = context.priceCompletion || 0;
+    
+    if (formula.includes('+')) {
+      const baseXP = parseInt(formula.split('+')[0].trim());
+      return baseXP + Math.floor(priceValue);
+    }
+    
+    return Math.floor(priceValue);
+  }
+  
+  // Handle "MINT_VALUE_$WINC"
   if (formula.includes('MINT_VALUE_$WINC')) {
     const mintValue = context.mintValueWINC || context.mintValueUSD || 0;
     

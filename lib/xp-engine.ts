@@ -33,6 +33,10 @@ export interface XPTransactionInput {
   completionId?: string;
   mintValueUSD?: number;
   mintValueWINC?: number;
+  priceCompletion?: number;
+  stakeAmount?: number;
+  stakeAgeDays?: number;
+  stakerType?: 'MAJOR' | 'MINOR' | 'PASSIVE' | 'INELIGIBLE';
   
   // Additional metadata
   description?: string;
@@ -114,12 +118,20 @@ export async function awardXP(input: XPTransactionInput): Promise<XPTransactionR
     // Calculate XP amount (handling formulas)
     const earnXP = calculateXPAmount(xpAction.earn_xp, {
       mintValueWINC: input.mintValueWINC,
-      mintValueUSD: input.mintValueUSD
+      mintValueUSD: input.mintValueUSD,
+      priceCompletion: input.priceCompletion,
+      stakeAmount: input.stakeAmount,
+      stakeAgeDays: input.stakeAgeDays,
+      stakerType: input.stakerType
     });
 
     const loseXP = calculateXPAmount(xpAction.lose_xp, {
       mintValueWINC: input.mintValueWINC,
-      mintValueUSD: input.mintValueUSD
+      mintValueUSD: input.mintValueUSD,
+      priceCompletion: input.priceCompletion,
+      stakeAmount: input.stakeAmount,
+      stakeAgeDays: input.stakeAgeDays,
+      stakerType: input.stakerType
     });
 
     const xpAmount = earnXP - loseXP;
@@ -350,43 +362,184 @@ export async function awardFinalModerationXP(
 }
 
 /**
- * Award XP for completion
+ * Award XP for moderators voting on completions
+ */
+export async function awardCompletionModerationXP(
+  moderatorWallet: string,
+  campaignId: string,
+  completionId: string,
+  campaignType: UserType,
+  voteDecision: 'VALID' | 'REFUSE'
+): Promise<XPTransactionResult> {
+  const action = voteDecision === 'VALID' 
+    ? 'Completion_Moderation_Validated'
+    : 'Completion_Moderation_Refused';
+
+  return await awardXP({
+    userWallet: moderatorWallet,
+    userType: campaignType,
+    action,
+    campaignId,
+    completionId,
+    description: `Completion moderation vote: ${voteDecision}`,
+    createdBy: 'completion_moderation_system'
+  });
+}
+
+/**
+ * Award XP for completion submission, validation, or refusal
  */
 export async function awardCompletionXP(
   completerWallet: string,
   campaignId: string,
   completionId: string,
-  isValidated: boolean = false
+  campaignType: UserType,
+  options: {
+    isValidated?: boolean;
+    isRefused?: boolean;
+    isPaid?: boolean;
+    priceCompletion?: number;
+    mintValueWINC?: number;
+  } = {}
 ): Promise<XPTransactionResult[]> {
   const results: XPTransactionResult[] = [];
+  const { isValidated = false, isRefused = false, isPaid = false, priceCompletion = 0, mintValueWINC = 0 } = options;
 
-  // Award base completion XP
-  const completionResult = await awardXP({
-    userWallet: completerWallet,
-    userType: 'B2C', // Completers are considered B2C for XP purposes
-    action: 'Completion_By_1_Completer',
-    campaignId,
-    completionId,
-    description: 'Completion submitted',
-    createdBy: 'completion_system'
-  });
-  results.push(completionResult);
+  // ========== SUBMISSION XP ==========
+  // Only award submission XP if it's a new submission (not a validation/refusal update)
+  if (!isValidated && !isRefused) {
+    let submitAction = '';
+    
+    if (campaignType === 'B2C') {
+      submitAction = isPaid ? 'Completion_Submit_B2C_Paid' : 'Completion_Submit_B2C_Free';
+    } else if (campaignType === 'AGENCY_B2C') {
+      submitAction = isPaid ? 'Completion_Submit_Agency_Paid' : 'Completion_Submit_Agency_Free';
+    } else if (campaignType === 'INDIVIDUAL') {
+      submitAction = 'Completion_Submit_Individual';
+    }
 
-  // Award bonus for 100% validated completion
+    if (submitAction) {
+      const submitResult = await awardXP({
+        userWallet: completerWallet,
+        userType: campaignType,
+        action: submitAction,
+        campaignId,
+        completionId,
+        mintValueWINC,
+        priceCompletion,
+        description: 'Completion submitted',
+        createdBy: 'completion_system'
+      });
+      results.push(submitResult);
+    }
+  }
+
+  // ========== VALIDATION XP ==========
   if (isValidated) {
-    const validatedResult = await awardXP({
-      userWallet: completerWallet,
-      userType: 'B2C',
-      action: 'Completion_100Percent_Validated',
-      campaignId,
-      completionId,
-      description: 'Completion validated at 100%',
-      createdBy: 'completion_system'
-    });
-    results.push(validatedResult);
+    let validatedAction = '';
+    
+    if (campaignType === 'B2C') {
+      validatedAction = 'Completion_Validated_B2C';
+    } else if (campaignType === 'AGENCY_B2C') {
+      validatedAction = 'Completion_Validated_Agency';
+    } else if (campaignType === 'INDIVIDUAL') {
+      validatedAction = 'Completion_Validated_Individual';
+    }
+
+    if (validatedAction) {
+      const validatedResult = await awardXP({
+        userWallet: completerWallet,
+        userType: campaignType,
+        action: validatedAction,
+        campaignId,
+        completionId,
+        description: 'Completion validated',
+        createdBy: 'completion_system'
+      });
+      results.push(validatedResult);
+    }
+  }
+
+  // ========== REFUSAL XP (LOSS) ==========
+  if (isRefused) {
+    let refusedAction = '';
+    
+    if (campaignType === 'B2C') {
+      refusedAction = 'Completion_Refused_B2C';
+    } else if (campaignType === 'AGENCY_B2C') {
+      refusedAction = 'Completion_Refused_Agency';
+    } else if (campaignType === 'INDIVIDUAL') {
+      refusedAction = 'Completion_Refused_Individual';
+    }
+
+    if (refusedAction) {
+      const refusedResult = await awardXP({
+        userWallet: completerWallet,
+        userType: campaignType,
+        action: refusedAction,
+        campaignId,
+        completionId,
+        mintValueWINC,
+        description: 'Completion refused',
+        createdBy: 'completion_system'
+      });
+      results.push(refusedResult);
+    }
   }
 
   return results;
+}
+
+/**
+ * Award XP for staking
+ */
+export async function awardStakingXP(
+  stakerWallet: string,
+  campaignId: string,
+  campaignType: UserType,
+  stakerCategory: 'MAJOR' | 'MINOR' | 'INELIGIBLE',
+  stakeAmount: number,
+  stakeAgeDays: number
+): Promise<XPTransactionResult> {
+  // Determine action based on staker category
+  let action = '';
+  
+  if (stakerCategory === 'MAJOR') {
+    action = 'STAKING_MAJOR';
+  } else if (stakerCategory === 'MINOR') {
+    action = 'STAKING_MINOR';
+  } else if (stakerCategory === 'INELIGIBLE') {
+    action = 'STAKING_INELIGIBLE';
+  }
+
+  if (!action) {
+    return {
+      success: false,
+      error: `Invalid staker category: ${stakerCategory}`,
+      xpAmount: 0,
+      xpBefore: 0,
+      xpAfter: 0,
+      level: 1,
+      levelUp: false
+    };
+  }
+
+  return await awardXP({
+    userWallet: stakerWallet,
+    userType: campaignType,
+    action,
+    campaignId,
+    stakeAmount,
+    stakeAgeDays,
+    stakerType: stakerCategory,
+    description: `Staking reward (${stakerCategory}): ${stakeAmount} WINC for ${stakeAgeDays} days`,
+    metadata: {
+      stakerCategory,
+      stakeAmount,
+      stakeAgeDays
+    },
+    createdBy: 'staking_system'
+  });
 }
 
 /**

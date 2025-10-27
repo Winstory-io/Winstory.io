@@ -1,10 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { awardCompletionXP } from '@/lib/xp-engine';
+import { UserType } from '@/lib/xp-config';
 
 /**
  * POST /api/xp/award-completion
  * 
- * Award XP for completion submission and validation
+ * Award XP for completion submission, validation, or refusal
+ * 
+ * Body parameters:
+ * - completerWallet: string (required) - Wallet address of the completer
+ * - campaignId: string (required) - Campaign ID
+ * - completionId: string (required) - Completion ID
+ * - campaignType: 'B2C' | 'AGENCY_B2C' | 'INDIVIDUAL' (required) - Type of campaign
+ * - isValidated: boolean (optional) - If completion is validated
+ * - isRefused: boolean (optional) - If completion is refused
+ * - isPaid: boolean (optional) - If completion is paid (for B2C/Agency)
+ * - priceCompletion: number (optional) - Price of the completion in USD/WINC
+ * - mintValueWINC: number (optional) - MINT value in WINC (for Individual)
  */
 export async function POST(request: NextRequest) {
   try {
@@ -13,21 +25,43 @@ export async function POST(request: NextRequest) {
       completerWallet,
       campaignId,
       completionId,
-      isValidated
+      campaignType,
+      isValidated = false,
+      isRefused = false,
+      isPaid = false,
+      priceCompletion = 0,
+      mintValueWINC = 0
     } = body;
 
     console.log('🎬 [XP] Awarding completion XP:', {
       completerWallet,
       campaignId,
       completionId,
-      isValidated
+      campaignType,
+      isValidated,
+      isRefused,
+      isPaid,
+      priceCompletion,
+      mintValueWINC
     });
 
-    if (!completerWallet || !campaignId || !completionId) {
+    // Validation
+    if (!completerWallet || !campaignId || !completionId || !campaignType) {
       return NextResponse.json(
         {
           success: false,
-          error: 'completerWallet, campaignId, and completionId are required'
+          error: 'completerWallet, campaignId, completionId, and campaignType are required'
+        },
+        { status: 400 }
+      );
+    }
+
+    // Validate campaignType
+    if (!['B2C', 'AGENCY_B2C', 'INDIVIDUAL'].includes(campaignType)) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'campaignType must be B2C, AGENCY_B2C, or INDIVIDUAL'
         },
         { status: 400 }
       );
@@ -37,7 +71,14 @@ export async function POST(request: NextRequest) {
       completerWallet,
       campaignId,
       completionId,
-      isValidated
+      campaignType as UserType,
+      {
+        isValidated,
+        isRefused,
+        isPaid,
+        priceCompletion,
+        mintValueWINC
+      }
     );
 
     const successfulResults = results.filter(r => r.success);
