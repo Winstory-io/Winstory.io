@@ -166,6 +166,8 @@ interface CampaignData {
     fileSize?: number;
     format?: string;
     aiRequested?: boolean;
+    s3VideoUrl?: string; // URL de la vidéo uploadée sur S3
+    delegatedToWinstory?: boolean;
   };
   completions?: {
     wincValue: number;
@@ -340,15 +342,32 @@ export async function POST(request: NextRequest) {
     console.log('✅ Creator info created');
 
     // 3. Créer le contenu de la campagne
-    // Gérer le cas où l'entreprise délègue la création vidéo à Winstory
-    const videoUrl = data.film?.videoId ? `indexeddb:${data.film.videoId}` : 
-                     data.film?.delegatedToWinstory ? 'winstory_delegated' : null;
+    // Priorité : S3 URL > IndexedDB > Délégation Winstory
+    let videoUrl: string;
+    
+    if (data.film?.s3VideoUrl) {
+      // Si une URL S3 est fournie (vidéo uploadée vers S3), l'utiliser en priorité
+      videoUrl = data.film.s3VideoUrl;
+      console.log('✅ Using S3 video URL:', videoUrl);
+    } else if (data.film?.videoId) {
+      // Sinon, utiliser l'ID IndexedDB (ancien système)
+      videoUrl = `indexeddb:${data.film.videoId}`;
+      console.log('⚠️ Using IndexedDB video ID (legacy):', videoUrl);
+    } else if (data.film?.delegatedToWinstory) {
+      // Ou marquer comme délégué à Winstory
+      videoUrl = 'winstory_delegated';
+      console.log('📝 Video delegated to Winstory');
+    } else {
+      // Valeur par défaut si aucune vidéo
+      videoUrl = 'winstory_delegated';
+      console.log('⚠️ No video provided, defaulting to winstory_delegated');
+    }
     
     const { error: contentError } = await supabase
       .from('campaign_contents')
       .insert({
         campaign_id: campaignId,
-        video_url: videoUrl || 'winstory_delegated', // Valeur par défaut si pas de vidéo
+        video_url: videoUrl,
         video_orientation: data.film?.format === '9:16' ? 'vertical' : 'horizontal',
         starting_story: data.story?.startingStory || '',
         guidelines: data.story?.guideline || ''

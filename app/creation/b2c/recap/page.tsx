@@ -212,6 +212,50 @@ export default function RecapB2C() {
     
     // Créer la campagne dans la base de données
     try {
+      // Générer un ID temporaire pour la campagne (sera remplacé par l'ID réel)
+      const tempCampaignId = `temp_${Date.now()}`;
+      
+      // ⚠️ DEV ONLY: Upload S3 lors de la confirmation pour tester l'intégration
+      // TODO PROD: Déplacer cet upload vers handlePaymentSuccess() pour éviter
+      // les coûts de stockage S3 pour les utilisateurs qui ne paient pas
+      // Voir S3_UPLOAD_STRATEGY.md pour plus de détails
+      
+      // 1. Upload la vidéo vers S3 si elle existe
+      let s3VideoUrl = null;
+      if (recap.film?.videoId) {
+        console.log('📤 [S3] Uploading video to S3...');
+        try {
+          const videoFile = await getVideoFromIndexedDB(recap.film.videoId);
+          if (videoFile) {
+            const formData = new FormData();
+            formData.append('file', videoFile);
+            formData.append('folder', 'pending');
+            formData.append('campaignId', tempCampaignId);
+
+            const uploadResponse = await fetch('/api/s3/upload', {
+              method: 'POST',
+              body: formData,
+            });
+
+            if (uploadResponse.ok) {
+              const uploadResult = await uploadResponse.json();
+              s3VideoUrl = uploadResult.videoUrl;
+              console.log('✅ [S3] Video uploaded successfully:', s3VideoUrl);
+            } else {
+              console.error('❌ [S3] Failed to upload video to S3');
+            }
+          }
+        } catch (uploadError) {
+          console.error('❌ [S3] Error uploading video:', uploadError);
+        }
+      }
+
+      // 2. Créer la campagne avec l'URL S3
+      const filmData = {
+        ...recap.film,
+        s3VideoUrl: s3VideoUrl, // Ajouter l'URL S3
+      };
+
       const response = await fetch('/api/campaigns/create', {
         method: 'POST',
         headers: {
@@ -221,7 +265,7 @@ export default function RecapB2C() {
           user: recap.user,
           company: recap.company,
           story: recap.story,
-          film: recap.film,
+          film: filmData,
           roiData: recap.roiData,
           standardToken: recap.standardToken,
           standardItem: recap.standardItem,

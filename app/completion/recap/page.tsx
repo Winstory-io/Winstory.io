@@ -78,7 +78,64 @@ export default function RecapCompletion() {
     };
   }, [router]);
 
-  const handleMint = () => {
+  const handleMint = async () => {
+    console.log('=== COMPLETION MINT - FINAL RECAP ===');
+    console.log('Completion Type:', completionType);
+    console.log('Completion Text:', recap.completionText);
+    console.log('Completion Film:', recap.completionFilm ? 'Yes' : 'No');
+    console.log('==========================================');
+    
+    // TODO: Créer la completion dans la base de données avec upload S3
+    try {
+      // Générer un ID temporaire pour la completion
+      const tempCompletionId = `completion_${Date.now()}`;
+      
+      // ℹ️ NOTE: Pour les completions, l'upload est déjà au bon moment (handleMint)
+      // car le bouton MINT représente déjà l'action finale de validation
+      // Pas besoin de déplacer l'upload ailleurs
+      
+      // 1. Upload la vidéo vers S3 si elle existe
+      let s3VideoUrl = null;
+      if (typeof window !== 'undefined' && window.__completionVideo) {
+        console.log('📤 [S3] Uploading completion video to S3...');
+        try {
+          const formData = new FormData();
+          formData.append('file', window.__completionVideo);
+          formData.append('folder', 'pending');
+          formData.append('campaignId', tempCompletionId);
+
+          const uploadResponse = await fetch('/api/s3/upload', {
+            method: 'POST',
+            body: formData,
+          });
+
+          if (uploadResponse.ok) {
+            const uploadResult = await uploadResponse.json();
+            s3VideoUrl = uploadResult.videoUrl;
+            console.log('✅ [S3] Completion video uploaded successfully:', s3VideoUrl);
+          } else {
+            console.error('❌ [S3] Failed to upload completion video to S3');
+          }
+        } catch (uploadError) {
+          console.error('❌ [S3] Error uploading completion video:', uploadError);
+        }
+      }
+
+      // 2. TODO: Créer la completion dans la base de données avec l'URL S3
+      // Cette partie sera à implémenter selon votre structure de base de données
+      console.log('📝 [Completion] S3 Video URL:', s3VideoUrl);
+      console.log('📝 [Completion] Text:', recap.completionText);
+      
+      // Stocker l'URL S3 pour utilisation ultérieure si besoin
+      if (s3VideoUrl) {
+        localStorage.setItem('completionS3VideoUrl', s3VideoUrl);
+      }
+      
+    } catch (error) {
+      console.error('Failed to process completion:', error);
+      // Continuer même si l'upload échoue
+    }
+    
     setConfirmed(true);
     setTimeout(() => {
       // Logic for MINT button will be refined later
