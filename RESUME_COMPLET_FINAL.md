@@ -398,13 +398,16 @@ $$ LANGUAGE plpgsql;
 3. Intégrez la validation vidéo
 4. Consultez `IMPLEMENTATION_ROADMAP_VIDEO.md` pour la suite
 
-### Questions restantes (optionnel)
-- Échelle de notation modérateurs ? (1-5★, 1-10★, 0-100 ?)
-- Délai max en `/pending` ?
-- Montant minimum staking $WINC ?
-- Blockchain pour votes ? (Ethereum, Polygon, autre ?)
+### ✅ Configuration finale validée
 
-**Ces détails peuvent être paramétrés ultérieurement sans bloquer l'implémentation ! 🚀**
+Tous les paramètres ont été clarifiés :
+
+1. **Échelle de notation** : **0-100** ✅ (déjà implémenté)
+2. **Délai max en `/pending`** : **Aucun** - reste jusqu'à décision finale ⏱️
+3. **Min staking $WINC** : À déterminer ultérieurement ⏳
+4. **Blockchain votes** : **Base** ⛓️ (paramétrable)
+
+**📄 Voir `CONFIGURATION_FINALE.md` pour tous les détails de configuration !**
 
 ---
 

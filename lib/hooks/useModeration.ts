@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useActiveAccount } from 'thirdweb/react';
 import { ModerationCampaign, ModerationProgress, ModerationSession } from '../types';
+import { transformCampaignFromAPI } from '../campaignTransformers';
 
 export const useModeration = () => {
   const account = useActiveAccount(); // Utilise useAddress au lieu de useActiveAccount
@@ -26,32 +27,55 @@ export const useModeration = () => {
       setIsLoading(true);
       setError(null);
 
-      // Pour les tests, utiliser directement les données mockées
-      const { mockCampaigns } = await import('../mockData');
-      // Mémoriser la liste complète pour les compteurs
-      setAllCampaigns(mockCampaigns);
-      console.log('Using mock campaigns:', mockCampaigns);
-      
-      // Filtrer les campagnes selon le type et créateur spécifiés
-      let filteredCampaigns = mockCampaigns;
-      
-      if (type && creatorType) {
-        filteredCampaigns = mockCampaigns.filter((campaign: any) => {
-          // Vérifier que le type de campagne correspond
-          const typeMatch = campaign.type === type;
-          
-          // Vérifier que le type de créateur correspond
-          const creatorMatch = campaign.creatorType === creatorType;
-          
-          return typeMatch && creatorMatch;
-        });
+      console.log('🔍 [FETCH CAMPAIGNS] Fetching from API...', { type, creatorType });
+
+      // Construire les paramètres de requête
+      const params = new URLSearchParams();
+      if (type) params.append('type', type);
+      if (creatorType) params.append('creatorType', creatorType);
+
+      const url = `/api/moderation/campaigns?${params.toString()}`;
+      console.log('📡 [FETCH CAMPAIGNS] API URL:', url);
+
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch campaigns: ${response.statusText}`);
       }
+
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to fetch campaigns');
+      }
+
+      console.log('✅ [FETCH CAMPAIGNS] Received campaigns:', result.count);
+
+      // Transformer les campagnes de l'API vers le format ModerationCampaign
+      const transformedCampaigns = (result.data || []).map((apiCampaign: any) => 
+        transformCampaignFromAPI(apiCampaign)
+      );
+
+      console.log('✅ [FETCH CAMPAIGNS] Transformed campaigns:', transformedCampaigns.length);
+
+      // Mémoriser la liste complète pour les compteurs
+      setAllCampaigns(transformedCampaigns);
+      setAvailableCampaigns(transformedCampaigns);
       
-      setAvailableCampaigns(filteredCampaigns);
-      return filteredCampaigns;
+      return transformedCampaigns;
     } catch (err) {
+      console.error('❌ [FETCH CAMPAIGNS] Error:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch campaigns');
-      return [];
+      
+      // Fallback vers les données mockées en cas d'erreur (pour le dev)
+      try {
+        const { mockCampaigns } = await import('../mockData');
+        console.warn('⚠️ [FETCH CAMPAIGNS] Using fallback mock data');
+        setAvailableCampaigns(mockCampaigns);
+        return mockCampaigns;
+      } catch (mockErr) {
+        return [];
+      }
     } finally {
       setIsLoading(false);
     }
@@ -94,52 +118,73 @@ export const useModeration = () => {
   // Fonction pour récupérer une campagne spécifique
   const fetchCampaignById = useCallback(async (campaignId: string) => {
     try {
-      console.log('DEBUG: fetchCampaignById called with:', campaignId);
+      console.log('🔍 [FETCH CAMPAIGN BY ID] Fetching campaign:', campaignId);
       setIsLoading(true);
       setError(null);
 
-      console.log('Fetching campaign with ID:', campaignId);
+      // Essayer d'abord de récupérer depuis les campagnes déjà chargées
+      const cachedCampaign = availableCampaigns.find(c => c.id === campaignId) || 
+                            allCampaigns.find(c => c.id === campaignId);
 
-      // Utiliser directement les données mockées
-      const { mockCampaigns } = await import('../mockData');
-      console.log('Available mock campaigns:', mockCampaigns);
+      if (cachedCampaign) {
+        console.log('✅ [FETCH CAMPAIGN BY ID] Found in cache');
+        const session: ModerationSession = {
+          id: `session_${cachedCampaign.id}`,
+          campaignId: cachedCampaign.id,
+          moderatorWallet: account?.address || '',
+          isEligible: true,
+          startedAt: new Date(),
+          campaign: cachedCampaign,
+          progress: cachedCampaign.progress
+        };
+
+        setCurrentSession(session);
+        
+        if (cachedCampaign.type === 'COMPLETION') {
+          await fetchModeratorUsedScores(campaignId);
+        }
+        
+        setIsLoading(false);
+        return session;
+      }
+
+      // Sinon, récupérer depuis l'API
+      console.log('📡 [FETCH CAMPAIGN BY ID] Fetching from API...');
       
-      const campaign = mockCampaigns.find(c => c.id === campaignId);
-      console.log('Found campaign:', campaign);
+      // Récupérer toutes les campagnes et trouver celle avec l'ID
+      const campaigns = await fetchAvailableCampaigns();
+      const campaign = campaigns.find(c => c.id === campaignId);
 
       if (campaign) {
-        // Créer une session simple sans transformation complexe
+        console.log('✅ [FETCH CAMPAIGN BY ID] Found campaign:', campaign.title);
         const session: ModerationSession = {
           id: `session_${campaign.id}`,
           campaignId: campaign.id,
           moderatorWallet: account?.address || '',
           isEligible: true,
           startedAt: new Date(),
-          campaign: campaign as any, // Utiliser any pour éviter les conflits de type
-          progress: campaign.progress as any
+          campaign,
+          progress: campaign.progress
         };
 
-        console.log('Created session:', session);
         setCurrentSession(session);
         
-        // Récupérer les scores utilisés par ce modérateur pour cette campagne
-        // Seulement si c'est une campagne de type COMPLETION
         if (campaign.type === 'COMPLETION') {
           await fetchModeratorUsedScores(campaignId);
         }
         
-        setIsLoading(false); // S'assurer que isLoading est mis à false
+        setIsLoading(false);
         return session;
       } else {
         throw new Error(`Campaign with ID ${campaignId} not found`);
       }
     } catch (err) {
-      console.error('Error in fetchCampaignById:', err);
+      console.error('❌ [FETCH CAMPAIGN BY ID] Error:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch campaign');
-      setIsLoading(false); // S'assurer que isLoading est mis à false même en cas d'erreur
+      setIsLoading(false);
       return null;
     }
-  }, [account, fetchModeratorUsedScores]);
+  }, [account, fetchModeratorUsedScores, availableCampaigns, allCampaigns, fetchAvailableCampaigns]);
 
   // Fonction pour vérifier la disponibilité des campagnes par type
   const checkCampaignsAvailability = useCallback(async () => {
@@ -261,6 +306,38 @@ export const useModeration = () => {
         } catch {}
 
         console.log('🎉 [MODERATION DECISION] Vote finalized successfully');
+        
+        // Après un vote réussi, vérifier si une décision finale est atteinte
+        // Cela déclenchera automatiquement le déplacement/suppression des vidéos S3
+        try {
+          const checkFinalResponse = await fetch('/api/moderation/check-final-decision', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              campaignId: currentSession.campaignId,
+              completionId: contentType === 'completion' ? currentSession.campaignId : undefined,
+              campaignType: contentType === 'creation' ? 'INITIAL' : 'COMPLETION',
+            }),
+          });
+
+          if (checkFinalResponse.ok) {
+            const checkResult = await checkFinalResponse.json();
+            if (checkResult.decision) {
+              console.log(`✅ [FINAL DECISION] Décision finale: ${checkResult.decision}`);
+              if (checkResult.consoleLogs) {
+                checkResult.consoleLogs.forEach((log: string) => {
+                  console.log(log);
+                });
+              }
+            }
+          }
+        } catch (checkError) {
+          // Ne pas bloquer le processus si la vérification échoue
+          console.warn('⚠️ [FINAL DECISION] Erreur lors de la vérification:', checkError);
+        }
+        
         return true;
       } else {
         const errorData = await response.json();
@@ -403,6 +480,38 @@ export const useModeration = () => {
         } catch {}
 
         console.log('🎉 [COMPLETION SCORE] Score finalized successfully:', score);
+        
+        // Après un score réussi, vérifier si une décision finale est atteinte
+        // Cela déclenchera automatiquement le déplacement/suppression des vidéos S3
+        try {
+          const checkFinalResponse = await fetch('/api/moderation/check-final-decision', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              campaignId: currentSession.campaignId,
+              completionId: completionId || currentSession.campaignId,
+              campaignType: 'COMPLETION',
+            }),
+          });
+
+          if (checkFinalResponse.ok) {
+            const checkResult = await checkFinalResponse.json();
+            if (checkResult.decision) {
+              console.log(`✅ [FINAL DECISION] Décision finale: ${checkResult.decision}`);
+              if (checkResult.consoleLogs) {
+                checkResult.consoleLogs.forEach((log: string) => {
+                  console.log(log);
+                });
+              }
+            }
+          }
+        } catch (checkError) {
+          // Ne pas bloquer le processus si la vérification échoue
+          console.warn('⚠️ [FINAL DECISION] Erreur lors de la vérification:', checkError);
+        }
+        
         return true;
       } else {
         const errorData = await response.json();
@@ -620,6 +729,14 @@ export const useModeration = () => {
     if (changed) setSubTabCounts(nextCounts);
   }, [availableCampaigns, allCampaigns, subTabCounts]);
 
+  // Charger les campagnes disponibles au montage
+  useEffect(() => {
+    if (account?.address) {
+      console.log('🔄 [INIT] Loading available campaigns on mount...');
+      fetchAvailableCampaigns();
+    }
+  }, [account?.address, fetchAvailableCampaigns]);
+
   // Charger la campagne au montage si on a un campaignId dans l'URL
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -629,10 +746,10 @@ export const useModeration = () => {
       const subtype = urlParams.get('subtype');
       
       if (campaignId && account?.address && !currentSession) {
-        console.log('Initial load, campaign ID found:', campaignId);
+        console.log('🔄 [INIT] Campaign ID found in URL:', campaignId);
         fetchCampaignById(campaignId);
       } else if (!campaignId && type && subtype && account?.address && !currentSession) {
-        console.log('Initial load, no campaign ID, loading for:', type, subtype);
+        console.log('🔄 [INIT] Loading campaign for:', type, subtype);
         loadCampaignForCriteria(type, subtype);
       }
     }

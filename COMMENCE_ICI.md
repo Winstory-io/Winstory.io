@@ -59,7 +59,8 @@ Créez une campagne avec une vidéo → Elle doit apparaître dans votre bucket 
 2. **`IMPLEMENTATION_ROADMAP_VIDEO.md`** - Feuille de route d'implémentation
 3. **`lib/videoValidation.ts`** - Utilitaires de validation
 
-### Notes importantes
+### Configuration & Notes
+- **`CONFIGURATION_FINALE.md`** ⭐ - Tous les paramètres validés
 - **`NOTE_IMPORTANTE_DEV_PROD.md`** - Upload lors confirmation vs paiement
 - **`LISEZ-MOI_S3.txt`** - Instructions essentielles
 
