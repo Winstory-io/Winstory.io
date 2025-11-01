@@ -40,13 +40,27 @@ export const useModeration = () => {
       const response = await fetch(url);
 
       if (!response.ok) {
-        throw new Error(`Failed to fetch campaigns: ${response.statusText}`);
+        // Lire le texte de l'erreur pour plus de détails
+        let errorText = '';
+        try {
+          errorText = await response.text();
+          const errorData = errorText ? JSON.parse(errorText) : {};
+          console.error('❌ [FETCH CAMPAIGNS] API Error Response:', {
+            status: response.status,
+            statusText: response.statusText,
+            error: errorData.error || errorData.details || errorText
+          });
+          throw new Error(errorData.error || errorData.details || `HTTP ${response.status}: ${response.statusText}`);
+        } catch (parseError) {
+          throw new Error(`Failed to fetch campaigns: ${response.status} ${response.statusText} - ${errorText || 'Unknown error'}`);
+        }
       }
 
       const result = await response.json();
 
       if (!result.success) {
-        throw new Error(result.error || 'Failed to fetch campaigns');
+        console.error('❌ [FETCH CAMPAIGNS] API returned success: false', result);
+        throw new Error(result.error || result.details || 'Failed to fetch campaigns');
       }
 
       console.log('✅ [FETCH CAMPAIGNS] Received campaigns:', result.count);
@@ -118,16 +132,23 @@ export const useModeration = () => {
   // Fonction pour récupérer une campagne spécifique
   const fetchCampaignById = useCallback(async (campaignId: string) => {
     try {
-      console.log('🔍 [FETCH CAMPAIGN BY ID] Fetching campaign:', campaignId);
       setIsLoading(true);
       setError(null);
+      console.log('🔍 [FETCH CAMPAIGN BY ID] Fetching campaign:', campaignId);
+
+      // Vérifier si c'est un ID de session (commence par "session_") et extraire l'ID de campagne
+      let actualCampaignId = campaignId;
+      if (campaignId.startsWith('session_')) {
+        actualCampaignId = campaignId.replace('session_', '');
+        console.log('⚠️ [FETCH CAMPAIGN BY ID] Detected session ID, extracted campaign ID:', actualCampaignId);
+      }
 
       // Essayer d'abord de récupérer depuis les campagnes déjà chargées
-      const cachedCampaign = availableCampaigns.find(c => c.id === campaignId) || 
-                            allCampaigns.find(c => c.id === campaignId);
+      const cachedCampaign = availableCampaigns.find(c => c.id === actualCampaignId) || 
+                            allCampaigns.find(c => c.id === actualCampaignId);
 
       if (cachedCampaign) {
-        console.log('✅ [FETCH CAMPAIGN BY ID] Found in cache');
+        console.log('✅ [FETCH CAMPAIGN BY ID] Found in cache:', cachedCampaign.title);
         const session: ModerationSession = {
           id: `session_${cachedCampaign.id}`,
           campaignId: cachedCampaign.id,
@@ -141,7 +162,7 @@ export const useModeration = () => {
         setCurrentSession(session);
         
         if (cachedCampaign.type === 'COMPLETION') {
-          await fetchModeratorUsedScores(campaignId);
+          await fetchModeratorUsedScores(actualCampaignId);
         }
         
         setIsLoading(false);
@@ -151,37 +172,49 @@ export const useModeration = () => {
       // Sinon, récupérer depuis l'API
       console.log('📡 [FETCH CAMPAIGN BY ID] Fetching from API...');
       
-      // Récupérer toutes les campagnes et trouver celle avec l'ID
-      const campaigns = await fetchAvailableCampaigns();
-      const campaign = campaigns.find(c => c.id === campaignId);
+      try {
+        // Récupérer toutes les campagnes et trouver celle avec l'ID
+        const campaigns = await fetchAvailableCampaigns();
+        const campaign = campaigns.find(c => c.id === actualCampaignId);
 
-      if (campaign) {
-        console.log('✅ [FETCH CAMPAIGN BY ID] Found campaign:', campaign.title);
-        const session: ModerationSession = {
-          id: `session_${campaign.id}`,
-          campaignId: campaign.id,
-          moderatorWallet: account?.address || '',
-          isEligible: true,
-          startedAt: new Date(),
-          campaign,
-          progress: campaign.progress
-        };
+        if (campaign) {
+          console.log('✅ [FETCH CAMPAIGN BY ID] Found campaign:', campaign.title);
+          const session: ModerationSession = {
+            id: `session_${campaign.id}`,
+            campaignId: campaign.id,
+            moderatorWallet: account?.address || '',
+            isEligible: true,
+            startedAt: new Date(),
+            campaign,
+            progress: campaign.progress
+          };
 
-        setCurrentSession(session);
-        
-        if (campaign.type === 'COMPLETION') {
-          await fetchModeratorUsedScores(campaignId);
+          setCurrentSession(session);
+          
+          if (campaign.type === 'COMPLETION') {
+            await fetchModeratorUsedScores(actualCampaignId);
+          }
+          
+          setIsLoading(false);
+          return session;
+        } else {
+          console.warn(`⚠️ [FETCH CAMPAIGN BY ID] Campaign ${actualCampaignId} not found in ${campaigns.length} campaigns`);
+          throw new Error(`Campaign with ID ${actualCampaignId} not found`);
         }
-        
-        setIsLoading(false);
-        return session;
-      } else {
-        throw new Error(`Campaign with ID ${campaignId} not found`);
+      } catch (fetchError) {
+        console.error('❌ [FETCH CAMPAIGN BY ID] Error fetching campaigns:', fetchError);
+        // Si fetchAvailableCampaigns échoue, essayer de lire l'erreur plus en détail
+        if (fetchError instanceof Error) {
+          throw new Error(`Failed to fetch campaigns: ${fetchError.message}`);
+        }
+        throw fetchError;
       }
     } catch (err) {
       console.error('❌ [FETCH CAMPAIGN BY ID] Error:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch campaign');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch campaign';
+      setError(errorMessage);
       setIsLoading(false);
+      // Ne pas throw, retourner null pour éviter de bloquer l'UI
       return null;
     }
   }, [account, fetchModeratorUsedScores, availableCampaigns, allCampaigns, fetchAvailableCampaigns]);

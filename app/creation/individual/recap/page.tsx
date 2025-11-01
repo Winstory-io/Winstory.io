@@ -460,6 +460,36 @@ export default function IndividualRecapPage() {
     console.log('Top3 Reward:', economicData?.top3);
     console.log('=== END RECAP ===');
 
+    // Validate required data before proceeding
+    const walletAddress = account?.address || localStorage.getItem('walletAddress');
+    if (!walletAddress) {
+      const errorMsg = 'Wallet address is required. Please connect your wallet.';
+      console.error('❌ [Validation]', errorMsg);
+      alert(`Error: ${errorMsg}`);
+      return;
+    }
+
+    if (!recap.story?.title || !recap.story?.startingStory || !recap.story?.guideline) {
+      const errorMsg = 'Story information is incomplete. Please complete all story fields.';
+      console.error('❌ [Validation]', errorMsg);
+      alert(`Error: ${errorMsg}`);
+      return;
+    }
+
+    if (!recap.completions?.wincValue || !recap.completions?.maxCompletions) {
+      const errorMsg = 'Completions data is incomplete. Please complete all completion fields.';
+      console.error('❌ [Validation]', errorMsg);
+      alert(`Error: ${errorMsg}`);
+      return;
+    }
+
+    if (!economicData?.mint) {
+      const errorMsg = 'Economic data is missing. Please refresh the page and try again.';
+      console.error('❌ [Validation]', errorMsg);
+      alert(`Error: ${errorMsg}`);
+      return;
+    }
+
     // Créer la campagne dans la base de données
     try {
       // Générer un ID temporaire pour la campagne (sera remplacé par l'ID réel)
@@ -492,11 +522,51 @@ export default function IndividualRecapPage() {
               s3VideoUrl = uploadResult.videoUrl;
               console.log('✅ [S3] Video uploaded successfully:', s3VideoUrl);
             } else {
-              console.error('❌ [S3] Failed to upload video to S3');
+              // Log the actual error response - read as text first
+              let errorText = '';
+              let errorData: any = {};
+              try {
+                errorText = await uploadResponse.text();
+                // Try to parse as JSON even if empty (to catch empty JSON objects)
+                if (errorText && errorText.trim()) {
+                  try {
+                    errorData = JSON.parse(errorText);
+                  } catch (parseError) {
+                    errorData = { rawError: errorText };
+                  }
+                } else {
+                  errorData = { 
+                    rawError: errorText || '(empty response body)',
+                    note: 'Response body was empty or whitespace only'
+                  };
+                }
+              } catch (readError) {
+                errorText = `Failed to read response: ${readError instanceof Error ? readError.message : 'Unknown error'}`;
+                errorData = { readError: errorText };
+              }
+              
+              const errorMessage = errorData.error || errorData.details || errorData.rawError || errorText || `HTTP ${uploadResponse.status}: ${uploadResponse.statusText}`;
+              
+              console.error('❌ [S3] Failed to upload video to S3:', {
+                status: uploadResponse.status,
+                statusText: uploadResponse.statusText,
+                contentType: uploadResponse.headers.get('content-type'),
+                hasBody: !!errorText,
+                bodyLength: errorText?.length || 0,
+                errorMessage: errorMessage,
+                parsedData: errorData,
+                rawText: errorText || '(no body)'
+              });
+              // Continue with campaign creation even if S3 upload fails
+              console.warn('⚠️ [S3] Continuing with campaign creation without S3 URL');
             }
+          } else {
+            console.warn('⚠️ [S3] Video file not found in IndexedDB');
           }
         } catch (uploadError) {
           console.error('❌ [S3] Error uploading video:', uploadError);
+          // Continue with campaign creation even if S3 upload fails
+          console.warn('⚠️ [S3] Continuing with campaign creation without S3 URL');
         }
       }
 
@@ -519,13 +589,49 @@ export default function IndividualRecapPage() {
           completions: recap.completions,
           economicData: economicData,
           campaignType: 'INDIVIDUAL',
-          walletAddress: account?.address || localStorage.getItem('walletAddress') || null,
-          walletSource: account?.address ? 'thirdweb_account' : (localStorage.getItem('walletAddress') ? 'localStorage.walletAddress' : null)
+          walletAddress: walletAddress,
+          walletSource: account?.address ? 'thirdweb_account' : (localStorage.getItem('walletAddress') ? 'localStorage.walletAddress' : 'unknown')
         }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to create campaign in database');
+        // Log the actual error response - read as text first
+        let errorText = '';
+        let errorData: any = {};
+        try {
+          errorText = await response.text();
+          // Try to parse as JSON even if empty (to catch empty JSON objects)
+          if (errorText && errorText.trim()) {
+            try {
+              errorData = JSON.parse(errorText);
+            } catch (parseError) {
+              errorData = { rawError: errorText };
+            }
+          } else {
+            errorData = { 
+              rawError: errorText || '(empty response body)',
+              note: 'Response body was empty or whitespace only'
+            };
+          }
+        } catch (readError) {
+          errorText = `Failed to read response: ${readError instanceof Error ? readError.message : 'Unknown error'}`;
+          errorData = { readError: errorText };
+        }
+        
+        const errorMessage = errorData.error || errorData.details || errorData.rawError || errorText || `HTTP ${response.status}: ${response.statusText}`;
+        
+        console.error('❌ [Campaign] Failed to create campaign in database:', {
+          status: response.status,
+          statusText: response.statusText,
+          contentType: response.headers.get('content-type'),
+          hasBody: !!errorText,
+          bodyLength: errorText?.length || 0,
+          errorMessage: errorMessage,
+          parsedData: errorData,
+          rawText: errorText || '(no body)'
+        });
+        
+        throw new Error(errorMessage);
       }
 
       const result = await response.json();
@@ -535,8 +641,16 @@ export default function IndividualRecapPage() {
       localStorage.setItem('currentCampaignId', result.campaignId);
       
     } catch (error) {
-      console.error('Failed to create Individual campaign:', error);
-      // Continuer même si la création échoue pour l'instant
+      console.error('❌ [Campaign] Failed to create Individual campaign:', error);
+      
+      // Show error to user
+      const errorMessage = error instanceof Error ? error.message : 'Failed to create campaign. Please try again.';
+      alert(`Error: ${errorMessage}`);
+      
+      // Don't proceed to payment if campaign creation failed
+      setConfirmed(false);
+      setShowPayment(false);
+      return;
     }
     
     setConfirmed(true);

@@ -1,1 +1,5 @@
-{}
+{
+  "/api/moderation/moderator-scores/route": "app/api/moderation/moderator-scores/route.js",
+  "/api/moderation/campaigns/route": "app/api/moderation/campaigns/route.js",
+  "/moderation/page": "app/moderation/page.js"
+}

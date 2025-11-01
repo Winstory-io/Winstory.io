@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { createClient } from '@supabase/supabase-js';
 
-const prisma = new PrismaClient();
+// Configuration Supabase
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 export async function GET(request: NextRequest) {
   try {
@@ -9,53 +12,145 @@ export async function GET(request: NextRequest) {
     const type = searchParams.get('type') as 'INITIAL' | 'COMPLETION' | null;
     const creatorType = searchParams.get('creatorType') as string | null;
 
-    // Construire les filtres
-    const where: any = {
-      status: 'PENDING_MODERATION'
-    };
+    console.log('🔍 [MODERATION API] Fetching campaigns for moderation...', { type, creatorType });
 
+    // Construire la requête Supabase
+    let query = supabase
+      .from('campaigns')
+      .select(`
+        id,
+        title,
+        description,
+        status,
+        type,
+        creator_type,
+        original_creator_wallet,
+        original_campaign_company_name,
+        created_at,
+        updated_at,
+        creator_infos (
+          company_name,
+          agency_name,
+          wallet_address,
+          email
+        ),
+        campaign_contents (
+          video_url,
+          video_orientation,
+          starting_story,
+          guidelines
+        ),
+        campaign_rewards_configs (
+          reward_tier,
+          reward_type,
+          is_configured
+        ),
+        campaign_metadata (
+          total_completions,
+          tags
+        ),
+        campaign_pricing_configs (
+          unit_value,
+          net_profit,
+          max_completions,
+          base_mint,
+          is_free_reward,
+          no_reward,
+          ai_option,
+          no_reward_option
+        ),
+        moderation_progress (
+          total_stakers,
+          active_stakers,
+          total_votes,
+          valid_votes,
+          refuse_votes,
+          abstain_votes,
+          current_score,
+          required_score,
+          staking_pool_total,
+          moderation_level,
+          blockchain_validation_type,
+          super_moderator_override,
+          winstory_intervention,
+          intervention_reason,
+          last_vote_at,
+          moderation_deadline
+        )
+      `)
+      .eq('status', 'PENDING_MODERATION')
+      .order('created_at', { ascending: false });
+
+    // Ajouter les filtres optionnels
     if (type) {
-      where.type = type;
+      query = query.eq('type', type);
     }
 
     if (creatorType) {
-      where.creatorType = creatorType;
+      // Mapper le creatorType de l'UI vers la base de données
+      const creatorTypeMap: Record<string, string> = {
+        'individual-creators': 'INDIVIDUAL_CREATORS',
+        'b2c-agencies': 'B2C_AGENCIES',
+        'for-b2c': 'FOR_B2C'
+      };
+      const dbCreatorType = creatorTypeMap[creatorType] || creatorType;
+      query = query.eq('creator_type', dbCreatorType);
     }
 
-    // Récupérer les campagnes avec toutes les relations
-    const campaigns = await prisma.campaign.findMany({
-      where,
-      include: {
-        creatorInfo: true,
-        content: true,
-        rewards: true,
-        metadata: true,
-        progress: true,
-        moderations: true
-      },
-      orderBy: {
-        createdAt: 'desc'
-      }
+    const { data: campaigns, error } = await query;
+
+    if (error) {
+      console.error('❌ [MODERATION API] Error fetching campaigns:', error);
+      throw new Error(`Failed to fetch campaigns: ${error.message}`);
+    }
+
+    // Transformer les données Supabase (tableaux) vers le format attendu (objets)
+    // et mapper les noms snake_case vers camelCase pour compatibilité avec transformCampaignFromAPI
+    const transformedCampaigns = (campaigns || []).map((campaign: any) => {
+      // Supabase retourne les relations comme des tableaux, on prend le premier élément
+      const creatorInfo = Array.isArray(campaign.creator_infos) ? campaign.creator_infos[0] : campaign.creator_infos;
+      const content = Array.isArray(campaign.campaign_contents) ? campaign.campaign_contents[0] : campaign.campaign_contents;
+      const metadata = Array.isArray(campaign.campaign_metadata) ? campaign.campaign_metadata[0] : campaign.campaign_metadata;
+      const pricingConfig = Array.isArray(campaign.campaign_pricing_configs) ? campaign.campaign_pricing_configs[0] : campaign.campaign_pricing_configs;
+      const progress = Array.isArray(campaign.moderation_progress) ? campaign.moderation_progress[0] : campaign.moderation_progress;
+      const rewards = campaign.campaign_rewards_configs || [];
+
+      return {
+        ...campaign,
+        // Garder les noms originaux pour la transformation
+        creator_infos: creatorInfo,
+        creatorInfo: creatorInfo, // Alias pour transformCampaignFromAPI
+        campaign_contents: content,
+        content: content, // Alias pour transformCampaignFromAPI
+        campaign_metadata: metadata,
+        metadata: metadata, // Alias pour transformCampaignFromAPI
+        campaign_pricing_configs: pricingConfig,
+        pricingConfig: pricingConfig, // Alias pour accès direct
+        moderation_progress: progress,
+        progress: progress, // Alias pour transformCampaignFromAPI
+        campaign_rewards_configs: rewards,
+        rewards: rewards, // Alias pour transformCampaignFromAPI
+      };
     });
 
-    // Filtrer les campagnes qui ont un progrès et sont en attente de modération
-    const eligibleCampaigns = campaigns.filter(campaign => {
-      // Vérifier que la campagne a un progrès et est en attente de modération
-      return campaign.progress !== null && 
-             campaign.progress !== undefined && 
-             campaign.status === 'PENDING_MODERATION';
+    // Filtrer les campagnes qui ont un progrès de modération (doit exister)
+    const eligibleCampaigns = transformedCampaigns.filter((campaign: any) => {
+      return campaign.moderation_progress !== null && 
+             campaign.moderation_progress !== undefined;
     });
+
+    console.log(`✅ [MODERATION API] Found ${eligibleCampaigns.length} eligible campaigns out of ${campaigns?.length || 0} total`);
 
     return NextResponse.json({
       success: true,
       data: eligibleCampaigns,
       count: eligibleCampaigns.length,
-      totalCampaigns: campaigns.length,
+      totalCampaigns: campaigns?.length || 0,
       eligibleCampaigns: eligibleCampaigns.length
     });
 
   } catch (error) {
-    console.error('Error fetching campaigns:', error);
+    console.error('❌ [MODERATION API] Error fetching campaigns:', error);
     return NextResponse.json(
       { 
         success: false, 
@@ -72,14 +167,53 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { campaignId, moderatorWallet } = body;
 
-    // Créer une nouvelle session de modération
-    const moderationSession = await prisma.moderationSession.create({
-      data: {
-        campaignId,
-        moderatorWallet,
-        isEligible: true
+    if (!campaignId || !moderatorWallet) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'campaignId and moderatorWallet are required' 
+        },
+        { status: 400 }
+      );
+    }
+
+    console.log('🔍 [MODERATION API] Creating moderation session...', { campaignId, moderatorWallet });
+
+    // Créer une nouvelle session de modération dans Supabase
+    const { data: moderationSession, error } = await supabase
+      .from('moderation_sessions')
+      .insert({
+        campaign_id: campaignId,
+        moderator_wallet: moderatorWallet,
+        status: 'active',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('❌ [MODERATION API] Error creating moderation session:', error);
+      // Si c'est une erreur de contrainte unique (session déjà existe), c'est OK
+      if (error.code === '23505') {
+        // Récupérer la session existante
+        const { data: existingSession } = await supabase
+          .from('moderation_sessions')
+          .select()
+          .eq('campaign_id', campaignId)
+          .eq('moderator_wallet', moderatorWallet)
+          .single();
+        
+        return NextResponse.json({
+          success: true,
+          data: existingSession,
+          message: 'Moderation session already exists'
+        });
       }
-    });
+      throw new Error(`Failed to create moderation session: ${error.message}`);
+    }
+
+    console.log('✅ [MODERATION API] Moderation session created');
 
     return NextResponse.json({
       success: true,
@@ -87,7 +221,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error creating moderation session:', error);
+    console.error('❌ [MODERATION API] Error creating moderation session:', error);
     return NextResponse.json(
       { 
         success: false, 

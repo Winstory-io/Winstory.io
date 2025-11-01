@@ -20,6 +20,8 @@ import UltimateDevControls from '../../components/UltimateDevControls';
 import styles from '../../styles/Moderation.module.css';
 import { useModeration } from '../../lib/hooks/useModeration';
 import { ModerationCampaign, getUICreatorType, getUICampaignType } from '../../lib/types';
+import { useS3VideoUrl } from '../../hooks/useS3VideoUrl';
+import { extractS3KeyFromUrl } from '../../lib/s3Utils';
 
 const ModerationPageContent = () => {
   const router = useRouter();
@@ -68,31 +70,37 @@ const ModerationPageContent = () => {
 
   // Only render videos from explicitly allowed prefixes in production
   const isVideoAllowed = (url?: string) => {
-    if (!url) return false;
-    if (process.env.NODE_ENV !== 'production') return true;
+    if (!url) {
+      console.log('⚠️ [VIDEO] No video URL provided');
+      return false;
+    }
+    // En développement, toujours autoriser (pour tester les vidéos S3)
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('✅ [VIDEO] Video allowed in development:', url);
+      return true;
+    }
+    // En production, vérifier les préfixes autorisés
     const prefixes = (process.env.NEXT_PUBLIC_ALLOWED_VIDEO_PREFIXES || '')
       .split(',')
       .map(s => s.trim())
       .filter(Boolean);
-    if (prefixes.length === 0) return false;
-    return prefixes.some(prefix => url.startsWith(prefix));
+    if (prefixes.length === 0) {
+      console.warn('⚠️ [VIDEO] No allowed prefixes configured in production');
+      return false;
+    }
+    const isAllowed = prefixes.some(prefix => url.startsWith(prefix));
+    if (!isAllowed) {
+      console.warn('⚠️ [VIDEO] URL not in allowed prefixes:', url);
+    }
+    return isAllowed;
   };
   
   // Fonction pour gérer les clics sur les bulles
   const handleBubbleClick = (bubbleType: string) => {
     if (bubbleType === 'rewards') {
-      // Si creatorType = individual sur Initial Story, afficher un popup WINC Pool spécifique
-      if (currentSession?.campaign.type === 'INITIAL' && getUICreatorType(currentSession.campaign) === 'individual') {
-        setShowInfoModal({
-          isOpen: true,
-          title: '$WINC Pool (Creation - Individual)',
-          icon: '💰',
-          content: (currentSession?.campaign as any)?.rewards?.wincPoolDescription || 'Creator-defined $WINC pool: rewards for Top 3, moderators, and platform.',
-          videoUrl: undefined
-        });
-      } else {
-        setShowRewardsModal(true);
-      }
+      // Pour toutes les campagnes (y compris individuelles), ouvrir le RewardsModal
+      // Le RewardsModal gère automatiquement l'affichage des données économiques pour les campagnes individuelles
+      setShowRewardsModal(true);
     } else if (bubbleType === 'startingText') {
       setShowInfoModal({
         isOpen: true,
@@ -193,6 +201,9 @@ const ModerationPageContent = () => {
     hasAlreadyVoted,
     subTabCounts
   } = useModeration();
+
+  // Utiliser le hook pour générer une presigned URL si nécessaire (appelé au niveau supérieur)
+  const { videoUrl: s3VideoUrl, isLoading: isLoadingVideoUrl } = useS3VideoUrl(currentSession?.campaign?.content?.videoUrl);
 
   // Function to fetch staker data
   const fetchStakerData = useCallback(async (wallet: string, campaignId?: string) => {
@@ -889,32 +900,75 @@ const ModerationPageContent = () => {
 
               {/* Zone vidéo (render only if provided, otherwise neutral placeholder) */}
               <div className={styles.videoSection} style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                {isVideoAllowed(campaign?.content?.videoUrl) ? (
-                  <video 
-                    ref={videoRef} 
-                    src={campaign.content.videoUrl} 
-                    controls 
-                    onLoadedMetadata={handleVideoLoadedMetadata}
-                    className={`${styles.campaignVideo} ${(campaign.content.videoOrientation === 'vertical' || detectedOrientation === 'vertical') ? styles.vertical : ''}`}
-                    style={{ margin: '0 0' }} 
-                  />
-                ) : (
-                  <div style={{
-                    width: '100%',
-                    maxWidth: 480,
-                    height: 270,
-                    background: '#111',
-                    borderRadius: 16,
-                    border: '2px dashed rgba(255,255,255,0.15)',
-                    color: '#999',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: 14
-                  }}>
-                    No video provided
-                  </div>
-                )}
+                {(() => {
+                  // Utiliser la presigned URL si disponible, sinon l'URL originale
+                  const finalVideoUrl = s3VideoUrl || campaign?.content?.videoUrl;
+                  console.log('🎬 [VIDEO] Video URL check (first instance):', {
+                    hasContent: !!campaign?.content,
+                    originalUrl: campaign?.content?.videoUrl,
+                    s3VideoUrl: s3VideoUrl,
+                    finalVideoUrl: finalVideoUrl,
+                    isLoadingVideoUrl: isLoadingVideoUrl,
+                    isAllowed: isVideoAllowed(finalVideoUrl),
+                    campaignId: campaign?.id
+                  });
+                  
+                  if (isLoadingVideoUrl) {
+                    return (
+                      <div style={{
+                        width: '100%',
+                        maxWidth: 480,
+                        height: 270,
+                        background: '#111',
+                        borderRadius: 16,
+                        border: '2px dashed rgba(255,255,255,0.15)',
+                        color: '#999',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: 14
+                      }}>
+                        Loading video...
+                      </div>
+                    );
+                  }
+                  
+                  return isVideoAllowed(finalVideoUrl) ? (
+                    <video 
+                      ref={videoRef} 
+                      src={finalVideoUrl || ''} 
+                      controls 
+                      onLoadedMetadata={handleVideoLoadedMetadata}
+                      onError={(e) => {
+                        console.error('❌ [VIDEO] Video load error (first):', e);
+                        console.error('❌ [VIDEO] Video src was:', finalVideoUrl);
+                        console.error('❌ [VIDEO] Original URL:', campaign?.content?.videoUrl);
+                        console.error('❌ [VIDEO] S3 URL:', s3VideoUrl);
+                      }}
+                      onLoadStart={() => {
+                        console.log('✅ [VIDEO] Video load started (first):', finalVideoUrl);
+                      }}
+                      className={`${styles.campaignVideo} ${(campaign.content.videoOrientation === 'vertical' || detectedOrientation === 'vertical') ? styles.vertical : ''}`}
+                      style={{ margin: '0 0' }} 
+                    />
+                  ) : (
+                    <div style={{
+                      width: '100%',
+                      maxWidth: 480,
+                      height: 270,
+                      background: '#111',
+                      borderRadius: 16,
+                      border: '2px dashed rgba(255,255,255,0.15)',
+                      color: '#999',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: 14
+                    }}>
+                      {finalVideoUrl ? `Video URL not allowed: ${finalVideoUrl.substring(0, 50)}...` : 'No video provided'}
+                    </div>
+                  );
+                })()}
                 {/* moved Completing Story bubble above, beside header block */}
               </div>
             </div>
@@ -978,6 +1032,9 @@ const ModerationPageContent = () => {
             onClose={() => setShowRewardsModal(false)}
             standardReward={campaign.rewards?.standardReward}
             premiumReward={campaign.rewards?.premiumReward}
+            campaignId={campaign.id}
+            campaignType={campaign.type}
+            creatorType={campaign.creatorType}
           />
 
           {/* Modal des statistiques de modération */}
@@ -1385,16 +1442,59 @@ const ModerationPageContent = () => {
           )}
           
         <div className={styles.videoSection} style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-          {isVideoAllowed(campaign?.content?.videoUrl) ? (
-            <video 
-              ref={videoRef} 
-              src={campaign.content.videoUrl} 
-              controls 
-              onLoadedMetadata={handleVideoLoadedMetadata}
-              className={`${styles.campaignVideo} ${(campaign.content.videoOrientation === 'vertical' || detectedOrientation === 'vertical') ? styles.vertical : ''}`}
-              style={{ margin: '0 0' }} 
-            />
-          ) : (
+          {(() => {
+            // Utiliser la même presigned URL générée au niveau supérieur
+            const finalVideoUrl2 = s3VideoUrl || campaign?.content?.videoUrl;
+            
+            console.log('🎬 [VIDEO] Video URL check (second instance):', {
+              hasContent: !!campaign?.content,
+              originalUrl: campaign?.content?.videoUrl,
+              s3VideoUrl: s3VideoUrl,
+              finalVideoUrl: finalVideoUrl2,
+              isLoadingVideoUrl: isLoadingVideoUrl,
+              isAllowed: isVideoAllowed(finalVideoUrl2),
+              campaignId: campaign?.id
+            });
+            
+            if (isLoadingVideoUrl) {
+              return (
+                <div style={{
+                  width: '100%',
+                  maxWidth: 480,
+                  height: 270,
+                  background: '#111',
+                  borderRadius: 16,
+                  border: '2px dashed rgba(255,255,255,0.15)',
+                  color: '#999',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 14
+                }}>
+                  Loading video...
+                </div>
+              );
+            }
+            
+            return isVideoAllowed(finalVideoUrl2) ? (
+              <video 
+                ref={videoRef} 
+                src={finalVideoUrl2 || ''} 
+                controls 
+                onLoadedMetadata={handleVideoLoadedMetadata}
+                onError={(e) => {
+                  console.error('❌ [VIDEO] Video load error (second):', e);
+                  console.error('❌ [VIDEO] Video src was:', finalVideoUrl2);
+                  console.error('❌ [VIDEO] Original URL:', campaign?.content?.videoUrl);
+                  console.error('❌ [VIDEO] S3 URL:', s3VideoUrl);
+                }}
+                onLoadStart={() => {
+                  console.log('✅ [VIDEO] Video load started (second):', finalVideoUrl2);
+                }}
+                className={`${styles.campaignVideo} ${(campaign.content.videoOrientation === 'vertical' || detectedOrientation === 'vertical') ? styles.vertical : ''}`}
+                style={{ margin: '0 0' }} 
+              />
+            ) : (
             <div style={{
               width: '100%',
               maxWidth: 480,
@@ -1408,9 +1508,10 @@ const ModerationPageContent = () => {
               justifyContent: 'center',
               fontSize: 14
             }}>
-              No video provided
+              {finalVideoUrl2 ? `Video URL not allowed: ${finalVideoUrl2.substring(0, 50)}...` : 'No video provided'}
             </div>
-          )}
+            );
+          })()}
         </div>
         </div>
 
@@ -1489,6 +1590,9 @@ const ModerationPageContent = () => {
         onClose={() => setShowRewardsModal(false)}
         standardReward={campaign.rewards?.standardReward}
         premiumReward={campaign.rewards?.premiumReward}
+        campaignId={campaign.id}
+        campaignType={campaign.type}
+        creatorType={campaign.creatorType}
       />
 
       {/* Modal des statistiques de modération */}

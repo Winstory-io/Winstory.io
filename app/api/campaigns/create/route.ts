@@ -51,51 +51,11 @@ async function ensureUserExists(walletAddress: string, email?: string) {
       console.log('✅ User profile already exists');
     }
 
-    // 2. Vérifier si l'utilisateur existe dans user_dashboard_stats
-    const { data: existingStats, error: statsError } = await supabase
-      .from('user_dashboard_stats')
-      .select('user_wallet')
-      .eq('user_wallet', walletAddress)
-      .single();
-
-    if (statsError && statsError.code !== 'PGRST116') {
-      console.error('Error checking user stats:', statsError);
-      throw new Error(`Failed to check user stats: ${statsError.message}`);
-    }
-
-    // Créer les statistiques utilisateur s'il n'existe pas
-    if (!existingStats) {
-      console.log('📊 Creating user dashboard stats for:', walletAddress);
-      const { error: createStatsError } = await supabase
-        .from('user_dashboard_stats')
-        .insert({
-          user_wallet: walletAddress,
-          total_creations: 0,
-          total_completions: 0,
-          total_moderations: 0,
-          total_winc_earned: 0,
-          total_winc_lost: 0,
-          total_xp_earned: 0,
-          current_level: 1,
-          last_updated: new Date().toISOString(),
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        });
-
-      if (createStatsError) {
-        // Tolérer clé dupliquée (course condition) et continuer
-        if ((createStatsError as any).code === '23505') {
-          console.warn('⚠️ User stats already exist (race), continuing...');
-        } else {
-          console.error('Error creating user stats:', createStatsError);
-          throw new Error(`Failed to create user stats: ${createStatsError.message}`);
-        }
-      } else {
-        console.log('✅ User dashboard stats created');
-      }
-    } else {
-      console.log('✅ User dashboard stats already exist');
-    }
+    // 2. NOTE: We don't create user_dashboard_stats here because:
+    //    - The trigger on_campaign_created() will call update_user_dashboard_stats()
+    //    - Creating stats here AND having the trigger update them causes "ON CONFLICT DO UPDATE cannot affect row a second time"
+    //    - The update_user_dashboard_stats() function uses INSERT ... ON CONFLICT DO UPDATE, which handles creation automatically
+    console.log('ℹ️ User dashboard stats will be created/updated by trigger after campaign creation');
 
     // 3. Vérifier si l'utilisateur existe dans user_xp_progression
     const { data: existingXp, error: xpError } = await supabase
@@ -220,31 +180,11 @@ export async function POST(request: NextRequest) {
     // Vérifier et créer les enregistrements utilisateur nécessaires
     await ensureUserExists(data.walletAddress, data.user?.email);
 
-    // Ensure user_dashboard_stats is properly initialized to prevent trigger conflicts
-    console.log('🔧 Ensuring user dashboard stats is properly initialized...');
-    const { error: initStatsError } = await supabase
-      .from('user_dashboard_stats')
-      .upsert({
-        user_wallet: data.walletAddress,
-        total_creations: 0,
-        total_completions: 0,
-        total_moderations: 0,
-        total_winc_earned: 0,
-        total_winc_lost: 0,
-        total_xp_earned: 0,
-        current_level: 1,
-        last_updated: new Date().toISOString(),
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }, {
-        onConflict: 'user_wallet'
-      });
-
-    if (initStatsError) {
-      console.error('Error initializing user stats:', initStatsError);
-      throw new Error(`Failed to initialize user stats: ${initStatsError.message}`);
-    }
-    console.log('✅ User dashboard stats initialized');
+    // NOTE: We don't initialize user_dashboard_stats here because:
+    // 1. The trigger on_campaign_created() will call update_user_dashboard_stats()
+    // 2. Doing an upsert here AND in the trigger causes "ON CONFLICT DO UPDATE cannot affect row a second time"
+    // 3. The update_user_dashboard_stats() function already handles upsert logic
+    console.log('ℹ️ User dashboard stats will be updated by trigger after campaign creation');
 
     // Générer un ID unique pour la campagne
     const campaignId = `campaign_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -273,52 +213,98 @@ export async function POST(request: NextRequest) {
     
     console.log('💰 Wallet address for campaign:', originalWalletAddress);
 
-    // 1. Créer la campagne principale avec gestion d'erreur pour le trigger
-    console.log('🎯 Creating campaign with trigger error handling...');
-    let campaign;
-    let campaignError;
+    // 1. Créer la campagne principale
+    // Note: We catch trigger errors but PostgreSQL will rollback the INSERT if trigger fails
+    // So we need to handle this carefully
+    console.log('🎯 Creating campaign...');
+    const campaignResult = await supabase
+      .from('campaigns')
+      .insert({
+        id: campaignId,
+        title: data.story?.title || 'Untitled Campaign',
+        description: data.story?.startingStory || '',
+        status: campaignStatus,
+        type: 'INITIAL',
+        creator_type: creatorType,
+        original_campaign_company_name: data.company?.name || null,
+        original_creator_wallet: originalWalletAddress,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .select()
+      .single();
     
-    try {
-      const result = await supabase
-        .from('campaigns')
-        .insert({
-          id: campaignId,
-          title: data.story?.title || 'Untitled Campaign',
-          description: data.story?.startingStory || '',
-          status: campaignStatus,
-          type: 'INITIAL',
-          creator_type: creatorType,
-          original_campaign_company_name: data.company?.name || null,
-          original_creator_wallet: originalWalletAddress,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
-        .select()
-        .single();
-      
-      campaign = result.data;
-      campaignError = result.error;
-    } catch (triggerError) {
-      console.warn('⚠️ Trigger error caught, but campaign might still be created:', triggerError);
-      // Check if campaign was actually created despite the trigger error
-      const { data: existingCampaign } = await supabase
-        .from('campaigns')
-        .select('*')
-        .eq('id', campaignId)
-        .single();
-      
-      if (existingCampaign) {
-        console.log('✅ Campaign was created despite trigger error');
-        campaign = existingCampaign;
-        campaignError = null;
+    if (campaignResult.error) {
+      // If it's the trigger error, we need to work around it
+      if (campaignResult.error.code === '21000' || campaignResult.error.message?.includes('ON CONFLICT DO UPDATE')) {
+        console.warn('⚠️ Trigger error detected. The issue is in update_user_dashboard_stats().');
+        console.warn('   This is a database function issue that needs to be fixed in the migration.');
+        console.warn('   For now, we will try to create the campaign with a workaround...');
+        
+        // The campaign wasn't created because PostgreSQL rolled back the transaction
+        // We need to fix the database function, but as a workaround, let's try
+        // to create the stats first manually with a simple INSERT
+        try {
+          // Try to ensure stats exist with a simple insert (ignore conflicts)
+          await supabase
+            .from('user_dashboard_stats')
+            .insert({
+              user_wallet: originalWalletAddress,
+              total_creations: 0,
+              total_completions: 0,
+              total_moderations: 0,
+              total_winc_earned: 0,
+              total_winc_lost: 0,
+              total_xp_earned: 0,
+              current_level: 1,
+              last_updated: new Date().toISOString(),
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            })
+            .select()
+            .single();
+        } catch (statsError: any) {
+          // Ignore if stats already exist (23505 = unique violation)
+          if (statsError.code !== '23505') {
+            console.warn('⚠️ Could not create stats:', statsError);
+          }
+        }
+        
+        // Now try creating the campaign again
+        const retryResult = await supabase
+          .from('campaigns')
+          .insert({
+            id: campaignId,
+            title: data.story?.title || 'Untitled Campaign',
+            description: data.story?.startingStory || '',
+            status: campaignStatus,
+            type: 'INITIAL',
+            creator_type: creatorType,
+            original_campaign_company_name: data.company?.name || null,
+            original_creator_wallet: originalWalletAddress,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
+          .select()
+          .single();
+        
+        if (retryResult.error) {
+          console.error('❌ Failed to create campaign even after workaround:', retryResult.error);
+          throw new Error(`Failed to create campaign: ${retryResult.error.message}`);
+        }
+        
+        campaignResult.data = retryResult.data;
+        campaignResult.error = null;
+        console.log('✅ Campaign created successfully with workaround');
       } else {
-        campaignError = triggerError;
+        console.error('❌ Error creating campaign:', campaignResult.error);
+        throw new Error(`Failed to create campaign: ${campaignResult.error.message}`);
       }
     }
-
-    if (campaignError) {
-      console.error('Error creating campaign:', campaignError);
-      throw new Error(`Failed to create campaign: ${campaignError.message}`);
+    
+    const campaign = campaignResult.data;
+    if (!campaign) {
+      throw new Error('Campaign was not created and no error was provided');
     }
 
     console.log('✅ Campaign created:', campaign.id);
@@ -340,6 +326,63 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('✅ Creator info created');
+
+    // Update dashboard stats manually after creator_infos is created
+    // This ensures the stats are updated correctly and avoids trigger conflicts
+    // Note: We do this after creator_infos is created so the stats can count campaigns correctly
+    try {
+      const { error: statsUpdateError } = await supabase.rpc('update_user_dashboard_stats', {
+        p_user_wallet: originalWalletAddress
+      });
+      
+      if (statsUpdateError) {
+        console.warn('⚠️ Failed to update dashboard stats (non-critical):', statsUpdateError);
+        // Non-critical, don't fail the campaign creation
+        // Stats will be updated on next campaign creation or manually
+      } else {
+        console.log('✅ Dashboard stats updated successfully');
+      }
+    } catch (statsError) {
+      console.warn('⚠️ Error updating dashboard stats (non-critical):', statsError);
+      // Non-critical, don't fail the campaign creation
+    }
+
+    // Create activity manually (since trigger might have failed)
+    try {
+      const { error: activityError } = await supabase.rpc('create_user_activity', {
+        p_user_wallet: originalWalletAddress,
+        p_activity_type: 'campaign_created',
+        p_activity_title: `Campaign Created: ${data.story?.title || 'Untitled Campaign'}`,
+        p_activity_description: 'New campaign created and ready for moderation',
+        p_campaign_id: campaignId
+      });
+      
+      if (activityError) {
+        console.warn('⚠️ Failed to create activity (non-critical):', activityError);
+      } else {
+        console.log('✅ Activity created successfully');
+      }
+    } catch (activityErr) {
+      console.warn('⚠️ Error creating activity (non-critical):', activityErr);
+    }
+
+    // Check and award achievement manually
+    try {
+      const { error: achievementError } = await supabase.rpc('award_user_achievement', {
+        p_user_wallet: originalWalletAddress,
+        p_achievement_type: 'first_creation',
+        p_achievement_name: 'First Creator',
+        p_achievement_description: 'Created your first campaign on Winstory'
+      });
+      
+      if (achievementError) {
+        console.warn('⚠️ Failed to award achievement (non-critical):', achievementError);
+      } else {
+        console.log('✅ Achievement check completed');
+      }
+    } catch (achievementErr) {
+      console.warn('⚠️ Error awarding achievement (non-critical):', achievementErr);
+    }
 
     // 3. Créer le contenu de la campagne
     // Priorité : S3 URL > IndexedDB > Délégation Winstory
