@@ -27,36 +27,64 @@ export const useModeration = () => {
       setIsLoading(true);
       setError(null);
 
-      console.log('🔍 [FETCH CAMPAIGNS] Fetching from API...', { type, creatorType });
+      console.log('🔍 [FETCH CAMPAIGNS] Fetching from API...', { type, creatorType, moderatorWallet: account?.address });
 
       // Construire les paramètres de requête
       const params = new URLSearchParams();
       if (type) params.append('type', type);
       if (creatorType) params.append('creatorType', creatorType);
+      // Ajouter le wallet du modérateur pour filtrer son propre contenu
+      if (account?.address) {
+        params.append('moderatorWallet', account.address);
+      }
 
       const url = `/api/moderation/campaigns?${params.toString()}`;
       console.log('📡 [FETCH CAMPAIGNS] API URL:', url);
 
-      const response = await fetch(url);
+      let response: Response;
+      try {
+        response = await fetch(url);
+      } catch (fetchError) {
+        // Erreur réseau ou CORS
+        console.error('❌ [FETCH CAMPAIGNS] Network error:', fetchError);
+        throw new Error(`Network error: ${fetchError instanceof Error ? fetchError.message : 'Failed to connect to server'}`);
+      }
 
       if (!response.ok) {
         // Lire le texte de l'erreur pour plus de détails
         let errorText = '';
         try {
           errorText = await response.text();
-          const errorData = errorText ? JSON.parse(errorText) : {};
+          let errorData: any = {};
+          if (errorText) {
+            try {
+              errorData = JSON.parse(errorText);
+            } catch {
+              // Si ce n'est pas du JSON, utiliser le texte brut
+              errorData = { rawError: errorText };
+            }
+          }
           console.error('❌ [FETCH CAMPAIGNS] API Error Response:', {
             status: response.status,
             statusText: response.statusText,
-            error: errorData.error || errorData.details || errorText
+            contentType: response.headers.get('content-type'),
+            error: errorData.error || errorData.details || errorData.rawError || errorText
           });
-          throw new Error(errorData.error || errorData.details || `HTTP ${response.status}: ${response.statusText}`);
+          throw new Error(errorData.error || errorData.details || errorData.rawError || `HTTP ${response.status}: ${response.statusText}`);
         } catch (parseError) {
+          console.error('❌ [FETCH CAMPAIGNS] Error parsing error response:', parseError);
           throw new Error(`Failed to fetch campaigns: ${response.status} ${response.statusText} - ${errorText || 'Unknown error'}`);
         }
       }
 
-      const result = await response.json();
+      let result: any;
+      try {
+        result = await response.json();
+      } catch (jsonError) {
+        console.error('❌ [FETCH CAMPAIGNS] Error parsing JSON response:', jsonError);
+        const text = await response.text().catch(() => 'Unable to read response');
+        throw new Error(`Invalid JSON response: ${text.substring(0, 200)}`);
+      }
 
       if (!result.success) {
         console.error('❌ [FETCH CAMPAIGNS] API returned success: false', result);
@@ -93,7 +121,7 @@ export const useModeration = () => {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [account?.address]);
 
   // Fonction pour récupérer les scores utilisés par le modérateur actuel pour une campagne
   const fetchModeratorUsedScores = useCallback(async (campaignId: string) => {

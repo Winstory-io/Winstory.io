@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import ProtectedRoute from '@/components/ProtectedRoute';
 
@@ -55,6 +55,21 @@ export default function YourWinstoryB2C() {
   const handleCloseModal = useCallback(() => {
     console.log('Closing tooltip modal');
     setShowModal(false);
+  }, []);
+
+  // Charger les données sauvegardées depuis localStorage au montage
+  useEffect(() => {
+    const savedStory = localStorage.getItem("story");
+    if (savedStory) {
+      try {
+        const parsed = JSON.parse(savedStory);
+        if (parsed.title) setTitle(parsed.title);
+        if (parsed.startingStory) setStory(parsed.startingStory);
+        if (parsed.guideline) setGuideline(parsed.guideline);
+      } catch (error) {
+        console.error('Error parsing saved story:', error);
+      }
+    }
   }, []);
 
   // Validation

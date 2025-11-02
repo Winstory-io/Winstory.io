@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import ProtectedRoute from '@/components/ProtectedRoute';
 
@@ -43,6 +43,21 @@ export default function YourWinstoryIndividual() {
     const [touched, setTouched] = useState({ title: false, story: false, guideline: false });
     const [error, setError] = useState<{ title?: string, story?: string, guideline?: string }>({});
     const [showModal, setShowModal] = useState(false);
+
+    // Charger les données sauvegardées depuis localStorage au montage
+    useEffect(() => {
+        const savedStory = localStorage.getItem("story");
+        if (savedStory) {
+            try {
+                const parsed = JSON.parse(savedStory);
+                if (parsed.title) setTitle(parsed.title);
+                if (parsed.startingStory) setStory(parsed.startingStory);
+                if (parsed.guideline) setGuideline(parsed.guideline);
+            } catch (error) {
+                console.error('Error parsing saved story:', error);
+            }
+        }
+    }, []);
 
     // Validation
     const isTitleValid = !!title.trim();

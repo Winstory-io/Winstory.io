@@ -291,6 +291,9 @@ export default function AgencyB2CRecap() {
       // Continuer même si la création échoue pour l'instant
     }
     
+    // Marquer le flow actuel comme AgencyB2C avant de rediriger
+    localStorage.setItem("currentCreationFlow", "AgencyB2C");
+    
     setConfirmed(true);
     setTimeout(() => {
       // TODO: Le MINT de la campagne permet de déployer sur IPFS (à améliorer ultérieurement)

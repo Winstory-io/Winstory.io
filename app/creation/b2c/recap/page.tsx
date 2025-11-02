@@ -292,6 +292,9 @@ export default function RecapB2C() {
       // Continuer même si la création échoue pour l'instant
     }
     
+    // Marquer le flow actuel comme B2C avant de rediriger
+    localStorage.setItem("currentCreationFlow", "B2C");
+    
     setConfirmed(true);
     setTimeout(() => {
       // TODO: Le MINT de la campagne permet de déployer sur IPFS (à améliorer ultérieurement)

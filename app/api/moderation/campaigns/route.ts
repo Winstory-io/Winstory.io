@@ -11,8 +11,9 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const type = searchParams.get('type') as 'INITIAL' | 'COMPLETION' | null;
     const creatorType = searchParams.get('creatorType') as string | null;
+    const moderatorWallet = searchParams.get('moderatorWallet') as string | null;
 
-    console.log('🔍 [MODERATION API] Fetching campaigns for moderation...', { type, creatorType });
+    console.log('🔍 [MODERATION API] Fetching campaigns for moderation...', { type, creatorType, moderatorWallet });
 
     // Construire la requête Supabase
     let query = supabase
@@ -26,6 +27,7 @@ export async function GET(request: NextRequest) {
         creator_type,
         original_creator_wallet,
         original_campaign_company_name,
+        completer_wallet,
         created_at,
         updated_at,
         creator_infos (
@@ -97,6 +99,27 @@ export async function GET(request: NextRequest) {
       query = query.eq('creator_type', dbCreatorType);
     }
 
+    // Filtrer les campagnes où le modérateur est le créateur ou le compléteur
+    if (moderatorWallet) {
+      // Pour les campagnes INITIAL : exclure celles créées par le modérateur
+      // Pour les campagnes COMPLETION : exclure celles complétées par le modérateur
+      if (type === 'INITIAL') {
+        // Exclure les campagnes où original_creator_wallet = moderatorWallet
+        query = query.neq('original_creator_wallet', moderatorWallet);
+        console.log('🚫 [MODERATION API] Filtering out INITIAL campaigns created by moderator:', moderatorWallet);
+      } else if (type === 'COMPLETION') {
+        // Exclure les campagnes où completer_wallet = moderatorWallet
+        query = query.neq('completer_wallet', moderatorWallet);
+        console.log('🚫 [MODERATION API] Filtering out COMPLETION campaigns completed by moderator:', moderatorWallet);
+      } else {
+        // Si pas de type spécifié, exclure les deux cas avec une condition OR
+        // Utiliser .or() pour exclure si original_creator_wallet OU completer_wallet correspond
+        // La syntaxe Supabase : .not('original_creator_wallet', 'eq', moderatorWallet).not('completer_wallet', 'eq', moderatorWallet)
+        // Mais cela ne fonctionne pas directement, donc on filtre après récupération
+        console.log('🚫 [MODERATION API] Will filter out campaigns created or completed by moderator:', moderatorWallet);
+      }
+    }
+
     const { data: campaigns, error } = await query;
 
     if (error) {
@@ -104,9 +127,22 @@ export async function GET(request: NextRequest) {
       throw new Error(`Failed to fetch campaigns: ${error.message}`);
     }
 
+    // Filtrer les campagnes si le modérateur est spécifié et le type n'est pas défini
+    // (pour exclure celles où le modérateur est le créateur OU le compléteur)
+    let filteredCampaigns = campaigns || [];
+    if (moderatorWallet && !type) {
+      filteredCampaigns = filteredCampaigns.filter((campaign: any) => {
+        const isCreator = campaign.original_creator_wallet?.toLowerCase() === moderatorWallet.toLowerCase();
+        const isCompleter = campaign.completer_wallet?.toLowerCase() === moderatorWallet.toLowerCase();
+        // Exclure si le modérateur est le créateur OU le compléteur
+        return !isCreator && !isCompleter;
+      });
+      console.log(`🚫 [MODERATION API] Filtered ${(campaigns || []).length - filteredCampaigns.length} campaigns where moderator is creator or completer`);
+    }
+
     // Transformer les données Supabase (tableaux) vers le format attendu (objets)
     // et mapper les noms snake_case vers camelCase pour compatibilité avec transformCampaignFromAPI
-    const transformedCampaigns = (campaigns || []).map((campaign: any) => {
+    const transformedCampaigns = filteredCampaigns.map((campaign: any) => {
       // Supabase retourne les relations comme des tableaux, on prend le premier élément
       const creatorInfo = Array.isArray(campaign.creator_infos) ? campaign.creator_infos[0] : campaign.creator_infos;
       const content = Array.isArray(campaign.campaign_contents) ? campaign.campaign_contents[0] : campaign.campaign_contents;
@@ -139,7 +175,7 @@ export async function GET(request: NextRequest) {
              campaign.moderation_progress !== undefined;
     });
 
-    console.log(`✅ [MODERATION API] Found ${eligibleCampaigns.length} eligible campaigns out of ${campaigns?.length || 0} total`);
+    console.log(`✅ [MODERATION API] Found ${eligibleCampaigns.length} eligible campaigns out of ${filteredCampaigns.length} filtered (${campaigns?.length || 0} total before filtering)`);
 
     return NextResponse.json({
       success: true,

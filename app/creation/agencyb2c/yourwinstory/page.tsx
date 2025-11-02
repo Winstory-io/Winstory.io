@@ -57,6 +57,21 @@ export default function YourWinstoryAgencyB2C() {
     }
   }, [router]);
 
+  // Charger les données sauvegardées depuis localStorage au montage
+  useEffect(() => {
+    const savedStory = localStorage.getItem("story");
+    if (savedStory) {
+      try {
+        const parsed = JSON.parse(savedStory);
+        if (parsed.title) setTitle(parsed.title);
+        if (parsed.startingStory) setStory(parsed.startingStory);
+        if (parsed.guideline) setGuideline(parsed.guideline);
+      } catch (error) {
+        console.error('Error parsing saved story:', error);
+      }
+    }
+  }, []);
+
   const isTitleValid = !!title.trim();
   const isStoryValid = !!story.trim();
   const isGuidelineValid = !!guideline.trim();

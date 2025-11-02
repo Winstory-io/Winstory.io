@@ -1,8 +1,12 @@
 {
-  "lib/hooks/useModeration.ts -> ../mockData": {
-    "id": "lib/hooks/useModeration.ts -> ../mockData",
+  "app/mywin/creations/page.tsx -> ../../../components/ActiveCampaignDashboard": {
+    "id": "app/mywin/creations/page.tsx -> ../../../components/ActiveCampaignDashboard",
+    "files": []
+  },
+  "app/mywin/creations/page.tsx -> ../../../components/ValidatedCampaignDashboard": {
+    "id": "app/mywin/creations/page.tsx -> ../../../components/ValidatedCampaignDashboard",
     "files": [
-      "static/chunks/_app-pages-browser_lib_mockData_ts.js"
+      "static/chunks/_app-pages-browser_components_ValidatedCampaignDashboard_tsx.js"
     ]
   },
   "node_modules/thirdweb/dist/esm/chains/constants.js -> ./utils.js": {

@@ -27,24 +27,56 @@ export default function MintPage() {
 
   useEffect(() => {
     try {
-      // Detect if user is in an Agency B2C flow and redirect to the correct mint page
+      // Vérifier le contexte actuel du workflow plutôt que juste la présence de agencyB2CContext
+      // Si on vient du workflow agencyb2c (via l'URL ou le contexte), rediriger
+      const currentFlow = localStorage.getItem("currentCreationFlow");
       const agencyContext = localStorage.getItem("agencyB2CContext");
-      if (agencyContext) {
+      
+      // Rediriger UNIQUEMENT si on est explicitement dans le flow agencyb2c
+      // Vérifier aussi l'URL pour être sûr
+      if (typeof window !== 'undefined') {
+        const pathname = window.location.pathname;
+        // Si l'URL contient agencyb2c, on est déjà au bon endroit (mais on devrait être dans agencyb2c/mint)
+        if (pathname.includes('/agencyb2c/')) {
+          router.replace("/creation/agencyb2c/mint");
+          return;
+        }
+      }
+      
+      // Si le flow actuel est AgencyB2C ET qu'on a un contexte agency, rediriger
+      if (currentFlow === "AgencyB2C" && agencyContext) {
         router.replace("/creation/agencyb2c/mint");
         return;
       }
+      
       // Mark current flow to avoid cross-session confusion
       localStorage.setItem("currentCreationFlow", "B2C");
       
       // Récupérer l'email de l'utilisateur
-      const email = localStorage.getItem("userEmail") || '';
-      setUserEmail(email);
+      const userData = localStorage.getItem("user");
+      if (userData) {
+        try {
+          const parsed = JSON.parse(userData);
+          setUserEmail(parsed.email || '');
+        } catch (e) {
+          console.error('Failed to parse user data:', e);
+        }
+      }
     } catch {}
 
     // Récupérer les données du localStorage pour déterminer le prix
     const filmData = localStorage.getItem("film");
     const campaignRewardData = localStorage.getItem("campaignReward");
     const roiData = localStorage.getItem("roiData");
+    
+    // Vérifier les récompenses sélectionnées
+    const standardToken = localStorage.getItem("standardTokenReward");
+    const standardItem = localStorage.getItem("standardItemReward");
+    const premiumToken = localStorage.getItem("premiumTokenReward");
+    const premiumItem = localStorage.getItem("premiumItemReward");
+    
+    const hasStandard = !!(standardToken || standardItem);
+    const hasPremium = !!(premiumToken || premiumItem);
     
     let aiRequested = false;
     let noRewards = false;
@@ -55,16 +87,21 @@ export default function MintPage() {
     }
     
     // Vérifier si "No rewards" est sélectionné
+    // No rewards est vrai UNIQUEMENT si explicitement choisi ET aucune récompense n'est configurée
     if (campaignRewardData) {
       const campaignReward = JSON.parse(campaignRewardData);
-      noRewards = campaignReward.rewardType === 'none' || 
-                  campaignReward.rewardLabel?.includes('No Reward');
+      noRewards = (campaignReward.rewardType === 'none' || 
+                  campaignReward.rewardLabel?.includes('No Reward')) && 
+                  !hasStandard && !hasPremium;
     }
     
     // Vérifier aussi dans roiData
-    if (roiData && !noRewards) {
+    if (roiData) {
       const roi = JSON.parse(roiData);
-      noRewards = roi.noReward === true;
+      // noReward doit être true ET aucune récompense configurée
+      if (roi.noReward === true && !hasStandard && !hasPremium) {
+        noRewards = true;
+      }
     }
     
     // Mettre à jour les options de prix
@@ -92,7 +129,7 @@ export default function MintPage() {
     
     // Stocker le prix final pour le paiement
     localStorage.setItem("finalPrice", price.toString());
-  }, []);
+  }, [router]);
 
   const handlePaymentMethod = (method: string) => {
     console.log('=== CREATE CAMPAIGN - Step 6: MINT & Payment ===');
