@@ -207,6 +207,16 @@ export async function POST(request: NextRequest) {
         creatorType = 'INDIVIDUAL_CREATORS';
     }
 
+    // Vérifier si la vidéo est déléguée à Winstory
+    const isVideoDelegated = data.film?.delegatedToWinstory || 
+                             (!data.film?.videoId && !data.film?.s3VideoUrl);
+    
+    // Si la vidéo est déléguée à Winstory, utiliser le statut spécial
+    if (isVideoDelegated) {
+      campaignStatus = 'PENDING_WINSTORY_VIDEO';
+      console.log('📝 [CAMPAIGN CREATE] Video delegated to Winstory, setting status to PENDING_WINSTORY_VIDEO');
+    }
+
     // IMPORTANT: Keep the original wallet address to track campaigns by the same user
     // Previous workaround added timestamp which prevented tracking multiple campaigns from same wallet
     const originalWalletAddress = data.walletAddress;
@@ -528,6 +538,34 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('✅ Campaign pricing config created');
+
+    // 6.5. Créer une intervention Winstory si la vidéo est déléguée
+    if (isVideoDelegated) {
+      const { error: interventionError } = await supabase
+        .from('winstory_interventions')
+        .insert({
+          campaign_id: campaignId,
+          intervention_type: 'video_creation',
+          intervention_reason: 'Campaign purchased "Winstory creates the Film" option',
+          intervention_details: {
+            company_name: data.company?.name || null,
+            starting_story: data.story?.startingStory || '',
+            guidelines: data.story?.guideline || '',
+            video_orientation: data.film?.format === '9:16' ? 'vertical' : 'horizontal',
+            ai_requested: data.film?.aiRequested || false
+          },
+          intervention_status: 'pending',
+          deadline_hours: 24, // 24h pour créer la vidéo
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        });
+
+      if (interventionError) {
+        console.warn('⚠️ Could not create winstory_intervention (non-critical):', interventionError);
+      } else {
+        console.log('✅ Winstory intervention created for video creation');
+      }
+    }
 
     // 7. Créer le progrès de modération initial
     const { error: progressError } = await supabase

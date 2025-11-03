@@ -69,14 +69,15 @@ const ModerationPageContent = () => {
   const switchTokenRef = useRef(0);
 
   // Only render videos from explicitly allowed prefixes in production
+  const DEBUG_VIDEO = process.env.NEXT_PUBLIC_DEBUG_VIDEO === 'true' && process.env.NODE_ENV !== 'production';
   const isVideoAllowed = (url?: string) => {
     if (!url) {
-      console.log('⚠️ [VIDEO] No video URL provided');
+      if (DEBUG_VIDEO) console.log('⚠️ [VIDEO] No video URL provided');
       return false;
     }
     // En développement, toujours autoriser (pour tester les vidéos S3)
     if (process.env.NODE_ENV !== 'production') {
-      console.log('✅ [VIDEO] Video allowed in development:', url);
+      if (DEBUG_VIDEO) console.log('✅ [VIDEO] Video allowed in development:', url);
       return true;
     }
     // En production, vérifier les préfixes autorisés
@@ -85,11 +86,11 @@ const ModerationPageContent = () => {
       .map(s => s.trim())
       .filter(Boolean);
     if (prefixes.length === 0) {
-      console.warn('⚠️ [VIDEO] No allowed prefixes configured in production');
+      if (DEBUG_VIDEO) console.warn('⚠️ [VIDEO] No allowed prefixes configured in production');
       return false;
     }
     const isAllowed = prefixes.some(prefix => url.startsWith(prefix));
-    if (!isAllowed) {
+    if (!isAllowed && DEBUG_VIDEO) {
       console.warn('⚠️ [VIDEO] URL not in allowed prefixes:', url);
     }
     return isAllowed;
@@ -204,6 +205,15 @@ const ModerationPageContent = () => {
 
   // Utiliser le hook pour générer une presigned URL si nécessaire (appelé au niveau supérieur)
   const { videoUrl: s3VideoUrl, isLoading: isLoadingVideoUrl } = useS3VideoUrl(currentSession?.campaign?.content?.videoUrl);
+
+  // Auto-load guard to avoid multiple triggers (placed after currentSession is defined)
+  const didAutoLoadRef = useRef(false);
+  useEffect(() => {
+    if (!currentSession && !isLoading && address?.address && !didAutoLoadRef.current) {
+      didAutoLoadRef.current = true;
+      loadFirstAvailableCampaign();
+    }
+  }, [currentSession, isLoading, address?.address]);
 
   // Function to fetch staker data
   const fetchStakerData = useCallback(async (wallet: string, campaignId?: string) => {
@@ -399,6 +409,12 @@ const ModerationPageContent = () => {
     try {
       setIsSwitching(true);
       setIsLoadingCampaign(true);
+      // Optimistic: si on a déjà des campagnes en mémoire, sélectionner immédiatement
+      const optimistic = quickSelectCampaignFor(activeTab, newSubTab);
+      if (optimistic) {
+        setCurrentSession(optimistic);
+        window.history.replaceState({}, '', `/moderation?campaignId=${optimistic.campaign.id}&type=${activeTab}&subtype=${newSubTab}`);
+      }
       const token = ++switchTokenRef.current;
       const session = await loadCampaignForCriteria(activeTab, newSubTab);
       
@@ -411,6 +427,10 @@ const ModerationPageContent = () => {
         console.log('No campaigns available for:', activeTab, newSubTab);
         // Mettre à jour l'URL sans campaignId
         window.history.replaceState({}, '', `/moderation?type=${activeTab}&subtype=${newSubTab}`);
+        // Si aucune campagne, effacer la session pour ne pas rester bloqué
+        if (!optimistic) {
+          setCurrentSession(null);
+        }
       }
     } catch (error) {
       console.error('Error loading campaign for new sub tab:', error);
@@ -902,16 +922,49 @@ const ModerationPageContent = () => {
               <div className={styles.videoSection} style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                 {(() => {
                   // Utiliser la presigned URL si disponible, sinon l'URL originale
-                  const finalVideoUrl = s3VideoUrl || campaign?.content?.videoUrl;
+                  const originalVideoUrl = campaign?.content?.videoUrl || campaign?.content?.video_url;
+                  const finalVideoUrl = s3VideoUrl || originalVideoUrl;
+                  
                   console.log('🎬 [VIDEO] Video URL check (first instance):', {
                     hasContent: !!campaign?.content,
-                    originalUrl: campaign?.content?.videoUrl,
+                    originalUrl: originalVideoUrl,
                     s3VideoUrl: s3VideoUrl,
                     finalVideoUrl: finalVideoUrl,
                     isLoadingVideoUrl: isLoadingVideoUrl,
                     isAllowed: isVideoAllowed(finalVideoUrl),
-                    campaignId: campaign?.id
+                    campaignId: campaign?.id,
+                    videoUrlType: finalVideoUrl ? (finalVideoUrl.startsWith('http') ? 'HTTP' : finalVideoUrl.startsWith('indexeddb') ? 'IndexedDB' : 'Other') : 'None'
                   });
+                  
+                  // Vérifier si la vidéo est déléguée à Winstory
+                  if (originalVideoUrl === 'winstory_delegated' || originalVideoUrl === null || originalVideoUrl === 'null') {
+                    return (
+                      <div style={{
+                        width: '100%',
+                        maxWidth: 480,
+                        height: 270,
+                        background: 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%)',
+                        borderRadius: 16,
+                        border: '2px solid rgba(255, 214, 0, 0.3)',
+                        color: '#FFD600',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: 16,
+                        fontWeight: 600,
+                        textAlign: 'center',
+                        padding: 24,
+                        gap: 12
+                      }}>
+                        <div style={{ fontSize: 48 }}>🎬</div>
+                        <div>Video creation delegated to Winstory</div>
+                        <div style={{ fontSize: 13, color: '#999', fontWeight: 400, marginTop: 4 }}>
+                          This video will be created by Winstory and will be available for moderation once completed.
+                        </div>
+                      </div>
+                    );
+                  }
                   
                   if (isLoadingVideoUrl) {
                     return (
@@ -933,23 +986,97 @@ const ModerationPageContent = () => {
                     );
                   }
                   
+                  // Vérifier si on a une URL valide
+                  if (!finalVideoUrl || finalVideoUrl === 'null' || finalVideoUrl === null) {
+                    return (
+                      <div style={{
+                        width: '100%',
+                        maxWidth: 480,
+                        height: 270,
+                        background: '#111',
+                        borderRadius: 16,
+                        border: '2px dashed rgba(255,255,255,0.15)',
+                        color: '#999',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: 14
+                      }}>
+                        No video available
+                      </div>
+                    );
+                  }
+                  
+                  // Vérifier si c'est une URL HTTP valide (pas indexeddb ou autre)
+                  const isValidHttpUrl = typeof finalVideoUrl === 'string' && (finalVideoUrl.startsWith('http://') || finalVideoUrl.startsWith('https://'));
+                  
+                  if (!isValidHttpUrl && finalVideoUrl.startsWith('indexeddb:')) {
+                    return (
+                      <div style={{
+                        width: '100%',
+                        maxWidth: 480,
+                        height: 270,
+                        background: '#111',
+                        borderRadius: 16,
+                        border: '2px dashed rgba(255,255,255,0.15)',
+                        color: '#999',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: 14,
+                        gap: 8
+                      }}>
+                        <div>⚠️ Video in IndexedDB format</div>
+                        <div style={{ fontSize: 12, color: '#666' }}>This video needs to be uploaded to S3 for moderation</div>
+                      </div>
+                    );
+                  }
+                  
+                  if (!isValidHttpUrl) {
+                    return (
+                      <div style={{
+                        width: '100%',
+                        maxWidth: 480,
+                        height: 270,
+                        background: '#111',
+                        borderRadius: 16,
+                        border: '2px dashed rgba(255,255,255,0.15)',
+                        color: '#999',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: 14
+                      }}>
+                        Invalid video URL format
+                      </div>
+                    );
+                  }
+                  
                   return isVideoAllowed(finalVideoUrl) ? (
                     <video 
                       ref={videoRef} 
-                      src={finalVideoUrl || ''} 
+                      src={finalVideoUrl} 
                       controls 
                       onLoadedMetadata={handleVideoLoadedMetadata}
                       onError={(e) => {
                         console.error('❌ [VIDEO] Video load error (first):', e);
                         console.error('❌ [VIDEO] Video src was:', finalVideoUrl);
-                        console.error('❌ [VIDEO] Original URL:', campaign?.content?.videoUrl);
+                        console.error('❌ [VIDEO] Original URL:', originalVideoUrl);
                         console.error('❌ [VIDEO] S3 URL:', s3VideoUrl);
                       }}
                       onLoadStart={() => {
                         console.log('✅ [VIDEO] Video load started (first):', finalVideoUrl);
                       }}
                       className={`${styles.campaignVideo} ${(campaign.content.videoOrientation === 'vertical' || detectedOrientation === 'vertical') ? styles.vertical : ''}`}
-                      style={{ margin: '0 0' }} 
+                      style={{ 
+                        margin: '0 0',
+                        backgroundColor: '#000',
+                        width: '100%',
+                        maxWidth: '100%',
+                        height: 'auto'
+                      }}
+                      preload="metadata"
                     />
                   ) : (
                     <div style={{
@@ -961,11 +1088,18 @@ const ModerationPageContent = () => {
                       border: '2px dashed rgba(255,255,255,0.15)',
                       color: '#999',
                       display: 'flex',
+                      flexDirection: 'column',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      fontSize: 14
+                      fontSize: 14,
+                      gap: 8,
+                      padding: 16,
+                      textAlign: 'center'
                     }}>
-                      {finalVideoUrl ? `Video URL not allowed: ${finalVideoUrl.substring(0, 50)}...` : 'No video provided'}
+                      <div>⚠️ Video URL not allowed</div>
+                      <div style={{ fontSize: 12, color: '#666', wordBreak: 'break-all' }}>
+                        {finalVideoUrl ? `${finalVideoUrl.substring(0, 60)}...` : 'No video URL provided'}
+                      </div>
                     </div>
                   );
                 })()}
@@ -1115,9 +1249,7 @@ const ModerationPageContent = () => {
 
   // Si pas de campaignId, charger automatiquement la première campagne disponible
 
-  // Si pas de session en cours, charger automatiquement la première campagne disponible
   if (!currentSession && !isLoading && address?.address) {
-    loadFirstAvailableCampaign();
     return (
       <div className={styles.moderationBg}>
         {/* Dev Controls - TOUJOURS VISIBLE */}
@@ -1444,18 +1576,49 @@ const ModerationPageContent = () => {
         <div className={styles.videoSection} style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
           {(() => {
             // Utiliser la même presigned URL générée au niveau supérieur
-            const finalVideoUrl2 = s3VideoUrl || campaign?.content?.videoUrl;
-            
+            const originalVideoUrl2 = campaign?.content?.videoUrl || (campaign as any)?.content?.video_url;
+            const finalVideoUrl2 = s3VideoUrl || originalVideoUrl2;
+
             console.log('🎬 [VIDEO] Video URL check (second instance):', {
               hasContent: !!campaign?.content,
-              originalUrl: campaign?.content?.videoUrl,
+              originalUrl: originalVideoUrl2,
               s3VideoUrl: s3VideoUrl,
               finalVideoUrl: finalVideoUrl2,
               isLoadingVideoUrl: isLoadingVideoUrl,
               isAllowed: isVideoAllowed(finalVideoUrl2),
               campaignId: campaign?.id
             });
-            
+
+            // Cas délégué à Winstory
+            if (originalVideoUrl2 === 'winstory_delegated' || originalVideoUrl2 === null || originalVideoUrl2 === 'null') {
+              return (
+                <div style={{
+                  width: '100%',
+                  maxWidth: 480,
+                  height: 270,
+                  background: 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%)',
+                  borderRadius: 16,
+                  border: '2px solid rgba(255, 214, 0, 0.3)',
+                  color: '#FFD600',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 16,
+                  fontWeight: 600,
+                  textAlign: 'center',
+                  padding: 24,
+                  gap: 12
+                }}>
+                  <div style={{ fontSize: 48 }}>🎬</div>
+                  <div>Video creation delegated to Winstory</div>
+                  <div style={{ fontSize: 13, color: '#999', fontWeight: 400, marginTop: 4 }}>
+                    This video will be created by Winstory and will be available for moderation once completed.
+                  </div>
+                </div>
+              );
+            }
+
             if (isLoadingVideoUrl) {
               return (
                 <div style={{
@@ -1475,41 +1638,114 @@ const ModerationPageContent = () => {
                 </div>
               );
             }
-            
+
+            // Vérifier URL disponible
+            if (!finalVideoUrl2 || finalVideoUrl2 === 'null') {
+              return (
+                <div style={{
+                  width: '100%',
+                  maxWidth: 480,
+                  height: 270,
+                  background: '#111',
+                  borderRadius: 16,
+                  border: '2px dashed rgba(255,255,255,0.15)',
+                  color: '#999',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 14
+                }}>
+                  No video available
+                </div>
+              );
+            }
+
+            const isValidHttpUrl = typeof finalVideoUrl2 === 'string' && (finalVideoUrl2.startsWith('http://') || finalVideoUrl2.startsWith('https://'));
+            if (!isValidHttpUrl && finalVideoUrl2.startsWith('indexeddb:')) {
+              return (
+                <div style={{
+                  width: '100%',
+                  maxWidth: 480,
+                  height: 270,
+                  background: '#111',
+                  borderRadius: 16,
+                  border: '2px dashed rgba(255,255,255,0.15)',
+                  color: '#999',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 14,
+                  gap: 8
+                }}>
+                  <div>⚠️ Video in IndexedDB format</div>
+                  <div style={{ fontSize: 12, color: '#666' }}>This video needs to be uploaded to S3 for moderation</div>
+                </div>
+              );
+            }
+
+            if (!isValidHttpUrl) {
+              return (
+                <div style={{
+                  width: '100%',
+                  maxWidth: 480,
+                  height: 270,
+                  background: '#111',
+                  borderRadius: 16,
+                  border: '2px dashed rgba(255,255,255,0.15)',
+                  color: '#999',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 14
+                }}>
+                  Invalid video URL format
+                </div>
+              );
+            }
+
             return isVideoAllowed(finalVideoUrl2) ? (
               <video 
                 ref={videoRef} 
-                src={finalVideoUrl2 || ''} 
+                src={finalVideoUrl2} 
                 controls 
                 onLoadedMetadata={handleVideoLoadedMetadata}
                 onError={(e) => {
                   console.error('❌ [VIDEO] Video load error (second):', e);
                   console.error('❌ [VIDEO] Video src was:', finalVideoUrl2);
-                  console.error('❌ [VIDEO] Original URL:', campaign?.content?.videoUrl);
+                  console.error('❌ [VIDEO] Original URL:', originalVideoUrl2);
                   console.error('❌ [VIDEO] S3 URL:', s3VideoUrl);
                 }}
                 onLoadStart={() => {
                   console.log('✅ [VIDEO] Video load started (second):', finalVideoUrl2);
                 }}
                 className={`${styles.campaignVideo} ${(campaign.content.videoOrientation === 'vertical' || detectedOrientation === 'vertical') ? styles.vertical : ''}`}
-                style={{ margin: '0 0' }} 
+                style={{ margin: '0 0', backgroundColor: '#000' }} 
+                preload="metadata"
               />
             ) : (
-            <div style={{
-              width: '100%',
-              maxWidth: 480,
-              height: 270,
-              background: '#111',
-              borderRadius: 16,
-              border: '2px dashed rgba(255,255,255,0.15)',
-              color: '#999',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: 14
-            }}>
-              {finalVideoUrl2 ? `Video URL not allowed: ${finalVideoUrl2.substring(0, 50)}...` : 'No video provided'}
-            </div>
+              <div style={{
+                width: '100%',
+                maxWidth: 480,
+                height: 270,
+                background: '#111',
+                borderRadius: 16,
+                border: '2px dashed rgba(255,255,255,0.15)',
+                color: '#999',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: 14,
+                gap: 8,
+                padding: 16,
+                textAlign: 'center'
+              }}>
+                <div>⚠️ Video URL not allowed</div>
+                <div style={{ fontSize: 12, color: '#666', wordBreak: 'break-all' }}>
+                  {finalVideoUrl2 ? `${finalVideoUrl2.substring(0, 60)}...` : 'No video URL provided'}
+                </div>
+              </div>
             );
           })()}
         </div>

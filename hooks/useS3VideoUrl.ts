@@ -60,8 +60,9 @@ export function useS3VideoUrl(originalUrl: string | undefined | null) {
       }
     };
 
-    if (!originalUrl) {
+    if (!originalUrl || originalUrl === 'winstory_delegated' || originalUrl === 'null' || originalUrl === null) {
       setVideoUrl(null);
+      setIsLoading(false);
       // Nettoyer le timer si l'URL change
       if (refreshTimerRef.current) {
         clearTimeout(refreshTimerRef.current);
