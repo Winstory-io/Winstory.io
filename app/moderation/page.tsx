@@ -151,6 +151,10 @@ const ModerationPageContent = () => {
   };
   
   const activeSubTypeLabel = getSubTypeLabel(activeSubTab);
+
+  // Libellé lisible pour l'onglet principal
+  const getMainTabLabel = (tab: 'initial' | 'completion') =>
+    tab === 'initial' ? 'Initial Story' : 'Completion';
   
   // Fonctions de conversion des types Prisma vers types familiers
   const convertPrismaCampaignType = (prismaType: string): 'creation' | 'completion' => {
@@ -375,10 +379,16 @@ const ModerationPageContent = () => {
     const newSubTab = desiredSubTab || defaultSubTab;
     setActiveSubTab(newSubTab);
     
+    // VIDER IMMÉDIATEMENT la session pour éviter l'affichage de l'ancien contenu
+    setCurrentSession(null);
+    
     // Afficher un overlay de chargement pour éviter un contenu temporairement incorrect
     try {
       setIsSwitching(true);
       setIsLoadingCampaign(true);
+      // Mettre à jour l'URL sans campaignId immédiatement
+      window.history.replaceState({}, '', `/moderation?type=${newTab}&subtype=${newSubTab}`);
+      
       const token = ++switchTokenRef.current;
       const session = await loadCampaignForCriteria(newTab, newSubTab);
       
@@ -391,9 +401,14 @@ const ModerationPageContent = () => {
         console.log('No campaigns available for:', newTab, newSubTab);
         // Mettre à jour l'URL sans campaignId
         window.history.replaceState({}, '', `/moderation?type=${newTab}&subtype=${newSubTab}`);
+        // S'assurer que la session est bien vide
+        setCurrentSession(null);
       }
     } catch (error) {
       console.error('Error loading campaign for new tab:', error);
+      // En cas d'erreur, s'assurer que la session est vide
+      setCurrentSession(null);
+      window.history.replaceState({}, '', `/moderation?type=${newTab}&subtype=${newSubTab}`);
     } finally {
       setIsLoadingCampaign(false);
       setIsSwitching(false);
@@ -405,6 +420,9 @@ const ModerationPageContent = () => {
     setActiveSubTab(newSubTab);
     console.log('Sub tab changed to:', newSubTab);
     
+    // VIDER IMMÉDIATEMENT la session pour éviter l'affichage de l'ancien contenu
+    setCurrentSession(null);
+    
     // Afficher un overlay de chargement pour éviter un contenu temporairement incorrect
     try {
       setIsSwitching(true);
@@ -414,6 +432,9 @@ const ModerationPageContent = () => {
       if (optimistic) {
         setCurrentSession(optimistic);
         window.history.replaceState({}, '', `/moderation?campaignId=${optimistic.campaign.id}&type=${activeTab}&subtype=${newSubTab}`);
+      } else {
+        // Si pas de campagne optimiste, mettre à jour l'URL sans campaignId immédiatement
+        window.history.replaceState({}, '', `/moderation?type=${activeTab}&subtype=${newSubTab}`);
       }
       const token = ++switchTokenRef.current;
       const session = await loadCampaignForCriteria(activeTab, newSubTab);
@@ -427,13 +448,14 @@ const ModerationPageContent = () => {
         console.log('No campaigns available for:', activeTab, newSubTab);
         // Mettre à jour l'URL sans campaignId
         window.history.replaceState({}, '', `/moderation?type=${activeTab}&subtype=${newSubTab}`);
-        // Si aucune campagne, effacer la session pour ne pas rester bloqué
-        if (!optimistic) {
-          setCurrentSession(null);
-        }
+        // S'assurer que la session est bien vide
+        setCurrentSession(null);
       }
     } catch (error) {
       console.error('Error loading campaign for new sub tab:', error);
+      // En cas d'erreur, s'assurer que la session est vide
+      setCurrentSession(null);
+      window.history.replaceState({}, '', `/moderation?type=${activeTab}&subtype=${newSubTab}`);
     } finally {
       setIsLoadingCampaign(false);
       setIsSwitching(false);
@@ -704,7 +726,7 @@ const ModerationPageContent = () => {
             <ModerationBubbles
               userType={getUICreatorType(campaign)}
               onBubbleClick={handleBubbleClick}
-              bubbleSize={110}
+              bubbleSize={100}
               bubbleGap={24}
               campaignType={getUICampaignType(campaign)}
               hasRewards={!!(campaign.rewards?.standardReward || campaign.rewards?.premiumReward)}
@@ -1216,10 +1238,7 @@ const ModerationPageContent = () => {
         </div>
       );
     } else {
-            // Si pas de session et pas en chargement, essayer de charger la campagne
-            if (address?.address) {
-        fetchCampaignById(campaignId);
-      }
+      // Si pas de session et pas en chargement, attendre l'effet useEffect de chargement
       return (
         <div className={styles.moderationBg}>
           <ModeratorHeader
@@ -1247,9 +1266,8 @@ const ModerationPageContent = () => {
     }
   }
 
-  // Si pas de campaignId, charger automatiquement la première campagne disponible
-
-  if (!currentSession && !isLoading && address?.address) {
+  // Si pas de campaignId, afficher un état de chargement uniquement pendant le fetch auto
+  if (!currentSession && isLoading && address?.address) {
     return (
       <div className={styles.moderationBg}>
         {/* Dev Controls - TOUJOURS VISIBLE */}
@@ -1332,15 +1350,29 @@ const ModerationPageContent = () => {
           subTabCounts={subTabCounts}
           stakerData={stakerData}
         />
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'center', 
+            alignItems: 'center', 
+            height: '60vh',
+            color: '#999',
+            fontSize: '18px',
+            textAlign: 'center',
+            padding: '0 16px'
+          }}>
+            No content to moderate for {getMainTabLabel(activeTab)} — {activeSubTypeLabel}
+          </div>
         <div style={{ 
           display: 'flex', 
           justifyContent: 'center', 
           alignItems: 'center', 
           height: '60vh',
           color: '#999',
-          fontSize: '18px'
+          fontSize: '18px',
+          textAlign: 'center',
+          padding: '0 16px'
         }}>
-          No campaigns available for moderation
+          No content to moderate for {getMainTabLabel(activeTab)} — {activeSubTypeLabel}
         </div>
       </div>
     );
@@ -1403,8 +1435,8 @@ const ModerationPageContent = () => {
           key={`bubbles-${getUICampaignType(campaign)}-${activeTab}-${activeSubTab}`}
           userType={getUICreatorType(campaign)}
           onBubbleClick={handleBubbleClick}
-                        bubbleSize={85}
-          bubbleGap={14}
+          bubbleSize={100}
+          bubbleGap={24}
           campaignType={getUICampaignType(campaign)}
           hasRewards={!!(campaign.rewards?.standardReward || campaign.rewards?.premiumReward)}
         />

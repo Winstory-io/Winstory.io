@@ -141,6 +141,27 @@ export async function GET(request: NextRequest) {
       if (DEBUG) console.log(`🚫 [MODERATION API] Filtered ${(campaigns || []).length - filteredCampaigns.length} campaigns where moderator is creator or completer`);
     }
 
+    // Exclure les campagnes déjà modérées par ce modérateur
+    if (moderatorWallet && filteredCampaigns.length > 0) {
+      const { data: existingVotes, error: votesError } = await supabase
+        .from('moderation_votes')
+        .select('campaign_id')
+        .eq('moderator_wallet', moderatorWallet.toLowerCase())
+        .in('campaign_id', filteredCampaigns.map((c: any) => c.id));
+
+      if (!votesError && existingVotes) {
+        const votedCampaignIds = new Set(existingVotes.map((v: any) => v.campaign_id));
+        const beforeCount = filteredCampaigns.length;
+        filteredCampaigns = filteredCampaigns.filter((campaign: any) => !votedCampaignIds.has(campaign.id));
+        if (DEBUG) {
+          console.log(`🚫 [MODERATION API] Excluded ${beforeCount - filteredCampaigns.length} campaigns already moderated by ${moderatorWallet}`);
+        }
+      } else if (votesError) {
+        console.error('⚠️ [MODERATION API] Error checking existing votes:', votesError);
+        // Continue sans exclure si erreur de vérification
+      }
+    }
+
     // Transformer les données Supabase (tableaux) vers le format attendu (objets)
     // et mapper les noms snake_case vers camelCase pour compatibilité avec transformCampaignFromAPI
     const transformedCampaigns = filteredCampaigns.map((campaign: any) => {
@@ -210,6 +231,22 @@ export async function GET(request: NextRequest) {
           excludedMissingVideo++;
           return false;
         }
+      }
+      
+      // Pour Individual Creators, exclure les vidéos IndexedDB (doivent être sur S3)
+      if (campaign.creator_type === 'INDIVIDUAL_CREATORS' && 
+          typeof videoUrl === 'string' && 
+          videoUrl.startsWith('indexeddb:')) {
+        excludedIndexedDb++;
+        return false;
+      }
+      
+      // Pour toutes les campagnes INITIAL, exclure les vidéos IndexedDB (doivent être sur S3 pour modération)
+      if (campaign.type === 'INITIAL' && 
+          typeof videoUrl === 'string' && 
+          videoUrl.startsWith('indexeddb:')) {
+        excludedIndexedDb++;
+        return false;
       }
       
       return true;

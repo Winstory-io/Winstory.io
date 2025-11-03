@@ -396,22 +396,31 @@ export async function POST(request: NextRequest) {
 
     // 3. Créer le contenu de la campagne
     // Priorité : S3 URL > IndexedDB > Délégation Winstory
+    // IMPORTANT: Pour Individual Creators, l'URL S3 est OBLIGATOIRE
     let videoUrl: string;
     
     if (data.film?.s3VideoUrl) {
       // Si une URL S3 est fournie (vidéo uploadée vers S3), l'utiliser en priorité
       videoUrl = data.film.s3VideoUrl;
       console.log('✅ Using S3 video URL:', videoUrl);
+      
+      // Valider que l'URL S3 est bien une URL HTTP/HTTPS valide
+      if (!videoUrl.startsWith('http://') && !videoUrl.startsWith('https://')) {
+        throw new Error(`Invalid S3 URL format: ${videoUrl}. Must be a valid HTTP/HTTPS URL.`);
+      }
+    } else if (data.campaignType === 'INDIVIDUAL' || creatorType === 'INDIVIDUAL_CREATORS') {
+      // Pour Individual Creators, l'URL S3 est OBLIGATOIRE - pas de délégation ni IndexedDB
+      throw new Error('Individual Creator campaigns require a video uploaded to S3. No video URL provided.');
     } else if (data.film?.videoId) {
-      // Sinon, utiliser l'ID IndexedDB (ancien système)
+      // Pour les autres types (B2C/Agency), utiliser l'ID IndexedDB (ancien système ou temporaire)
       videoUrl = `indexeddb:${data.film.videoId}`;
       console.log('⚠️ Using IndexedDB video ID (legacy):', videoUrl);
     } else if (data.film?.delegatedToWinstory) {
-      // Ou marquer comme délégué à Winstory
+      // Ou marquer comme délégué à Winstory (seulement pour B2C/Agency avec ai_option)
       videoUrl = 'winstory_delegated';
       console.log('📝 Video delegated to Winstory');
     } else {
-      // Valeur par défaut si aucune vidéo
+      // Valeur par défaut si aucune vidéo (seulement pour B2C/Agency)
       videoUrl = 'winstory_delegated';
       console.log('⚠️ No video provided, defaulting to winstory_delegated');
     }

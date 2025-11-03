@@ -10,6 +10,16 @@
       "static/chunks/main-app.js",
       "static/chunks/app/page.js"
     ],
+    "/completion/layout": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/completion/layout.js"
+    ],
+    "/completion/login/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/completion/login/page.js"
+    ],
     "/welcome/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
@@ -24,6 +34,52 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/api/auth/[...nextauth]/route.js"
+    ],
+    "/completion/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/completion/page.js"
+    ],
+    "/api/campaigns/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/campaigns/route.js"
+    ],
+    "/moderation/layout": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/moderation/layout.js"
+    ],
+    "/moderation/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/moderation/page.css",
+      "static/chunks/app/moderation/page.js"
+    ],
+    "/api/moderation/campaigns/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/moderation/campaigns/route.js"
+    ],
+    "/api/moderation/dev-controls/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/moderation/dev-controls/route.js"
+    ],
+    "/api/moderation/moderator-scores/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/moderation/moderator-scores/route.js"
+    ],
+    "/api/campaigns/economic-data/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/campaigns/economic-data/route.js"
+    ],
+    "/api/s3/presigned-url/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/s3/presigned-url/route.js"
     ]
   }
 }

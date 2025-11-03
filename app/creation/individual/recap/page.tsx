@@ -500,74 +500,85 @@ export default function IndividualRecapPage() {
       // les coûts de stockage S3 pour les utilisateurs qui ne paient pas
       // Voir S3_UPLOAD_STRATEGY.md pour plus de détails
       
-      // 1. Upload la vidéo vers S3 si elle existe
+      // 1. Upload OBLIGATOIRE de la vidéo vers S3 pour Individual Creators
+      // Pas de délégation vidéo pour ce type de créateur
       let s3VideoUrl = null;
-      if (recap.film?.videoId) {
-        console.log('📤 [S3] Uploading video to S3...');
-        try {
-          const videoFile = await getVideoFromIndexedDB(recap.film.videoId);
-          if (videoFile) {
-            const formData = new FormData();
-            formData.append('file', videoFile);
-            formData.append('folder', 'pending');
-            formData.append('campaignId', tempCampaignId);
+      if (!recap.film?.videoId) {
+        throw new Error('❌ Video file is required for Individual Creator campaigns. Please upload a video file.');
+      }
 
-            const uploadResponse = await fetch('/api/s3/upload', {
-              method: 'POST',
-              body: formData,
-            });
-
-            if (uploadResponse.ok) {
-              const uploadResult = await uploadResponse.json();
-              s3VideoUrl = uploadResult.videoUrl;
-              console.log('✅ [S3] Video uploaded successfully:', s3VideoUrl);
-            } else {
-              // Log the actual error response - read as text first
-              let errorText = '';
-              let errorData: any = {};
-              try {
-                errorText = await uploadResponse.text();
-                // Try to parse as JSON even if empty (to catch empty JSON objects)
-                if (errorText && errorText.trim()) {
-                  try {
-                    errorData = JSON.parse(errorText);
-                  } catch (parseError) {
-                    errorData = { rawError: errorText };
-                  }
-                } else {
-                  errorData = { 
-                    rawError: errorText || '(empty response body)',
-                    note: 'Response body was empty or whitespace only'
-                  };
-                }
-              } catch (readError) {
-                errorText = `Failed to read response: ${readError instanceof Error ? readError.message : 'Unknown error'}`;
-                errorData = { readError: errorText };
-              }
-              
-              const errorMessage = errorData.error || errorData.details || errorData.rawError || errorText || `HTTP ${uploadResponse.status}: ${uploadResponse.statusText}`;
-              
-              console.error('❌ [S3] Failed to upload video to S3:', {
-                status: uploadResponse.status,
-                statusText: uploadResponse.statusText,
-                contentType: uploadResponse.headers.get('content-type'),
-                hasBody: !!errorText,
-                bodyLength: errorText?.length || 0,
-                errorMessage: errorMessage,
-                parsedData: errorData,
-                rawText: errorText || '(no body)'
-              });
-              // Continue with campaign creation even if S3 upload fails
-              console.warn('⚠️ [S3] Continuing with campaign creation without S3 URL');
-            }
-          } else {
-            console.warn('⚠️ [S3] Video file not found in IndexedDB');
-          }
-        } catch (uploadError) {
-          console.error('❌ [S3] Error uploading video:', uploadError);
-          // Continue with campaign creation even if S3 upload fails
-          console.warn('⚠️ [S3] Continuing with campaign creation without S3 URL');
+      console.log('📤 [S3] Uploading video to S3 (REQUIRED for Individual Creators)...');
+      try {
+        const videoFile = await getVideoFromIndexedDB(recap.film.videoId);
+        if (!videoFile) {
+          throw new Error('❌ Video file not found in IndexedDB. Please re-upload your video.');
         }
+
+        const formData = new FormData();
+        formData.append('file', videoFile);
+        formData.append('folder', 'pending');
+        formData.append('campaignId', tempCampaignId);
+
+        const uploadResponse = await fetch('/api/s3/upload', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!uploadResponse.ok) {
+          // Log the actual error response
+          let errorText = '';
+          let errorData: any = {};
+          try {
+            errorText = await uploadResponse.text();
+            if (errorText && errorText.trim()) {
+              try {
+                errorData = JSON.parse(errorText);
+              } catch (parseError) {
+                errorData = { rawError: errorText };
+              }
+            } else {
+              errorData = { 
+                rawError: errorText || '(empty response body)',
+                note: 'Response body was empty or whitespace only'
+              };
+            }
+          } catch (readError) {
+            errorText = `Failed to read response: ${readError instanceof Error ? readError.message : 'Unknown error'}`;
+            errorData = { readError: errorText };
+          }
+          
+          const errorMessage = errorData.error || errorData.details || errorData.rawError || errorText || `HTTP ${uploadResponse.status}: ${uploadResponse.statusText}`;
+          
+          console.error('❌ [S3] Failed to upload video to S3:', {
+            status: uploadResponse.status,
+            statusText: uploadResponse.statusText,
+            contentType: uploadResponse.headers.get('content-type'),
+            hasBody: !!errorText,
+            bodyLength: errorText?.length || 0,
+            errorMessage: errorMessage,
+            parsedData: errorData,
+            rawText: errorText || '(no body)'
+          });
+          
+          // ÉCHEC : Pour Individual Creators, l'upload S3 est obligatoire
+          throw new Error(`Failed to upload video to S3: ${errorMessage}. Please try again.`);
+        }
+
+        const uploadResult = await uploadResponse.json();
+        s3VideoUrl = uploadResult.videoUrl;
+        console.log('✅ [S3] Video uploaded successfully:', s3VideoUrl);
+        
+        if (!s3VideoUrl || !s3VideoUrl.startsWith('http')) {
+          throw new Error('❌ Invalid S3 URL returned. Please contact support.');
+        }
+      } catch (uploadError) {
+        console.error('❌ [S3] Error uploading video:', uploadError);
+        // Pour Individual Creators, l'upload S3 est obligatoire - ne pas continuer
+        throw new Error(
+          uploadError instanceof Error 
+            ? uploadError.message 
+            : 'Failed to upload video to S3. Please try again or contact support.'
+        );
       }
 
       // 2. Créer la campagne avec l'URL S3

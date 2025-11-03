@@ -843,7 +843,7 @@ export const useModeration = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [account?.address]); // Ne pas inclure fetchCampaignById et fetchAvailableCampaigns pour éviter les boucles
 
-  // Fonction utilitaire pour charger une campagne selon les critères
+  // Fonction utilitaire pour charger une campagne selon les critères avec sélection intelligente
   const loadCampaignForCriteria = useCallback(async (type: string, subtype: string) => {
     if (!account?.address) {
       setError('Wallet not connected. Please connect your wallet to moderate campaigns.');
@@ -862,16 +862,89 @@ export const useModeration = () => {
       const campaigns = await fetchAvailableCampaigns(prismaType, prismaCreatorType);
       
       if (campaigns && campaigns.length > 0) {
-        const firstCampaign = campaigns[0];
-        console.log('Found campaign for criteria:', firstCampaign.title);
-        const session = await fetchCampaignById(firstCampaign.id);
-        return session;
-      } else {
-        console.log('No campaigns found for criteria:', type, subtype);
-        setCurrentSession(null);
-        setError(null); // Pas d'erreur, juste pas de campagnes disponibles
-        return null;
+        // Sélection intelligente avec priorité :
+        // 1. Campagnes INITIAL avec < 22 votes (priorité absolue)
+        // 2. Campagnes avec deadline < 24h (priorité haute)
+        // 3. Sélection pondérée (moins de votes = plus de chances)
+        let selectedCampaign = null;
+        
+        if (prismaType === 'INITIAL') {
+          // Priorité aux campagnes avec moins de 22 votes
+          const blockingCampaigns = campaigns.filter((c: any) => {
+            const totalVotes = c.progress?.total_votes || c.moderation_progress?.total_votes || 0;
+            return totalVotes < 22;
+          }).sort((a: any, b: any) => {
+            const votesA = a.progress?.total_votes || a.moderation_progress?.total_votes || 0;
+            const votesB = b.progress?.total_votes || b.moderation_progress?.total_votes || 0;
+            return votesA - votesB; // Moins de votes en premier
+          });
+          
+          if (blockingCampaigns.length > 0) {
+            selectedCampaign = blockingCampaigns[0];
+            console.log('✅ [LOAD CAMPAIGN] Selected blocking campaign (< 22 votes):', selectedCampaign.title);
+          }
+        }
+        
+        // Si pas de campagne bloquante, vérifier les urgences (deadline < 24h)
+        if (!selectedCampaign) {
+          const now = Date.now();
+          const urgentCampaigns = campaigns.filter((c: any) => {
+            const deadline = c.progress?.moderation_deadline || c.moderation_progress?.moderation_deadline;
+            if (!deadline) return false;
+            const deadlineMs = new Date(deadline).getTime();
+            const hoursRemaining = (deadlineMs - now) / (1000 * 60 * 60);
+            return hoursRemaining > 0 && hoursRemaining < 24;
+          }).sort((a: any, b: any) => {
+            const deadlineA = new Date(a.progress?.moderation_deadline || a.moderation_progress?.moderation_deadline || 0).getTime();
+            const deadlineB = new Date(b.progress?.moderation_deadline || b.moderation_progress?.moderation_deadline || 0).getTime();
+            return deadlineA - deadlineB; // Plus urgent en premier
+          });
+          
+          if (urgentCampaigns.length > 0) {
+            selectedCampaign = urgentCampaigns[0];
+            console.log('✅ [LOAD CAMPAIGN] Selected urgent campaign (< 24h deadline):', selectedCampaign.title);
+          }
+        }
+        
+        // Si toujours pas de campagne, sélection pondérée par nombre de votes
+        if (!selectedCampaign) {
+          const weighted = campaigns.map((c: any) => {
+            const totalVotes = c.progress?.total_votes || c.moderation_progress?.total_votes || 0;
+            return {
+              campaign: c,
+              weight: 1 / (totalVotes + 1) // Moins de votes = plus de poids
+            };
+          });
+          
+          const totalWeight = weighted.reduce((sum, item) => sum + item.weight, 0);
+          let random = Math.random() * totalWeight;
+          
+          for (const item of weighted) {
+            random -= item.weight;
+            if (random <= 0) {
+              selectedCampaign = item.campaign;
+              break;
+            }
+          }
+          
+          // Fallback : première campagne si sélection pondérée échoue
+          if (!selectedCampaign) {
+            selectedCampaign = campaigns[0];
+          }
+          
+          console.log('✅ [LOAD CAMPAIGN] Selected campaign via weighted selection:', selectedCampaign.title);
+        }
+        
+        if (selectedCampaign) {
+          const session = await fetchCampaignById(selectedCampaign.id);
+          return session;
+        }
       }
+      
+      console.log('No campaigns found for criteria:', type, subtype);
+      setCurrentSession(null);
+      setError(null); // Pas d'erreur, juste pas de campagnes disponibles
+      return null;
     } catch (error) {
       console.error('Error loading campaign for criteria:', error);
       
