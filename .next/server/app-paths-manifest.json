@@ -1,4 +1,6 @@
 {
+  "/_not-found/page": "app/_not-found/page.js",
+  "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js",
   "/creation/b2c/recap/page": "app/creation/b2c/recap/page.js",
-  "/creation/b2c/mint/page": "app/creation/b2c/mint/page.js"
+  "/creation/b2c/login/page": "app/creation/b2c/login/page.js"
 }

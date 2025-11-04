@@ -477,7 +477,101 @@ export async function POST(request: NextRequest) {
           throw new Error(`Failed to create campaign rewards: ${rewardsError.message}`);
         }
         
-        console.log('✅ Campaign rewards created');
+        console.log('✅ Campaign rewards configs created');
+      }
+
+      // Sauvegarder les détails des tokens dans token_rewards
+      if (data.standardToken) {
+        const { error: tokenError } = await supabase
+          .from('token_rewards')
+          .insert({
+            campaign_id: campaignId,
+            reward_tier: 'standard',
+            token_name: data.standardToken.name,
+            contract_address: data.standardToken.contractAddress,
+            blockchain: data.standardToken.blockchain || 'Base',
+            token_standard: data.standardToken.tokenStandard || 'ERC20',
+            amount_per_user: parseFloat(data.standardToken.amountPerUser) || 0,
+            total_amount: parseFloat(data.standardToken.totalAmount) || 0,
+            decimals: parseInt(data.standardToken.decimals) || 18,
+            has_enough_balance: data.standardToken.hasEnoughBalance || false
+          });
+
+        if (tokenError) {
+          console.error('Error creating standard token reward:', tokenError);
+          throw new Error(`Failed to create standard token reward: ${tokenError.message}`);
+        }
+        console.log('✅ Standard token reward saved:', data.standardToken.name);
+      }
+
+      if (data.premiumToken) {
+        const { error: tokenError } = await supabase
+          .from('token_rewards')
+          .insert({
+            campaign_id: campaignId,
+            reward_tier: 'premium',
+            token_name: data.premiumToken.name,
+            contract_address: data.premiumToken.contractAddress,
+            blockchain: data.premiumToken.blockchain || 'Base',
+            token_standard: data.premiumToken.tokenStandard || 'ERC20',
+            amount_per_user: parseFloat(data.premiumToken.amountPerUser) || 0,
+            total_amount: parseFloat(data.premiumToken.totalAmount) || 0,
+            decimals: parseInt(data.premiumToken.decimals) || 18,
+            has_enough_balance: data.premiumToken.hasEnoughBalance || false
+          });
+
+        if (tokenError) {
+          console.error('Error creating premium token reward:', tokenError);
+          throw new Error(`Failed to create premium token reward: ${tokenError.message}`);
+        }
+        console.log('✅ Premium token reward saved:', data.premiumToken.name);
+      }
+
+      // Sauvegarder les détails des items dans item_rewards
+      if (data.standardItem) {
+        const { error: itemError } = await supabase
+          .from('item_rewards')
+          .insert({
+            campaign_id: campaignId,
+            reward_tier: 'standard',
+            item_name: data.standardItem.name,
+            contract_address: data.standardItem.contractAddress,
+            blockchain: data.standardItem.blockchain || 'Base',
+            item_standard: data.standardItem.itemStandard || 'ERC1155',
+            amount_per_user: parseInt(data.standardItem.amountPerUser) || 0,
+            total_amount: parseInt(data.standardItem.totalAmount) || 0,
+            decimals: 0, // Items n'ont pas de décimales
+            has_enough_balance: data.standardItem.hasEnoughBalance || false
+          });
+
+        if (itemError) {
+          console.error('Error creating standard item reward:', itemError);
+          throw new Error(`Failed to create standard item reward: ${itemError.message}`);
+        }
+        console.log('✅ Standard item reward saved:', data.standardItem.name);
+      }
+
+      if (data.premiumItem) {
+        const { error: itemError } = await supabase
+          .from('item_rewards')
+          .insert({
+            campaign_id: campaignId,
+            reward_tier: 'premium',
+            item_name: data.premiumItem.name,
+            contract_address: data.premiumItem.contractAddress,
+            blockchain: data.premiumItem.blockchain || 'Base',
+            item_standard: data.premiumItem.itemStandard || 'ERC1155',
+            amount_per_user: parseInt(data.premiumItem.amountPerUser) || 0,
+            total_amount: parseInt(data.premiumItem.totalAmount) || 0,
+            decimals: 0, // Items n'ont pas de décimales
+            has_enough_balance: data.premiumItem.hasEnoughBalance || false
+          });
+
+        if (itemError) {
+          console.error('Error creating premium item reward:', itemError);
+          throw new Error(`Failed to create premium item reward: ${itemError.message}`);
+        }
+        console.log('✅ Premium item reward saved:', data.premiumItem.name);
       }
     } else {
       // Créer une configuration standard pour indiquer que Winstory gère les récompenses
@@ -607,7 +701,7 @@ export async function POST(request: NextRequest) {
     console.log('✅ Moderation progress created');
 
     // 8. Insérer dans les logs de création (structure correcte)
-    const logData = {
+    const logData: any = {
       submission_timestamp_iso: new Date().toISOString(),
       submission_timestamp_local: new Date().toLocaleString(),
       campaign_type: data.campaignType,
@@ -635,7 +729,7 @@ export async function POST(request: NextRequest) {
       logData.individual_currency = 'WINC';
       logData.individual_winc_value = data.completions?.wincValue || null;
       logData.individual_max_completions = data.completions?.maxCompletions || null;
-      logData.individual_duration_days = data.economicData?.durationDays || null;
+      logData.individual_duration_days = null; // Reserved for future use
     }
 
     const { error: logError } = await supabase
@@ -660,34 +754,58 @@ export async function POST(request: NextRequest) {
     // ===================================
     console.log('🎯 [XP] Starting XP award for campaign creation...');
     try {
-      // Determine mint value
-      const mintValueUSD = data.roiData?.unitValue || 1000; // Default to 1000 USD for B2C/Agency
-      const mintValueWINC = data.completions?.wincValue || data.economicData?.totalCost || mintValueUSD;
+      // Determine mint value based on campaign type
+      let mintValueUSD = null;
+      let mintValueWINC = null;
+      
+      if (data.campaignType === 'INDIVIDUAL') {
+        // Individual creators use WINC
+        mintValueWINC = data.completions?.wincValue || null;
+        console.log('💰 [XP] Mint Value (INDIVIDUAL):', { mintValueWINC });
+      } else {
+        // B2C and AgencyB2C use USD
+        // Calculate total mint cost: base (1000) + AI option (500 if selected) + no rewards (1000 if selected)
+        const baseMint = 1000;
+        const aiOption = data.film?.aiRequested ? 500 : 0;
+        const noRewardsOption = !hasRewards ? 1000 : 0;
+        mintValueUSD = baseMint + aiOption + noRewardsOption;
+        console.log('💰 [XP] Mint Value (B2C/AgencyB2C):', { 
+          mintValueUSD, 
+          breakdown: { baseMint, aiOption, noRewardsOption } 
+        });
+      }
       
       // Determine options
-      const winstoryCreatesVideo = !data.film?.videoId; // No videoId means Winstory creates
+      const winstoryCreatesVideo = data.film?.aiRequested || false; // AI requested = Winstory creates
       const noRewards = !hasRewards; // No custom rewards means Winstory manages
       
-      console.log('💰 [XP] Mint Value:', { mintValueUSD, mintValueWINC });
       console.log('⚙️ [XP] Options:', { winstoryCreatesVideo, noRewards });
       
       // Call XP award API
+      const xpRequestBody: any = {
+        userWallet: originalWalletAddress,
+        campaignType: data.campaignType,
+        campaignId: campaignId,
+        options: {
+          winstoryCreatesVideo,
+          noRewards
+        }
+      };
+      
+      // Add appropriate mint value based on campaign type
+      if (mintValueUSD !== null) {
+        xpRequestBody.mintValueUSD = mintValueUSD;
+      }
+      if (mintValueWINC !== null) {
+        xpRequestBody.options.mintValueWINC = mintValueWINC;
+      }
+      
       const xpResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/xp/award-campaign-creation`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          userWallet: originalWalletAddress,
-          campaignType: data.campaignType,
-          campaignId: campaignId,
-          mintValueUSD,
-          options: {
-            winstoryCreatesVideo,
-            noRewards,
-            mintValueWINC
-          }
-        })
+        body: JSON.stringify(xpRequestBody)
       });
 
       if (xpResponse.ok) {
