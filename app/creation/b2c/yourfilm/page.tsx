@@ -54,6 +54,7 @@ export default function YourFilmPage() {
   const [videoPreview, setVideoPreview] = useState<string | null>(null);
   const [videoFormat, setVideoFormat] = useState<'horizontal' | 'vertical' | null>(null);
   const [preferWinstory, setPreferWinstory] = useState(false);
+  const [winstoryFormat, setWinstoryFormat] = useState<'horizontal' | 'vertical' | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [videoPoster, setVideoPoster] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -134,7 +135,12 @@ export default function YourFilmPage() {
   };
 
   const handleCheckboxChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setPreferWinstory(event.target.checked);
+    const isChecked = event.target.checked;
+    setPreferWinstory(isChecked);
+    // Réinitialiser le format si on décoche
+    if (!isChecked) {
+      setWinstoryFormat(null);
+    }
   };
 
   const handleNext = async () => {
@@ -143,6 +149,7 @@ export default function YourFilmPage() {
     console.log('Video Size:', video ? `${(video.size / (1024 * 1024)).toFixed(2)} MB` : 'N/A');
     console.log('Video Format:', videoFormat || 'N/A');
     console.log('Winstory Creates Film:', preferWinstory);
+    console.log('Winstory Format:', winstoryFormat || 'N/A');
     console.log('==========================================');
     
     // Sauvegarde dans IndexedDB pour éviter les limites de localStorage
@@ -171,13 +178,13 @@ export default function YourFilmPage() {
         alert('Failed to save video. Please try again.');
       }
     } else {
-      // Pas de vidéo, sauvegarder quand même les données
+      // Pas de vidéo, sauvegarder quand même les données (délégation Winstory)
       localStorage.setItem("film", JSON.stringify({
         aiRequested: preferWinstory,
         videoId: null,
         fileName: null,
         fileSize: null,
-        format: null
+        format: winstoryFormat // Format choisi pour la délégation Winstory
       }));
       router.push('/creation/b2c/rewardsornot');
     }
@@ -187,7 +194,7 @@ export default function YourFilmPage() {
     fileInputRef.current?.click();
   };
 
-  const canProceed = video !== null || preferWinstory;
+  const canProceed = video !== null || (preferWinstory && winstoryFormat !== null);
 
   return (
     <div style={{ minHeight: '100vh', background: '#000', color: 'white', fontFamily: 'Inter, sans-serif', padding: 40, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
@@ -406,6 +413,116 @@ export default function YourFilmPage() {
                   <span style={{ color: preferWinstory ? '#18C964' : 'white', fontWeight: 'bold', fontSize: 20, transition: 'color 0.2s' }}>+ $500</span>
                 </div>
               </label>
+
+              {/* Format Selection - Only shown when Winstory option is checked */}
+              {preferWinstory && (
+                <div style={{
+                  marginTop: 24,
+                  paddingTop: 24,
+                  borderTop: '1px solid rgba(255, 214, 0, 0.3)'
+                }}>
+                  <p style={{
+                    fontSize: 16,
+                    fontWeight: 'bold',
+                    color: '#FFD600',
+                    marginBottom: 16
+                  }}>
+                    Select video format *
+                  </p>
+                  <div style={{
+                    display: 'flex',
+                    gap: '16px',
+                    justifyContent: 'center',
+                    flexWrap: 'wrap'
+                  }}>
+                    {/* Horizontal Format */}
+                    <button
+                      type="button"
+                      onClick={() => setWinstoryFormat('horizontal')}
+                      style={{
+                        flex: '1 1 200px',
+                        minWidth: '200px',
+                        padding: '16px',
+                        border: `2px solid ${winstoryFormat === 'horizontal' ? '#FFD600' : '#444'}`,
+                        borderRadius: 8,
+                        background: winstoryFormat === 'horizontal' ? 'rgba(255, 214, 0, 0.1)' : 'transparent',
+                        color: winstoryFormat === 'horizontal' ? '#FFD600' : '#999',
+                        fontSize: 16,
+                        fontWeight: winstoryFormat === 'horizontal' ? 'bold' : 'normal',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: '8px'
+                      }}
+                      onMouseEnter={(e) => {
+                        if (winstoryFormat !== 'horizontal') {
+                          e.currentTarget.style.borderColor = '#666';
+                          e.currentTarget.style.color = '#ccc';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (winstoryFormat !== 'horizontal') {
+                          e.currentTarget.style.borderColor = '#444';
+                          e.currentTarget.style.color = '#999';
+                        }
+                      }}
+                    >
+                      <span style={{ fontSize: 32 }}>🖥️</span>
+                      <span>Horizontal 16:9</span>
+                    </button>
+
+                    {/* Vertical Format */}
+                    <button
+                      type="button"
+                      onClick={() => setWinstoryFormat('vertical')}
+                      style={{
+                        flex: '1 1 200px',
+                        minWidth: '200px',
+                        padding: '16px',
+                        border: `2px solid ${winstoryFormat === 'vertical' ? '#FFD600' : '#444'}`,
+                        borderRadius: 8,
+                        background: winstoryFormat === 'vertical' ? 'rgba(255, 214, 0, 0.1)' : 'transparent',
+                        color: winstoryFormat === 'vertical' ? '#FFD600' : '#999',
+                        fontSize: 16,
+                        fontWeight: winstoryFormat === 'vertical' ? 'bold' : 'normal',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: '8px'
+                      }}
+                      onMouseEnter={(e) => {
+                        if (winstoryFormat !== 'vertical') {
+                          e.currentTarget.style.borderColor = '#666';
+                          e.currentTarget.style.color = '#ccc';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (winstoryFormat !== 'vertical') {
+                          e.currentTarget.style.borderColor = '#444';
+                          e.currentTarget.style.color = '#999';
+                        }
+                      }}
+                    >
+                      <span style={{ fontSize: 32 }}>📱</span>
+                      <span>Vertical 9:16</span>
+                    </button>
+                  </div>
+                  {!winstoryFormat && (
+                    <p style={{
+                      fontSize: 14,
+                      color: '#F31260',
+                      marginTop: 12,
+                      fontStyle: 'italic'
+                    }}>
+                      Please select a format to continue
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
           </>
         )}

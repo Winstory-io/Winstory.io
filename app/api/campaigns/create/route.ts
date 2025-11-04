@@ -430,7 +430,7 @@ export async function POST(request: NextRequest) {
       .insert({
         campaign_id: campaignId,
         video_url: videoUrl,
-        video_orientation: data.film?.format === '9:16' ? 'vertical' : 'horizontal',
+        video_orientation: data.film?.format || 'horizontal', // Format déjà en 'horizontal' ou 'vertical'
         starting_story: data.story?.startingStory || '',
         guidelines: data.story?.guideline || ''
       });
@@ -560,7 +560,7 @@ export async function POST(request: NextRequest) {
             company_name: data.company?.name || null,
             starting_story: data.story?.startingStory || '',
             guidelines: data.story?.guideline || '',
-            video_orientation: data.film?.format === '9:16' ? 'vertical' : 'horizontal',
+            video_orientation: data.film?.format || 'horizontal', // Format déjà en 'horizontal' ou 'vertical'
             ai_requested: data.film?.aiRequested || false
           },
           intervention_status: 'pending',

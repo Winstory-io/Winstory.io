@@ -54,6 +54,12 @@ export function verifyAdminSecretKey(secretKey: string | null): boolean {
  * Vérifie l'accès admin depuis une requête Next.js
  */
 export async function checkAdminAccess(request: NextRequest): Promise<boolean> {
+  // En développement, permettre l'accès (pour les tests)
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('🧪 [ADMIN AUTH] Development mode: Admin access allowed');
+    return true;
+  }
+
   // Vérifier la clé secrète dans les headers (pour les API calls)
   const adminKey = request.headers.get('x-admin-key');
   if (adminKey && verifyAdminSecretKey(adminKey)) {
@@ -64,6 +70,12 @@ export async function checkAdminAccess(request: NextRequest): Promise<boolean> {
   const wallet = request.nextUrl.searchParams.get('wallet') || request.headers.get('x-wallet-address');
   if (wallet) {
     return await verifyAdminAccess(wallet);
+  }
+
+  // Si aucune configuration admin, refuser l'accès
+  if (ADMIN_WALLETS.length === 0 && !ADMIN_SECRET_KEY) {
+    console.warn('⚠️ [ADMIN AUTH] No admin configuration found. Please set ADMIN_WALLETS or ADMIN_SECRET_KEY in .env.local');
+    return false;
   }
 
   // Par défaut, refuser l'accès

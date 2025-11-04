@@ -409,21 +409,27 @@ export default function RecapB2C() {
         </div>
         {/* Bloc film */}
         <div style={{ border: "2px solid #fff", borderRadius: 24, padding: 24, marginBottom: 40, maxWidth: 420, width: '100%', marginLeft: 'auto', marginRight: 'auto' }}>
-          <div style={{ display: "flex", alignItems: "center" }}>
-            <span style={{ fontWeight: 600, fontSize: 18, width: 120 }}>Film</span>
-            {recap.film?.aiRequested ? (
-              <div style={{ background: 'rgba(255,215,0,0.15)', border: '1px solid #FFD600', borderRadius: 8, padding: 12, marginLeft: 8, color: '#FFD600', fontWeight: 600, fontSize: 15, textAlign: 'center', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                Winstory creates the Film. Delivered within 24h after payment. +$500
-              </div>
-            ) : videoLoading ? (
-              <div style={{ flex: 1, border: "2px solid #FFD600", borderRadius: 12, padding: 12, color: "#FFD600", fontStyle: "italic", fontSize: 16, background: 'none', fontWeight: 700, marginLeft: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                Loading video...
-              </div>
-            ) : (videoUrl || recap.film?.url) ? (
-              <button onClick={() => openModal('Your film', filmLabel, true)} style={{ flex: 1, border: "2px solid #FFD600", borderRadius: 12, padding: 12, color: "#FFD600", fontStyle: "italic", fontSize: 16, background: 'none', cursor: 'pointer', fontWeight: 700, marginLeft: 8 }}>{filmLabel}</button>
-            ) : (
-              <button onClick={() => openModal('Your film', filmLabel)} style={{ flex: 1, border: "2px solid #FFD600", borderRadius: 12, padding: 12, color: "#FFD600", fontStyle: "italic", fontSize: 16, background: 'none', cursor: 'pointer', fontWeight: 700, marginLeft: 8 }}>{filmLabel}</button>
-            )}
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <div style={{ display: "flex", alignItems: "center" }}>
+              <span style={{ fontWeight: 600, fontSize: 18, width: 120 }}>Film</span>
+              {recap.film?.aiRequested ? (
+                <div style={{ background: 'rgba(255,215,0,0.15)', border: '1px solid #FFD600', borderRadius: 8, padding: 12, marginLeft: 8, color: '#FFD600', fontWeight: 600, fontSize: 15, textAlign: 'center', flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <div>Winstory creates the Film</div>
+                  <div style={{ fontSize: 13, color: '#fff' }}>
+                    {recap.film?.format === 'horizontal' ? '🖥️ Horizontal 16:9' : recap.film?.format === 'vertical' ? '📱 Vertical 9:16' : 'Format not selected'}
+                  </div>
+                  <div style={{ fontSize: 13, fontStyle: 'italic' }}>Delivered within 24h after payment. +$500</div>
+                </div>
+              ) : videoLoading ? (
+                <div style={{ flex: 1, border: "2px solid #FFD600", borderRadius: 12, padding: 12, color: "#FFD600", fontStyle: "italic", fontSize: 16, background: 'none', fontWeight: 700, marginLeft: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  Loading video...
+                </div>
+              ) : (videoUrl || recap.film?.url) ? (
+                <button onClick={() => openModal('Your film', filmLabel, true)} style={{ flex: 1, border: "2px solid #FFD600", borderRadius: 12, padding: 12, color: "#FFD600", fontStyle: "italic", fontSize: 16, background: 'none', cursor: 'pointer', fontWeight: 700, marginLeft: 8 }}>{filmLabel}</button>
+              ) : (
+                <button onClick={() => openModal('Your film', filmLabel)} style={{ flex: 1, border: "2px solid #FFD600", borderRadius: 12, padding: 12, color: "#FFD600", fontStyle: "italic", fontSize: 16, background: 'none', cursor: 'pointer', fontWeight: 700, marginLeft: 8 }}>{filmLabel}</button>
+              )}
+            </div>
           </div>
         </div>
         {/* Bloc rewards */}

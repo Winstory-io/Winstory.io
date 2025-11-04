@@ -1,6 +1,7 @@
 {
-  "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js",
   "/api/moderation/campaigns/route": "app/api/moderation/campaigns/route.js",
+  "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js",
+  "/moderation/page": "app/moderation/page.js",
   "/welcome/page": "app/welcome/page.js",
-  "/moderation/page": "app/moderation/page.js"
+  "/admin/video-creation/page": "app/admin/video-creation/page.js"
 }
