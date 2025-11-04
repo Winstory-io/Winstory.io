@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // Uploader vers S3
+    // Uploader vers S3 (bucket privé, utilisera des URLs signées)
     const command = new PutObjectCommand({
       Bucket: BUCKET_NAME,
       Key: fileKey,
@@ -65,11 +65,13 @@ export async function POST(request: NextRequest) {
 
     await s3Client.send(command);
 
-    // Construire l'URL de la vidéo
+    // Construire l'URL de la vidéo (stockée mais nécessitera une URL signée pour l'accès)
     const videoUrl = `https://${BUCKET_NAME}.s3.${process.env.AWS_REGION || 'eu-north-1'}.amazonaws.com/${fileKey}`;
 
     console.log('✅ [S3 Upload] Video uploaded successfully');
     console.log('  - S3 URL:', videoUrl);
+    console.log('  - File Key:', fileKey);
+    console.log('  - Note: Bucket is private, use presigned URLs for access');
 
     return NextResponse.json({
       success: true,

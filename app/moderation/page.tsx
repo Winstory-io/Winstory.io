@@ -151,7 +151,7 @@ const ModerationPageContent = () => {
   };
   
   const activeSubTypeLabel = getSubTypeLabel(activeSubTab);
-
+  
   // Libellé lisible pour l'onglet principal
   const getMainTabLabel = (tab: 'initial' | 'completion') =>
     tab === 'initial' ? 'Initial Story' : 'Completion';
@@ -449,7 +449,7 @@ const ModerationPageContent = () => {
         // Mettre à jour l'URL sans campaignId
         window.history.replaceState({}, '', `/moderation?type=${activeTab}&subtype=${newSubTab}`);
         // S'assurer que la session est bien vide
-        setCurrentSession(null);
+          setCurrentSession(null);
       }
     } catch (error) {
       console.error('Error loading campaign for new sub tab:', error);
@@ -1350,16 +1350,16 @@ const ModerationPageContent = () => {
           subTabCounts={subTabCounts}
           stakerData={stakerData}
         />
-          <div style={{ 
-            display: 'flex', 
-            justifyContent: 'center', 
-            alignItems: 'center', 
-            height: '60vh',
-            color: '#999',
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          height: '60vh',
+          color: '#999',
             fontSize: '18px',
             textAlign: 'center',
             padding: '0 16px'
-          }}>
+        }}>
             No content to moderate for {getMainTabLabel(activeTab)} — {activeSubTypeLabel}
           </div>
         <div style={{ 

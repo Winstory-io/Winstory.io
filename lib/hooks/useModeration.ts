@@ -937,14 +937,14 @@ export const useModeration = () => {
         
         if (selectedCampaign) {
           const session = await fetchCampaignById(selectedCampaign.id);
-          return session;
+        return session;
         }
       }
       
-      console.log('No campaigns found for criteria:', type, subtype);
-      setCurrentSession(null);
-      setError(null); // Pas d'erreur, juste pas de campagnes disponibles
-      return null;
+        console.log('No campaigns found for criteria:', type, subtype);
+        setCurrentSession(null);
+        setError(null); // Pas d'erreur, juste pas de campagnes disponibles
+        return null;
     } catch (error) {
       console.error('Error loading campaign for criteria:', error);
       
