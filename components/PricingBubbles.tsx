@@ -510,11 +510,20 @@ Payment is processed securely through our trusted partners. Your campaign will b
             >
               <div>
                 <div style={{ 
-                  color: '#FFD600', // Same color for both options
                   fontWeight: 600, 
-                  fontSize: 13 
+                  fontSize: 13,
+                  display: 'flex',
+                  alignItems: 'center'
                 }}>
-                  {option.label.includes('Winstory creates') ? 'AI Film Creation' : 'No Rewards Setup'}
+                  {option.label.includes('Winstory creates') ? (
+                    <span style={{ color: '#FFD600' }}>
+                      AI Film Creation
+                      {option.label.includes(' - Horizontal') && ' - Horizontal'}
+                      {option.label.includes(' - Vertical') && ' - Vertical'}
+                    </span>
+                  ) : (
+                    <span style={{ color: '#FFD600' }}>No Rewards Setup</span>
+                  )}
                 </div>
                 <div style={{ 
                   color: '#fff', 

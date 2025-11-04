@@ -79,11 +79,13 @@ export default function MintPage() {
     const hasPremium = !!(premiumToken || premiumItem);
     
     let aiRequested = false;
+    let videoFormat: 'horizontal' | 'vertical' | null = null;
     let noRewards = false;
     
     if (filmData) {
       const film = JSON.parse(filmData);
       aiRequested = film.aiRequested || false;
+      videoFormat = film.format || null;
     }
     
     // Vérifier si "No rewards" est sélectionné
@@ -104,10 +106,16 @@ export default function MintPage() {
       }
     }
     
+    // Construire le label pour l'option AI avec le format
+    let aiLabel = "Winstory creates the film";
+    if (aiRequested && videoFormat) {
+      aiLabel = `Winstory creates the film - ${videoFormat === 'horizontal' ? 'Horizontal' : 'Vertical'}`;
+    }
+    
     // Mettre à jour les options de prix
     setPricingOptions([
       {
-        label: "Winstory creates the film",
+        label: aiLabel,
         price: 500,
         isSelected: aiRequested,
         description: "AI-generated film based on your story"
