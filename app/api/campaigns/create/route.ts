@@ -144,6 +144,15 @@ interface CampaignData {
   standardItem?: any;
   premiumToken?: any;
   premiumItem?: any;
+  // Agency B2C specific fields
+  agencyInfo?: {
+    email?: string;
+    name?: string;
+  };
+  clientInfo?: {
+    contactEmail?: string;
+    companyName?: string;
+  };
   campaignType: 'B2C' | 'AGENCY_B2C' | 'INDIVIDUAL';
   walletAddress: string;
   walletSource: string;
