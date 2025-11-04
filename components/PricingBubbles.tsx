@@ -66,20 +66,22 @@ const ROIModalContent = ({
   const actualCompletions = Math.round((completionRate / 100) * (roiData?.maxCompletions || 0));
 
   // Fonction pour calculer la couleur dynamique du ROI
-  const getROIColor = (roi: number, mintCost: number) => {
-    if (roi === 0) return '#FFD600'; // Jaune pour Initial MINT
+  const getROIColor = (recovered: number, mintCost: number) => {
+    if (recovered === 0) return '#FFD600'; // Jaune pour 0
     
-    const progress = roi / mintCost; // Progression par rapport au MINT initial
+    const progress = recovered / mintCost; // Progression par rapport au MINT initial
     
-    if (progress < 0.25) return '#F31260'; // Rouge (0-25%)
-    if (progress < 0.5) return '#FF8C00'; // Orange (25-50%)
-    if (progress < 0.75) return '#FFD600'; // Jaune (50-75%)
-    if (progress < 1) return '#18C964'; // Vert clair (75-100%)
-    if (progress >= 1) return '#00C46C'; // Vert foncé (100%+ = ROI franchit le MINT initial)
-    return '#00C46C'; // Fallback
+    // Déficitaire (pas encore rentable)
+    if (progress < 0.5) return '#F31260'; // Rouge - très déficitaire (< 50% du MINT)
+    if (progress < 1) return '#FF8C00'; // Orange - déficitaire (50-99% du MINT)
+    
+    // Rentable ou positif
+    if (progress >= 1 && progress < 1.5) return '#18C964'; // Vert clair - break-even ou petit profit (100-150%)
+    return '#00C46C'; // Vert foncé - bon profit (>150% du MINT)
   };
 
   const roiColor = getROIColor(recoveredAmount, actualMintCost);
+  const recoveredColor = getROIColor(recoveredAmount, actualMintCost);
 
   return (
     <div style={{ color: '#fff' }}>
@@ -196,22 +198,31 @@ const ROIModalContent = ({
 
         {/* Affichage du montant récupéré */}
         <div style={{ fontSize: 14, color: '#ccc', marginBottom: 16 }}>
-          Recovered (50% of fees): <span style={{ color: '#00C46C', fontWeight: 600 }}>
+          Recovered (50% of fees): <span style={{ color: recoveredColor, fontWeight: 600 }}>
             {formatPrice(recoveredAmount)}
           </span>
         </div>
         
         {/* Affichage du ROI avec couleur dynamique */}
-        <div style={{ fontSize: 24, fontWeight: 700, color: roiColor }}>
+        <div style={{ fontSize: 24, fontWeight: 700 }}>
           {completionRate === 0 ? (
             <span style={{ color: '#FFD600' }}>Initial MINT: {formatPrice(actualMintCost)}</span>
           ) : (
-            <span>ROI: {formatPrice(recoveredAmount)}</span>
+            <>
+              <span style={{ color: roiColor }}>Recovered: {formatPrice(recoveredAmount)}</span>
+              <div style={{ fontSize: 14, marginTop: 8 }}>
+                {recoveredAmount < actualMintCost ? (
+                  <span style={{ color: '#F31260' }}>Déficit: -{formatPrice(actualMintCost - recoveredAmount)}</span>
+                ) : (
+                  <span style={{ color: '#00C46C' }}>Profit: +{formatPrice(recoveredAmount - actualMintCost)}</span>
+                )}
+              </div>
+            </>
           )}
         </div>
       </div>
 
-      {/* Insights simplifiés */}
+      {/* Insights simplifiés avec exemples mathématiquement corrects */}
       <div style={{ 
         background: 'rgba(255, 214, 0, 0.05)',
         borderRadius: 16,
@@ -223,15 +234,60 @@ const ROIModalContent = ({
           📊 ROI Examples
         </div>
         <div style={{ fontSize: 14, color: '#ccc', lineHeight: 1.6 }}>
-          <div style={{ marginBottom: 8 }}>
-            • <strong>0 completions:</strong> <span style={{ color: '#FFD600' }}>Initial MINT: {formatPrice(actualMintCost)}</span>
-          </div>
-          <div style={{ marginBottom: 8 }}>
-            • <strong>25 completions:</strong> <span style={{ color: getROIColor(calculateRecovered(50), actualMintCost) }}>ROI = {formatPrice(calculateRecovered(50))}</span>
-          </div>
-          <div style={{ marginBottom: 8 }}>
-            • <strong>50 completions:</strong> <span style={{ color: getROIColor(calculateRecovered(100), actualMintCost) }}>ROI = {formatPrice(calculateRecovered(100))}</span>
-          </div>
+          {(() => {
+            const unitValue = roiData?.unitValue || 0;
+            const maxCompletions = roiData?.maxCompletions || 0;
+            
+            // Calcul pour 0%, 50% et 100% des completions
+            const example1Completions = 0;
+            const example2Completions = Math.round(maxCompletions * 0.5); // 50%
+            const example3Completions = maxCompletions; // 100%
+            
+            const example1Recovered = 0;
+            const example2Recovered = (unitValue * example2Completions * 0.5);
+            const example3Recovered = (unitValue * example3Completions * 0.5);
+            
+            return (
+              <>
+                <div style={{ marginBottom: 8 }}>
+                  • <strong>0 completions:</strong> <span style={{ color: '#FFD600' }}>Initial MINT: {formatPrice(actualMintCost)}</span>
+                </div>
+                <div style={{ marginBottom: 8 }}>
+                  • <strong>{example2Completions} completions (50%):</strong>{' '}
+                  <span style={{ color: getROIColor(example2Recovered, actualMintCost) }}>
+                    Recovered = {formatPrice(example2Recovered)}
+                  </span>
+                  {example2Recovered < actualMintCost ? (
+                    <span style={{ color: '#F31260', fontSize: 12 }}> (Déficit: -{formatPrice(actualMintCost - example2Recovered)})</span>
+                  ) : (
+                    <span style={{ color: '#00C46C', fontSize: 12 }}> (Profit: +{formatPrice(example2Recovered - actualMintCost)})</span>
+                  )}
+                </div>
+                <div style={{ marginBottom: 8 }}>
+                  • <strong>{example3Completions} completions (100%):</strong>{' '}
+                  <span style={{ color: getROIColor(example3Recovered, actualMintCost) }}>
+                    Recovered = {formatPrice(example3Recovered)}
+                  </span>
+                  {example3Recovered < actualMintCost ? (
+                    <span style={{ color: '#F31260', fontSize: 12 }}> (Déficit: -{formatPrice(actualMintCost - example3Recovered)})</span>
+                  ) : (
+                    <span style={{ color: '#00C46C', fontSize: 12 }}> (Profit: +{formatPrice(example3Recovered - actualMintCost)})</span>
+                  )}
+                </div>
+              </>
+            );
+          })()}
+        </div>
+        <div style={{ 
+          marginTop: 16, 
+          padding: 12, 
+          background: 'rgba(255, 214, 0, 0.1)', 
+          borderRadius: 8,
+          fontSize: 13,
+          color: '#FFD600',
+          fontStyle: 'italic'
+        }}>
+          💡 Formula: Recovered = (Unit Value × Completions) × 50%
         </div>
       </div>
 
