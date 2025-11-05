@@ -67,6 +67,11 @@ export default function RecapB2C() {
       const standardItem = JSON.parse(localStorage.getItem("standardItemReward") || "null");
       const premiumToken = JSON.parse(localStorage.getItem("premiumTokenReward") || "null");
       const premiumItem = JSON.parse(localStorage.getItem("premiumItemReward") || "null");
+      // Charger les récompenses Digital et Physical Access
+      const standardDigitalAccess = JSON.parse(localStorage.getItem("standardDigitalAccessReward") || "null");
+      const premiumDigitalAccess = JSON.parse(localStorage.getItem("premiumDigitalAccessReward") || "null");
+      const standardPhysicalAccess = JSON.parse(localStorage.getItem("standardPhysicalAccessReward") || "null");
+      const premiumPhysicalAccess = JSON.parse(localStorage.getItem("premiumPhysicalAccessReward") || "null");
       const roiData = JSON.parse(localStorage.getItem("roiData") || "null");
       const lsWallet = localStorage.getItem("walletAddress");
       
@@ -81,7 +86,11 @@ export default function RecapB2C() {
         standardToken, 
         standardItem, 
         premiumToken, 
-        premiumItem, 
+        premiumItem,
+        standardDigitalAccess,
+        premiumDigitalAccess,
+        standardPhysicalAccess,
+        premiumPhysicalAccess,
         roiData,
         unifiedConfig 
       });
@@ -206,6 +215,31 @@ export default function RecapB2C() {
       console.log('  - Blockchain:', recap.premiumItem.blockchain);
       console.log('  - Amount per user:', recap.premiumItem.amountPerUser);
     }
+    console.log('--- Digital & Physical Access Rewards ---');
+    if (recap.standardDigitalAccess) {
+      console.log('Standard Digital Access:', recap.standardDigitalAccess.accessName);
+      console.log('  - Type:', recap.standardDigitalAccess.accessType);
+      console.log('  - URL:', recap.standardDigitalAccess.accessUrl);
+      console.log('  - Blockchain:', recap.standardDigitalAccess.blockchain);
+    }
+    if (recap.premiumDigitalAccess) {
+      console.log('Premium Digital Access:', recap.premiumDigitalAccess.accessName);
+      console.log('  - Type:', recap.premiumDigitalAccess.accessType);
+      console.log('  - URL:', recap.premiumDigitalAccess.accessUrl);
+      console.log('  - Blockchain:', recap.premiumDigitalAccess.blockchain);
+    }
+    if (recap.standardPhysicalAccess) {
+      console.log('Standard Physical Access:', recap.standardPhysicalAccess.accessName);
+      console.log('  - Event:', recap.standardPhysicalAccess.eventLocation);
+      console.log('  - Date:', recap.standardPhysicalAccess.eventDate);
+      console.log('  - Blockchain:', recap.standardPhysicalAccess.blockchain);
+    }
+    if (recap.premiumPhysicalAccess) {
+      console.log('Premium Physical Access:', recap.premiumPhysicalAccess.accessName);
+      console.log('  - Event:', recap.premiumPhysicalAccess.eventLocation);
+      console.log('  - Date:', recap.premiumPhysicalAccess.eventDate);
+      console.log('  - Blockchain:', recap.premiumPhysicalAccess.blockchain);
+    }
     console.log('==========================================');
     console.log('Proceeding to MINT page...');
     console.log('==========================================');
@@ -271,6 +305,10 @@ export default function RecapB2C() {
           standardItem: recap.standardItem,
           premiumToken: recap.premiumToken,
           premiumItem: recap.premiumItem,
+          standardDigitalAccess: recap.standardDigitalAccess,
+          premiumDigitalAccess: recap.premiumDigitalAccess,
+          standardPhysicalAccess: recap.standardPhysicalAccess,
+          premiumPhysicalAccess: recap.premiumPhysicalAccess,
           campaignType: 'B2C',
           walletAddress: account?.address || walletAddress || null,
           walletSource: account?.address ? 'thirdweb_account' : (walletSource || null)
@@ -440,10 +478,10 @@ export default function RecapB2C() {
               ✓ No rewards - Free completions +$1000
             </div>
           )}
-          {(!recap.standardToken && !recap.standardItem && !recap.premiumToken && !recap.premiumItem) ? null : (
+          {(!recap.standardToken && !recap.standardItem && !recap.premiumToken && !recap.premiumItem && !recap.standardDigitalAccess && !recap.premiumDigitalAccess && !recap.standardPhysicalAccess && !recap.premiumPhysicalAccess) ? null : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
               {/* Standard Rewards */}
-              {(recap.standardToken || recap.standardItem) && (
+              {(recap.standardToken || recap.standardItem || recap.standardDigitalAccess || recap.standardPhysicalAccess) && (
                 <div style={{ background: 'rgba(0,196,108,0.08)', borderRadius: 12, padding: 14, textAlign: 'left' }}>
                   <div style={{ color: '#00C46C', fontWeight: 700, fontSize: 18, marginBottom: 6 }}>Standard Rewards</div>
                   {recap.standardToken && (
@@ -453,15 +491,37 @@ export default function RecapB2C() {
                     </div>
                   )}
                   {recap.standardItem && (
-                    <div>
+                    <div style={{ marginBottom: 6 }}>
                       <span style={{ fontWeight: 600 }}>Item:</span> {recap.standardItem.name} ({recap.standardItem.amountPerUser} per user)
                       <br /><span style={{ fontSize: 13, color: '#FFD600' }}>Contract:</span> <span style={{ fontSize: 13 }}>{recap.standardItem.contractAddress}</span>
+                    </div>
+                  )}
+                  {recap.standardDigitalAccess && (
+                    <div style={{ marginBottom: 6 }}>
+                      <span style={{ fontWeight: 600 }}>🔗 Digital Access:</span> {recap.standardDigitalAccess.accessName}
+                      <br /><span style={{ fontSize: 13, color: '#FFD600' }}>Type:</span> <span style={{ fontSize: 13 }}>{recap.standardDigitalAccess.accessType || 'Private Link'}</span>
+                      {recap.standardDigitalAccess.blockchain && (
+                        <>
+                          <br /><span style={{ fontSize: 13, color: '#FFD600' }}>Blockchain:</span> <span style={{ fontSize: 13 }}>{recap.standardDigitalAccess.blockchain}</span>
+                        </>
+                      )}
+                    </div>
+                  )}
+                  {recap.standardPhysicalAccess && (
+                    <div>
+                      <span style={{ fontWeight: 600 }}>🎫 Physical Access:</span> {recap.standardPhysicalAccess.accessName}
+                      <br /><span style={{ fontSize: 13, color: '#FFD600' }}>Event:</span> <span style={{ fontSize: 13 }}>{recap.standardPhysicalAccess.eventLocation} - {recap.standardPhysicalAccess.eventDate} {recap.standardPhysicalAccess.eventTime ? `at ${recap.standardPhysicalAccess.eventTime}` : ''}</span>
+                      {recap.standardPhysicalAccess.blockchain && (
+                        <>
+                          <br /><span style={{ fontSize: 13, color: '#FFD600' }}>Blockchain:</span> <span style={{ fontSize: 13 }}>{recap.standardPhysicalAccess.blockchain}</span>
+                        </>
+                      )}
                     </div>
                   )}
                 </div>
               )}
               {/* Premium Rewards */}
-              {(recap.premiumToken || recap.premiumItem) && (
+              {(recap.premiumToken || recap.premiumItem || recap.premiumDigitalAccess || recap.premiumPhysicalAccess) && (
                 <div style={{ background: 'rgba(255,215,0,0.08)', borderRadius: 12, padding: 14, textAlign: 'left' }}>
                   <div style={{ color: '#FFD600', fontWeight: 700, fontSize: 18, marginBottom: 6 }}>Premium Rewards</div>
                   {recap.premiumToken && (
@@ -471,9 +531,31 @@ export default function RecapB2C() {
                     </div>
                   )}
                   {recap.premiumItem && (
-                    <div>
+                    <div style={{ marginBottom: 6 }}>
                       <span style={{ fontWeight: 600 }}>Item:</span> {recap.premiumItem.name} ({recap.premiumItem.amountPerUser} per winner)
                       <br /><span style={{ fontSize: 13, color: '#00C46C' }}>Contract:</span> <span style={{ fontSize: 13 }}>{recap.premiumItem.contractAddress}</span>
+                    </div>
+                  )}
+                  {recap.premiumDigitalAccess && (
+                    <div style={{ marginBottom: 6 }}>
+                      <span style={{ fontWeight: 600 }}>🔗 Digital Access:</span> {recap.premiumDigitalAccess.accessName}
+                      <br /><span style={{ fontSize: 13, color: '#00C46C' }}>Type:</span> <span style={{ fontSize: 13 }}>{recap.premiumDigitalAccess.accessType || 'Private Link'}</span>
+                      {recap.premiumDigitalAccess.blockchain && (
+                        <>
+                          <br /><span style={{ fontSize: 13, color: '#00C46C' }}>Blockchain:</span> <span style={{ fontSize: 13 }}>{recap.premiumDigitalAccess.blockchain}</span>
+                        </>
+                      )}
+                    </div>
+                  )}
+                  {recap.premiumPhysicalAccess && (
+                    <div>
+                      <span style={{ fontWeight: 600 }}>🎫 Physical Access:</span> {recap.premiumPhysicalAccess.accessName}
+                      <br /><span style={{ fontSize: 13, color: '#00C46C' }}>Event:</span> <span style={{ fontSize: 13 }}>{recap.premiumPhysicalAccess.eventLocation} - {recap.premiumPhysicalAccess.eventDate} {recap.premiumPhysicalAccess.eventTime ? `at ${recap.premiumPhysicalAccess.eventTime}` : ''}</span>
+                      {recap.premiumPhysicalAccess.blockchain && (
+                        <>
+                          <br /><span style={{ fontSize: 13, color: '#00C46C' }}>Blockchain:</span> <span style={{ fontSize: 13 }}>{recap.premiumPhysicalAccess.blockchain}</span>
+                        </>
+                      )}
                     </div>
                   )}
                 </div>

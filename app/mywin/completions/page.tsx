@@ -510,24 +510,7 @@ export default function MyCompletionsPage() {
         )}
 
         {activeTab === 'rewards' && (
-          <div style={{ color: '#fff', textAlign: 'center', paddingTop: 40 }}>
-            <h2 style={{ fontSize: 36, fontWeight: 800, marginBottom: 8 }}>Rewards & Earnings</h2>
-            <p style={{ color: '#C0C0C0', marginBottom: 32 }}>Track your rewards and earnings from completions</p>
-            
-            <div style={{ 
-              background: 'rgba(0, 0, 0, 0.6)',
-              border: '2px dashed #333',
-              borderRadius: '16px',
-              padding: '48px 24px',
-              textAlign: 'center',
-              maxWidth: '600px',
-              margin: '0 auto'
-            }}>
-              <div style={{ fontSize: '48px', marginBottom: '16px', opacity: 0.5 }}>🎁</div>
-              <h3 style={{ color: '#C0C0C0', fontSize: '20px', marginBottom: '8px' }}>Rewards Coming Soon</h3>
-              <p style={{ color: '#888', fontSize: '16px' }}>Your earned rewards and earnings will be displayed here once available.</p>
-            </div>
-          </div>
+          <RewardsTab wallet={account.address} />
         )}
 
         {/* Dev Controls with individual moderator configuration */}
@@ -1103,3 +1086,265 @@ export default function MyCompletionsPage() {
     </div>
   );
 } 
+
+function RewardsTab({ wallet }: { wallet: string }) {
+  const [loading, setLoading] = useState(true);
+  const [digital, setDigital] = useState<any[]>([]);
+  const [physical, setPhysical] = useState<any[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [editingAddressId, setEditingAddressId] = useState<string | null>(null);
+  const [addressForm, setAddressForm] = useState<{[k:string]: string}>({});
+  const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [claimingDeliveryId, setClaimingDeliveryId] = useState<string | null>(null);
+  const [claimForm, setClaimForm] = useState<{ beneficiaryWallet?: string; beneficiaryName?: string }>({});
+
+  const showToast = (type: 'success' | 'error', message: string) => {
+    setToast({ type, message });
+    setTimeout(() => setToast(null), 2500);
+  };
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        setLoading(true);
+        const res = await fetch(`/api/rewards/my?wallet=${wallet}`);
+        const json = await res.json();
+        if (!res.ok || !json.success) throw new Error(json.error || 'Failed to load rewards');
+        setDigital(json.data.digital || []);
+        setPhysical(json.data.physical || []);
+        setError(null);
+      } catch (e: any) {
+        setError(e.message);
+        setDigital([]);
+        setPhysical([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, [wallet]);
+
+  const handleResolveAccess = async (code: string) => {
+    try {
+      const res = await fetch(`/api/rewards/access/resolve?code=${encodeURIComponent(code)}`);
+      const json = await res.json();
+      if (!res.ok || !json.success) throw new Error(json.error || 'Failed to resolve access');
+      if (json.accessLink) {
+        window.open(json.accessLink, '_blank');
+        showToast('success', 'Access opened');
+      }
+    } catch (e) {
+      console.error(e);
+      showToast('error', 'Unable to open access link');
+    }
+  };
+
+  const handleStartEditAddress = (deliveryId: string) => {
+    setEditingAddressId(deliveryId);
+    setAddressForm({
+      fullName: '',
+      addressLine1: '',
+      city: '',
+      postalCode: '',
+      country: 'FR'
+    });
+  };
+
+  const handleSubmitAddress = async () => {
+    if (!editingAddressId) return;
+    const { fullName, addressLine1, city, postalCode, country } = addressForm;
+    if (!fullName || !addressLine1 || !city || !postalCode || !country) {
+      showToast('error', 'Please fill all required fields');
+      return;
+    }
+    const res = await fetch('/api/rewards/physical/update-address', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        physicalDeliveryId: editingAddressId,
+        shippingAddress: { fullName, addressLine1, city, postalCode, country }
+      })
+    });
+    const json = await res.json();
+    if (!res.ok || !json.success) {
+      showToast('error', json.error || 'Failed to update address');
+      return;
+    }
+    // Refresh list
+    const ref = await fetch(`/api/rewards/my?wallet=${wallet}`);
+    const j = await ref.json();
+    if (ref.ok && j.success) {
+      setPhysical(j.data.physical || []);
+    }
+    setEditingAddressId(null);
+    setAddressForm({});
+    showToast('success', 'Address saved');
+  };
+
+  const handleStartClaim = (deliveryId: string, deliveryType: 'digital' | 'physical') => {
+    setClaimingDeliveryId(deliveryId);
+    setClaimForm({ beneficiaryWallet: '', beneficiaryName: '' });
+  };
+
+  const handleSubmitClaim = async () => {
+    if (!claimingDeliveryId) return;
+    const deliveryType = digital.some(d => d.id === claimingDeliveryId) ? 'digital' : 'physical';
+    const res = await fetch('/api/rewards/claim-with-beneficiary', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        deliveryType,
+        deliveryId: claimingDeliveryId,
+        completerWallet: wallet,
+        beneficiaryWallet: claimForm.beneficiaryWallet || undefined,
+        beneficiaryName: claimForm.beneficiaryName || undefined
+      })
+    });
+    const json = await res.json();
+    if (!res.ok || !json.success) {
+      showToast('error', json.error || 'Failed to claim reward');
+      return;
+    }
+    showToast('success', json.data?.notificationSent ? 'Reward claimed and creator notified' : 'Reward claimed');
+    setClaimingDeliveryId(null);
+    setClaimForm({});
+    // Refresh list
+    const ref = await fetch(`/api/rewards/my?wallet=${wallet}`);
+    const j = await ref.json();
+    if (ref.ok && j.success) {
+      setDigital(j.data.digital || []);
+      setPhysical(j.data.physical || []);
+    }
+  };
+
+  return (
+    <div style={{ color: '#fff', textAlign: 'center', paddingTop: 40 }}>
+      {toast && (
+        <div style={{
+          position: 'fixed', top: 20, right: 20, zIndex: 1000,
+          background: toast.type === 'success' ? '#18C964' : '#FF4D4F',
+          color: '#000', borderRadius: 8, padding: '10px 14px', fontWeight: 800
+        }}>
+          {toast.message}
+        </div>
+      )}
+      <h2 style={{ fontSize: 36, fontWeight: 800, marginBottom: 8 }}>Rewards & Earnings</h2>
+      <p style={{ color: '#C0C0C0', marginBottom: 32 }}>Track your rewards and earnings from completions</p>
+
+      {loading && (
+        <div style={{ color: '#C0C0C0' }}>Loading rewards...</div>
+      )}
+      {error && (
+        <div style={{ color: '#FF6666' }}>{error}</div>
+      )}
+
+      {!loading && !error && (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, maxWidth: 1000, margin: '0 auto' }}>
+          <div style={{ background: 'rgba(0,0,0,0.6)', border: '2px solid #222', borderRadius: 16, padding: 16 }}>
+            <h3 style={{ color: '#FFD600', marginBottom: 12 }}>Digital Exclusive Access</h3>
+            {digital.length === 0 && (
+              <div style={{ color: '#888' }}>No digital rewards yet</div>
+            )}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {digital.map((d) => (
+                <div key={d.id} style={{ display: 'flex', alignItems: 'center', gap: 12, border: '1px solid #333', borderRadius: 10, padding: 12 }}>
+                  <div style={{ textAlign: 'left', flex: 1 }}>
+                    <div style={{ fontWeight: 700 }}>Delivery #{d.id.slice(0, 6)}</div>
+                    <div style={{ fontSize: 12, color: '#aaa' }}>completion: {d.completion_id.slice(0, 8)}…</div>
+                    {d.metadata?.access_type && (
+                      <div style={{ fontSize: 12, color: '#888' }}>type: {d.metadata.access_type}</div>
+                    )}
+                  </div>
+                  {d.is_redeemed ? (
+                    <span style={{ fontSize: 12, color: '#18C964', border: '1px solid #18C964', borderRadius: 8, padding: '4px 8px' }}>Already opened</span>
+                  ) : (
+                    <button onClick={() => handleResolveAccess(d.access_code)} style={{ background: '#18C964', color: '#000', border: 'none', borderRadius: 8, padding: '8px 12px', fontWeight: 700, cursor: 'pointer' }}>
+                      View access
+                    </button>
+                  )}
+                  {!d.beneficiary_wallet && (
+                    <button onClick={() => handleStartClaim(d.id, 'digital')} style={{ background: '#222', color: '#FFD600', border: '1px solid #555', borderRadius: 8, padding: '8px 12px', fontWeight: 700, cursor: 'pointer' }} title="Claim reward (you can designate a beneficiary)">
+                      Claim reward
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+          <div style={{ background: 'rgba(0,0,0,0.6)', border: '2px solid #222', borderRadius: 16, padding: 16 }}>
+            <h3 style={{ color: '#18C964', marginBottom: 12 }}>Physical Exclusive Rewards</h3>
+            {physical.length === 0 && (
+              <div style={{ color: '#888' }}>No physical rewards yet</div>
+            )}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {physical.map((p) => (
+                <div key={p.id} style={{ display: 'flex', flexDirection: 'column', gap: 8, border: '1px solid #333', borderRadius: 10, padding: 12 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div style={{ textAlign: 'left', flex: 1 }}>
+                      <div style={{ fontWeight: 700 }}>Delivery #{p.id.slice(0, 6)}</div>
+                      <div style={{ fontSize: 12, color: '#aaa' }}>status: {p.fulfillment_status}</div>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button onClick={() => handleStartEditAddress(p.id)} style={{ background: '#FFD600', color: '#000', border: 'none', borderRadius: 8, padding: '8px 12px', fontWeight: 700, cursor: 'pointer', flex: 1 }}>
+                      Add / Edit address
+                    </button>
+                    {!p.beneficiary_wallet && (
+                      <button onClick={() => handleStartClaim(p.id, 'physical')} style={{ background: '#222', color: '#FFD600', border: '1px solid #555', borderRadius: 8, padding: '8px 12px', fontWeight: 700, cursor: 'pointer', flex: 1 }} title="Claim reward (you can designate a beneficiary)">
+                        Claim reward
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+            {editingAddressId && (
+              <div style={{ marginTop: 12, textAlign: 'left', border: '1px solid #333', borderRadius: 12, padding: 12 }}>
+                <div style={{ color: '#FFF', fontWeight: 700, marginBottom: 8 }}>Shipping address</div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                  <input placeholder="Full name" value={addressForm.fullName || ''} onChange={e => setAddressForm({ ...addressForm, fullName: e.target.value })} style={{ background: '#111', color: '#fff', border: '1px solid #333', borderRadius: 6, padding: 8 }} />
+                  <input placeholder="Address line 1" value={addressForm.addressLine1 || ''} onChange={e => setAddressForm({ ...addressForm, addressLine1: e.target.value })} style={{ background: '#111', color: '#fff', border: '1px solid #333', borderRadius: 6, padding: 8 }} />
+                  <input placeholder="City" value={addressForm.city || ''} onChange={e => setAddressForm({ ...addressForm, city: e.target.value })} style={{ background: '#111', color: '#fff', border: '1px solid #333', borderRadius: 6, padding: 8 }} />
+                  <input placeholder="Postal code" value={addressForm.postalCode || ''} onChange={e => setAddressForm({ ...addressForm, postalCode: e.target.value })} style={{ background: '#111', color: '#fff', border: '1px solid #333', borderRadius: 6, padding: 8 }} />
+                  <input placeholder="Country" value={addressForm.country || ''} onChange={e => setAddressForm({ ...addressForm, country: e.target.value })} style={{ background: '#111', color: '#fff', border: '1px solid #333', borderRadius: 6, padding: 8 }} />
+                </div>
+                <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                  <button onClick={handleSubmitAddress} style={{ background: '#18C964', color: '#000', border: 'none', borderRadius: 8, padding: '8px 12px', fontWeight: 700, cursor: 'pointer' }}>Save address</button>
+                  <button onClick={() => setEditingAddressId(null)} style={{ background: '#222', color: '#fff', border: '1px solid #333', borderRadius: 8, padding: '8px 12px', fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+                </div>
+              </div>
+            )}
+            {claimingDeliveryId && (
+              <div style={{ marginTop: 12, textAlign: 'left', border: '1px solid #333', borderRadius: 12, padding: 12, background: 'rgba(255, 215, 0, 0.1)' }}>
+                <div style={{ color: '#FFD600', fontWeight: 700, marginBottom: 8 }}>Claim reward</div>
+                <div style={{ color: '#C0C0C0', fontSize: 12, marginBottom: 12 }}>
+                  You can claim this reward for yourself or designate a beneficiary. The campaign creator will be notified if you designate someone else.
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <input 
+                    placeholder="Beneficiary wallet (0x...) - leave empty to claim for yourself" 
+                    value={claimForm.beneficiaryWallet || ''} 
+                    onChange={e => setClaimForm({ ...claimForm, beneficiaryWallet: e.target.value })} 
+                    style={{ background: '#111', color: '#fff', border: '1px solid #333', borderRadius: 6, padding: 8 }} 
+                  />
+                  {claimForm.beneficiaryWallet && (
+                    <input 
+                      placeholder="Beneficiary name (optional)" 
+                      value={claimForm.beneficiaryName || ''} 
+                      onChange={e => setClaimForm({ ...claimForm, beneficiaryName: e.target.value })} 
+                      style={{ background: '#111', color: '#fff', border: '1px solid #333', borderRadius: 6, padding: 8 }} 
+                    />
+                  )}
+                </div>
+                <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+                  <button onClick={handleSubmitClaim} style={{ background: '#18C964', color: '#000', border: 'none', borderRadius: 8, padding: '8px 12px', fontWeight: 700, cursor: 'pointer' }}>Confirm claim</button>
+                  <button onClick={() => setClaimingDeliveryId(null)} style={{ background: '#222', color: '#fff', border: '1px solid #333', borderRadius: 8, padding: '8px 12px', fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

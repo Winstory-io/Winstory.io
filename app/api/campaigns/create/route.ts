@@ -144,6 +144,93 @@ interface CampaignData {
   standardItem?: any;
   premiumToken?: any;
   premiumItem?: any;
+  // Exclusive access rewards (digital + physical)
+  standardDigitalAccess?: {
+    accessName: string;
+    accessDescription: string;
+    accessType?: string;
+    accessUrl: string;
+    maxAccesses?: number | string;
+    blockchain?: string;
+    tokenStandard?: string;
+    contractAddress?: string;
+    tokenId?: string | number;
+    contentType?: string; // e.g., video/audio/file
+    codeType?: string; // e.g., promo_code, api_key
+    // Nouveaux paramètres pour protection et pérennité
+    expirationDate?: string; // Date d'expiration de l'accès
+    claimDeadline?: string; // Date limite pour réclamer
+    contactEmail?: string;
+    contactPhone?: string;
+    userInstructions?: string;
+    allowTransfer?: boolean;
+    allowSharing?: boolean;
+    privacyPolicy?: string;
+  };
+  premiumDigitalAccess?: {
+    accessName: string;
+    accessDescription: string;
+    accessType?: string;
+    accessUrl: string;
+    maxAccesses?: number | string;
+    blockchain?: string;
+    tokenStandard?: string;
+    contractAddress?: string;
+    tokenId?: string | number;
+    contentType?: string;
+    codeType?: string;
+    // Nouveaux paramètres pour protection et pérennité
+    expirationDate?: string;
+    claimDeadline?: string;
+    contactEmail?: string;
+    contactPhone?: string;
+    userInstructions?: string;
+    allowTransfer?: boolean;
+    allowSharing?: boolean;
+    privacyPolicy?: string;
+  };
+  standardPhysicalAccess?: {
+    accessName: string;
+    accessDescription: string;
+    eventDate: string; // ISO date
+    eventTime?: string; // HH:mm
+    eventLocation: string;
+    maxAccesses?: number | string;
+    blockchain?: string;
+    tokenStandard?: string;
+    contractAddress?: string;
+    tokenId?: string | number;
+    // Nouveaux paramètres pour protection et pérennité
+    timezone?: string; // Fuseau horaire
+    claimDeadline?: string; // Date limite pour réclamer
+    deliveryDeadline?: string; // Date limite pour fournir l'adresse
+    contactEmail?: string;
+    contactPhone?: string;
+    userInstructions?: string;
+    allowTransfer?: boolean;
+    cancellationPolicy?: string;
+  };
+  premiumPhysicalAccess?: {
+    accessName: string;
+    accessDescription: string;
+    eventDate: string; // ISO date
+    eventTime?: string; // HH:mm
+    eventLocation: string;
+    maxAccesses?: number | string;
+    blockchain?: string;
+    tokenStandard?: string;
+    contractAddress?: string;
+    tokenId?: string | number;
+    // Nouveaux paramètres pour protection et pérennité
+    timezone?: string;
+    claimDeadline?: string;
+    deliveryDeadline?: string;
+    contactEmail?: string;
+    contactPhone?: string;
+    userInstructions?: string;
+    allowTransfer?: boolean;
+    cancellationPolicy?: string;
+  };
   // Agency B2C specific fields
   agencyInfo?: {
     email?: string;
@@ -169,11 +256,15 @@ export async function POST(request: NextRequest) {
     console.log('Story Title:', data.story?.title);
     console.log('=== PREMIUM OPTIONS CHOSEN ===');
     console.log('Video ID (custom video):', data.film?.videoId ? 'YES' : 'NO - Winstory creates film');
-    console.log('Has Custom Rewards:', (data.standardToken || data.standardItem || data.premiumToken || data.premiumItem) ? 'YES' : 'NO - Winstory manages rewards');
+    // Vérifier toutes les récompenses (Token, Item, Digital Access, Physical Access)
+    const hasCustomRewards = !!(data.standardToken || data.standardItem || data.premiumToken || data.premiumItem ||
+                                 data.standardDigitalAccess || data.premiumDigitalAccess || 
+                                 data.standardPhysicalAccess || data.premiumPhysicalAccess);
+    console.log('Has Custom Rewards:', hasCustomRewards ? 'YES' : 'NO - Winstory manages rewards');
     console.log('Video File Name:', data.film?.fileName || 'N/A');
     console.log('AI Requested:', data.film?.aiRequested || false);
     
-    const hasRewards = data.standardToken || data.standardItem || data.premiumToken || data.premiumItem;
+    const hasRewards = hasCustomRewards;
     const maxCompletions = !hasRewards ? 100 : (data.roiData?.maxCompletions || data.completions?.maxCompletions || 0);
     console.log('Max Completions:', maxCompletions, !hasRewards ? '(Limited to 100 for complete ranking)' : '(Custom)');
 
@@ -581,6 +672,312 @@ export async function POST(request: NextRequest) {
           throw new Error(`Failed to create premium item reward: ${itemError.message}`);
         }
         console.log('✅ Premium item reward saved:', data.premiumItem.name);
+      }
+
+      // Sauvegarder les accès digitaux
+      if (data.standardDigitalAccess) {
+        const { error: digitalError } = await supabase
+          .from('digital_access_rewards')
+          .insert({
+            campaign_id: campaignId,
+            reward_tier: 'standard',
+            access_name: data.standardDigitalAccess.accessName,
+            access_description: data.standardDigitalAccess.accessDescription,
+            access_type: data.standardDigitalAccess.accessType || 'Private Link',
+            access_url: data.standardDigitalAccess.accessUrl,
+            max_accesses: data.standardDigitalAccess.maxAccesses ? Number(data.standardDigitalAccess.maxAccesses) : null,
+            blockchain: data.standardDigitalAccess.blockchain || 'Ethereum',
+            token_standard: data.standardDigitalAccess.tokenStandard || 'ERC1155',
+            contract_address: data.standardDigitalAccess.contractAddress || null,
+            token_id: data.standardDigitalAccess.tokenId !== undefined && data.standardDigitalAccess.tokenId !== null ? String(data.standardDigitalAccess.tokenId) : null,
+            is_auto_mint: !data.standardDigitalAccess.contractAddress,
+            metadata: {
+              // Configuration utilisateur
+              content_type: data.standardDigitalAccess.contentType || null,
+              code_type: data.standardDigitalAccess.codeType || null,
+              access_name_full: data.standardDigitalAccess.accessName,
+              access_description_full: data.standardDigitalAccess.accessDescription,
+              access_url_original: data.standardDigitalAccess.accessUrl,
+              max_accesses_configured: data.standardDigitalAccess.maxAccesses ? Number(data.standardDigitalAccess.maxAccesses) : null,
+              // Configuration blockchain
+              blockchain_configured: data.standardDigitalAccess.blockchain || 'Ethereum',
+              token_standard_configured: data.standardDigitalAccess.tokenStandard || 'ERC1155',
+              contract_address_configured: data.standardDigitalAccess.contractAddress || null,
+              token_id_configured: data.standardDigitalAccess.tokenId !== undefined && data.standardDigitalAccess.tokenId !== null ? String(data.standardDigitalAccess.tokenId) : null,
+              is_auto_mint_configured: !data.standardDigitalAccess.contractAddress,
+              // Nouveaux paramètres pour protection et pérennité
+              expiration_date: data.standardDigitalAccess.expirationDate || null,
+              claim_deadline: data.standardDigitalAccess.claimDeadline || null,
+              contact_email: data.standardDigitalAccess.contactEmail || null,
+              contact_phone: data.standardDigitalAccess.contactPhone || null,
+              user_instructions: data.standardDigitalAccess.userInstructions || null,
+              allow_transfer: data.standardDigitalAccess.allowTransfer !== undefined ? data.standardDigitalAccess.allowTransfer : true,
+              allow_sharing: data.standardDigitalAccess.allowSharing !== undefined ? data.standardDigitalAccess.allowSharing : false,
+              privacy_policy: data.standardDigitalAccess.privacyPolicy || null,
+              // Contexte campagne
+              campaign_type: data.campaignType || 'B2C',
+              creator_wallet: data.walletAddress || null,
+              wallet_source: data.walletSource || null,
+              created_at: new Date().toISOString(),
+              // Configuration complète (pour référence)
+              full_config: {
+                accessName: data.standardDigitalAccess.accessName,
+                accessDescription: data.standardDigitalAccess.accessDescription,
+                accessType: data.standardDigitalAccess.accessType || 'Private Link',
+                accessUrl: data.standardDigitalAccess.accessUrl,
+                maxAccesses: data.standardDigitalAccess.maxAccesses,
+                blockchain: data.standardDigitalAccess.blockchain || 'Ethereum',
+                tokenStandard: data.standardDigitalAccess.tokenStandard || 'ERC1155',
+                contractAddress: data.standardDigitalAccess.contractAddress,
+                tokenId: data.standardDigitalAccess.tokenId,
+                contentType: data.standardDigitalAccess.contentType,
+                codeType: data.standardDigitalAccess.codeType,
+                expirationDate: data.standardDigitalAccess.expirationDate,
+                claimDeadline: data.standardDigitalAccess.claimDeadline,
+                contactEmail: data.standardDigitalAccess.contactEmail,
+                contactPhone: data.standardDigitalAccess.contactPhone,
+                userInstructions: data.standardDigitalAccess.userInstructions,
+                allowTransfer: data.standardDigitalAccess.allowTransfer,
+                allowSharing: data.standardDigitalAccess.allowSharing,
+                privacyPolicy: data.standardDigitalAccess.privacyPolicy
+              }
+            }
+          });
+
+        if (digitalError) {
+          console.error('Error creating standard digital access reward:', digitalError);
+          throw new Error(`Failed to create standard digital access reward: ${digitalError.message}`);
+        }
+        console.log('✅ Standard digital access reward saved:', data.standardDigitalAccess.accessName);
+      }
+
+      if (data.premiumDigitalAccess) {
+        const { error: digitalError } = await supabase
+          .from('digital_access_rewards')
+          .insert({
+            campaign_id: campaignId,
+            reward_tier: 'premium',
+            access_name: data.premiumDigitalAccess.accessName,
+            access_description: data.premiumDigitalAccess.accessDescription,
+            access_type: data.premiumDigitalAccess.accessType || 'Private Link',
+            access_url: data.premiumDigitalAccess.accessUrl,
+            max_accesses: data.premiumDigitalAccess.maxAccesses ? Number(data.premiumDigitalAccess.maxAccesses) : null,
+            blockchain: data.premiumDigitalAccess.blockchain || 'Ethereum',
+            token_standard: data.premiumDigitalAccess.tokenStandard || 'ERC1155',
+            contract_address: data.premiumDigitalAccess.contractAddress || null,
+            token_id: data.premiumDigitalAccess.tokenId !== undefined && data.premiumDigitalAccess.tokenId !== null ? String(data.premiumDigitalAccess.tokenId) : null,
+            is_auto_mint: !data.premiumDigitalAccess.contractAddress,
+            metadata: {
+              // Configuration utilisateur
+              content_type: data.premiumDigitalAccess.contentType || null,
+              code_type: data.premiumDigitalAccess.codeType || null,
+              access_name_full: data.premiumDigitalAccess.accessName,
+              access_description_full: data.premiumDigitalAccess.accessDescription,
+              access_url_original: data.premiumDigitalAccess.accessUrl,
+              max_accesses_configured: data.premiumDigitalAccess.maxAccesses ? Number(data.premiumDigitalAccess.maxAccesses) : null,
+              // Configuration blockchain
+              blockchain_configured: data.premiumDigitalAccess.blockchain || 'Ethereum',
+              token_standard_configured: data.premiumDigitalAccess.tokenStandard || 'ERC1155',
+              contract_address_configured: data.premiumDigitalAccess.contractAddress || null,
+              token_id_configured: data.premiumDigitalAccess.tokenId !== undefined && data.premiumDigitalAccess.tokenId !== null ? String(data.premiumDigitalAccess.tokenId) : null,
+              is_auto_mint_configured: !data.premiumDigitalAccess.contractAddress,
+              // Nouveaux paramètres pour protection et pérennité
+              expiration_date: data.premiumDigitalAccess.expirationDate || null,
+              claim_deadline: data.premiumDigitalAccess.claimDeadline || null,
+              contact_email: data.premiumDigitalAccess.contactEmail || null,
+              contact_phone: data.premiumDigitalAccess.contactPhone || null,
+              user_instructions: data.premiumDigitalAccess.userInstructions || null,
+              allow_transfer: data.premiumDigitalAccess.allowTransfer !== undefined ? data.premiumDigitalAccess.allowTransfer : true,
+              allow_sharing: data.premiumDigitalAccess.allowSharing !== undefined ? data.premiumDigitalAccess.allowSharing : false,
+              privacy_policy: data.premiumDigitalAccess.privacyPolicy || null,
+              // Contexte campagne
+              campaign_type: data.campaignType || 'B2C',
+              creator_wallet: data.walletAddress || null,
+              wallet_source: data.walletSource || null,
+              created_at: new Date().toISOString(),
+              // Configuration complète (pour référence)
+              full_config: {
+                accessName: data.premiumDigitalAccess.accessName,
+                accessDescription: data.premiumDigitalAccess.accessDescription,
+                accessType: data.premiumDigitalAccess.accessType || 'Private Link',
+                accessUrl: data.premiumDigitalAccess.accessUrl,
+                maxAccesses: data.premiumDigitalAccess.maxAccesses,
+                blockchain: data.premiumDigitalAccess.blockchain || 'Ethereum',
+                tokenStandard: data.premiumDigitalAccess.tokenStandard || 'ERC1155',
+                contractAddress: data.premiumDigitalAccess.contractAddress,
+                tokenId: data.premiumDigitalAccess.tokenId,
+                contentType: data.premiumDigitalAccess.contentType,
+                codeType: data.premiumDigitalAccess.codeType,
+                expirationDate: data.premiumDigitalAccess.expirationDate,
+                claimDeadline: data.premiumDigitalAccess.claimDeadline,
+                contactEmail: data.premiumDigitalAccess.contactEmail,
+                contactPhone: data.premiumDigitalAccess.contactPhone,
+                userInstructions: data.premiumDigitalAccess.userInstructions,
+                allowTransfer: data.premiumDigitalAccess.allowTransfer,
+                allowSharing: data.premiumDigitalAccess.allowSharing,
+                privacyPolicy: data.premiumDigitalAccess.privacyPolicy
+              }
+            }
+          });
+
+        if (digitalError) {
+          console.error('Error creating premium digital access reward:', digitalError);
+          throw new Error(`Failed to create premium digital access reward: ${digitalError.message}`);
+        }
+        console.log('✅ Premium digital access reward saved:', data.premiumDigitalAccess.accessName);
+      }
+
+      // Sauvegarder les accès physiques
+      if (data.standardPhysicalAccess) {
+        const { error: physicalError } = await supabase
+          .from('physical_access_rewards')
+          .insert({
+            campaign_id: campaignId,
+            reward_tier: 'standard',
+            access_name: data.standardPhysicalAccess.accessName,
+            access_description: data.standardPhysicalAccess.accessDescription,
+            event_date: data.standardPhysicalAccess.eventDate,
+            event_time: data.standardPhysicalAccess.eventTime || null,
+            event_location: data.standardPhysicalAccess.eventLocation,
+            max_accesses: data.standardPhysicalAccess.maxAccesses ? Number(data.standardPhysicalAccess.maxAccesses) : null,
+            blockchain: data.standardPhysicalAccess.blockchain || 'Ethereum',
+            token_standard: data.standardPhysicalAccess.tokenStandard || 'ERC1155',
+            contract_address: data.standardPhysicalAccess.contractAddress || null,
+            token_id: data.standardPhysicalAccess.tokenId !== undefined && data.standardPhysicalAccess.tokenId !== null ? String(data.standardPhysicalAccess.tokenId) : null,
+            is_auto_mint: !data.standardPhysicalAccess.contractAddress,
+            metadata: {
+              // Configuration utilisateur
+              access_name_full: data.standardPhysicalAccess.accessName,
+              access_description_full: data.standardPhysicalAccess.accessDescription,
+              event_date_configured: data.standardPhysicalAccess.eventDate,
+              event_time_configured: data.standardPhysicalAccess.eventTime || null,
+              event_location_full: data.standardPhysicalAccess.eventLocation,
+              max_accesses_configured: data.standardPhysicalAccess.maxAccesses ? Number(data.standardPhysicalAccess.maxAccesses) : null,
+              // Configuration blockchain
+              blockchain_configured: data.standardPhysicalAccess.blockchain || 'Ethereum',
+              token_standard_configured: data.standardPhysicalAccess.tokenStandard || 'ERC1155',
+              contract_address_configured: data.standardPhysicalAccess.contractAddress || null,
+              token_id_configured: data.standardPhysicalAccess.tokenId !== undefined && data.standardPhysicalAccess.tokenId !== null ? String(data.standardPhysicalAccess.tokenId) : null,
+              is_auto_mint_configured: !data.standardPhysicalAccess.contractAddress,
+              // Nouveaux paramètres pour protection et pérennité
+              timezone: data.standardPhysicalAccess.timezone || null,
+              claim_deadline: data.standardPhysicalAccess.claimDeadline || null,
+              delivery_deadline: data.standardPhysicalAccess.deliveryDeadline || null,
+              contact_email: data.standardPhysicalAccess.contactEmail || null,
+              contact_phone: data.standardPhysicalAccess.contactPhone || null,
+              user_instructions: data.standardPhysicalAccess.userInstructions || null,
+              allow_transfer: data.standardPhysicalAccess.allowTransfer !== undefined ? data.standardPhysicalAccess.allowTransfer : true,
+              cancellation_policy: data.standardPhysicalAccess.cancellationPolicy || null,
+              // Contexte campagne
+              campaign_type: data.campaignType || 'B2C',
+              creator_wallet: data.walletAddress || null,
+              wallet_source: data.walletSource || null,
+              created_at: new Date().toISOString(),
+              // Configuration complète (pour référence)
+              full_config: {
+                accessName: data.standardPhysicalAccess.accessName,
+                accessDescription: data.standardPhysicalAccess.accessDescription,
+                eventDate: data.standardPhysicalAccess.eventDate,
+                eventTime: data.standardPhysicalAccess.eventTime,
+                eventLocation: data.standardPhysicalAccess.eventLocation,
+                maxAccesses: data.standardPhysicalAccess.maxAccesses,
+                blockchain: data.standardPhysicalAccess.blockchain || 'Ethereum',
+                tokenStandard: data.standardPhysicalAccess.tokenStandard || 'ERC1155',
+                contractAddress: data.standardPhysicalAccess.contractAddress,
+                tokenId: data.standardPhysicalAccess.tokenId,
+                timezone: data.standardPhysicalAccess.timezone,
+                claimDeadline: data.standardPhysicalAccess.claimDeadline,
+                deliveryDeadline: data.standardPhysicalAccess.deliveryDeadline,
+                contactEmail: data.standardPhysicalAccess.contactEmail,
+                contactPhone: data.standardPhysicalAccess.contactPhone,
+                userInstructions: data.standardPhysicalAccess.userInstructions,
+                allowTransfer: data.standardPhysicalAccess.allowTransfer,
+                cancellationPolicy: data.standardPhysicalAccess.cancellationPolicy
+              }
+            }
+          });
+
+        if (physicalError) {
+          console.error('Error creating standard physical access reward:', physicalError);
+          throw new Error(`Failed to create standard physical access reward: ${physicalError.message}`);
+        }
+        console.log('✅ Standard physical access reward saved:', data.standardPhysicalAccess.accessName);
+      }
+
+      if (data.premiumPhysicalAccess) {
+        const { error: physicalError } = await supabase
+          .from('physical_access_rewards')
+          .insert({
+            campaign_id: campaignId,
+            reward_tier: 'premium',
+            access_name: data.premiumPhysicalAccess.accessName,
+            access_description: data.premiumPhysicalAccess.accessDescription,
+            event_date: data.premiumPhysicalAccess.eventDate,
+            event_time: data.premiumPhysicalAccess.eventTime || null,
+            event_location: data.premiumPhysicalAccess.eventLocation,
+            max_accesses: data.premiumPhysicalAccess.maxAccesses ? Number(data.premiumPhysicalAccess.maxAccesses) : null,
+            blockchain: data.premiumPhysicalAccess.blockchain || 'Ethereum',
+            token_standard: data.premiumPhysicalAccess.tokenStandard || 'ERC1155',
+            contract_address: data.premiumPhysicalAccess.contractAddress || null,
+            token_id: data.premiumPhysicalAccess.tokenId !== undefined && data.premiumPhysicalAccess.tokenId !== null ? String(data.premiumPhysicalAccess.tokenId) : null,
+            is_auto_mint: !data.premiumPhysicalAccess.contractAddress,
+            metadata: {
+              // Configuration utilisateur
+              access_name_full: data.premiumPhysicalAccess.accessName,
+              access_description_full: data.premiumPhysicalAccess.accessDescription,
+              event_date_configured: data.premiumPhysicalAccess.eventDate,
+              event_time_configured: data.premiumPhysicalAccess.eventTime || null,
+              event_location_full: data.premiumPhysicalAccess.eventLocation,
+              max_accesses_configured: data.premiumPhysicalAccess.maxAccesses ? Number(data.premiumPhysicalAccess.maxAccesses) : null,
+              // Configuration blockchain
+              blockchain_configured: data.premiumPhysicalAccess.blockchain || 'Ethereum',
+              token_standard_configured: data.premiumPhysicalAccess.tokenStandard || 'ERC1155',
+              contract_address_configured: data.premiumPhysicalAccess.contractAddress || null,
+              token_id_configured: data.premiumPhysicalAccess.tokenId !== undefined && data.premiumPhysicalAccess.tokenId !== null ? String(data.premiumPhysicalAccess.tokenId) : null,
+              is_auto_mint_configured: !data.premiumPhysicalAccess.contractAddress,
+              // Nouveaux paramètres pour protection et pérennité
+              timezone: data.premiumPhysicalAccess.timezone || null,
+              claim_deadline: data.premiumPhysicalAccess.claimDeadline || null,
+              delivery_deadline: data.premiumPhysicalAccess.deliveryDeadline || null,
+              contact_email: data.premiumPhysicalAccess.contactEmail || null,
+              contact_phone: data.premiumPhysicalAccess.contactPhone || null,
+              user_instructions: data.premiumPhysicalAccess.userInstructions || null,
+              allow_transfer: data.premiumPhysicalAccess.allowTransfer !== undefined ? data.premiumPhysicalAccess.allowTransfer : true,
+              cancellation_policy: data.premiumPhysicalAccess.cancellationPolicy || null,
+              // Contexte campagne
+              campaign_type: data.campaignType || 'B2C',
+              creator_wallet: data.walletAddress || null,
+              wallet_source: data.walletSource || null,
+              created_at: new Date().toISOString(),
+              // Configuration complète (pour référence)
+              full_config: {
+                accessName: data.premiumPhysicalAccess.accessName,
+                accessDescription: data.premiumPhysicalAccess.accessDescription,
+                eventDate: data.premiumPhysicalAccess.eventDate,
+                eventTime: data.premiumPhysicalAccess.eventTime,
+                eventLocation: data.premiumPhysicalAccess.eventLocation,
+                timezone: data.premiumPhysicalAccess.timezone,
+                claimDeadline: data.premiumPhysicalAccess.claimDeadline,
+                deliveryDeadline: data.premiumPhysicalAccess.deliveryDeadline,
+                contactEmail: data.premiumPhysicalAccess.contactEmail,
+                contactPhone: data.premiumPhysicalAccess.contactPhone,
+                userInstructions: data.premiumPhysicalAccess.userInstructions,
+                allowTransfer: data.premiumPhysicalAccess.allowTransfer,
+                cancellationPolicy: data.premiumPhysicalAccess.cancellationPolicy,
+                maxAccesses: data.premiumPhysicalAccess.maxAccesses,
+                blockchain: data.premiumPhysicalAccess.blockchain || 'Ethereum',
+                tokenStandard: data.premiumPhysicalAccess.tokenStandard || 'ERC1155',
+                contractAddress: data.premiumPhysicalAccess.contractAddress,
+                tokenId: data.premiumPhysicalAccess.tokenId
+              }
+            }
+          });
+
+        if (physicalError) {
+          console.error('Error creating premium physical access reward:', physicalError);
+          throw new Error(`Failed to create premium physical access reward: ${physicalError.message}`);
+        }
+        console.log('✅ Premium physical access reward saved:', data.premiumPhysicalAccess.accessName);
       }
     } else {
       // Créer une configuration standard pour indiquer que Winstory gère les récompenses

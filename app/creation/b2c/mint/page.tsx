@@ -74,9 +74,14 @@ export default function MintPage() {
     const standardItem = localStorage.getItem("standardItemReward");
     const premiumToken = localStorage.getItem("premiumTokenReward");
     const premiumItem = localStorage.getItem("premiumItemReward");
+    // Vérifier aussi les récompenses Digital et Physical Access
+    const standardDigitalAccess = localStorage.getItem("standardDigitalAccessReward");
+    const premiumDigitalAccess = localStorage.getItem("premiumDigitalAccessReward");
+    const standardPhysicalAccess = localStorage.getItem("standardPhysicalAccessReward");
+    const premiumPhysicalAccess = localStorage.getItem("premiumPhysicalAccessReward");
     
-    const hasStandard = !!(standardToken || standardItem);
-    const hasPremium = !!(premiumToken || premiumItem);
+    const hasStandard = !!(standardToken || standardItem || standardDigitalAccess || standardPhysicalAccess);
+    const hasPremium = !!(premiumToken || premiumItem || premiumDigitalAccess || premiumPhysicalAccess);
     
     let aiRequested = false;
     let videoFormat: 'horizontal' | 'vertical' | null = null;

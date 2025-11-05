@@ -1,10 +1,13 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import styles from './Rewards.module.css';
 
 export default function DigitalExclusiveAccessConfig({ onClose }: { onClose: () => void }) {
+  const router = useRouter();
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [showAdditionalSettings, setShowAdditionalSettings] = useState(false);
   const [accessName, setAccessName] = useState('');
   const [accessDescription, setAccessDescription] = useState('');
   const [accessType, setAccessType] = useState('Private Link');
@@ -13,8 +16,228 @@ export default function DigitalExclusiveAccessConfig({ onClose }: { onClose: () 
   const [contractAddress, setContractAddress] = useState('');
   const [tokenId, setTokenId] = useState('');
   const [blockchain, setBlockchain] = useState('Ethereum');
+  const [errors, setErrors] = useState<{[key: string]: string}>({});
+  const [urlValidationStatus, setUrlValidationStatus] = useState<'idle' | 'validating' | 'valid' | 'invalid'>('idle');
+  const [contentType, setContentType] = useState('');
+  const [codeType, setCodeType] = useState('');
+  const [expirationDate, setExpirationDate] = useState('');
+  const [claimDeadline, setClaimDeadline] = useState('');
+  const [contactEmail, setContactEmail] = useState('');
+  const [contactPhone, setContactPhone] = useState('');
+  const [userInstructions, setUserInstructions] = useState('');
+  const [allowTransfer, setAllowTransfer] = useState(true);
+  const [allowSharing, setAllowSharing] = useState(false);
+  const [privacyPolicy, setPrivacyPolicy] = useState('');
 
-  const canComplete = accessName && accessDescription && accessUrl;
+  // Validation d'URL robuste
+  const validateUrl = (url: string): string => {
+    if (!url) return '';
+    
+    // Permettre les URLs spéciales (Zoom, Discord, etc.)
+    const specialPatterns = [
+      /^zoom\.us\/j\//i,
+      /^discord\.gg\//i,
+      /^discord\.com\/invite\//i,
+      /^meet\.google\.com\//i,
+      /^teams\.microsoft\.com\//i
+    ];
+    
+    // Si c'est un pattern spécial sans https://, c'est OK
+    if (specialPatterns.some(pattern => pattern.test(url))) {
+      return '';
+    }
+    
+    // Validation URL standard
+    try {
+      const urlObj = new URL(url.startsWith('http') ? url : `https://${url}`);
+      
+      // Vérifier le protocole (HTTPS recommandé)
+      if (urlObj.protocol === 'http:') {
+        return '⚠️ HTTP is not secure. Please use HTTPS for better security.';
+      }
+      
+      if (!['http:', 'https:'].includes(urlObj.protocol)) {
+        return 'Invalid URL protocol. Only HTTP and HTTPS are allowed.';
+      }
+      
+      // Vérifier que le domaine est valide
+      if (!urlObj.hostname || urlObj.hostname.length < 3) {
+        return 'Invalid domain name';
+      }
+      
+      // Vérifier format basique
+      if (urlObj.hostname.split('.').length < 2) {
+        return 'Invalid domain format';
+      }
+      
+      return '';
+    } catch (e) {
+      // Si l'URL n'est pas valide, essayer de détecter si c'est un code/key
+      if (accessType === 'Code/Key') {
+        // Pour les codes/keys, on accepte tout texte
+        return '';
+      }
+      return 'Invalid URL format. Please enter a valid URL (https://example.com) or a special link (Zoom, Discord, etc.)';
+    }
+  };
+
+  // Validation du format email
+  const validateEmail = (email: string) => {
+    if (!email) return '';
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return 'Please enter a valid email address';
+    }
+    return '';
+  };
+
+  // Validation du format de l'adresse de contrat
+  const validateContractAddress = (address: string) => {
+    if (!address) return '';
+    const ethAddressRegex = /^0x[a-fA-F0-9]{40}$/;
+    if (!ethAddressRegex.test(address)) {
+      return 'Invalid contract address format (must be 0x followed by 40 hex characters)';
+    }
+    return '';
+  };
+
+  // Validation de la date d'expiration
+  const validateExpirationDate = (date: string) => {
+    if (!date) return '';
+    const expDate = new Date(date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    if (expDate <= today) {
+      return 'Expiration date must be in the future';
+    }
+    
+    return '';
+  };
+
+  // Validation de la date limite de claim
+  const validateClaimDeadline = (deadline: string) => {
+    if (!deadline) return '';
+    const deadlineDate = new Date(deadline);
+    const today = new Date();
+    
+    if (deadlineDate < today) {
+      return 'Claim deadline cannot be in the past';
+    }
+    
+    if (expirationDate) {
+      const expDate = new Date(expirationDate);
+      if (deadlineDate >= expDate) {
+        return 'Claim deadline must be before expiration date';
+      }
+    }
+    
+    return '';
+  };
+
+  const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const url = e.target.value;
+    setAccessUrl(url);
+    
+    // Validation en temps réel
+    if (url) {
+      setUrlValidationStatus('validating');
+      setTimeout(() => {
+        const error = validateUrl(url);
+        setErrors(prev => ({ ...prev, accessUrl: error }));
+        setUrlValidationStatus(error ? 'invalid' : 'valid');
+      }, 300);
+    } else {
+      setUrlValidationStatus('idle');
+      setErrors(prev => ({ ...prev, accessUrl: '' }));
+    }
+  };
+
+  const handleContactEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const email = e.target.value;
+    setContactEmail(email);
+    const error = validateEmail(email);
+    setErrors(prev => ({ ...prev, contactEmail: error }));
+  };
+
+  const handleContractAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const address = e.target.value;
+    setContractAddress(address);
+    if (address) {
+      const error = validateContractAddress(address);
+      setErrors(prev => ({ ...prev, contractAddress: error }));
+    } else {
+      setErrors(prev => ({ ...prev, contractAddress: '' }));
+    }
+  };
+
+  const handleExpirationDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const date = e.target.value;
+    setExpirationDate(date);
+    const error = validateExpirationDate(date);
+    setErrors(prev => ({ ...prev, expirationDate: error }));
+    // Re-validate claim deadline if expiration date changed
+    if (claimDeadline) {
+      const claimError = validateClaimDeadline(claimDeadline);
+      setErrors(prev => ({ ...prev, claimDeadline: claimError }));
+    }
+  };
+
+  const handleClaimDeadlineChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const deadline = e.target.value;
+    setClaimDeadline(deadline);
+    const error = validateClaimDeadline(deadline);
+    setErrors(prev => ({ ...prev, claimDeadline: error }));
+  };
+
+  const hasErrors = Object.values(errors).some(error => error !== '');
+  const canComplete = accessName && accessDescription && accessUrl && !hasErrors;
+
+  const handleCompleteConfiguration = () => {
+    if (!canComplete) return;
+    
+    // Save complete configuration in localStorage
+    const config = {
+      accessName,
+      accessDescription,
+      accessType,
+      accessUrl,
+      maxAccesses,
+      contractAddress,
+      tokenId,
+      blockchain,
+      // Nouveaux paramètres pour protection et pérennité
+      contentType,
+      codeType,
+      expirationDate,
+      claimDeadline,
+      contactEmail,
+      contactPhone,
+      userInstructions,
+      allowTransfer,
+      allowSharing,
+      privacyPolicy
+    };
+    
+    localStorage.setItem('standardDigitalAccessReward', JSON.stringify(config));
+    
+    // Navigate to Premium rewards page
+    router.push('/creation/b2c/premiumrewards');
+  };
+
+  // Déterminer le type de contenu basé sur accessType
+  const getContentTypeOptions = () => {
+    switch (accessType) {
+      case 'Content':
+        return ['Video', 'Audio', 'Document', 'Image', 'Interactive'];
+      case 'Code/Key':
+        return ['Promo Code', 'API Key', 'License Key', 'Access Code', 'Coupon'];
+      case 'File/Media':
+        return ['Download', 'Stream', 'Archive', 'Software'];
+      default:
+        return [];
+    }
+  };
 
   return (
     <div className={styles.modalOverlay} onClick={onClose}>
@@ -91,7 +314,10 @@ export default function DigitalExclusiveAccessConfig({ onClose }: { onClose: () 
               <label style={{ display: 'block', color: '#FFD600', fontWeight: 600, marginBottom: 8 }}>Access Type</label>
               <select
                 value={accessType}
-                onChange={(e) => setAccessType(e.target.value)}
+                onChange={(e) => {
+                  setAccessType(e.target.value);
+                  setContentType(''); // Reset content type when access type changes
+                }}
                 style={{
                   width: '100%',
                   padding: 12,
@@ -109,24 +335,65 @@ export default function DigitalExclusiveAccessConfig({ onClose }: { onClose: () 
               </select>
             </div>
 
+            {/* Content Type (conditional) */}
+            {getContentTypeOptions().length > 0 && (
+              <div>
+                <label style={{ display: 'block', color: '#FFD600', fontWeight: 600, marginBottom: 8 }}>
+                  Content/Code Type <span style={{ color: '#888', fontSize: 14 }}>(optional)</span>
+                </label>
+                <select
+                  value={contentType}
+                  onChange={(e) => setContentType(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: 12,
+                    borderRadius: 8,
+                    border: '2px solid #FFD600',
+                    background: 'none',
+                    color: '#fff',
+                    fontSize: 16
+                  }}
+                >
+                  <option value="">Select type...</option>
+                  {getContentTypeOptions().map(option => (
+                    <option key={option} value={option}>{option}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
             {/* Access URL */}
             <div>
-              <label style={{ display: 'block', color: '#FFD600', fontWeight: 600, marginBottom: 8 }}>Access URL or Delivery Method</label>
+              <label style={{ display: 'block', color: '#FFD600', fontWeight: 600, marginBottom: 8 }}>
+                Access URL or Delivery Method <span style={{ color: '#FF2D2D', fontSize: 14 }}>*</span>
+              </label>
               <input
-                type="url"
+                type="text"
                 value={accessUrl}
-                onChange={(e) => setAccessUrl(e.target.value)}
-                placeholder="https://..., Zoom link, Discord invite, download URL"
+                onChange={handleUrlChange}
+                placeholder="https://..., zoom.us/j/..., discord.gg/..., or code/key"
                 style={{
                   width: '100%',
                   padding: 12,
                   borderRadius: 8,
-                  border: '2px solid #FFD600',
+                  border: errors.accessUrl ? '2px solid #FF2D2D' : (urlValidationStatus === 'valid' ? '2px solid #00C46C' : '2px solid #FFD600'),
                   background: 'none',
                   color: '#fff',
                   fontSize: 16
                 }}
               />
+              {urlValidationStatus === 'validating' && (
+                <div style={{ color: '#888', fontSize: 12, marginTop: 4 }}>Validating URL...</div>
+              )}
+              {errors.accessUrl && (
+                <div style={{ color: errors.accessUrl.includes('⚠️') ? '#FFD600' : '#FF2D2D', fontSize: 12, marginTop: 4 }}>{errors.accessUrl}</div>
+              )}
+              {urlValidationStatus === 'valid' && !errors.accessUrl && (
+                <div style={{ color: '#00C46C', fontSize: 12, marginTop: 4 }}>✓ Valid URL format</div>
+              )}
+              <div style={{ color: '#888', fontSize: 12, marginTop: 4 }}>
+                💡 Supports: HTTPS URLs, Zoom links, Discord invites, Google Meet, Teams, or access codes
+              </div>
             </div>
 
             {/* Max Accesses */}
@@ -155,6 +422,222 @@ export default function DigitalExclusiveAccessConfig({ onClose }: { onClose: () 
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Additional Settings Section */}
+        <div style={{ marginBottom: 24 }}>
+          <button
+            onClick={() => setShowAdditionalSettings(!showAdditionalSettings)}
+            style={{
+              width: '100%',
+              padding: 12,
+              borderRadius: 8,
+              border: '2px solid #666',
+              background: 'none',
+              color: '#666',
+              fontWeight: 600,
+              fontSize: 16,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between'
+            }}
+          >
+            <span>⚙️ Additional Settings (Deadlines, Expiration, Contact, Policies)</span>
+            <span>{showAdditionalSettings ? '▼' : '▶'}</span>
+          </button>
+          
+          {showAdditionalSettings && (
+            <div style={{ marginTop: 16, padding: 16, background: 'rgba(255, 214, 0, 0.05)', borderRadius: 8, border: '1px solid #333' }}>
+              <div style={{ color: '#FFD600', fontWeight: 600, marginBottom: 16, fontSize: 14 }}>
+                Configure deadlines, expiration, and contact information to protect both creators and completers
+              </div>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+                {/* Expiration Date */}
+                <div>
+                  <label style={{ display: 'block', color: '#FFD600', fontWeight: 600, marginBottom: 8 }}>
+                    Access Expiration Date <span style={{ color: '#888', fontSize: 14 }}>(optional)</span>
+                  </label>
+                  <input
+                    type="date"
+                    value={expirationDate}
+                    onChange={handleExpirationDateChange}
+                    min={new Date().toISOString().split('T')[0]}
+                    style={{
+                      width: '100%',
+                      padding: 12,
+                      borderRadius: 8,
+                      border: errors.expirationDate ? '2px solid #FF2D2D' : '2px solid #FFD600',
+                      background: 'none',
+                      color: '#fff',
+                      fontSize: 16
+                    }}
+                  />
+                  {errors.expirationDate && (
+                    <div style={{ color: '#FF2D2D', fontSize: 12, marginTop: 4 }}>{errors.expirationDate}</div>
+                  )}
+                  <div style={{ color: '#888', fontSize: 12, marginTop: 4 }}>
+                    💡 Leave blank for unlimited access duration
+                  </div>
+                </div>
+
+                {/* Claim Deadline */}
+                <div>
+                  <label style={{ display: 'block', color: '#FFD600', fontWeight: 600, marginBottom: 8 }}>
+                    Claim Deadline <span style={{ color: '#888', fontSize: 14 }}>(optional)</span>
+                  </label>
+                  <input
+                    type="date"
+                    value={claimDeadline}
+                    onChange={handleClaimDeadlineChange}
+                    min={new Date().toISOString().split('T')[0]}
+                    max={expirationDate || undefined}
+                    style={{
+                      width: '100%',
+                      padding: 12,
+                      borderRadius: 8,
+                      border: errors.claimDeadline ? '2px solid #FF2D2D' : '2px solid #FFD600',
+                      background: 'none',
+                      color: '#fff',
+                      fontSize: 16
+                    }}
+                  />
+                  {errors.claimDeadline && (
+                    <div style={{ color: '#FF2D2D', fontSize: 12, marginTop: 4 }}>{errors.claimDeadline}</div>
+                  )}
+                  <div style={{ color: '#888', fontSize: 12, marginTop: 4 }}>
+                    💡 Last date for completers to claim their reward
+                  </div>
+                </div>
+
+                {/* Contact Email */}
+                <div>
+                  <label style={{ display: 'block', color: '#FFD600', fontWeight: 600, marginBottom: 8 }}>
+                    Contact Email <span style={{ color: '#888', fontSize: 14 }}>(optional)</span>
+                  </label>
+                  <input
+                    type="email"
+                    value={contactEmail}
+                    onChange={handleContactEmailChange}
+                    placeholder="support@yourcompany.com"
+                    style={{
+                      width: '100%',
+                      padding: 12,
+                      borderRadius: 8,
+                      border: errors.contactEmail ? '2px solid #FF2D2D' : '2px solid #FFD600',
+                      background: 'none',
+                      color: '#fff',
+                      fontSize: 16
+                    }}
+                  />
+                  {errors.contactEmail && (
+                    <div style={{ color: '#FF2D2D', fontSize: 12, marginTop: 4 }}>{errors.contactEmail}</div>
+                  )}
+                </div>
+
+                {/* Contact Phone */}
+                <div>
+                  <label style={{ display: 'block', color: '#FFD600', fontWeight: 600, marginBottom: 8 }}>
+                    Contact Phone <span style={{ color: '#888', fontSize: 14 }}>(optional)</span>
+                  </label>
+                  <input
+                    type="tel"
+                    value={contactPhone}
+                    onChange={(e) => setContactPhone(e.target.value)}
+                    placeholder="+33 1 23 45 67 89"
+                    style={{
+                      width: '100%',
+                      padding: 12,
+                      borderRadius: 8,
+                      border: '2px solid #FFD600',
+                      background: 'none',
+                      color: '#fff',
+                      fontSize: 16
+                    }}
+                  />
+                </div>
+
+                {/* User Instructions */}
+                <div>
+                  <label style={{ display: 'block', color: '#FFD600', fontWeight: 600, marginBottom: 8 }}>
+                    Instructions for Users <span style={{ color: '#888', fontSize: 14 }}>(optional)</span>
+                  </label>
+                  <textarea
+                    value={userInstructions}
+                    onChange={(e) => setUserInstructions(e.target.value)}
+                    placeholder="Instructions on how to use the access, system requirements, etc."
+                    rows={3}
+                    style={{
+                      width: '100%',
+                      padding: 12,
+                      borderRadius: 8,
+                      border: '2px solid #FFD600',
+                      background: 'none',
+                      color: '#fff',
+                      fontSize: 16,
+                      resize: 'vertical'
+                    }}
+                  />
+                </div>
+
+                {/* Privacy Policy */}
+                <div>
+                  <label style={{ display: 'block', color: '#FFD600', fontWeight: 600, marginBottom: 8 }}>
+                    Privacy Policy <span style={{ color: '#888', fontSize: 14 }}>(optional)</span>
+                  </label>
+                  <textarea
+                    value={privacyPolicy}
+                    onChange={(e) => setPrivacyPolicy(e.target.value)}
+                    placeholder="Privacy policy, data usage, terms of access, etc."
+                    rows={3}
+                    style={{
+                      width: '100%',
+                      padding: 12,
+                      borderRadius: 8,
+                      border: '2px solid #FFD600',
+                      background: 'none',
+                      color: '#fff',
+                      fontSize: 16,
+                      resize: 'vertical'
+                    }}
+                  />
+                </div>
+
+                {/* Allow Transfer */}
+                <div>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#FFD600', fontWeight: 600, marginBottom: 8 }}>
+                    <input
+                      type="checkbox"
+                      checked={allowTransfer}
+                      onChange={(e) => setAllowTransfer(e.target.checked)}
+                      style={{ width: 18, height: 18 }}
+                    />
+                    Allow reward transfer to another wallet
+                  </label>
+                  <div style={{ color: '#888', fontSize: 12, marginTop: 4 }}>
+                    💡 If enabled, completers can transfer their reward to another wallet address
+                  </div>
+                </div>
+
+                {/* Allow Sharing */}
+                <div>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#FFD600', fontWeight: 600, marginBottom: 8 }}>
+                    <input
+                      type="checkbox"
+                      checked={allowSharing}
+                      onChange={(e) => setAllowSharing(e.target.checked)}
+                      style={{ width: 18, height: 18 }}
+                    />
+                    Allow sharing access link/code
+                  </label>
+                  <div style={{ color: '#888', fontSize: 12, marginTop: 4 }}>
+                    💡 If enabled, completers can share their access link or code with others
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Advanced Web3 Configuration Section */}
@@ -217,18 +700,21 @@ export default function DigitalExclusiveAccessConfig({ onClose }: { onClose: () 
                   <input
                     type="text"
                     value={contractAddress}
-                    onChange={(e) => setContractAddress(e.target.value)}
+                    onChange={handleContractAddressChange}
                     placeholder="0x..."
                     style={{
                       width: '100%',
                       padding: 12,
                       borderRadius: 8,
-                      border: '2px solid #FFD600',
+                      border: errors.contractAddress ? '2px solid #FF2D2D' : '2px solid #FFD600',
                       background: 'none',
                       color: '#fff',
                       fontSize: 16
                     }}
                   />
+                  {errors.contractAddress && (
+                    <div style={{ color: '#FF2D2D', fontSize: 12, marginTop: 4 }}>{errors.contractAddress}</div>
+                  )}
                 </div>
 
                 {/* Token ID */}
@@ -262,7 +748,7 @@ export default function DigitalExclusiveAccessConfig({ onClose }: { onClose: () 
 
         {/* Complete Configuration Button */}
         <button
-          onClick={onClose}
+          onClick={handleCompleteConfiguration}
           disabled={!canComplete}
           style={{
             width: '100%',
@@ -281,4 +767,4 @@ export default function DigitalExclusiveAccessConfig({ onClose }: { onClose: () 
       </div>
     </div>
   );
-} 
+}

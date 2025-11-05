@@ -110,6 +110,31 @@ export async function POST(request: NextRequest) {
       } catch (xpError) {
         console.error('❌ [XP] Error awarding 100% completion XP:', xpError);
       }
+
+      // ===================================
+      // DELIVER ACCESS REWARDS (DIGITAL/PHYSICAL)
+      // ===================================
+      try {
+        console.log('🎟️ Delivering access rewards for completion...');
+        const deliverResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/rewards/deliver-access`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            completionId: data.completionId,
+            campaignId: completion.original_campaign_id,
+            completerWallet: completion.completer_wallet
+          })
+        });
+
+        if (deliverResponse.ok) {
+          const deliverResult = await deliverResponse.json();
+          console.log('✅ Access rewards delivered:', deliverResult?.data);
+        } else {
+          console.warn('⚠️ Failed to deliver access rewards');
+        }
+      } catch (deliverErr) {
+        console.error('❌ Error delivering access rewards:', deliverErr);
+      }
     }
 
     return NextResponse.json({

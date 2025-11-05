@@ -58,10 +58,15 @@ export default function AgencyB2CMintPage() {
     const standardItemRaw = localStorage.getItem("standardItemReward");
     const premiumTokenRaw = localStorage.getItem("premiumTokenReward");
     const premiumItemRaw = localStorage.getItem("premiumItemReward");
+    // Vérifier aussi les récompenses Digital et Physical Access
+    const standardDigitalAccess = localStorage.getItem("standardDigitalAccessReward");
+    const premiumDigitalAccess = localStorage.getItem("premiumDigitalAccessReward");
+    const standardPhysicalAccess = localStorage.getItem("standardPhysicalAccessReward");
+    const premiumPhysicalAccess = localStorage.getItem("premiumPhysicalAccessReward");
 
     const roi = roiDataRaw ? JSON.parse(roiDataRaw) : null;
-    const hasStandard = !!(standardTokenRaw || standardItemRaw);
-    const hasPremium = !!(premiumTokenRaw || premiumItemRaw);
+    const hasStandard = !!(standardTokenRaw || standardItemRaw || standardDigitalAccess || standardPhysicalAccess);
+    const hasPremium = !!(premiumTokenRaw || premiumItemRaw || premiumDigitalAccess || premiumPhysicalAccess);
 
     // "No rewards" uniquement si explicitement choisi ET aucune config de récompense n'existe
     const noRewards = roi?.noReward === true && !hasStandard && !hasPremium;
