@@ -84,6 +84,7 @@ export async function GET(request: NextRequest) {
           id,
           title,
           status,
+          creator_type,
           created_at,
           moderation_progress (
             total_stakers,
@@ -117,6 +118,7 @@ export async function GET(request: NextRequest) {
         campaignId: campaign.id,
         campaignTitle: campaign.title,
         campaignStatus: campaign.status,
+        creatorType: campaign.creator_type,
         createdAt: campaign.created_at,
         progress: Array.isArray(campaign.moderation_progress) 
           ? campaign.moderation_progress[0] || {

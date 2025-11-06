@@ -102,6 +102,43 @@ const CompletionPage = () => {
     fetchApprovedCampaigns();
   }, []);
 
+  // Handle campaignId from URL query parameter
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    const urlParams = new URLSearchParams(window.location.search);
+    const campaignIdParam = urlParams.get('campaignId');
+    
+    if (campaignIdParam && availableCampaigns.length > 0) {
+      // Find the campaign with matching ID
+      const campaign = availableCampaigns.find(c => c.id === campaignIdParam);
+      if (campaign) {
+        // Set the correct tab based on creator type
+        if (campaign.creatorType === 'B2C_AGENCIES' || campaign.creatorType === 'FOR_B2C') {
+          setActiveTab('b2c');
+        } else {
+          setActiveTab('individual');
+        }
+      }
+    }
+  }, [availableCampaigns]);
+
+  // Set video index after tab is set and campaigns are filtered
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    const urlParams = new URLSearchParams(window.location.search);
+    const campaignIdParam = urlParams.get('campaignId');
+    
+    if (campaignIdParam) {
+      const filtered = getFilteredCampaigns();
+      const filteredIndex = filtered.findIndex(c => c.id === campaignIdParam);
+      if (filteredIndex !== -1) {
+        setCurrentVideoIndex(filteredIndex);
+      }
+    }
+  }, [activeTab, availableCampaigns]);
+
   // Re-fetch campaigns when Dev Controls parameters change
   useEffect(() => {
     if (devShowMockData) {

@@ -571,9 +571,11 @@ function DualLineChart({ mintPoints, validatedPoints, maxY, maxX, currentMintPoi
 interface VCProps {
     forceValidated?: boolean;
     onForceValidated?: (enabled: boolean) => void;
+    campaignId?: string;
+    creatorType?: 'FOR_B2C' | 'B2C_AGENCIES' | 'INDIVIDUAL_CREATORS' | 'FOR_INDIVIDUALS';
 }
 
-export default function ValidatedCampaignDashboard({ forceValidated, onForceValidated }: VCProps) {
+export default function ValidatedCampaignDashboard({ forceValidated, onForceValidated, campaignId, creatorType }: VCProps) {
 	const [tab, setTab] = useState<TabKey>('mint');
 	const [objective, setObjective] = useState<number>(200);
 	const [remainingHours, setRemainingHours] = useState<number>(168);
@@ -586,6 +588,12 @@ export default function ValidatedCampaignDashboard({ forceValidated, onForceVali
 	const [chartModalType, setChartModalType] = useState<'mint' | 'roi' | 'rewards'>('mint');
 	const [currentDay, setCurrentDay] = useState(1); // Day navigation for chart modal
 	const [validatedCompletions, setValidatedCompletions] = useState<number>(0); // Number of validated completions (≤ mintCompleted)
+	
+	// Short link state
+	const [shortLink, setShortLink] = useState<{ shortUrl: string; shortCode: string; clicksCount: number } | null>(null);
+	const [shortLinkLoading, setShortLinkLoading] = useState(false);
+	const [shortLinkError, setShortLinkError] = useState<string | null>(null);
+	const [copied, setCopied] = useState(false);
 	
 	// Pricing controls - MINT Community to Company is always 50% of MINT Price
 	const [mintPrice, setMintPrice] = useState<number>(25);
@@ -603,6 +611,48 @@ export default function ValidatedCampaignDashboard({ forceValidated, onForceVali
 			setValidatedCompletions(mintCompleted);
 		}
 	}, [mintCompleted, validatedCompletions]);
+
+	// Fetch short link for B2C/Agence B2C campaigns
+	useEffect(() => {
+		if (campaignId && (creatorType === 'FOR_B2C' || creatorType === 'B2C_AGENCIES')) {
+			setShortLinkLoading(true);
+			setShortLinkError(null);
+			
+			fetch(`/api/campaigns/short-link?campaignId=${campaignId}`)
+				.then(res => res.json())
+				.then(data => {
+					if (data.success) {
+						setShortLink({
+							shortUrl: data.shortUrl,
+							shortCode: data.shortCode,
+							clicksCount: data.clicksCount || 0
+						});
+					} else {
+						setShortLinkError(data.error || 'Failed to fetch short link');
+					}
+				})
+				.catch(err => {
+					console.error('Error fetching short link:', err);
+					setShortLinkError('Failed to fetch short link');
+				})
+				.finally(() => {
+					setShortLinkLoading(false);
+				});
+		}
+	}, [campaignId, creatorType]);
+
+	// Copy short link to clipboard
+	const handleCopyLink = async () => {
+		if (shortLink) {
+			try {
+				await navigator.clipboard.writeText(shortLink.shortUrl);
+				setCopied(true);
+				setTimeout(() => setCopied(false), 2000);
+			} catch (err) {
+				console.error('Failed to copy:', err);
+			}
+		}
+	};
 
 	useEffect(() => {
 		const id = setInterval(() => setNow(Date.now()), 1000);
@@ -829,7 +879,7 @@ export default function ValidatedCampaignDashboard({ forceValidated, onForceVali
 	return (
 		<div style={{ width: '100%', maxWidth: 1180 }}>
 			{/* Title row */}
-			<div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24 }}>
+			<div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24, flexWrap: 'wrap' }}>
 				<h2 style={{ 
 					color: '#18C964', 
 					fontSize: 38, // Reduced from 44 for better spacing
@@ -864,6 +914,69 @@ export default function ValidatedCampaignDashboard({ forceValidated, onForceVali
 				>
 					Community Completions
 				</button>
+				
+				{/* Short Link Section - Only for B2C/Agence B2C */}
+				{(creatorType === 'FOR_B2C' || creatorType === 'B2C_AGENCIES') && (
+					<div style={{ 
+						display: 'flex', 
+						alignItems: 'center', 
+						gap: 12,
+						marginLeft: 'auto',
+						padding: '8px 16px',
+						background: 'rgba(24, 201, 100, 0.1)',
+						border: '1px solid rgba(24, 201, 100, 0.3)',
+						borderRadius: 8
+					}}>
+						{shortLinkLoading ? (
+							<span style={{ color: '#18C964', fontSize: 14 }}>Chargement du lien...</span>
+						) : shortLinkError ? (
+							<span style={{ color: '#FF3B30', fontSize: 14 }}>{shortLinkError}</span>
+						) : shortLink ? (
+							<>
+								<div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+									<span style={{ color: '#C0C0C0', fontSize: 12 }}>Lien de completion</span>
+									<div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+										<a 
+											href={shortLink.shortUrl} 
+											target="_blank" 
+											rel="noopener noreferrer"
+											style={{ 
+												color: '#18C964', 
+												fontSize: 14, 
+												fontWeight: 600,
+												textDecoration: 'none',
+												fontFamily: 'monospace'
+											}}
+										>
+											{shortLink.shortUrl}
+										</a>
+										<button
+											onClick={handleCopyLink}
+											style={{
+												background: copied ? '#18C964' : 'transparent',
+												border: '1px solid #18C964',
+												color: copied ? '#000' : '#18C964',
+												borderRadius: 6,
+												padding: '4px 12px',
+												fontSize: 12,
+												fontWeight: 600,
+												cursor: 'pointer',
+												transition: 'all 0.2s'
+											}}
+										>
+											{copied ? '✓ Copié' : 'Copier'}
+										</button>
+									</div>
+									{shortLink.clicksCount > 0 && (
+										<span style={{ color: '#C0C0C0', fontSize: 11 }}>
+											{shortLink.clicksCount} clic{shortLink.clicksCount > 1 ? 's' : ''}
+										</span>
+									)}
+								</div>
+							</>
+						) : null}
+					</div>
+				)}
 			</div>
 
 			{/* Sub-tabs with carousel effect - spaced down for better breathing room */}

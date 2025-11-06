@@ -265,7 +265,8 @@ export default function PhysicalExclusiveAccessConfig({ onClose }: { onClose: ()
                     border: errors.eventDate ? '2px solid #FF2D2D' : '2px solid #FFD600',
                     background: 'none',
                     color: '#fff',
-                    fontSize: 16
+                    fontSize: 16,
+                    boxSizing: 'border-box'
                   }}
                 />
                 {errors.eventDate && (
@@ -288,7 +289,8 @@ export default function PhysicalExclusiveAccessConfig({ onClose }: { onClose: ()
                     border: '2px solid #FFD600',
                     background: 'none',
                     color: '#fff',
-                    fontSize: 16
+                    fontSize: 16,
+                    boxSizing: 'border-box'
                   }}
                 />
               </div>
@@ -409,14 +411,15 @@ export default function PhysicalExclusiveAccessConfig({ onClose }: { onClose: ()
                     onChange={handleClaimDeadlineChange}
                     min={new Date().toISOString().split('T')[0]}
                     max={eventDate ? new Date(new Date(eventDate).getTime() - 86400000).toISOString().split('T')[0] : undefined}
-                    style={{
+                  style={{
                       width: '100%',
                       padding: 12,
                       borderRadius: 8,
                       border: errors.claimDeadline ? '2px solid #FF2D2D' : '2px solid #FFD600',
                       background: 'none',
                       color: '#fff',
-                      fontSize: 16
+                    fontSize: 16,
+                    boxSizing: 'border-box'
                     }}
                   />
                   {errors.claimDeadline && (
@@ -438,14 +441,15 @@ export default function PhysicalExclusiveAccessConfig({ onClose }: { onClose: ()
                     onChange={handleDeliveryDeadlineChange}
                     min={new Date().toISOString().split('T')[0]}
                     max={eventDate ? new Date(new Date(eventDate).getTime() - 3 * 86400000).toISOString().split('T')[0] : undefined}
-                    style={{
+                  style={{
                       width: '100%',
                       padding: 12,
                       borderRadius: 8,
                       border: errors.deliveryDeadline ? '2px solid #FF2D2D' : '2px solid #FFD600',
                       background: 'none',
                       color: '#fff',
-                      fontSize: 16
+                    fontSize: 16,
+                    boxSizing: 'border-box'
                     }}
                   />
                   {errors.deliveryDeadline && (
@@ -466,14 +470,15 @@ export default function PhysicalExclusiveAccessConfig({ onClose }: { onClose: ()
                     value={contactEmail}
                     onChange={handleContactEmailChange}
                     placeholder="support@yourcompany.com"
-                    style={{
+                  style={{
                       width: '100%',
                       padding: 12,
                       borderRadius: 8,
                       border: errors.contactEmail ? '2px solid #FF2D2D' : '2px solid #FFD600',
                       background: 'none',
                       color: '#fff',
-                      fontSize: 16
+                    fontSize: 16,
+                    boxSizing: 'border-box'
                     }}
                   />
                   {errors.contactEmail && (
@@ -491,14 +496,15 @@ export default function PhysicalExclusiveAccessConfig({ onClose }: { onClose: ()
                     value={contactPhone}
                     onChange={(e) => setContactPhone(e.target.value)}
                     placeholder="+33 1 23 45 67 89"
-                    style={{
+                  style={{
                       width: '100%',
                       padding: 12,
                       borderRadius: 8,
                       border: '2px solid #FFD600',
                       background: 'none',
                       color: '#fff',
-                      fontSize: 16
+                    fontSize: 16,
+                    boxSizing: 'border-box'
                     }}
                   />
                 </div>
@@ -513,7 +519,7 @@ export default function PhysicalExclusiveAccessConfig({ onClose }: { onClose: ()
                     onChange={(e) => setUserInstructions(e.target.value)}
                     placeholder="Instructions on how to use the access, what to bring, dress code, etc."
                     rows={3}
-                    style={{
+                  style={{
                       width: '100%',
                       padding: 12,
                       borderRadius: 8,
@@ -521,7 +527,8 @@ export default function PhysicalExclusiveAccessConfig({ onClose }: { onClose: ()
                       background: 'none',
                       color: '#fff',
                       fontSize: 16,
-                      resize: 'vertical'
+                    resize: 'vertical',
+                    boxSizing: 'border-box'
                     }}
                   />
                 </div>
@@ -536,7 +543,7 @@ export default function PhysicalExclusiveAccessConfig({ onClose }: { onClose: ()
                     onChange={(e) => setCancellationPolicy(e.target.value)}
                     placeholder="Policy for event cancellation, refunds, rescheduling, etc."
                     rows={3}
-                    style={{
+                  style={{
                       width: '100%',
                       padding: 12,
                       borderRadius: 8,
@@ -544,7 +551,8 @@ export default function PhysicalExclusiveAccessConfig({ onClose }: { onClose: ()
                       background: 'none',
                       color: '#fff',
                       fontSize: 16,
-                      resize: 'vertical'
+                    resize: 'vertical',
+                    boxSizing: 'border-box'
                     }}
                   />
                 </div>

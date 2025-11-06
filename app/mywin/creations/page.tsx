@@ -353,6 +353,8 @@ export default function MyCreationsPage() {
                 <ValidatedCampaignDashboard 
                   forceValidated={devForceValidated}
                   onForceValidated={setDevForceValidated}
+                  campaignId={activeInitialProgress?.campaignId}
+                  creatorType={moderationData[currentCampaignIndex]?.creatorType}
                 />
               ) : (
             <ActiveCampaignDashboard 

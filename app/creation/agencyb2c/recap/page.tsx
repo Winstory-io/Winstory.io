@@ -72,6 +72,11 @@ export default function AgencyB2CRecap() {
       const standardItem = JSON.parse(localStorage.getItem("standardItemReward") || "null");
       const premiumToken = JSON.parse(localStorage.getItem("premiumTokenReward") || "null");
       const premiumItem = JSON.parse(localStorage.getItem("premiumItemReward") || "null");
+      // Charger aussi les récompenses Digital/Physical Access
+      const standardDigitalAccess = JSON.parse(localStorage.getItem("standardDigitalAccessReward") || "null");
+      const premiumDigitalAccess = JSON.parse(localStorage.getItem("premiumDigitalAccessReward") || "null");
+      const standardPhysicalAccess = JSON.parse(localStorage.getItem("standardPhysicalAccessReward") || "null");
+      const premiumPhysicalAccess = JSON.parse(localStorage.getItem("premiumPhysicalAccessReward") || "null");
       const roiData = JSON.parse(localStorage.getItem("roiData") || "null");
       setRecap({ 
         user, 
@@ -82,6 +87,10 @@ export default function AgencyB2CRecap() {
         standardItem, 
         premiumToken, 
         premiumItem, 
+        standardDigitalAccess,
+        premiumDigitalAccess,
+        standardPhysicalAccess,
+        premiumPhysicalAccess,
         roiData,
         agencyInfo,
         clientInfo 
@@ -525,7 +534,7 @@ export default function AgencyB2CRecap() {
                   ✓ No rewards - Free completions +$1000
                 </div>
               )}
-              {(!recap.standardToken && !recap.standardItem && !recap.premiumToken && !recap.premiumItem) ? null :
+              {(!recap.standardToken && !recap.standardItem && !recap.premiumToken && !recap.premiumItem && !recap.standardDigitalAccess && !recap.premiumDigitalAccess && !recap.standardPhysicalAccess && !recap.premiumPhysicalAccess) ? null :
                 <div style={{ marginTop: 16 }}>
                   {recap.standardToken && (
                     <div style={{ marginBottom: 8 }}>
@@ -537,6 +546,22 @@ export default function AgencyB2CRecap() {
                       <span style={{ color: '#FFD600', fontWeight: 600 }}>Standard Item:</span> {recap.standardItem.itemName}
                     </div>
                   )}
+                  {recap.standardDigitalAccess && (
+                    <div style={{ marginBottom: 8 }}>
+                      <span style={{ color: '#FFD600', fontWeight: 600 }}>Standard Digital Access:</span> {recap.standardDigitalAccess.accessName}
+                      {recap.standardDigitalAccess.accessType && (
+                        <span> — {recap.standardDigitalAccess.accessType}</span>
+                      )}
+                    </div>
+                  )}
+                  {recap.standardPhysicalAccess && (
+                    <div style={{ marginBottom: 8 }}>
+                      <span style={{ color: '#FFD600', fontWeight: 600 }}>Standard Physical Access:</span> {recap.standardPhysicalAccess.accessName}
+                      <div style={{ fontSize: 14, color: '#aaa' }}>
+                        {recap.standardPhysicalAccess.eventLocation} — {recap.standardPhysicalAccess.eventDate}{recap.standardPhysicalAccess.eventTime ? ` at ${recap.standardPhysicalAccess.eventTime}` : ''}
+                      </div>
+                    </div>
+                  )}
                   {recap.premiumToken && (
                     <div style={{ marginBottom: 8 }}>
                       <span style={{ color: '#FFD600', fontWeight: 600 }}>Premium Token:</span> {recap.premiumToken.amountPerUser} {recap.premiumToken.tokenSymbol} per winner
@@ -545,6 +570,22 @@ export default function AgencyB2CRecap() {
                   {recap.premiumItem && (
                     <div style={{ marginBottom: 8 }}>
                       <span style={{ color: '#FFD600', fontWeight: 600 }}>Premium Item:</span> {recap.premiumItem.itemName}
+                    </div>
+                  )}
+                  {recap.premiumDigitalAccess && (
+                    <div style={{ marginBottom: 8 }}>
+                      <span style={{ color: '#FFD600', fontWeight: 600 }}>Premium Digital Access:</span> {recap.premiumDigitalAccess.accessName}
+                      {recap.premiumDigitalAccess.accessType && (
+                        <span> — {recap.premiumDigitalAccess.accessType}</span>
+                      )}
+                    </div>
+                  )}
+                  {recap.premiumPhysicalAccess && (
+                    <div style={{ marginBottom: 8 }}>
+                      <span style={{ color: '#FFD600', fontWeight: 600 }}>Premium Physical Access:</span> {recap.premiumPhysicalAccess.accessName}
+                      <div style={{ fontSize: 14, color: '#aaa' }}>
+                        {recap.premiumPhysicalAccess.eventLocation} — {recap.premiumPhysicalAccess.eventDate}{recap.premiumPhysicalAccess.eventTime ? ` at ${recap.premiumPhysicalAccess.eventTime}` : ''}
+                      </div>
                     </div>
                   )}
                 </div>

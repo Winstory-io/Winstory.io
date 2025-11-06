@@ -5,11 +5,6 @@
       "static/chunks/main-app.js",
       "static/chunks/app/layout.js"
     ],
-    "/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/page.js"
-    ],
     "/welcome/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
@@ -30,47 +25,35 @@
       "static/chunks/main-app.js",
       "static/chunks/app/creation/youare/page.js"
     ],
-    "/creation/b2c/login/page": [
+    "/creation/individual/login/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/creation/b2c/login/page.js"
+      "static/chunks/app/creation/individual/login/page.js"
     ],
-    "/creation/b2c/yourinformations/page": [
+    "/creation/individual/yourwinstory/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/creation/b2c/yourinformations/page.js"
+      "static/chunks/app/creation/individual/yourwinstory/page.js"
     ],
-    "/creation/b2c/yourwinstory/page": [
+    "/creation/individual/yourfilm/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/creation/b2c/yourwinstory/page.js"
+      "static/chunks/app/creation/individual/yourfilm/page.js"
     ],
-    "/creation/b2c/yourfilm/page": [
+    "/creation/individual/yourcompletions/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/creation/b2c/yourfilm/page.js"
+      "static/chunks/app/creation/individual/yourcompletions/page.js"
     ],
-    "/creation/b2c/rewardsornot/page": [
+    "/creation/individual/recap/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/creation/b2c/rewardsornot/page.js"
+      "static/chunks/app/creation/individual/recap/page.js"
     ],
-    "/creation/b2c/standardrewards/page": [
+    "/api/s3/upload/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/css/app/creation/b2c/standardrewards/page.css",
-      "static/chunks/app/creation/b2c/standardrewards/page.js"
-    ],
-    "/creation/b2c/premiumrewards/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/css/app/creation/b2c/premiumrewards/page.css",
-      "static/chunks/app/creation/b2c/premiumrewards/page.js"
-    ],
-    "/creation/b2c/recap/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/creation/b2c/recap/page.js"
+      "static/chunks/app/api/s3/upload/route.js"
     ],
     "/api/campaigns/create/route": [
       "static/chunks/webpack.js",
@@ -82,10 +65,15 @@
       "static/chunks/main-app.js",
       "static/chunks/app/api/xp/award-campaign-creation/route.js"
     ],
-    "/creation/b2c/mint/page": [
+    "/creation/individual/mint/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/creation/b2c/mint/page.js"
+      "static/chunks/app/creation/individual/mint/page.js"
+    ],
+    "/api/campaigns/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/campaigns/route.js"
     ]
   }
 }
