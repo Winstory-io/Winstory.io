@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from 'react';
+import { useActiveAccount } from 'thirdweb/react';
 import DevControls from '@/components/DevControls';
 import { TextModal, VideoModal } from '@/components/CampaignModals';
 
@@ -576,6 +577,7 @@ interface VCProps {
 }
 
 export default function ValidatedCampaignDashboard({ forceValidated, onForceValidated, campaignId, creatorType }: VCProps) {
+	const account = useActiveAccount();
 	const [tab, setTab] = useState<TabKey>('mint');
 	const [objective, setObjective] = useState<number>(200);
 	const [remainingHours, setRemainingHours] = useState<number>(168);
@@ -594,6 +596,12 @@ export default function ValidatedCampaignDashboard({ forceValidated, onForceVali
 	const [shortLinkLoading, setShortLinkLoading] = useState(false);
 	const [shortLinkError, setShortLinkError] = useState<string | null>(null);
 	const [copied, setCopied] = useState(false);
+	
+	// Clicks history state
+	const [showClicksHistory, setShowClicksHistory] = useState(false);
+	const [clicksHistory, setClicksHistory] = useState<any[]>([]);
+	const [clicksStats, setClicksStats] = useState<any>(null);
+	const [clicksHistoryLoading, setClicksHistoryLoading] = useState(false);
 	
 	// Pricing controls - MINT Community to Company is always 50% of MINT Price
 	const [mintPrice, setMintPrice] = useState<number>(25);
@@ -652,6 +660,32 @@ export default function ValidatedCampaignDashboard({ forceValidated, onForceVali
 				console.error('Failed to copy:', err);
 			}
 		}
+	};
+
+	// Fetch clicks history
+	const fetchClicksHistory = async () => {
+		if (!campaignId || !account?.address) return;
+		
+		setClicksHistoryLoading(true);
+		try {
+			const response = await fetch(`/api/campaigns/short-link/clicks?campaignId=${campaignId}&walletAddress=${account.address}`);
+			const data = await response.json();
+			
+			if (data.success) {
+				setClicksHistory(data.clicks || []);
+				setClicksStats(data.stats || null);
+			}
+		} catch (err) {
+			console.error('Error fetching clicks history:', err);
+		} finally {
+			setClicksHistoryLoading(false);
+		}
+	};
+
+	// Open clicks history modal
+	const handleShowClicksHistory = () => {
+		setShowClicksHistory(true);
+		fetchClicksHistory();
 	};
 
 	useEffect(() => {
@@ -967,11 +1001,28 @@ export default function ValidatedCampaignDashboard({ forceValidated, onForceVali
 											{copied ? '✓ Copié' : 'Copier'}
 										</button>
 									</div>
-									{shortLink.clicksCount > 0 && (
-										<span style={{ color: '#C0C0C0', fontSize: 11 }}>
-											{shortLink.clicksCount} clic{shortLink.clicksCount > 1 ? 's' : ''}
-										</span>
-									)}
+									<div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
+										{shortLink.clicksCount > 0 && (
+											<span style={{ color: '#C0C0C0', fontSize: 11 }}>
+												{shortLink.clicksCount} clic{shortLink.clicksCount > 1 ? 's' : ''}
+											</span>
+										)}
+										<button
+											onClick={handleShowClicksHistory}
+											style={{
+												background: 'transparent',
+												border: '1px solid #18C964',
+												color: '#18C964',
+												borderRadius: 4,
+												padding: '2px 8px',
+												fontSize: 10,
+												fontWeight: 600,
+												cursor: 'pointer'
+											}}
+										>
+											📊 Stats
+										</button>
+									</div>
 								</div>
 							</>
 						) : null}
@@ -1229,6 +1280,181 @@ export default function ValidatedCampaignDashboard({ forceValidated, onForceVali
 				validatedPoints={chartModalType === 'rewards' ? validatedChart : undefined}
 				currentValidatedPoint={chartModalType === 'rewards' ? currentValidatedPoint : undefined}
 			/>
+
+			{/* Clicks History Modal */}
+			{showClicksHistory && (
+				<div style={{
+					position: 'fixed',
+					top: 0,
+					left: 0,
+					right: 0,
+					bottom: 0,
+					backgroundColor: 'rgba(0, 0, 0, 0.95)',
+					zIndex: 1000,
+					display: 'flex',
+					flexDirection: 'column',
+					alignItems: 'center',
+					justifyContent: 'center',
+					padding: 20
+				}} onClick={() => setShowClicksHistory(false)}>
+					<div style={{
+						backgroundColor: '#000',
+						borderRadius: 16,
+						padding: 24,
+						maxWidth: '90vw',
+						maxHeight: '90vh',
+						border: '2px solid #18C964',
+						overflow: 'auto',
+						width: '100%',
+						maxWidth: 1200
+					}} onClick={e => e.stopPropagation()}>
+						<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+							<h3 style={{ color: '#18C964', fontSize: 24, fontWeight: 800, margin: 0 }}>
+								📊 Statistiques des clics
+							</h3>
+							<button
+								onClick={() => setShowClicksHistory(false)}
+								style={{
+									background: 'transparent',
+									border: '2px solid #FF4444',
+									color: '#FF4444',
+									borderRadius: 8,
+									padding: '8px 16px',
+									fontWeight: 800,
+									cursor: 'pointer'
+								}}
+							>
+								✕ Fermer
+							</button>
+						</div>
+
+						{clicksHistoryLoading ? (
+							<div style={{ color: '#18C964', textAlign: 'center', padding: 40 }}>
+								Chargement des statistiques...
+							</div>
+						) : clicksStats ? (
+							<>
+								{/* Statistiques générales */}
+								<div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 24 }}>
+									<div style={{ background: 'rgba(24, 201, 100, 0.1)', padding: 16, borderRadius: 8, border: '1px solid #18C964' }}>
+										<div style={{ color: '#C0C0C0', fontSize: 12, marginBottom: 4 }}>Total</div>
+										<div style={{ color: '#18C964', fontSize: 24, fontWeight: 800 }}>{clicksStats.total}</div>
+									</div>
+									<div style={{ background: 'rgba(24, 201, 100, 0.1)', padding: 16, borderRadius: 8, border: '1px solid #18C964' }}>
+										<div style={{ color: '#C0C0C0', fontSize: 12, marginBottom: 4 }}>Valides</div>
+										<div style={{ color: '#18C964', fontSize: 24, fontWeight: 800 }}>{clicksStats.valid}</div>
+									</div>
+									<div style={{ background: 'rgba(255, 68, 68, 0.1)', padding: 16, borderRadius: 8, border: '1px solid #FF4444' }}>
+										<div style={{ color: '#C0C0C0', fontSize: 12, marginBottom: 4 }}>Spam</div>
+										<div style={{ color: '#FF4444', fontSize: 24, fontWeight: 800 }}>{clicksStats.spam}</div>
+									</div>
+								</div>
+
+								{/* Statistiques par pays */}
+								{Object.keys(clicksStats.byCountry).length > 0 && (
+									<div style={{ marginBottom: 24 }}>
+										<h4 style={{ color: '#FFD600', fontSize: 18, fontWeight: 700, marginBottom: 12 }}>Par pays</h4>
+										<div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+											{Object.entries(clicksStats.byCountry)
+												.sort(([, a]: any, [, b]: any) => b - a)
+												.slice(0, 10)
+												.map(([country, count]: any) => (
+													<div key={country} style={{ 
+														background: 'rgba(255, 214, 0, 0.1)', 
+														padding: '8px 12px', 
+														borderRadius: 6, 
+														border: '1px solid #FFD600' 
+													}}>
+														<span style={{ color: '#FFD600', fontWeight: 600 }}>{country}: </span>
+														<span style={{ color: '#fff' }}>{count}</span>
+													</div>
+												))}
+										</div>
+									</div>
+								)}
+
+								{/* Statistiques par appareil */}
+								{Object.keys(clicksStats.byDevice).length > 0 && (
+									<div style={{ marginBottom: 24 }}>
+										<h4 style={{ color: '#FFD600', fontSize: 18, fontWeight: 700, marginBottom: 12 }}>Par appareil</h4>
+										<div style={{ display: 'flex', gap: 8 }}>
+											{Object.entries(clicksStats.byDevice).map(([device, count]: any) => (
+												<div key={device} style={{ 
+													background: 'rgba(255, 214, 0, 0.1)', 
+													padding: '8px 12px', 
+													borderRadius: 6, 
+													border: '1px solid #FFD600' 
+												}}>
+													<span style={{ color: '#FFD600', fontWeight: 600 }}>{device}: </span>
+													<span style={{ color: '#fff' }}>{count}</span>
+												</div>
+											))}
+										</div>
+									</div>
+								)}
+
+								{/* Historique détaillé */}
+								<div>
+									<h4 style={{ color: '#FFD600', fontSize: 18, fontWeight: 700, marginBottom: 12 }}>Historique détaillé</h4>
+									<div style={{ maxHeight: 400, overflow: 'auto' }}>
+										<table style={{ width: '100%', borderCollapse: 'collapse' }}>
+											<thead>
+												<tr style={{ borderBottom: '1px solid #333' }}>
+													<th style={{ color: '#18C964', padding: 12, textAlign: 'left', fontSize: 12 }}>Date/Heure</th>
+													<th style={{ color: '#18C964', padding: 12, textAlign: 'left', fontSize: 12 }}>Pays</th>
+													<th style={{ color: '#18C964', padding: 12, textAlign: 'left', fontSize: 12 }}>Appareil</th>
+													<th style={{ color: '#18C964', padding: 12, textAlign: 'left', fontSize: 12 }}>Référent</th>
+													<th style={{ color: '#18C964', padding: 12, textAlign: 'left', fontSize: 12 }}>Wallet</th>
+													<th style={{ color: '#18C964', padding: 12, textAlign: 'left', fontSize: 12 }}>Statut</th>
+												</tr>
+											</thead>
+											<tbody>
+												{clicksHistory.slice(0, 50).map((click: any) => (
+													<tr key={click.id} style={{ borderBottom: '1px solid #222' }}>
+														<td style={{ color: '#fff', padding: 12, fontSize: 12 }}>
+															{new Date(click.clicked_at).toLocaleString('fr-FR')}
+														</td>
+														<td style={{ color: '#fff', padding: 12, fontSize: 12 }}>
+															{click.country_code || '-'}
+														</td>
+														<td style={{ color: '#fff', padding: 12, fontSize: 12 }}>
+															{click.device_type || '-'}
+														</td>
+														<td style={{ color: '#fff', padding: 12, fontSize: 12 }}>
+															{click.referrer ? (() => {
+																try {
+																	const url = new URL(click.referrer);
+																	return url.hostname;
+																} catch {
+																	return 'Direct';
+																}
+															})() : 'Direct'}
+														</td>
+														<td style={{ color: '#fff', padding: 12, fontSize: 12, fontFamily: 'monospace' }}>
+															{click.wallet_address ? `${click.wallet_address.slice(0, 6)}...${click.wallet_address.slice(-4)}` : '-'}
+														</td>
+														<td style={{ padding: 12, fontSize: 12 }}>
+															{click.is_spam ? (
+																<span style={{ color: '#FF4444' }}>⚠️ Spam</span>
+															) : (
+																<span style={{ color: '#18C964' }}>✅ Valide</span>
+															)}
+														</td>
+													</tr>
+												))}
+											</tbody>
+										</table>
+									</div>
+								</div>
+							</>
+						) : (
+							<div style={{ color: '#C0C0C0', textAlign: 'center', padding: 40 }}>
+								Aucune statistique disponible pour le moment
+							</div>
+						)}
+					</div>
+				</div>
+			)}
 
 			{/* Dev controls pour ce dashboard */}
 			<DevControls 

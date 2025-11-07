@@ -48,9 +48,10 @@ export default function PhysicalExclusiveAccessConfig({ onClose }: { onClose: ()
     return '';
   };
 
-  // Validation de la date limite de claim
+  // Validation de la date limite de claim (seulement si eventDate est rempli)
   const validateClaimDeadline = (deadline: string) => {
-    if (!deadline || !eventDate) return '';
+    if (!deadline) return '';
+    if (!eventDate) return ''; // Pas de validation si pas d'event date
     const deadlineDate = new Date(deadline);
     const eventDateObj = new Date(eventDate);
     
@@ -66,9 +67,10 @@ export default function PhysicalExclusiveAccessConfig({ onClose }: { onClose: ()
     return '';
   };
 
-  // Validation de la date limite de livraison
+  // Validation de la date limite de livraison (seulement si eventDate est rempli)
   const validateDeliveryDeadline = (deadline: string) => {
-    if (!deadline || !eventDate) return '';
+    if (!deadline) return '';
+    if (!eventDate) return ''; // Pas de validation si pas d'event date
     const deadlineDate = new Date(deadline);
     const eventDateObj = new Date(eventDate);
     
@@ -144,7 +146,8 @@ export default function PhysicalExclusiveAccessConfig({ onClose }: { onClose: ()
   };
 
   const hasErrors = Object.values(errors).some(error => error !== '');
-  const canComplete = accessName && accessDescription && eventDate && eventTime && eventLocation && !hasErrors;
+  // Event Date n'est plus requis (peut être du merchandising sans date d'événement)
+  const canComplete = accessName && accessDescription && !hasErrors;
 
   const handleCompleteConfiguration = () => {
     if (!canComplete) return;
@@ -255,7 +258,7 @@ export default function PhysicalExclusiveAccessConfig({ onClose }: { onClose: ()
             <div style={{ display: 'flex', gap: 12 }}>
               <div style={{ flex: 1 }}>
                 <label style={{ display: 'block', color: '#FFD600', fontWeight: 600, marginBottom: 8 }}>
-                  Event Date <span style={{ color: '#FF2D2D', fontSize: 14 }}>*</span>
+                  Event Date <span style={{ color: '#888', fontSize: 12 }}>(optional - for events only)</span>
                 </label>
                 <input
                   type="date"
@@ -276,9 +279,11 @@ export default function PhysicalExclusiveAccessConfig({ onClose }: { onClose: ()
                 {errors.eventDate && (
                   <div style={{ color: '#FF2D2D', fontSize: 12, marginTop: 4 }}>{errors.eventDate}</div>
                 )}
-                <div style={{ color: '#888', fontSize: 12, marginTop: 4 }}>
-                  ⚠️ Event must be at least 7 days in the future
-                </div>
+                {eventDate && (
+                  <div style={{ color: '#888', fontSize: 12, marginTop: 4 }}>
+                    ⚠️ Event must be at least 7 days in the future
+                  </div>
+                )}
               </div>
               <div style={{ flex: 1 }}>
                 <label style={{ display: 'block', color: '#FFD600', fontWeight: 600, marginBottom: 8 }}>Event Time</label>
@@ -624,7 +629,8 @@ export default function PhysicalExclusiveAccessConfig({ onClose }: { onClose: ()
                       border: '2px solid #FFD600',
                       background: 'none',
                       color: '#fff',
-                      fontSize: 16
+                      fontSize: 16,
+                      boxSizing: 'border-box'
                     }}
                   >
                     <option value="Ethereum">Ethereum</option>
@@ -650,7 +656,8 @@ export default function PhysicalExclusiveAccessConfig({ onClose }: { onClose: ()
                       border: errors.contractAddress ? '2px solid #FF2D2D' : '2px solid #FFD600',
                       background: 'none',
                       color: '#fff',
-                      fontSize: 16
+                      fontSize: 16,
+                      boxSizing: 'border-box'
                     }}
                   />
                   {errors.contractAddress && (
@@ -674,7 +681,8 @@ export default function PhysicalExclusiveAccessConfig({ onClose }: { onClose: ()
                       border: '2px solid #FFD600',
                       background: 'none',
                       color: '#fff',
-                      fontSize: 16
+                      fontSize: 16,
+                      boxSizing: 'border-box'
                     }}
                   />
                 </div>

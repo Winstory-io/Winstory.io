@@ -1,6 +1,5 @@
 {
-  "/api/campaigns/route": "app/api/campaigns/route.js",
-  "/creation/individual/mint/page": "app/creation/individual/mint/page.js",
-  "/creation/individual/recap/page": "app/creation/individual/recap/page.js",
-  "/creation/individual/yourcompletions/page": "app/creation/individual/yourcompletions/page.js"
+  "/api/moderation/campaigns/route": "app/api/moderation/campaigns/route.js",
+  "/moderation/page": "app/moderation/page.js",
+  "/welcome/page": "app/welcome/page.js"
 }

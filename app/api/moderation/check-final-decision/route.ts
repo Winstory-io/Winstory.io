@@ -68,11 +68,12 @@ export async function POST(request: NextRequest) {
       if (votesError) {
         consoleLogs.push(`⚠️ Erreur lors de la récupération des votes: ${votesError.message}`);
       } else {
-        const validVotes = votesData?.filter(v => v.vote_decision === 'VALID').length || 0;
-        const refuseVotes = votesData?.filter(v => v.vote_decision === 'REFUSE').length || 0;
-        const stakeYes = votesData?.filter(v => v.vote_decision === 'VALID')
+        // Convertir approve/reject de la DB vers VALID/REFUSE pour la compatibilité
+        const validVotes = votesData?.filter(v => v.vote_decision === 'approve').length || 0;
+        const refuseVotes = votesData?.filter(v => v.vote_decision === 'reject').length || 0;
+        const stakeYes = votesData?.filter(v => v.vote_decision === 'approve')
           .reduce((sum, v) => sum + (Number(v.staked_amount) || 0), 0) || 0;
-        const stakeNo = votesData?.filter(v => v.vote_decision === 'REFUSE')
+        const stakeNo = votesData?.filter(v => v.vote_decision === 'reject')
           .reduce((sum, v) => sum + (Number(v.staked_amount) || 0), 0) || 0;
 
         moderationData = {
@@ -104,11 +105,12 @@ export async function POST(request: NextRequest) {
       if (votesError) {
         consoleLogs.push(`⚠️ Erreur lors de la récupération des votes: ${votesError.message}`);
       } else {
-        const validVotes = votesData?.filter(v => v.vote_decision === 'VALID').length || 0;
-        const refuseVotes = votesData?.filter(v => v.vote_decision === 'REFUSE').length || 0;
-        const stakeYes = votesData?.filter(v => v.vote_decision === 'VALID')
+        // Convertir approve/reject de la DB vers VALID/REFUSE pour la compatibilité
+        const validVotes = votesData?.filter(v => v.vote_decision === 'approve').length || 0;
+        const refuseVotes = votesData?.filter(v => v.vote_decision === 'reject').length || 0;
+        const stakeYes = votesData?.filter(v => v.vote_decision === 'approve')
           .reduce((sum, v) => sum + (Number(v.staked_amount) || 0), 0) || 0;
-        const stakeNo = votesData?.filter(v => v.vote_decision === 'REFUSE')
+        const stakeNo = votesData?.filter(v => v.vote_decision === 'reject')
           .reduce((sum, v) => sum + (Number(v.staked_amount) || 0), 0) || 0;
 
         moderationData = {

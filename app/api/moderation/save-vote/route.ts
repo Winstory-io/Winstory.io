@@ -75,12 +75,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Convertir VALID/REFUSE vers approve/reject pour correspondre à l'enum de la base de données
+    const dbVoteDecision = voteDecision === 'VALID' ? 'approve' : voteDecision === 'REFUSE' ? 'reject' : voteDecision;
+    
+    if (dbVoteDecision !== 'approve' && dbVoteDecision !== 'reject') {
+      const error = `voteDecision invalide après conversion: ${dbVoteDecision}. Doit être 'approve' ou 'reject'`;
+      consoleLogs.push(`❌ ${error}`);
+      return NextResponse.json(
+        { success: false, error, consoleLogs },
+        { status: 400 }
+      );
+    }
+
     // Prépare les données à sauvegarder
     const voteData: VoteToSave = {
       campaignId,
       moderatorWallet,
       completionId,
-      voteDecision,
+      voteDecision: dbVoteDecision as 'VALID' | 'REFUSE', // Garder le type pour la compatibilité, mais utiliser la valeur DB
       score,
       stakedAmount: stakedAmount || 0,
       stakeAgeDays: stakeAgeDays || 0,
@@ -120,13 +132,15 @@ export async function POST(request: NextRequest) {
         campaign_id: voteData.campaignId,
         moderator_wallet: voteData.moderatorWallet,
         completion_id: voteData.completionId ?? null,
-        vote_decision: voteData.voteDecision,
+        vote_decision: dbVoteDecision, // Utiliser la valeur convertie pour la base de données
         staked_amount: voteData.stakedAmount,
         vote_weight: vote_weight,
         transaction_hash: voteData.transactionHash ?? null,
         vote_timestamp: new Date(voteData.voteTimestamp).toISOString(),
         created_at: new Date().toISOString(),
       };
+      
+      consoleLogs.push(`🔄 [SAVE VOTE] Conversion: ${voteDecision} → ${dbVoteDecision}`);
 
       const { data, error } = await supabaseServer
         .from('moderation_votes')
@@ -136,15 +150,25 @@ export async function POST(request: NextRequest) {
 
       if (error) {
         consoleLogs.push(`❌ Supabase insert error: ${error.message}`);
+        consoleLogs.push(`❌ Error details: ${JSON.stringify(error)}`);
+        // Retourner une erreur si l'insertion échoue
+        return NextResponse.json(
+          { 
+            success: false, 
+            error: `Failed to save vote: ${error.message}`,
+            consoleLogs 
+          },
+          { status: 500 }
+        );
       } else {
         voteId = data?.id as string | undefined;
         consoleLogs.push(`✅ Vote inserted into moderation_votes with id: ${voteId}`);
       }
 
       // If this is a completion vote with a score or a refusal, persist granular score metrics
-      if (completionId && (typeof score === 'number' || voteDecision === 'REFUSE')) {
-        const scoreValue = voteDecision === 'REFUSE' ? 0 : Math.max(0, Math.min(100, Number(score ?? 0)));
-        const isRefused = voteDecision === 'REFUSE' || scoreValue === 0;
+      if (completionId && (typeof score === 'number' || dbVoteDecision === 'reject')) {
+        const scoreValue = dbVoteDecision === 'reject' ? 0 : Math.max(0, Math.min(100, Number(score ?? 0)));
+        const isRefused = dbVoteDecision === 'reject' || scoreValue === 0;
         const scoreInsert = {
           completion_id: completionId,
           completion_history_id: null, // optional if you track history; can be updated later
@@ -161,10 +185,24 @@ export async function POST(request: NextRequest) {
           .insert([scoreInsert]);
         if (scoreErr) {
           consoleLogs.push(`⚠️ Insert user_completion_moderator_scores failed: ${scoreErr.message}`);
+          // Ne pas faire échouer le vote si l'insertion du score échoue, mais logger l'erreur
+          // Le vote principal a déjà été sauvegardé avec succès
         } else {
           consoleLogs.push('✅ Stored completion score metrics');
         }
       }
+    } else {
+      // Si Supabase n'est pas configuré, retourner une erreur
+      const error = 'Supabase server client is not configured';
+      consoleLogs.push(`❌ ${error}`);
+      return NextResponse.json(
+        { 
+          success: false, 
+          error,
+          consoleLogs 
+        },
+        { status: 500 }
+      );
     }
 
     // Logs détaillés pour le debugging
@@ -182,24 +220,6 @@ export async function POST(request: NextRequest) {
       voteData,
       timestamp: new Date().toISOString()
     });
-
-    // TODO: Implémenter la vraie logique de sauvegarde avec Prisma/Supabase
-    // Exemple de requête SQL qui devrait être exécutée :
-    /*
-    INSERT INTO moderation_votes (
-      id,
-      campaign_id,
-      moderator_wallet,
-      completion_id,
-      vote_decision,
-      staked_amount,
-      vote_weight,
-      vote_timestamp,
-      created_at
-    ) VALUES (
-      $1, $2, $3, $4, $5, $6, $7, $8, NOW()
-    );
-    */
 
     const response: SaveVoteResponse = {
       success: true,

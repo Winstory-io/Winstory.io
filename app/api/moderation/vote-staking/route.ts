@@ -172,6 +172,31 @@ export async function POST(request: NextRequest) {
 
       if (saveResponse.ok) {
         const saveResult = await saveResponse.json();
+        
+        // Vérifier si la sauvegarde a réellement réussi
+        if (!saveResult.success) {
+          const error = saveResult.error || 'Failed to save vote';
+          consoleLogs.push(`❌ Vote save failed: ${error}`);
+          consoleLogs.push(`⚠️ Error during save: ${saveResponse.status}`);
+          
+          // Display save logs même en cas d'erreur
+          if (saveResult.consoleLogs) {
+            saveResult.consoleLogs.forEach((log: string) => {
+              consoleLogs.push(log);
+            });
+          }
+          
+          // Retourner une erreur si la sauvegarde a échoué
+          return NextResponse.json(
+            { 
+              success: false, 
+              error: `Failed to save vote: ${error}`,
+              consoleLogs 
+            },
+            { status: 500 }
+          );
+        }
+        
         consoleLogs.push(`✅ Vote saved successfully: ${saveResult.voteId}`);
         
         // Display save logs
@@ -234,7 +259,33 @@ export async function POST(request: NextRequest) {
         }
 
       } else {
-        consoleLogs.push(`⚠️ Error during save: ${saveResponse.status}`);
+        const errorText = await saveResponse.text();
+        let errorData: any = {};
+        try {
+          errorData = JSON.parse(errorText);
+        } catch {
+          errorData = { error: errorText || `HTTP ${saveResponse.status}` };
+        }
+        
+        consoleLogs.push(`❌ Error during save: ${saveResponse.status}`);
+        consoleLogs.push(`❌ Error details: ${errorData.error || 'Unknown error'}`);
+        
+        // Display save logs même en cas d'erreur
+        if (errorData.consoleLogs) {
+          errorData.consoleLogs.forEach((log: string) => {
+            consoleLogs.push(log);
+          });
+        }
+        
+        // Retourner une erreur si la sauvegarde a échoué
+        return NextResponse.json(
+          { 
+            success: false, 
+            error: `Failed to save vote: ${errorData.error || `HTTP ${saveResponse.status}`}`,
+            consoleLogs 
+          },
+          { status: saveResponse.status || 500 }
+        );
       }
     } catch (saveError) {
       consoleLogs.push(`⚠️ Error calling save API: ${saveError}`);

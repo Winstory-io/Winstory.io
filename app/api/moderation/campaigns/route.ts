@@ -143,18 +143,26 @@ export async function GET(request: NextRequest) {
 
     // Exclure les campagnes déjà modérées par ce modérateur
     if (moderatorWallet && filteredCampaigns.length > 0) {
+      const campaignIds = filteredCampaigns.map((c: any) => c.id);
+      
+      // Vérifier les votes sur campaign_id (pour les INITIAL et COMPLETION)
+      // Note: Pour les COMPLETION, chaque complétion est une campagne différente,
+      // donc vérifier campaign_id suffit (pas besoin de vérifier completion_id séparément)
       const { data: existingVotes, error: votesError } = await supabase
         .from('moderation_votes')
         .select('campaign_id')
         .eq('moderator_wallet', moderatorWallet.toLowerCase())
-        .in('campaign_id', filteredCampaigns.map((c: any) => c.id));
+        .in('campaign_id', campaignIds);
 
       if (!votesError && existingVotes) {
+        // Créer un Set des campaign_id déjà votés
         const votedCampaignIds = new Set(existingVotes.map((v: any) => v.campaign_id));
         const beforeCount = filteredCampaigns.length;
         filteredCampaigns = filteredCampaigns.filter((campaign: any) => !votedCampaignIds.has(campaign.id));
+        
         if (DEBUG) {
           console.log(`🚫 [MODERATION API] Excluded ${beforeCount - filteredCampaigns.length} campaigns already moderated by ${moderatorWallet}`);
+          console.log(`🚫 [MODERATION API] Voted campaign IDs:`, Array.from(votedCampaignIds));
         }
       } else if (votesError) {
         console.error('⚠️ [MODERATION API] Error checking existing votes:', votesError);

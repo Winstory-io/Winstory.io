@@ -54,8 +54,9 @@ export async function GET(request: NextRequest) {
     // Aggregate simple metrics for analysis
     const metrics = {
       totalVotes: votes?.length ?? 0,
-      validCount: votes?.filter(v => v.vote_decision === 'VALID').length ?? 0,
-      refuseCount: votes?.filter(v => v.vote_decision === 'REFUSE').length ?? 0,
+      // Convertir approve/reject de la DB vers VALID/REFUSE pour la compatibilité
+      validCount: votes?.filter(v => v.vote_decision === 'approve').length ?? 0,
+      refuseCount: votes?.filter(v => v.vote_decision === 'reject').length ?? 0,
       avgWeight: votes && votes.length > 0 ? Number((votes.reduce((a, v) => a + (Number(v.vote_weight) || 0), 0) / votes.length).toFixed(3)) : 0,
     };
 

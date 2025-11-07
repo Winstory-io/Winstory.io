@@ -204,7 +204,9 @@ const ModerationPageContent = () => {
     refreshData,
     setCurrentSession,
     hasAlreadyVoted,
-    subTabCounts
+    subTabCounts,
+    updateSubTabCounts,
+    decrementSubTabCount
   } = useModeration();
 
   // Utiliser le hook pour générer une presigned URL si nécessaire (appelé au niveau supérieur)
@@ -334,11 +336,24 @@ const ModerationPageContent = () => {
       setIsLoadingCampaign(true);
       
       // Laisser le hook useModeration gérer le chargement
-      fetchCampaignById(campaignId).finally(() => {
+      fetchCampaignById(campaignId).then((session) => {
+        // Si la campagne n'a pas pu être chargée (déjà votée ou filtrée), charger la suivante
+        if (!session) {
+          console.log('⚠️ [MODERATION PAGE] Campaign from URL not available, loading next available...');
+          // Charger la première campagne disponible pour le type/sous-type actuel
+          loadCampaignForCriteria(activeTab, activeSubTab).then((nextSession) => {
+            if (nextSession) {
+              window.history.replaceState({}, '', `/moderation?campaignId=${nextSession.campaign.id}&type=${activeTab}&subtype=${activeSubTab}`);
+            } else {
+              window.history.replaceState({}, '', `/moderation?type=${activeTab}&subtype=${activeSubTab}`);
+            }
+          });
+        }
+      }).finally(() => {
         setIsLoadingCampaign(false);
       });
     }
-  }, [campaignId, address, currentSession, fetchCampaignById]);
+  }, [campaignId, address, currentSession, fetchCampaignById, loadCampaignForCriteria, activeTab, activeSubTab]);
 
   // Fonction pour charger automatiquement la première campagne disponible
   const loadFirstAvailableCampaign = async () => {
@@ -466,19 +481,34 @@ const ModerationPageContent = () => {
   const goToNextAvailable = useCallback(async () => {
     // Charger immédiatement un autre contenu disponible dans le même onglet/sous-onglet
     try {
+      console.log('🔄 [GO TO NEXT] Loading next available campaign...');
       setIsLoadingCampaign(true);
+      
+      // Rafraîchir les compteurs en appelant l'API avec les mêmes filtres que loadCampaignForCriteria
+      // Cela garantit que les compteurs correspondent exactement aux campagnes réellement disponibles
+      console.log('🔄 [GO TO NEXT] Updating notification counts...');
+      await updateSubTabCounts();
+      
+      // Charger la prochaine campagne disponible
       const session = await loadCampaignForCriteria(activeTab, activeSubTab);
       if (session) {
+        console.log('✅ [GO TO NEXT] Next campaign loaded:', session.campaign.title);
+        // Mettre à jour l'URL et la session est déjà mise à jour par fetchCampaignById
         window.history.replaceState({}, '', `/moderation?campaignId=${session.campaign.id}&type=${activeTab}&subtype=${activeSubTab}`);
       } else {
-        // Sinon, effacer la session et laisser l’écran d’attente
+        console.log('⚠️ [GO TO NEXT] No more campaigns available');
+        // Sinon, effacer la session et laisser l'écran d'attente
         setCurrentSession(null);
         window.history.replaceState({}, '', `/moderation?type=${activeTab}&subtype=${activeSubTab}`);
       }
+    } catch (error) {
+      console.error('❌ [GO TO NEXT] Error loading next campaign:', error);
+      setCurrentSession(null);
+      window.history.replaceState({}, '', `/moderation?type=${activeTab}&subtype=${activeSubTab}`);
     } finally {
       setIsLoadingCampaign(false);
     }
-  }, [activeTab, activeSubTab, loadCampaignForCriteria, setCurrentSession]);
+  }, [activeTab, activeSubTab, loadCampaignForCriteria, setCurrentSession, fetchAvailableCampaigns, updateSubTabCounts]);
 
   const handleInitialValid = async () => {
     if (!currentSession) return;
@@ -502,10 +532,15 @@ const ModerationPageContent = () => {
       
       if (success) {
         console.log('✅ [INITIAL VALID] Initial content validated successfully');
-        // Automatically go to next content
+        // Décrémenter immédiatement le compteur pour un feedback instantané
+        decrementSubTabCount('initial', activeSubTab);
+        // Automatically go to next content immediately
         await goToNextAvailable();
       } else {
         console.error('❌ [INITIAL VALID] Failed to validate initial content');
+        // Même en cas d'échec, essayer de charger le suivant si possible
+        console.log('🔄 [INITIAL VALID] Attempting to load next campaign anyway...');
+        await goToNextAvailable();
       }
     } catch (error) {
       console.error('❌ [INITIAL VALID] Error during validation:', error);
@@ -534,13 +569,92 @@ const ModerationPageContent = () => {
       
       if (success) {
         console.log('✅ [COMPLETION VALID] Completion validated successfully');
-        // Open scoring if needed handled by ModerationButtons; here we auto-advance after vote or score
+        // Décrémenter immédiatement le compteur pour un feedback instantané
+        decrementSubTabCount('completion', activeSubTab);
+        // Automatically go to next content immediately
         await goToNextAvailable();
       } else {
         console.error('❌ [COMPLETION VALID] Failed to validate completion');
+        // Même en cas d'échec, essayer de charger le suivant si possible
+        console.log('🔄 [COMPLETION VALID] Attempting to load next campaign anyway...');
+        await goToNextAvailable();
       }
     } catch (error) {
       console.error('❌ [COMPLETION VALID] Error during validation:', error);
+    }
+  };
+
+  const handleInitialRefuse = async () => {
+    if (!currentSession) {
+      console.error('❌ [INITIAL REFUSE] No current session');
+      return;
+    }
+    
+    try {
+      console.log('🔍 [INITIAL REFUSE] Starting refusal:', {
+        campaignId: currentSession.campaignId,
+        campaignType: currentSession.campaign?.type,
+        stakerData: stakerData ? {
+          stakedAmount: stakerData.stakedAmount,
+          stakeAgeDays: stakerData.stakeAgeDays,
+          moderatorXP: stakerData.moderatorXP,
+          isEligible: stakerData.isEligible
+        } : null
+      });
+      
+      console.log('📤 [INITIAL REFUSE] Calling submitModerationDecision...');
+      const success = await submitModerationDecision(
+        'refuse', 
+        'creation',
+        undefined, // No score for refusals
+        stakerData ? {
+          stakedAmount: stakerData.stakedAmount,
+          stakeAgeDays: stakerData.stakeAgeDays,
+          moderatorXP: stakerData.moderatorXP
+        } : undefined
+      );
+      
+      console.log('📥 [INITIAL REFUSE] submitModerationDecision returned:', success);
+      console.log('📥 [INITIAL REFUSE] success type:', typeof success);
+      console.log('📥 [INITIAL REFUSE] success value:', success);
+      
+      if (success) {
+        console.log('✅ [INITIAL REFUSE] Initial content refused successfully');
+        // Décrémenter immédiatement le compteur pour un feedback instantané
+        decrementSubTabCount('initial', activeSubTab);
+        // Automatically go to next content immediately
+        await goToNextAvailable();
+      } else {
+        console.error('❌ [INITIAL REFUSE] Failed to refuse initial content');
+        console.error('❌ [INITIAL REFUSE] Check the network tab and console logs above for details');
+        // Même en cas d'échec, essayer de charger le suivant si possible
+        console.log('🔄 [INITIAL REFUSE] Attempting to load next campaign anyway...');
+        await goToNextAvailable();
+        
+        // Vérifier si c'est un problème de vote déjà enregistré
+        const wallet = address?.address || '';
+        const storageKey = `winstory_moderation_voted_${wallet}`;
+        try {
+          const votedData = localStorage.getItem(storageKey);
+          if (votedData) {
+            const votedIds = JSON.parse(votedData);
+            if (votedIds.includes(currentSession.campaignId)) {
+              alert('Ce contenu a déjà été modéré.\n\nSi vous pensez que c\'est une erreur, le système va vérifier dans la base de données et autoriser le vote si nécessaire.\n\nVeuillez réessayer.');
+              return;
+            }
+          }
+        } catch (e) {
+          // Ignorer les erreurs de parsing
+        }
+        
+        // Afficher un message d'erreur à l'utilisateur avec plus de détails
+        alert('Erreur lors du refus de la création initiale.\n\nVeuillez:\n1. Ouvrir la console du navigateur (F12)\n2. Vérifier les logs précédents\n3. Vérifier l\'onglet Network pour voir la réponse de l\'API\n4. Réessayer si le problème persiste');
+      }
+    } catch (error) {
+      console.error('❌ [INITIAL REFUSE] Error during refusal:', error);
+      console.error('❌ [INITIAL REFUSE] Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+      // Afficher un message d'erreur à l'utilisateur
+      alert(`Erreur lors du refus: ${error instanceof Error ? error.message : 'Erreur inconnue'}\n\nVérifiez la console pour plus de détails.`);
     }
   };
 
@@ -566,12 +680,20 @@ const ModerationPageContent = () => {
       
       if (success) {
         console.log('✅ [COMPLETION REFUSE] Completion refused successfully');
+        // Décrémenter immédiatement le compteur pour un feedback instantané
+        decrementSubTabCount('completion', activeSubTab);
+        // Automatically go to next content immediately
         await goToNextAvailable();
       } else {
         console.error('❌ [COMPLETION REFUSE] Failed to refuse completion');
+        // Même en cas d'échec, essayer de charger le suivant si possible
+        console.log('🔄 [COMPLETION REFUSE] Attempting to load next campaign anyway...');
+        await goToNextAvailable();
       }
     } catch (error) {
       console.error('❌ [COMPLETION REFUSE] Error during refusal:', error);
+      // Afficher un message d'erreur à l'utilisateur
+      alert(`Erreur lors du refus: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
     }
   };
 
@@ -604,9 +726,15 @@ const ModerationPageContent = () => {
       if (success) {
         console.log('✅ [COMPLETION SCORE] Score submitted successfully:', score);
         setShowScoringModal(false);
+        // Décrémenter immédiatement le compteur pour un feedback instantané
+        decrementSubTabCount('completion', activeSubTab);
+        // Automatically go to next content immediately
         await goToNextAvailable();
       } else {
         console.error('❌ [COMPLETION SCORE] Failed to submit score:', score);
+        // Même en cas d'échec, essayer de charger le suivant si possible
+        console.log('🔄 [COMPLETION SCORE] Attempting to load next campaign anyway...');
+        await goToNextAvailable();
       }
     } catch (error) {
       console.error('❌ [COMPLETION SCORE] Error during submission:', error);
@@ -944,7 +1072,7 @@ const ModerationPageContent = () => {
               <div className={styles.videoSection} style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                 {(() => {
                   // Utiliser la presigned URL si disponible, sinon l'URL originale
-                  const originalVideoUrl = campaign?.content?.videoUrl || campaign?.content?.video_url;
+                  const originalVideoUrl = campaign?.content?.videoUrl;
                   const finalVideoUrl = s3VideoUrl || originalVideoUrl;
                   
                   console.log('🎬 [VIDEO] Video URL check (first instance):', {
@@ -1159,7 +1287,7 @@ const ModerationPageContent = () => {
                 activeSubTab={activeSubTab}
                 userType={getUICreatorType(campaign)}
                 onValid={activeTab === 'initial' ? handleInitialValid : handleCompletionValid}
-                onRefuse={activeTab === 'initial' ? handleCompletionRefuse : handleCompletionRefuse}
+                onRefuse={activeTab === 'initial' ? handleInitialRefuse : handleCompletionRefuse}
                 onValidWithScore={handleCompletionScore}
                 usedScores={moderatorUsedScores}
               />
@@ -1608,7 +1736,7 @@ const ModerationPageContent = () => {
         <div className={styles.videoSection} style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
           {(() => {
             // Utiliser la même presigned URL générée au niveau supérieur
-            const originalVideoUrl2 = campaign?.content?.videoUrl || (campaign as any)?.content?.video_url;
+            const originalVideoUrl2 = campaign?.content?.videoUrl;
             const finalVideoUrl2 = s3VideoUrl || originalVideoUrl2;
 
             console.log('🎬 [VIDEO] Video URL check (second instance):', {
@@ -1805,7 +1933,7 @@ const ModerationPageContent = () => {
             activeSubTab={activeSubTab}
             userType={getUICreatorType(campaign)}
             onValid={activeTab === 'initial' ? handleInitialValid : handleCompletionValid}
-            onRefuse={activeTab === 'initial' ? handleCompletionRefuse : handleCompletionRefuse}
+            onRefuse={activeTab === 'initial' ? handleInitialRefuse : handleCompletionRefuse}
             onValidWithScore={handleCompletionScore}
             usedScores={moderatorUsedScores}
           />

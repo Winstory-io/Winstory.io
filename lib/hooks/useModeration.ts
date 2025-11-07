@@ -143,8 +143,21 @@ export const useModeration = () => {
       const shouldUpdate = lastSetKeyRef.current !== fetchKey || lastSetSnapshotRef.current !== snapshot;
 
       if (shouldUpdate) {
-        setAllCampaigns(transformedCampaigns);
-        setAvailableCampaigns(transformedCampaigns);
+        // Si on charge sans filtres (pour les compteurs), remplacer complètement allCampaigns
+        // car ces campagnes sont déjà filtrées par l'API (excluent les déjà votées, etc.)
+        if (!type && !creatorType) {
+          // Chargement complet : remplacer complètement les deux listes
+          // Ces campagnes sont déjà filtrées par l'API, donc elles sont toutes disponibles
+          setAllCampaigns(transformedCampaigns);
+          setAvailableCampaigns(transformedCampaigns);
+          if (DEBUG) console.log('✅ [FETCH CAMPAIGNS] Replaced all campaigns (no filters):', transformedCampaigns.length);
+        } else {
+          // Chargement filtré : mettre à jour seulement availableCampaigns
+          // Ne pas toucher à allCampaigns car elle doit contenir toutes les campagnes disponibles
+          // (chargées sans filtres pour avoir les compteurs corrects)
+          setAvailableCampaigns(transformedCampaigns);
+          if (DEBUG) console.log(`✅ [FETCH CAMPAIGNS] Updated filtered campaigns: ${transformedCampaigns.length}`);
+        }
         lastSetKeyRef.current = fetchKey;
         lastSetSnapshotRef.current = snapshot;
       } else {
@@ -226,6 +239,33 @@ export const useModeration = () => {
         console.log('⚠️ [FETCH CAMPAIGN BY ID] Detected session ID, extracted campaign ID:', actualCampaignId);
       }
 
+      // Vérifier d'abord si cette campagne a déjà été votée par ce modérateur
+      if (account?.address) {
+        try {
+          const checkVoteResponse = await fetch(
+            `/api/moderation/moderator-votes?wallet=${account.address}&campaignId=${actualCampaignId}`
+          );
+          
+          if (checkVoteResponse.ok) {
+            const checkResult = await checkVoteResponse.json();
+            const existingVotes = checkResult.votes || [];
+            
+            if (existingVotes.length > 0) {
+              console.warn(`⚠️ [FETCH CAMPAIGN BY ID] Campaign ${actualCampaignId} has already been voted on by this moderator`);
+              console.warn(`⚠️ [FETCH CAMPAIGN BY ID] Found ${existingVotes.length} existing vote(s)`);
+              
+              // Ne pas charger cette campagne, retourner null pour déclencher le chargement d'une autre
+              setError(`This campaign has already been moderated by you. Loading next available campaign...`);
+              setIsLoading(false);
+              return null;
+            }
+          }
+        } catch (checkError) {
+          console.warn('⚠️ [FETCH CAMPAIGN BY ID] Error checking existing votes:', checkError);
+          // Continuer même si la vérification échoue
+        }
+      }
+
       // Essayer d'abord de récupérer depuis les campagnes déjà chargées
       const cachedCampaign = availableCampaigns.find(c => c.id === actualCampaignId) || 
                             allCampaigns.find(c => c.id === actualCampaignId);
@@ -281,12 +321,15 @@ export const useModeration = () => {
           setIsLoading(false);
           return session;
         } else {
-          // La campagne n'a pas été trouvée - peut être filtrée (modérateur = créateur/compléteur) ou n'existe pas
+          // La campagne n'a pas été trouvée - peut être filtrée (modérateur = créateur/compléteur, déjà votée, ou n'existe pas)
           console.warn(`⚠️ [FETCH CAMPAIGN BY ID] Campaign ${actualCampaignId} not found in ${campaigns.length} campaigns`);
-          console.warn(`⚠️ [FETCH CAMPAIGN BY ID] This campaign may have been filtered out because the moderator is the creator or completer`);
+          console.warn(`⚠️ [FETCH CAMPAIGN BY ID] This campaign may have been filtered out because:`);
+          console.warn(`   - The moderator is the creator or completer`);
+          console.warn(`   - The campaign has already been moderated by this moderator`);
+          console.warn(`   - The campaign does not exist`);
           
-          // Ne pas lancer d'erreur, mais plutôt retourner null et afficher un message d'erreur approprié
-          setError(`Campaign not available for moderation. This campaign may have been filtered because you are the creator or completer.`);
+          // Ne pas lancer d'erreur, mais plutôt retourner null pour permettre le chargement d'une autre campagne
+          setError(null); // Ne pas afficher d'erreur, juste charger la suivante
           setIsLoading(false);
           return null;
         }
@@ -365,9 +408,66 @@ export const useModeration = () => {
     const wallet = account?.address || '';
     const storageKey = `winstory_moderation_voted_${wallet}`;
     const votedSet = new Set<string>(votedContentIds);
+    
+    console.log('🔍 [MODERATION DECISION] Checking if already voted:', {
+      contentId,
+      wallet,
+      hasVoted: votedSet.has(contentId),
+      votedContentIds: Array.from(votedSet)
+    });
+    
     if (votedSet.has(contentId)) {
-      console.warn('⚠️ Vote déjà enregistré pour ce contenu par ce modérateur.');
-      return false;
+      console.warn('⚠️ [MODERATION DECISION] Vote marqué comme déjà enregistré dans le localStorage/state.');
+      console.warn('⚠️ [MODERATION DECISION] Vérification si le vote existe vraiment dans la base de données...');
+      
+      // Vérifier si le vote existe vraiment dans la base de données
+      try {
+        const checkResponse = await fetch(
+          `/api/moderation/moderator-votes?wallet=${wallet}&campaignId=${contentId}`
+        );
+        
+        if (checkResponse.ok) {
+          const checkResult = await checkResponse.json();
+          const existingVotes = checkResult.votes || [];
+          const hasRealVote = existingVotes.length > 0;
+          
+          console.log('🔍 [MODERATION DECISION] Vérification base de données:', {
+            hasRealVote,
+            votesCount: existingVotes.length,
+            votes: existingVotes
+          });
+          
+          if (hasRealVote) {
+            console.warn('✅ [MODERATION DECISION] Vote confirmé dans la base de données. Blocage du vote.');
+            console.warn('⚠️ [MODERATION DECISION] Content ID:', contentId);
+            console.warn('⚠️ [MODERATION DECISION] Moderator wallet:', wallet);
+            return false;
+          } else {
+            console.warn('⚠️ [MODERATION DECISION] Vote marqué localement mais absent de la base de données.');
+            console.warn('⚠️ [MODERATION DECISION] Nettoyage du localStorage et autorisation du vote...');
+            
+            // Nettoyer le localStorage et le state
+            votedSet.delete(contentId);
+            setVotedContentIds(votedSet);
+            try {
+              const serialized = JSON.stringify(Array.from(votedSet));
+              localStorage.setItem(storageKey, serialized);
+              console.log('✅ [MODERATION DECISION] localStorage nettoyé, vote autorisé');
+            } catch (e) {
+              console.warn('⚠️ [MODERATION DECISION] Erreur lors du nettoyage du localStorage:', e);
+            }
+            
+            // Continuer avec le vote
+          }
+        } else {
+          console.warn('⚠️ [MODERATION DECISION] Impossible de vérifier dans la base de données. Autorisation du vote par sécurité.');
+          // En cas d'erreur de vérification, autoriser le vote par sécurité
+        }
+      } catch (checkError) {
+        console.warn('⚠️ [MODERATION DECISION] Erreur lors de la vérification:', checkError);
+        console.warn('⚠️ [MODERATION DECISION] Autorisation du vote par sécurité.');
+        // En cas d'erreur, autoriser le vote par sécurité
+      }
     }
 
     try {
@@ -404,15 +504,39 @@ export const useModeration = () => {
         body: JSON.stringify(voteData),
       });
 
+      console.log('📡 [MODERATION DECISION] Response status:', response.status, response.statusText);
+      
       if (response.ok) {
         const result = await response.json();
+        // Vérifier si le vote a réellement réussi
+        if (!result.success) {
+          const errorMsg = result.error || 'Failed to register vote';
+          console.error('❌ [MODERATION DECISION] Vote registration failed:', errorMsg);
+          console.error('❌ [MODERATION DECISION] Full error response:', JSON.stringify(result, null, 2));
+          
+          // Display API logs même en cas d'erreur
+          if (result.consoleLogs && Array.isArray(result.consoleLogs)) {
+            console.error('📋 [MODERATION DECISION] API Console Logs (' + result.consoleLogs.length + ' logs):');
+            result.consoleLogs.forEach((log: string, index: number) => {
+              console.error(`  [${index + 1}]`, log);
+            });
+          } else {
+            console.warn('⚠️ [MODERATION DECISION] No console logs in response');
+          }
+          
+          return false;
+        }
+        
         console.log('✅ [MODERATION DECISION] Vote registered successfully:', result);
         
         // Display API logs
-        if (result.consoleLogs) {
-          result.consoleLogs.forEach((log: string) => {
-            console.log(log);
+        if (result.consoleLogs && Array.isArray(result.consoleLogs)) {
+          console.log('📋 [MODERATION DECISION] API Console Logs (' + result.consoleLogs.length + ' logs):');
+          result.consoleLogs.forEach((log: string, index: number) => {
+            console.log(`  [${index + 1}]`, log);
           });
+        } else {
+          console.warn('⚠️ [MODERATION DECISION] No console logs in successful response');
         }
 
         // Mettre à jour la session locale
@@ -475,13 +599,31 @@ export const useModeration = () => {
         
         return true;
       } else {
-        const errorData = await response.json();
-        console.error('❌ [MODERATION DECISION] API Error:', errorData);
+        console.error('❌ [MODERATION DECISION] HTTP Error:', response.status, response.statusText);
+        
+        let errorData: any = {};
+        try {
+          const errorText = await response.text();
+          console.error('❌ [MODERATION DECISION] Error response text:', errorText);
+          
+          try {
+            errorData = JSON.parse(errorText);
+            console.error('❌ [MODERATION DECISION] Parsed error data:', errorData);
+          } catch {
+            errorData = { error: errorText || `HTTP ${response.status}` };
+          }
+        } catch (parseError) {
+          console.error('❌ [MODERATION DECISION] Error parsing error response:', parseError);
+          errorData = { error: `HTTP ${response.status}: ${response.statusText}` };
+        }
+        
+        console.error('❌ [MODERATION DECISION] Full API Error:', errorData);
         
         // Display API error logs
         if (errorData.consoleLogs) {
+          console.error('📋 [MODERATION DECISION] API Error Console Logs:');
           errorData.consoleLogs.forEach((log: string) => {
-            console.error(log);
+            console.error('  ', log);
           });
         }
         
@@ -1001,33 +1143,81 @@ export const useModeration = () => {
     return session;
   }, [account, availableCampaigns, allCampaigns, fetchModeratorUsedScores]);
 
-  // Mettre à jour les compteurs à partir de toutes les campagnes (pour afficher aussi les non-sélectionnées)
+  // Mettre à jour les compteurs en appelant l'API avec les mêmes filtres que loadCampaignForCriteria
+  // Cela garantit que les compteurs correspondent exactement aux campagnes réellement disponibles
   useEffect(() => {
-    const all = allCampaigns && allCampaigns.length > 0 ? allCampaigns : (availableCampaigns || []);
-    const nextCounts = {
-      initial: {
-        'b2c-agencies': all.filter((c: any) => c.type === 'INITIAL' && c.creatorType === 'B2C_AGENCIES').length,
-        'individual-creators': all.filter((c: any) => c.type === 'INITIAL' && c.creatorType === 'INDIVIDUAL_CREATORS').length,
-      },
-      completion: {
-        'for-b2c': all.filter((c: any) => c.type === 'COMPLETION' && c.creatorType === 'FOR_B2C').length,
-        'for-individuals': all.filter((c: any) => c.type === 'COMPLETION' && c.creatorType === 'FOR_INDIVIDUALS').length,
+    if (!account?.address) {
+      // Réinitialiser les compteurs si pas de wallet
+      setSubTabCounts({ initial: { 'b2c-agencies': 0, 'individual-creators': 0 }, completion: { 'for-b2c': 0, 'for-individuals': 0 } });
+      return;
+    }
+    
+    let isMounted = true;
+    
+    const calculateCounts = async () => {
+      try {
+        // Appeler l'API avec les mêmes filtres que loadCampaignForCriteria pour chaque sous-onglet
+        const [initialB2C, initialIndividual, completionB2C, completionIndividual] = await Promise.all([
+          fetchAvailableCampaigns('INITIAL', 'B2C_AGENCIES'),
+          fetchAvailableCampaigns('INITIAL', 'INDIVIDUAL_CREATORS'),
+          fetchAvailableCampaigns('COMPLETION', 'FOR_B2C'),
+          fetchAvailableCampaigns('COMPLETION', 'FOR_INDIVIDUALS')
+        ]);
+        
+        if (!isMounted) return;
+        
+        const nextCounts = {
+          initial: {
+            'b2c-agencies': initialB2C?.length || 0,
+            'individual-creators': initialIndividual?.length || 0,
+          },
+          completion: {
+            'for-b2c': completionB2C?.length || 0,
+            'for-individuals': completionIndividual?.length || 0,
+          }
+        };
+        
+        console.log('📊 [SUB TAB COUNTS] Calculated exact counts from API:', nextCounts);
+        console.log('📊 [SUB TAB COUNTS] Breakdown:', {
+          'INITIAL_B2C_AGENCIES': initialB2C?.length || 0,
+          'INITIAL_INDIVIDUAL_CREATORS': initialIndividual?.length || 0,
+          'COMPLETION_FOR_B2C': completionB2C?.length || 0,
+          'COMPLETION_FOR_INDIVIDUALS': completionIndividual?.length || 0,
+        });
+        
+        // Mettre à jour les compteurs
+        setSubTabCounts(prev => {
+          const changed =
+            prev.initial['b2c-agencies'] !== nextCounts.initial['b2c-agencies'] ||
+            prev.initial['individual-creators'] !== nextCounts.initial['individual-creators'] ||
+            prev.completion['for-b2c'] !== nextCounts.completion['for-b2c'] ||
+            prev.completion['for-individuals'] !== nextCounts.completion['for-individuals'];
+          if (changed) {
+            console.log('🔄 [SUB TAB COUNTS] Counts changed, updating:', nextCounts);
+            return nextCounts;
+          }
+          return prev;
+        });
+      } catch (error) {
+        if (!isMounted) return;
+        console.error('❌ [SUB TAB COUNTS] Error calculating counts:', error);
       }
     };
-    // Éviter les mises à jour inutiles
-    const prev = subTabCounts;
-    const changed =
-      prev.initial['b2c-agencies'] !== nextCounts.initial['b2c-agencies'] ||
-      prev.initial['individual-creators'] !== nextCounts.initial['individual-creators'] ||
-      prev.completion['for-b2c'] !== nextCounts.completion['for-b2c'] ||
-      prev.completion['for-individuals'] !== nextCounts.completion['for-individuals'];
-    if (changed) setSubTabCounts(nextCounts);
-  }, [availableCampaigns, allCampaigns, subTabCounts]);
+    
+    // Calculer les compteurs au montage et après chaque changement de wallet
+    calculateCounts();
+    
+    return () => {
+      isMounted = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [account?.address]);
 
-  // Charger les campagnes disponibles au montage
+  // Charger les campagnes disponibles au montage (sans filtres pour avoir toutes les campagnes pour les compteurs)
   useEffect(() => {
     if (account?.address) {
-      console.log('🔄 [INIT] Loading available campaigns on mount...');
+      console.log('🔄 [INIT] Loading all available campaigns on mount (for counts)...');
+      // Charger sans filtres pour avoir toutes les campagnes disponibles pour calculer les compteurs
       fetchAvailableCampaigns();
     }
   }, [account?.address, fetchAvailableCampaigns]);
@@ -1057,6 +1247,60 @@ export const useModeration = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [account?.address, currentSession]);
 
+  // Fonction pour mettre à jour les compteurs manuellement
+  // Appelle l'API avec les mêmes filtres que loadCampaignForCriteria pour garantir la cohérence
+  const updateSubTabCounts = useCallback(async () => {
+    if (!account?.address) return;
+    
+    try {
+      // Appeler l'API avec les mêmes filtres que loadCampaignForCriteria pour chaque sous-onglet
+      const [initialB2C, initialIndividual, completionB2C, completionIndividual] = await Promise.all([
+        fetchAvailableCampaigns('INITIAL', 'B2C_AGENCIES'),
+        fetchAvailableCampaigns('INITIAL', 'INDIVIDUAL_CREATORS'),
+        fetchAvailableCampaigns('COMPLETION', 'FOR_B2C'),
+        fetchAvailableCampaigns('COMPLETION', 'FOR_INDIVIDUALS')
+      ]);
+      
+      const nextCounts = {
+        initial: {
+          'b2c-agencies': initialB2C?.length || 0,
+          'individual-creators': initialIndividual?.length || 0,
+        },
+        completion: {
+          'for-b2c': completionB2C?.length || 0,
+          'for-individuals': completionIndividual?.length || 0,
+        }
+      };
+      
+      setSubTabCounts(nextCounts);
+      console.log('🔄 [SUB TAB COUNTS] Updated exact counts from API:', nextCounts);
+    } catch (error) {
+      console.error('❌ [SUB TAB COUNTS] Error updating counts:', error);
+    }
+  }, [account?.address, fetchAvailableCampaigns]);
+
+  // Fonction pour décrémenter immédiatement le compteur d'un sous-onglet spécifique (feedback instantané)
+  const decrementSubTabCount = useCallback((tab: 'initial' | 'completion', subTab: string) => {
+    setSubTabCounts(prev => {
+      const newCounts = { ...prev };
+      if (tab === 'initial') {
+        if (subTab === 'b2c-agencies' && newCounts.initial['b2c-agencies'] > 0) {
+          newCounts.initial['b2c-agencies'] = Math.max(0, newCounts.initial['b2c-agencies'] - 1);
+        } else if (subTab === 'individual-creators' && newCounts.initial['individual-creators'] > 0) {
+          newCounts.initial['individual-creators'] = Math.max(0, newCounts.initial['individual-creators'] - 1);
+        }
+      } else if (tab === 'completion') {
+        if (subTab === 'for-b2c' && newCounts.completion['for-b2c'] > 0) {
+          newCounts.completion['for-b2c'] = Math.max(0, newCounts.completion['for-b2c'] - 1);
+        } else if (subTab === 'for-individuals' && newCounts.completion['for-individuals'] > 0) {
+          newCounts.completion['for-individuals'] = Math.max(0, newCounts.completion['for-individuals'] - 1);
+        }
+      }
+      console.log('📉 [SUB TAB COUNTS] Decremented count for', tab, subTab, ':', newCounts);
+      return newCounts;
+    });
+  }, []);
+
   return {
     currentSession,
     isLoading,
@@ -1075,6 +1319,8 @@ export const useModeration = () => {
     setCurrentSession,
     // Exposer infos pour UI
     hasAlreadyVoted: currentSession ? votedContentIds.has(currentSession.campaignId) : false,
-    subTabCounts
+    subTabCounts,
+    updateSubTabCounts, // Exposer la fonction pour mettre à jour les compteurs
+    decrementSubTabCount // Exposer la fonction pour décrémenter immédiatement un compteur
   };
 }; 

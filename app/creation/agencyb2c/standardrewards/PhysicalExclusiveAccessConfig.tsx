@@ -39,7 +39,8 @@ export default function AgencyB2CPhysicalExclusiveAccessConfig({ onClose }: { on
     }
   }, []);
 
-  const canConfirm = accessName && accessDescription && eventDate && eventLocation && contractAddress && tokenId;
+  // Event Date n'est plus requis (peut être du merchandising sans date d'événement)
+  const canConfirm = accessName && accessDescription && contractAddress && tokenId;
 
   const handleTokenIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -234,7 +235,9 @@ export default function AgencyB2CPhysicalExclusiveAccessConfig({ onClose }: { on
 
           {/* Event Date */}
           <div>
-            <label style={{ display: 'block', color: '#FFD600', fontWeight: 600, marginBottom: 8 }}>Event Date</label>
+            <label style={{ display: 'block', color: '#FFD600', fontWeight: 600, marginBottom: 8 }}>
+              Event Date <span style={{ color: '#888', fontSize: 12 }}>(optional - for events only)</span>
+            </label>
             <input
               type="datetime-local"
               value={eventDate}

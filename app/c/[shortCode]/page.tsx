@@ -2,13 +2,51 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { useActiveAccount } from 'thirdweb/react';
+
+interface GeolocationData {
+  countryCode?: string;
+  countryName?: string;
+  region?: string;
+  city?: string;
+  latitude?: number;
+  longitude?: number;
+}
 
 export default function ShortLinkRedirectPage() {
   const params = useParams();
   const router = useRouter();
+  const account = useActiveAccount();
   const shortCode = params.shortCode as string;
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [geolocation, setGeolocation] = useState<GeolocationData | null>(null);
+
+  // Récupérer la géolocalisation
+  useEffect(() => {
+    const fetchGeolocation = async () => {
+      try {
+        // Utiliser un service de géolocalisation gratuit (ipapi.co, ip-api.com, etc.)
+        const response = await fetch('https://ipapi.co/json/');
+        if (response.ok) {
+          const data = await response.json();
+          setGeolocation({
+            countryCode: data.country_code,
+            countryName: data.country_name,
+            region: data.region,
+            city: data.city,
+            latitude: data.latitude,
+            longitude: data.longitude
+          });
+        }
+      } catch (err) {
+        console.warn('Failed to fetch geolocation:', err);
+        // Continuer sans géolocalisation
+      }
+    };
+
+    fetchGeolocation();
+  }, []);
 
   useEffect(() => {
     if (!shortCode) {
@@ -30,11 +68,18 @@ export default function ShortLinkRedirectPage() {
         const data = await response.json();
         
         if (data.success && data.fullUrl) {
-          // Incrémenter le compteur de clics
-          await fetch(`/api/campaigns/short-link/redirect`, {
+          // Tracker le clic avec toutes les métriques
+          const referrer = typeof document !== 'undefined' ? document.referrer : null;
+          
+          await fetch(`/api/campaigns/short-link/track`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ shortCode })
+            body: JSON.stringify({ 
+              shortCode,
+              walletAddress: account?.address || null,
+              geolocation,
+              referrer
+            })
           });
 
           // Rediriger vers l'URL complète
@@ -59,8 +104,13 @@ export default function ShortLinkRedirectPage() {
       }
     };
 
-    fetchRedirect();
-  }, [shortCode, router]);
+    // Attendre un peu pour la géolocalisation, mais ne pas bloquer la redirection
+    const timeout = setTimeout(() => {
+      fetchRedirect();
+    }, 500); // Attendre 500ms max pour la géolocalisation
+
+    return () => clearTimeout(timeout);
+  }, [shortCode, router, account, geolocation]);
 
   if (loading) {
     return (
