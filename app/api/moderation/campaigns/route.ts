@@ -14,7 +14,9 @@ export async function GET(request: NextRequest) {
     const creatorType = searchParams.get('creatorType') as string | null;
     const moderatorWallet = searchParams.get('moderatorWallet') as string | null;
 
-    if (DEBUG) console.log('🔍 [MODERATION API] Fetching campaigns for moderation...', { type, creatorType, moderatorWallet });
+    // Toujours logger pour les nouveaux modérateurs (pour debug)
+    const shouldLog = DEBUG || moderatorWallet;
+    if (shouldLog) console.log('🔍 [MODERATION API] Fetching campaigns for moderation...', { type, creatorType, moderatorWallet });
 
     // Construire la requête Supabase
     let query = supabase
@@ -94,9 +96,11 @@ export async function GET(request: NextRequest) {
       const creatorTypeMap: Record<string, string> = {
         'individual-creators': 'INDIVIDUAL_CREATORS',
         'b2c-agencies': 'B2C_AGENCIES',
-        'for-b2c': 'FOR_B2C'
+        'for-b2c': 'FOR_B2C',
+        'for-individuals': 'FOR_INDIVIDUALS'
       };
       const dbCreatorType = creatorTypeMap[creatorType] || creatorType;
+      if (shouldLog) console.log(`🔄 [MODERATION API] Mapping creatorType: ${creatorType} -> ${dbCreatorType}`);
       query = query.eq('creator_type', dbCreatorType);
     }
 
@@ -106,18 +110,18 @@ export async function GET(request: NextRequest) {
       // Pour les campagnes COMPLETION : exclure celles complétées par le modérateur
       if (type === 'INITIAL') {
         // Exclure les campagnes où original_creator_wallet = moderatorWallet
-        query = query.neq('original_creator_wallet', moderatorWallet);
-        if (DEBUG) console.log('🚫 [MODERATION API] Filtering out INITIAL campaigns created by moderator:', moderatorWallet);
+        query = query.neq('original_creator_wallet', moderatorWallet.toLowerCase());
+        if (shouldLog) console.log('🚫 [MODERATION API] Filtering out INITIAL campaigns created by moderator:', moderatorWallet);
       } else if (type === 'COMPLETION') {
         // Exclure les campagnes où completer_wallet = moderatorWallet
-        query = query.neq('completer_wallet', moderatorWallet);
-        if (DEBUG) console.log('🚫 [MODERATION API] Filtering out COMPLETION campaigns completed by moderator:', moderatorWallet);
+        query = query.neq('completer_wallet', moderatorWallet.toLowerCase());
+        if (shouldLog) console.log('🚫 [MODERATION API] Filtering out COMPLETION campaigns completed by moderator:', moderatorWallet);
       } else {
         // Si pas de type spécifié, exclure les deux cas avec une condition OR
         // Utiliser .or() pour exclure si original_creator_wallet OU completer_wallet correspond
         // La syntaxe Supabase : .not('original_creator_wallet', 'eq', moderatorWallet).not('completer_wallet', 'eq', moderatorWallet)
         // Mais cela ne fonctionne pas directement, donc on filtre après récupération
-        if (DEBUG) console.log('🚫 [MODERATION API] Will filter out campaigns created or completed by moderator:', moderatorWallet);
+        if (shouldLog) console.log('🚫 [MODERATION API] Will filter out campaigns created or completed by moderator:', moderatorWallet);
       }
     }
 
@@ -132,27 +136,50 @@ export async function GET(request: NextRequest) {
     // (pour exclure celles où le modérateur est le créateur OU le compléteur)
     let filteredCampaigns = campaigns || [];
     if (moderatorWallet && !type) {
+      const beforeFilter = filteredCampaigns.length;
       filteredCampaigns = filteredCampaigns.filter((campaign: any) => {
         const isCreator = campaign.original_creator_wallet?.toLowerCase() === moderatorWallet.toLowerCase();
         const isCompleter = campaign.completer_wallet?.toLowerCase() === moderatorWallet.toLowerCase();
         // Exclure si le modérateur est le créateur OU le compléteur
         return !isCreator && !isCompleter;
       });
-      if (DEBUG) console.log(`🚫 [MODERATION API] Filtered ${(campaigns || []).length - filteredCampaigns.length} campaigns where moderator is creator or completer`);
+        if (shouldLog) {
+          console.log(`🚫 [MODERATION API] Filtered ${beforeFilter - filteredCampaigns.length} campaigns where moderator is creator or completer`);
+          console.log(`📊 [MODERATION API] Remaining campaigns after creator/completer filter: ${filteredCampaigns.length}`);
+        }
+    }
+    
+    // Log pour debug : afficher le nombre de campagnes avant filtrage des votes
+    if (shouldLog) {
+      console.log(`📊 [MODERATION API] Campaigns before vote filtering: ${filteredCampaigns.length}`);
     }
 
     // Exclure les campagnes déjà modérées par ce modérateur
     if (moderatorWallet && filteredCampaigns.length > 0) {
       const campaignIds = filteredCampaigns.map((c: any) => c.id);
       
+      if (shouldLog) {
+        console.log(`🔍 [MODERATION API] Checking votes for moderator: ${moderatorWallet}`);
+        console.log(`🔍 [MODERATION API] Campaign IDs to check: ${campaignIds.length} campaigns`);
+        console.log(`🔍 [MODERATION API] Sample campaign IDs:`, campaignIds.slice(0, 3));
+      }
+      
       // Vérifier les votes sur campaign_id (pour les INITIAL et COMPLETION)
       // Note: Pour les COMPLETION, chaque complétion est une campagne différente,
       // donc vérifier campaign_id suffit (pas besoin de vérifier completion_id séparément)
+      // IMPORTANT: Ne pas utiliser .toLowerCase() sur moderatorWallet car les wallets en base peuvent être en casse mixte
       const { data: existingVotes, error: votesError } = await supabase
         .from('moderation_votes')
-        .select('campaign_id')
+        .select('campaign_id, moderator_wallet')
         .eq('moderator_wallet', moderatorWallet.toLowerCase())
         .in('campaign_id', campaignIds);
+
+      if (shouldLog) {
+        console.log(`📊 [MODERATION API] Vote query result: ${existingVotes?.length || 0} votes found`);
+        if (existingVotes && existingVotes.length > 0) {
+          console.log(`📊 [MODERATION API] Sample votes:`, existingVotes.slice(0, 3));
+        }
+      }
 
       if (!votesError && existingVotes) {
         // Créer un Set des campaign_id déjà votés
@@ -160,13 +187,20 @@ export async function GET(request: NextRequest) {
         const beforeCount = filteredCampaigns.length;
         filteredCampaigns = filteredCampaigns.filter((campaign: any) => !votedCampaignIds.has(campaign.id));
         
-        if (DEBUG) {
-          console.log(`🚫 [MODERATION API] Excluded ${beforeCount - filteredCampaigns.length} campaigns already moderated by ${moderatorWallet}`);
-          console.log(`🚫 [MODERATION API] Voted campaign IDs:`, Array.from(votedCampaignIds));
-        }
+      if (shouldLog) {
+        console.log(`🚫 [MODERATION API] Excluded ${beforeCount - filteredCampaigns.length} campaigns already moderated by ${moderatorWallet}`);
+        console.log(`🚫 [MODERATION API] Voted campaign IDs (${votedCampaignIds.size}):`, Array.from(votedCampaignIds).slice(0, 5));
+        console.log(`📊 [MODERATION API] Remaining campaigns after vote filtering: ${filteredCampaigns.length}`);
+      }
       } else if (votesError) {
         console.error('⚠️ [MODERATION API] Error checking existing votes:', votesError);
+        console.error('⚠️ [MODERATION API] Error details:', JSON.stringify(votesError, null, 2));
         // Continue sans exclure si erreur de vérification
+      } else {
+        // Pas de votes existants pour ce modérateur (nouveau modérateur)
+        if (shouldLog) {
+          console.log(`✅ [MODERATION API] No existing votes for moderator ${moderatorWallet} - all ${filteredCampaigns.length} campaigns are available`);
+        }
       }
     }
 
@@ -260,9 +294,23 @@ export async function GET(request: NextRequest) {
       return true;
     });
 
-    if (DEBUG) {
+    if (DEBUG || moderatorWallet) {
       console.log(`✅ [MODERATION API] Found ${eligibleCampaigns.length} eligible campaigns out of ${filteredCampaigns.length} filtered (${campaigns?.length || 0} total before filtering)`);
       console.log(`   Excluded: delegated=${excludedDelegated}, indexeddb=${excludedIndexedDb}, missingVideo=${excludedMissingVideo}`);
+      console.log(`📊 [MODERATION API] Final eligible campaigns breakdown:`, {
+        total: eligibleCampaigns.length,
+        byType: {
+          INITIAL: eligibleCampaigns.filter((c: any) => c.type === 'INITIAL').length,
+          COMPLETION: eligibleCampaigns.filter((c: any) => c.type === 'COMPLETION').length
+        },
+        byCreatorType: {
+          B2C_AGENCIES: eligibleCampaigns.filter((c: any) => c.creator_type === 'B2C_AGENCIES').length,
+          INDIVIDUAL_CREATORS: eligibleCampaigns.filter((c: any) => c.creator_type === 'INDIVIDUAL_CREATORS').length,
+          FOR_B2C: eligibleCampaigns.filter((c: any) => c.creator_type === 'FOR_B2C').length,
+          FOR_INDIVIDUALS: eligibleCampaigns.filter((c: any) => c.creator_type === 'FOR_INDIVIDUALS').length
+        },
+        moderatorWallet: moderatorWallet || 'none'
+      });
     }
 
     return NextResponse.json({

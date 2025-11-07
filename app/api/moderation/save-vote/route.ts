@@ -128,9 +128,12 @@ export async function POST(request: NextRequest) {
 
     let voteId: string | undefined = undefined;
     if (supabaseServer) {
+      // IMPORTANT: Normaliser le wallet address en lowercase pour la cohérence avec les requêtes
+      const normalizedWallet = voteData.moderatorWallet.toLowerCase();
+      
       const insertPayload: Record<string, any> = {
         campaign_id: voteData.campaignId,
-        moderator_wallet: voteData.moderatorWallet,
+        moderator_wallet: normalizedWallet,
         completion_id: voteData.completionId ?? null,
         vote_decision: dbVoteDecision, // Utiliser la valeur convertie pour la base de données
         staked_amount: voteData.stakedAmount,
@@ -141,6 +144,7 @@ export async function POST(request: NextRequest) {
       };
       
       consoleLogs.push(`🔄 [SAVE VOTE] Conversion: ${voteDecision} → ${dbVoteDecision}`);
+      consoleLogs.push(`🔄 [SAVE VOTE] Normalized wallet: ${voteData.moderatorWallet} → ${normalizedWallet}`);
 
       const { data, error } = await supabaseServer
         .from('moderation_votes')

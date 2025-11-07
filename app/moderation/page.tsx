@@ -67,6 +67,7 @@ const ModerationPageContent = () => {
   const [isLoadingCampaign, setIsLoadingCampaign] = useState(false);
   const [isSwitching, setIsSwitching] = useState(false);
   const switchTokenRef = useRef(0);
+  const [isForceDisconnected, setIsForceDisconnected] = useState(false);
 
   // Only render videos from explicitly allowed prefixes in production
   const DEBUG_VIDEO = process.env.NEXT_PUBLIC_DEBUG_VIDEO === 'true' && process.env.NODE_ENV !== 'production';
@@ -751,6 +752,18 @@ const ModerationPageContent = () => {
     gap: '0' // Réduire l'espacement entre les éléments
   } as React.CSSProperties;
 
+  // Vérifier si l'utilisateur a été déconnecté de force
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const forceDisconnected = localStorage.getItem('winstory_force_disconnected') === 'true';
+      if (forceDisconnected) {
+        setIsForceDisconnected(true);
+        // Si déconnecté de force, rediriger vers welcome
+        router.push('/welcome');
+      }
+    }
+  }, [router]);
+
   // Debug: Afficher l'état actuel
     console.log('DEBUG: Current state', { 
     campaignId, 
@@ -761,7 +774,7 @@ const ModerationPageContent = () => {
   });
 
   // VÉRIFIER L'AUTHENTIFICATION EN PREMIER
-  if (!address?.address) {
+  if (!address?.address || isForceDisconnected) {
     return (
       <div className={styles.moderationBg}>
         {/* Dev Controls - TOUJOURS VISIBLE */}
@@ -809,9 +822,11 @@ const ModerationPageContent = () => {
             textAlign: 'center',
             maxWidth: '600px'
           }}>
-            Connect your wallet to access the moderation interface and start moderating campaigns.
+            {isForceDisconnected 
+              ? 'You have been disconnected. Please reconnect your wallet to access moderation.'
+              : 'Connect your wallet to access the moderation interface and start moderating campaigns.'}
           </p>
-          <WalletConnect isBothLogin={true} />
+          {!isForceDisconnected && <WalletConnect isBothLogin={true} />}
         </div>
       </div>
     );

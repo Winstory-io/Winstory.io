@@ -22,9 +22,12 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // IMPORTANT: Normaliser le wallet address en lowercase pour la cohérence
+    const normalizedWallet = moderatorWallet.toLowerCase();
+
     // En mode test, utiliser le stockage en mémoire
     if (TEST_MODE) {
-      const key = `${campaignId}_${moderatorWallet}`;
+      const key = `${campaignId}_${normalizedWallet}`;
       const scores = mockScores[key] || [];
       console.log('🧪 Mode test activé, scores récupérés:', scores);
       return NextResponse.json({ usedScores: scores });
@@ -55,9 +58,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // IMPORTANT: Normaliser le wallet address en lowercase pour la cohérence
+    const normalizedWallet = moderatorWallet.toLowerCase();
+
     // En mode test, utiliser le stockage en mémoire
     if (TEST_MODE) {
-      const key = `${campaignId}_${moderatorWallet}`;
+      const key = `${campaignId}_${normalizedWallet}`;
       
       // Vérifier si le score est déjà utilisé
       if (mockScores[key] && mockScores[key].includes(score)) {

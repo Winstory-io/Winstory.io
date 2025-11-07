@@ -196,12 +196,18 @@ const ModeratorHeader: React.FC<ModeratorHeaderProps> = ({
   };
 
   const getBadgeCount = (key: string) => {
-    if (!subTabCounts) return 0;
-    if (key === 'b2c-agencies') return subTabCounts.initial['b2c-agencies'];
-    if (key === 'individual-creators') return subTabCounts.initial['individual-creators'];
-    if (key === 'for-b2c') return subTabCounts.completion['for-b2c'];
-    if (key === 'for-individuals') return subTabCounts.completion['for-individuals'];
-    return 0;
+    if (!subTabCounts) {
+      console.log('⚠️ [MODERATOR HEADER] No subTabCounts provided');
+      return 0;
+    }
+    let count = 0;
+    if (key === 'b2c-agencies') count = subTabCounts.initial['b2c-agencies'];
+    else if (key === 'individual-creators') count = subTabCounts.initial['individual-creators'];
+    else if (key === 'for-b2c') count = subTabCounts.completion['for-b2c'];
+    else if (key === 'for-individuals') count = subTabCounts.completion['for-individuals'];
+    
+    console.log(`📊 [MODERATOR HEADER] Badge count for ${key}:`, count, 'subTabCounts:', subTabCounts);
+    return count;
   };
 
   const formatCount = (n: number) => (n > 99 ? '+99' : String(n));
@@ -238,6 +244,16 @@ const ModeratorHeader: React.FC<ModeratorHeaderProps> = ({
         {(() => {
           const initialSum = (subTabCounts?.initial['b2c-agencies'] || 0) + (subTabCounts?.initial['individual-creators'] || 0);
           const completionSum = (subTabCounts?.completion['for-b2c'] || 0) + (subTabCounts?.completion['for-individuals'] || 0);
+          
+          // Debug: log les compteurs reçus
+          console.log('📊 [MODERATOR HEADER] Received subTabCounts:', JSON.stringify(subTabCounts, null, 2));
+          console.log('📊 [MODERATOR HEADER] Initial sum:', initialSum, 'Completion sum:', completionSum);
+          console.log('📊 [MODERATOR HEADER] Breakdown:', {
+            'b2c-agencies': subTabCounts?.initial['b2c-agencies'],
+            'individual-creators': subTabCounts?.initial['individual-creators'],
+            'for-b2c': subTabCounts?.completion['for-b2c'],
+            'for-individuals': subTabCounts?.completion['for-individuals']
+          });
           const initialSubs = [
             { key: 'b2c-agencies', label: 'B2C & Agencies', tooltip: 'Moderate content created by B2C companies and agencies' },
             { key: 'individual-creators', label: 'Individual Creators', tooltip: 'Moderate content created by individual creators' }

@@ -39,6 +39,10 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // IMPORTANT: Normaliser le wallet address en lowercase pour la cohérence
+    const normalizedWallet = wallet.toLowerCase();
+    consoleLogs.push(`🔄 [STAKER DATA] Normalized wallet: ${wallet} → ${normalizedWallet}`);
+
     let stakedAmount = 0;
     let stakeAgeDays = 0;
     let xp = 0;
@@ -51,7 +55,7 @@ export async function GET(request: NextRequest) {
       const stakeQuery = supabaseServer
         .from('moderator_stakes')
         .select('staked_amount, staking_date')
-        .eq('moderator_wallet', wallet)
+        .eq('moderator_wallet', normalizedWallet)
         .order('staking_date', { ascending: false })
         .limit(1);
       if (campaignId) stakeQuery.eq('campaign_id', campaignId);
@@ -72,7 +76,7 @@ export async function GET(request: NextRequest) {
       const { data: xpData } = await supabaseServer
         .from('user_dashboard_stats')
         .select('moderator_xp')
-        .eq('wallet', wallet)
+        .eq('wallet', normalizedWallet)
         .maybeSingle?.() ?? { data: null };
       if (xpData && typeof xpData.moderator_xp === 'number') {
         xp = xpData.moderator_xp;

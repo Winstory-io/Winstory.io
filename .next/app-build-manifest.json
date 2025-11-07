@@ -5,6 +5,26 @@
       "static/chunks/main-app.js",
       "static/chunks/app/layout.js"
     ],
+    "/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/page.js"
+    ],
+    "/welcome/layout": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/welcome/layout.js"
+    ],
+    "/welcome/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/welcome/page.js"
+    ],
+    "/api/auth/[...nextauth]/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/auth/[...nextauth]/route.js"
+    ],
     "/moderation/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
@@ -16,15 +36,20 @@
       "static/css/app/moderation/page.css",
       "static/chunks/app/moderation/page.js"
     ],
-    "/api/auth/[...nextauth]/route": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/api/auth/[...nextauth]/route.js"
-    ],
     "/api/moderation/campaigns/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/api/moderation/campaigns/route.js"
+    ],
+    "/api/moderation/moderator-votes/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/moderation/moderator-votes/route.js"
+    ],
+    "/api/moderation/moderator-scores/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/moderation/moderator-scores/route.js"
     ],
     "/api/moderation/dev-controls/route": [
       "static/chunks/webpack.js",
@@ -36,25 +61,25 @@
       "static/chunks/main-app.js",
       "static/chunks/app/api/s3/presigned-url/route.js"
     ],
-    "/api/moderation/moderator-scores/route": [
+    "/api/moderation/vote-staking/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/api/moderation/moderator-scores/route.js"
+      "static/chunks/app/api/moderation/vote-staking/route.js"
     ],
-    "/api/moderation/moderator-votes/route": [
+    "/api/moderation/save-vote/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/api/moderation/moderator-votes/route.js"
+      "static/chunks/app/api/moderation/save-vote/route.js"
     ],
-    "/welcome/layout": [
+    "/api/xp/award-moderation/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/welcome/layout.js"
+      "static/chunks/app/api/xp/award-moderation/route.js"
     ],
-    "/welcome/page": [
+    "/api/moderation/normalize-votes/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/welcome/page.js"
+      "static/chunks/app/api/moderation/normalize-votes/route.js"
     ]
   }
 }

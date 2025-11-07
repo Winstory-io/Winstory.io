@@ -9,8 +9,7 @@ import ExplorerIcon from '@/components/icons/ExplorerIcon';
 import { useRouter } from 'next/navigation';
 import { useWalletAddress } from '@/lib/hooks/useWalletConnection';
 import { clearUserCache } from '@/lib/utils';
-import { useActiveAccount } from 'thirdweb/react';
-import { ConnectButton } from 'thirdweb/react';
+import { useActiveAccount, useDisconnect, ConnectButton } from 'thirdweb/react';
 import { createThirdwebClient } from "thirdweb";
 
 const client = createThirdwebClient({
@@ -21,6 +20,7 @@ export default function Home() {
   const router = useRouter();
   const walletAddress = useWalletAddress();
   const account = useActiveAccount();
+  const { disconnect, isDisconnecting } = useDisconnect();
   const [showDisconnectMenu, setShowDisconnectMenu] = useState(false);
   const [isForceDisconnected, setIsForceDisconnected] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -33,26 +33,113 @@ export default function Home() {
     }
   }, []);
 
+  // Gestionnaire d'erreur global pour capturer les erreurs de déconnexion
+  useEffect(() => {
+    const handleError = (event: ErrorEvent) => {
+      // Si l'erreur concerne la déconnexion, on la gère silencieusement
+      if (event.message && (event.message.includes('logout') || event.message.includes('disconnect') || event.message.includes('Failed to logout'))) {
+        console.warn('⚠️ [WELCOME] Logout/disconnect error caught and handled:', event.message);
+        event.preventDefault();
+        return true;
+      }
+      return false;
+    };
+
+    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+      // Si l'erreur concerne la déconnexion, on la gère silencieusement
+      const errorMessage = event.reason?.message || String(event.reason || '');
+      if (errorMessage.includes('logout') || errorMessage.includes('disconnect') || errorMessage.includes('Failed to logout')) {
+        console.warn('⚠️ [WELCOME] Logout/disconnect promise rejection caught and handled:', errorMessage);
+        event.preventDefault();
+        return true;
+      }
+      return false;
+    };
+
+    window.addEventListener('error', handleError);
+    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+
+    return () => {
+      window.removeEventListener('error', handleError);
+      window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+    };
+  }, []);
+
   const truncateAddress = (address: string) => {
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
   };
 
-  const handleForceDisconnect = () => {
-    // Marquer comme forcément déconnecté
-    setIsForceDisconnected(true);
-    
-    // Fermer le menu
-    setShowDisconnectMenu(false);
+  const handleForceDisconnect = async () => {
+    try {
+      // Essayer de déconnecter proprement via thirdweb
+      if (account && !isDisconnecting) {
+        try {
+          await disconnect();
+        } catch (disconnectError) {
+          // Si la déconnexion thirdweb échoue, on continue avec la déconnexion forcée locale
+          console.warn('⚠️ [WELCOME] Thirdweb disconnect failed (using force disconnect):', disconnectError);
+        }
+      }
+    } catch (error) {
+      // Si une erreur survient, on continue quand même
+      console.warn('⚠️ [WELCOME] Error during disconnect attempt (continuing anyway):', error);
+    } finally {
+      // Toujours marquer comme déconnecté et nettoyer, même si la déconnexion thirdweb a échoué
+      setIsForceDisconnected(true);
+      
+      // Nettoyer le cache local
+      if (typeof window !== 'undefined') {
+        clearUserCache();
+        // Nettoyer aussi les données de modération
+        const wallet = account?.address || '';
+        if (wallet) {
+          const storageKey = `winstory_moderation_voted_${wallet}`;
+          localStorage.removeItem(storageKey);
+        }
+        
+        // Persister l'état de déconnexion forcée dans localStorage
+        localStorage.setItem('winstory_force_disconnected', 'true');
+        localStorage.setItem('winstory_force_disconnected_timestamp', Date.now().toString());
+        
+        // Nettoyer toutes les clés thirdweb possibles
+        const thirdwebKeys: string[] = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && (key.startsWith('thirdweb') || key.includes('wallet') || key.includes('auth'))) {
+            thirdwebKeys.push(key);
+          }
+        }
+        thirdwebKeys.forEach(key => localStorage.removeItem(key));
+      }
+      
+      // Fermer le menu
+      setShowDisconnectMenu(false);
+    }
   };
 
   const toggleMenu = () => {
     setShowDisconnectMenu(!showDisconnectMenu);
   };
 
+  // Charger l'état de déconnexion forcée depuis localStorage au montage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const forceDisconnected = localStorage.getItem('winstory_force_disconnected') === 'true';
+      if (forceDisconnected) {
+        setIsForceDisconnected(true);
+      }
+    }
+  }, []);
+
   // Réinitialiser l'état de déconnexion forcée si un nouveau compte se connecte
   useEffect(() => {
     if (account) {
       setIsForceDisconnected(false);
+      // Nettoyer le flag de déconnexion forcée quand on se reconnecte
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('winstory_force_disconnected');
+        localStorage.removeItem('winstory_force_disconnected_timestamp');
+      }
     }
   }, [account]);
 
@@ -224,10 +311,50 @@ export default function Home() {
                   alignItems: 'center',
                   gap: '8px'
                 }}>
-                  <ConnectButton 
-                    client={client}
-                    theme="dark"
-                  />
+                  <div
+                    onError={(e) => {
+                      // Gérer silencieusement les erreurs de déconnexion
+                      console.warn('⚠️ [WELCOME] ConnectButton error (handled):', e);
+                      e.preventDefault();
+                      e.stopPropagation();
+                    }}
+                  >
+                    <ConnectButton 
+                      client={client}
+                      theme="dark"
+                      onConnect={() => {
+                        setIsForceDisconnected(false);
+                        setShowDisconnectMenu(false);
+                      }}
+                    />
+                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleForceDisconnect();
+                    }}
+                    style={{
+                      background: 'rgba(255, 0, 0, 0.1)',
+                      border: '2px solid #FF0000',
+                      borderRadius: '8px',
+                      padding: '8px 16px',
+                      color: '#FF0000',
+                      fontWeight: 600,
+                      fontSize: 14,
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease',
+                      marginTop: '8px'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = 'rgba(255, 0, 0, 0.2)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'rgba(255, 0, 0, 0.1)';
+                    }}
+                  >
+                    Force Disconnect
+                  </button>
                 </div>
               </div>
             )}

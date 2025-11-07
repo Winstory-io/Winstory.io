@@ -20,10 +20,12 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch votes
+    // IMPORTANT: Normaliser le wallet address en lowercase pour la cohérence avec la base de données
+    const normalizedWallet = wallet.toLowerCase();
     let query = supabaseServer
       .from('moderation_votes')
       .select('id,campaign_id,moderator_wallet,completion_id,vote_decision,staked_amount,vote_weight,transaction_hash,vote_timestamp,created_at')
-      .eq('moderator_wallet', wallet)
+      .eq('moderator_wallet', normalizedWallet)
       .order('vote_timestamp', { ascending: false })
       .range(offset, offset + limit - 1);
     if (campaignId) query = query.eq('campaign_id', campaignId);

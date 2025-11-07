@@ -38,151 +38,99 @@ interface CompletionModerationData extends BaseModerationData {
 
 type ModerationData = InitialModerationData | CompletionModerationData;
 
+type FinalDecision = 'valid' | 'refuse';
+interface HistoryModerationData extends BaseModerationData {
+  finalizedAt: string; // ISO date-time
+  finalDecision: FinalDecision; // majorité hybride finale
+  campaignName: string;
+}
+
 export default function MyModerationsPage() {
   const account = useActiveAccount();
   const [activeTab, setActiveTab] = useState<'active' | 'history' | 'staking' | 'influence'>('active');
   const [currentModerationIndex, setCurrentModerationIndex] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   
-  // Données mock pour les modérations actives - combinées dans un seul tableau
-  const [activeModerations, setActiveModerations] = useState<ModerationData[]>([
-    {
-      id: 'INIT_001',
-      type: 'initial',
-      mintPrice: 150,
-      walletAddress: '0x9B28EP...75A0G9BR',
-      personalStaking: 200,
-      poolStaking: 2400,
-      personalStakingPercentage: 8.3,
-      validatedVotes: 12,
-      refusedVotes: 3,
-      totalModerators: 22,
-      userVote: 'valid',
-      conditions: {
-        poolStakingExceedsMint: true,
-        hybridRatioMet: true,
-        moderatorThresholdMet: true,
-      }
-    },
-    {
-      id: 'COMP_001',
-      type: 'completion',
-      mintPrice: 100,
-      walletAddress: '0x9B28EP...75A0G9BR',
-      personalStaking: 150,
-      poolStaking: 1800,
-      personalStakingPercentage: 8.3,
-      validatedVotes: 14,
-      refusedVotes: 3,
-      totalModerators: 22,
-      userVote: 'valid',
-      userScore: 88,
-      averageScore: 86.5,
-      conditions: {
-        poolStakingExceedsMint: true,
-        hybridRatioMet: true,
-        moderatorThresholdMet: true,
-      }
-    },
-    {
-      id: 'COMP_002',
-      type: 'completion',
-      mintPrice: 75,
-      walletAddress: '0x7A15BC...23F8D1AC',
-      personalStaking: 100,
-      poolStaking: 1200,
-      personalStakingPercentage: 8.3,
-      validatedVotes: 8,
-      refusedVotes: 2,
-      totalModerators: 15,
-      userVote: 'valid',
-      userScore: 92,
-      averageScore: 89.2,
-      conditions: {
-        poolStakingExceedsMint: true,
-        hybridRatioMet: true,
-        moderatorThresholdMet: false,
-      }
-    }
-  ]);
+  // Données réelles depuis l'API pour les modérations actives
+  const [activeModerations, setActiveModerations] = useState<ModerationData[]>([]);
 
-  // Données mock pour l'historique des modérations (finalisées)
-  type FinalDecision = 'valid' | 'refuse';
-  interface HistoryModerationData extends BaseModerationData {
-    finalizedAt: string; // ISO date-time
-    finalDecision: FinalDecision; // majorité hybride finale
-    campaignName: string;
-  }
-  const [historyModerations, setHistoryModerations] = useState<HistoryModerationData[]>([]); // Commencer vide
-  const [initialHistoryData] = useState<HistoryModerationData[]>([
-    {
-      id: 'HIST_INIT_101',
-      type: 'initial',
-      mintPrice: 120,
-      walletAddress: '0x9B28EP...75A0G9BR',
-      personalStaking: 180,
-      poolStaking: 2200,
-      personalStakingPercentage: 8.2,
-      validatedVotes: 16,
-      refusedVotes: 6,
-      totalModerators: 22,
-      userVote: 'valid',
-      conditions: { poolStakingExceedsMint: true, hybridRatioMet: true, moderatorThresholdMet: true },
-      finalizedAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(),
-      finalDecision: 'valid',
-      campaignName: 'Campaign A'
-    },
-    {
-      id: 'HIST_COMP_202',
-      type: 'completion',
-      mintPrice: 95,
-      walletAddress: '0x7A15BC...23F8D1AC',
-      personalStaking: 120,
-      poolStaking: 1400,
-      personalStakingPercentage: 8.6,
-      validatedVotes: 7,
-      refusedVotes: 12,
-      totalModerators: 22,
-      userVote: 'valid',
-      conditions: { poolStakingExceedsMint: true, hybridRatioMet: true, moderatorThresholdMet: true },
-      finalizedAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5).toISOString(),
-      finalDecision: 'refuse',
-      campaignName: 'Campaign B'
-    },
-    {
-      id: 'HIST_INIT_303',
-      type: 'initial',
-      mintPrice: 160,
-      walletAddress: '0x1111AA...2222BB',
-      personalStaking: 90,
-      poolStaking: 800,
-      personalStakingPercentage: 11.3,
-      validatedVotes: 9,
-      refusedVotes: 13,
-      totalModerators: 22,
-      userVote: 'refuse',
-      conditions: { poolStakingExceedsMint: false, hybridRatioMet: true, moderatorThresholdMet: true },
-      finalizedAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 8).toISOString(),
-      finalDecision: 'refuse',
-      campaignName: 'Campaign C'
-    },
-    {
-      id: 'HIST_COMP_404',
-      type: 'completion',
-      mintPrice: 70,
-      walletAddress: '0x3333CC...4444DD',
-      personalStaking: 140,
-      poolStaking: 2100,
-      personalStakingPercentage: 6.6,
-      validatedVotes: 18,
-      refusedVotes: 4,
-      totalModerators: 22,
-      userVote: 'refuse',
-      conditions: { poolStakingExceedsMint: true, hybridRatioMet: true, moderatorThresholdMet: true },
-      finalizedAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 12).toISOString(),
-      finalDecision: 'valid',
-      campaignName: 'Campaign D'
-    }
-  ]);
+  // Données réelles depuis l'API pour l'historique des modérations (finalisées)
+  const [historyModerations, setHistoryModerations] = useState<HistoryModerationData[]>([]);
+  
+  // Données mock pour les DevControls (gardées pour le développement)
+  const [initialHistoryData] = useState<HistoryModerationData[]>([]);
+
+  // Charger les modérations depuis l'API
+  useEffect(() => {
+    const loadModerations = async () => {
+      if (!account?.address) {
+        setActiveModerations([]);
+        setHistoryModerations([]);
+        return;
+      }
+
+      setIsLoading(true);
+      setError(null);
+      try {
+        const response = await fetch(`/api/moderation/my-moderations?wallet=${encodeURIComponent(account.address)}`);
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          let errorData;
+          try {
+            errorData = JSON.parse(errorText);
+          } catch {
+            errorData = { error: errorText || `HTTP ${response.status}: ${response.statusText}` };
+          }
+          console.error('Failed to load moderations:', errorData);
+          setError(errorData.error || `Failed to load: ${response.status} ${response.statusText}`);
+          // En cas d'erreur, on garde les tableaux vides plutôt que de planter
+          setActiveModerations([]);
+          setHistoryModerations([]);
+          return;
+        }
+
+        const data = await response.json();
+        
+        // Vérifier si c'est une erreur
+        if (data.error) {
+          console.error('API returned error:', data.error);
+          setError(data.error);
+          setActiveModerations([]);
+          setHistoryModerations([]);
+          return;
+        }
+
+        // Mettre à jour les données
+        if (Array.isArray(data.active)) {
+          setActiveModerations(data.active);
+        } else {
+          setActiveModerations([]);
+        }
+        
+        if (Array.isArray(data.history)) {
+          setHistoryModerations(data.history);
+        } else {
+          setHistoryModerations([]);
+        }
+        
+        // Clear error on success
+        setError(null);
+      } catch (error) {
+        console.error('Error loading moderations:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Network error: Failed to fetch moderations';
+        setError(errorMessage);
+        // En cas d'erreur réseau, on garde les tableaux vides
+        setActiveModerations([]);
+        setHistoryModerations([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadModerations();
+  }, [account?.address]);
 
   // DevControls pour l'onglet History uniquement
   const [selectedHistoryId, setSelectedHistoryId] = useState<string | null>(null);
@@ -1187,7 +1135,20 @@ export default function MyModerationsPage() {
       <div style={{ width: '100%', maxWidth: 1400, justifySelf: 'center', position: 'relative' }}>
         {activeTab === 'active' && (
           <div style={{ color: '#fff', paddingTop: 20 }}>
-            {activeModerations.length > 0 ? (
+            {isLoading ? (
+              /* Loading state */
+              <div style={{ 
+                background: 'rgba(0, 0, 0, 0.6)',
+                border: '2px dashed #333',
+                borderRadius: '16px',
+                padding: '48px 24px',
+                textAlign: 'center'
+              }}>
+                <div style={{ fontSize: '48px', marginBottom: '16px', opacity: 0.5 }}>⏳</div>
+                <h3 style={{ color: '#C0C0C0', fontSize: '20px', marginBottom: '8px' }}>Loading moderations...</h3>
+                <p style={{ color: '#888', fontSize: '16px' }}>Please wait while we fetch your moderation data.</p>
+              </div>
+            ) : activeModerations.length > 0 ? (
               <div>
                 {/* Contrôles du carrousel */}
                 {renderCarouselControls()}
@@ -1271,6 +1232,55 @@ export default function MyModerationsPage() {
                    );
                 })()}
               </div>
+            ) : error ? (
+              /* Error state */
+              <div style={{ 
+                background: 'rgba(255, 45, 45, 0.1)',
+                border: '2px solid #FF2D2D',
+                borderRadius: '16px',
+                padding: '48px 24px',
+                textAlign: 'center'
+              }}>
+                <div style={{ fontSize: '48px', marginBottom: '16px', opacity: 0.5 }}>⚠️</div>
+                <h3 style={{ color: '#FF2D2D', fontSize: '20px', marginBottom: '8px' }}>Error loading moderations</h3>
+                <p style={{ color: '#FF8888', fontSize: '16px', marginBottom: '16px' }}>{error}</p>
+                <button 
+                  onClick={() => {
+                    if (account?.address) {
+                      const loadModerations = async () => {
+                        setIsLoading(true);
+                        setError(null);
+                        try {
+                          const response = await fetch(`/api/moderation/my-moderations?wallet=${encodeURIComponent(account.address)}`);
+                          if (response.ok) {
+                            const data = await response.json();
+                            if (Array.isArray(data.active)) setActiveModerations(data.active);
+                            if (Array.isArray(data.history)) setHistoryModerations(data.history);
+                            setError(null);
+                          }
+                        } catch (e) {
+                          setError(e instanceof Error ? e.message : 'Failed to fetch');
+                        } finally {
+                          setIsLoading(false);
+                        }
+                      };
+                      loadModerations();
+                    }
+                  }}
+                  style={{
+                    background: '#FF2D2D',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: '8px',
+                    padding: '12px 24px',
+                    fontSize: '16px',
+                    cursor: 'pointer',
+                    fontWeight: 700
+                  }}
+                >
+                  Retry
+                </button>
+              </div>
             ) : (
               /* Empty state */
               <div style={{ 
@@ -1292,7 +1302,20 @@ export default function MyModerationsPage() {
           <div style={{ color: '#fff', textAlign: 'center', paddingTop: 40 }}>
             <h2 style={{ fontSize: 36, fontWeight: 800, marginBottom: 8 }}>Moderation History</h2>
             <p style={{ color: '#C0C0C0', marginBottom: 24 }}>Your complete moderation history will be displayed here</p>
-            {historyModerations.length > 0 ? (
+            {isLoading ? (
+              <div style={{ 
+                background: 'rgba(0, 0, 0, 0.6)',
+                border: '2px dashed #333',
+                borderRadius: '16px',
+                padding: '48px 24px',
+                textAlign: 'center',
+                marginTop: 40
+              }}>
+                <div style={{ fontSize: '48px', marginBottom: '16px', opacity: 0.5 }}>⏳</div>
+                <h3 style={{ color: '#C0C0C0', fontSize: '20px', marginBottom: '8px' }}>Loading history...</h3>
+                <p style={{ color: '#888', fontSize: '16px' }}>Please wait while we fetch your moderation history.</p>
+              </div>
+            ) : historyModerations.length > 0 ? (
               <div style={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',

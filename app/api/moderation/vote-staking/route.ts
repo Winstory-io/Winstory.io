@@ -63,6 +63,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // IMPORTANT: Normaliser le wallet address en lowercase pour la cohérence
+    const normalizedModeratorWallet = moderatorWallet.toLowerCase();
+    consoleLogs.push(`🔄 [MODERATION VOTE] Normalized wallet: ${moderatorWallet} → ${normalizedModeratorWallet}`);
+
     // Validation du vote
     if (!['VALID', 'REFUSE'].includes(voteDecision)) {
       const error = 'voteDecision doit être VALID ou REFUSE';
@@ -86,7 +90,7 @@ export async function POST(request: NextRequest) {
     // Créer l'objet de données de vote
     const moderationData: ModerationVoteData = {
       campaignId,
-      moderatorWallet,
+      moderatorWallet: normalizedModeratorWallet,
       completionId,
       voteDecision,
       score,

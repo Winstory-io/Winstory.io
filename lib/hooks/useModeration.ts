@@ -4,8 +4,13 @@ import { ModerationCampaign, ModerationProgress, ModerationSession } from '../ty
 import { transformCampaignFromAPI } from '../campaignTransformers';
 
 export const useModeration = () => {
-  const DEBUG = process.env.NEXT_PUBLIC_DEBUG_MODERATION === 'true' && process.env.NODE_ENV !== 'production';
+  const DEBUG = process.env.NEXT_PUBLIC_DEBUG_MODERATION === 'true' || process.env.NODE_ENV !== 'production';
   const account = useActiveAccount(); // Utilise useAddress au lieu de useActiveAccount
+  
+  // Log pour vérifier que le hook est bien initialisé
+  console.log('🔄 [USE MODERATION] Hook initialized, account:', account?.address);
+  console.log('🔄 [USE MODERATION] About to declare useEffect for subTabCounts...');
+  
   const [currentSession, setCurrentSession] = useState<ModerationSession | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -29,14 +34,16 @@ export const useModeration = () => {
   const campaignsCacheRef = useRef<Map<string, any[]>>(new Map());
   const lastSetKeyRef = useRef<string | null>(null);
   const lastSetSnapshotRef = useRef<string | null>(null);
+  // Flag pour éviter de normaliser plusieurs fois
+  const normalizeVotesInitializedRef = useRef<boolean>(false);
 
   // Fonction pour récupérer les campagnes disponibles depuis l'API
-  const fetchAvailableCampaigns = useCallback(async (type?: string, creatorType?: string) => {
+  const fetchAvailableCampaigns = useCallback(async (type?: string, creatorType?: string, skipCache: boolean = false) => {
     try {
       setIsLoading(true);
       setError(null);
 
-      if (DEBUG) console.log('🔍 [FETCH CAMPAIGNS] Fetching from API...', { type, creatorType, moderatorWallet: account?.address });
+      if (DEBUG) console.log('🔍 [FETCH CAMPAIGNS] Fetching from API...', { type, creatorType, moderatorWallet: account?.address, skipCache });
 
       // Construire les paramètres de requête
       const params = new URLSearchParams();
@@ -46,6 +53,10 @@ export const useModeration = () => {
       if (account?.address) {
         params.append('moderatorWallet', account.address);
       }
+      // Ajouter un timestamp pour forcer le rechargement si skipCache est true
+      if (skipCache) {
+        params.append('_t', Date.now().toString());
+      }
 
       const url = `/api/moderation/campaigns?${params.toString()}`;
       if (DEBUG) console.log('📡 [FETCH CAMPAIGNS] API URL:', url);
@@ -53,16 +64,19 @@ export const useModeration = () => {
       // Clé de déduplication
       const fetchKey = `${type || 'ALL'}|${creatorType || 'ALL'}|${account?.address || 'anon'}`;
 
-      // Throttle: éviter de refetch avec mêmes paramètres dans les 300ms
-      const now = Date.now();
-      if (lastFetchKeyRef.current === fetchKey && now - lastFetchTimestampRef.current < 300) {
-        const cached = campaignsCacheRef.current.get(fetchKey);
-        if (cached) {
-          if (DEBUG) console.log('⏸️ [FETCH CAMPAIGNS] Throttled; using cached result');
-          setAllCampaigns(cached);
-          setAvailableCampaigns(cached);
-          setIsLoading(false);
-          return cached;
+      // Si skipCache est true, ignorer le cache et le throttle
+      if (!skipCache) {
+        // Throttle: éviter de refetch avec mêmes paramètres dans les 300ms
+        const now = Date.now();
+        if (lastFetchKeyRef.current === fetchKey && now - lastFetchTimestampRef.current < 300) {
+          const cached = campaignsCacheRef.current.get(fetchKey);
+          if (cached) {
+            if (DEBUG) console.log('⏸️ [FETCH CAMPAIGNS] Throttled; using cached result');
+            setAllCampaigns(cached);
+            setAvailableCampaigns(cached);
+            setIsLoading(false);
+            return cached;
+          }
         }
       }
 
@@ -84,8 +98,12 @@ export const useModeration = () => {
           setIsLoading(false);
           return cached;
         }
+        const errorMessage = fetchError instanceof Error ? fetchError.message : 'Failed to connect to server';
         if (DEBUG) console.error('❌ [FETCH CAMPAIGNS] Network error:', fetchError);
-        throw new Error(`Network error: ${fetchError instanceof Error ? fetchError.message : 'Failed to connect to server'}`);
+        // Ne pas throw l'erreur, retourner un tableau vide pour éviter de casser l'UI
+        setIsLoading(false);
+        setError(`Network error: ${errorMessage}`);
+        return [];
       }
 
       if (!response.ok) {
@@ -566,6 +584,100 @@ export const useModeration = () => {
 
         console.log('🎉 [MODERATION DECISION] Vote finalized successfully');
         
+        // Sauvegarder le campaignId avant de réinitialiser la session
+        const votedCampaignId = currentSession?.campaignId;
+        
+        // Invalider le cache et recalculer les compteurs après un vote réussi
+        // pour que les bulles de notifications reflètent le nouveau "reste" disponible
+        console.log('🔄 [MODERATION DECISION] Invalidating cache and recalculating counts after vote...');
+        
+        // Réinitialiser complètement tous les états et caches
+        lastFetchKeyRef.current = null;
+        lastFetchTimestampRef.current = 0;
+        lastSetKeyRef.current = null;
+        lastSetSnapshotRef.current = null;
+        campaignsCacheRef.current.clear();
+        setAllCampaigns([]);
+        setAvailableCampaigns([]);
+        // Réinitialiser la session actuelle pour éviter d'afficher des contenus déjà modérés
+        setCurrentSession(null);
+        
+        // Vérifier que le vote est bien enregistré avant de recalculer
+        // On va vérifier directement dans la base de données avec plusieurs tentatives
+        const verifyVoteAndRecalculate = async (campaignId: string, maxRetries = 5) => {
+          for (let attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+              // Vérifier si le vote est bien enregistré
+              const verifyResponse = await fetch(
+                `/api/moderation/moderator-votes?wallet=${encodeURIComponent(account.address)}&campaignId=${encodeURIComponent(campaignId)}`
+              );
+              
+              if (verifyResponse.ok) {
+                const verifyData = await verifyResponse.json();
+                const hasVote = verifyData.votes && verifyData.votes.length > 0 && 
+                  verifyData.votes.some((v: any) => v.campaign_id === campaignId);
+                
+                if (hasVote) {
+                  console.log(`✅ [MODERATION DECISION] Vote verified after ${attempt} attempt(s)`);
+                  break;
+                } else if (attempt < maxRetries) {
+                  console.log(`⏳ [MODERATION DECISION] Vote not yet visible, retrying... (${attempt}/${maxRetries})`);
+                  await new Promise(resolve => setTimeout(resolve, 500));
+                  continue;
+                }
+              }
+            } catch (err) {
+              console.error(`❌ [MODERATION DECISION] Error verifying vote (attempt ${attempt}):`, err);
+              if (attempt < maxRetries) {
+                await new Promise(resolve => setTimeout(resolve, 500));
+                continue;
+              }
+            }
+            
+            // Si on arrive ici, on a épuisé les tentatives ou il y a eu une erreur
+            // On attend un peu plus avant de recalculer quand même
+            if (attempt < maxRetries) {
+              await new Promise(resolve => setTimeout(resolve, 500));
+            }
+          }
+          
+          // Attendre encore un peu pour être sûr que la base de données est à jour
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
+          // Recalculer les compteurs pour mettre à jour les bulles de notifications
+          // IMPORTANT: Utiliser skipCache=true pour forcer le rechargement et obtenir les données à jour
+          try {
+            console.log('🔄 [MODERATION DECISION] Recalculating counts after vote (skipCache=true)...');
+            const initialB2CAll = await fetchAvailableCampaigns('INITIAL', 'B2C_AGENCIES', true).catch(() => []);
+            const initialB2CForB2C = await fetchAvailableCampaigns('INITIAL', 'FOR_B2C', true).catch(() => []);
+            const initialB2C = [...(initialB2CAll || []), ...(initialB2CForB2C || [])];
+            const initialIndividual = await fetchAvailableCampaigns('INITIAL', 'INDIVIDUAL_CREATORS', true).catch(() => []);
+            const completionB2C = await fetchAvailableCampaigns('COMPLETION', 'FOR_B2C', true).catch(() => []);
+            const completionIndividual = await fetchAvailableCampaigns('COMPLETION', 'FOR_INDIVIDUALS', true).catch(() => []);
+            
+            const newCounts = {
+              initial: {
+                'b2c-agencies': initialB2C?.length || 0,
+                'individual-creators': initialIndividual?.length || 0
+              },
+              completion: {
+                'for-b2c': completionB2C?.length || 0,
+                'for-individuals': completionIndividual?.length || 0
+              }
+            };
+            
+            console.log('✅ [MODERATION DECISION] Updated counts after vote:', newCounts);
+            setSubTabCounts(newCounts);
+          } catch (err) {
+            console.error('❌ [MODERATION DECISION] Error recalculating counts:', err);
+          }
+        };
+        
+        // Vérifier le vote et recalculer
+        if (account?.address && votedCampaignId) {
+          verifyVoteAndRecalculate(votedCampaignId);
+        }
+        
         // Après un vote réussi, vérifier si une décision finale est atteinte
         // Cela déclenchera automatiquement le déplacement/suppression des vidéos S3
         try {
@@ -758,6 +870,100 @@ export const useModeration = () => {
 
         console.log('🎉 [COMPLETION SCORE] Score finalized successfully:', score);
         
+        // Sauvegarder le campaignId avant de réinitialiser la session
+        const votedCampaignId = currentSession?.campaignId;
+        
+        // Invalider le cache et recalculer les compteurs après un vote réussi
+        // pour que les bulles de notifications reflètent le nouveau "reste" disponible
+        console.log('🔄 [COMPLETION SCORE] Invalidating cache and recalculating counts after vote...');
+        
+        // Réinitialiser complètement tous les états et caches
+        lastFetchKeyRef.current = null;
+        lastFetchTimestampRef.current = 0;
+        lastSetKeyRef.current = null;
+        lastSetSnapshotRef.current = null;
+        campaignsCacheRef.current.clear();
+        setAllCampaigns([]);
+        setAvailableCampaigns([]);
+        // Réinitialiser la session actuelle pour éviter d'afficher des contenus déjà modérés
+        setCurrentSession(null);
+        
+        // Vérifier que le vote est bien enregistré avant de recalculer
+        // On va vérifier directement dans la base de données avec plusieurs tentatives
+        const verifyVoteAndRecalculate = async (campaignId: string, maxRetries = 5) => {
+          for (let attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+              // Vérifier si le vote est bien enregistré
+              const verifyResponse = await fetch(
+                `/api/moderation/moderator-votes?wallet=${encodeURIComponent(account.address)}&campaignId=${encodeURIComponent(campaignId)}`
+              );
+              
+              if (verifyResponse.ok) {
+                const verifyData = await verifyResponse.json();
+                const hasVote = verifyData.votes && verifyData.votes.length > 0 && 
+                  verifyData.votes.some((v: any) => v.campaign_id === campaignId);
+                
+                if (hasVote) {
+                  console.log(`✅ [COMPLETION SCORE] Vote verified after ${attempt} attempt(s)`);
+                  break;
+                } else if (attempt < maxRetries) {
+                  console.log(`⏳ [COMPLETION SCORE] Vote not yet visible, retrying... (${attempt}/${maxRetries})`);
+                  await new Promise(resolve => setTimeout(resolve, 500));
+                  continue;
+                }
+              }
+            } catch (err) {
+              console.error(`❌ [COMPLETION SCORE] Error verifying vote (attempt ${attempt}):`, err);
+              if (attempt < maxRetries) {
+                await new Promise(resolve => setTimeout(resolve, 500));
+                continue;
+              }
+            }
+            
+            // Si on arrive ici, on a épuisé les tentatives ou il y a eu une erreur
+            // On attend un peu plus avant de recalculer quand même
+            if (attempt < maxRetries) {
+              await new Promise(resolve => setTimeout(resolve, 500));
+            }
+          }
+          
+          // Attendre encore un peu pour être sûr que la base de données est à jour
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
+          // Recalculer les compteurs pour mettre à jour les bulles de notifications
+          // IMPORTANT: Utiliser skipCache=true pour forcer le rechargement et obtenir les données à jour
+          try {
+            console.log('🔄 [COMPLETION SCORE] Recalculating counts after vote (skipCache=true)...');
+            const initialB2CAll = await fetchAvailableCampaigns('INITIAL', 'B2C_AGENCIES', true).catch(() => []);
+            const initialB2CForB2C = await fetchAvailableCampaigns('INITIAL', 'FOR_B2C', true).catch(() => []);
+            const initialB2C = [...(initialB2CAll || []), ...(initialB2CForB2C || [])];
+            const initialIndividual = await fetchAvailableCampaigns('INITIAL', 'INDIVIDUAL_CREATORS', true).catch(() => []);
+            const completionB2C = await fetchAvailableCampaigns('COMPLETION', 'FOR_B2C', true).catch(() => []);
+            const completionIndividual = await fetchAvailableCampaigns('COMPLETION', 'FOR_INDIVIDUALS', true).catch(() => []);
+            
+            const newCounts = {
+              initial: {
+                'b2c-agencies': initialB2C?.length || 0,
+                'individual-creators': initialIndividual?.length || 0
+              },
+              completion: {
+                'for-b2c': completionB2C?.length || 0,
+                'for-individuals': completionIndividual?.length || 0
+              }
+            };
+            
+            console.log('✅ [COMPLETION SCORE] Updated counts after vote:', newCounts);
+            setSubTabCounts(newCounts);
+          } catch (err) {
+            console.error('❌ [COMPLETION SCORE] Error recalculating counts:', err);
+          }
+        };
+        
+        // Vérifier le vote et recalculer
+        if (account?.address && votedCampaignId) {
+          verifyVoteAndRecalculate(votedCampaignId);
+        }
+        
         // Après un score réussi, vérifier si une décision finale est atteinte
         // Cela déclenchera automatiquement le déplacement/suppression des vidéos S3
         try {
@@ -816,6 +1022,59 @@ export const useModeration = () => {
       return false;
     }
   }, [currentSession, account, moderatorUsedScores, loadModeratorUsedScores, votedContentIds]);
+
+  // Normaliser automatiquement les wallet addresses dans la base de données
+  // Exécuté une seule fois au montage du composant
+  useEffect(() => {
+    const normalizeVotesAutomatically = async () => {
+      // Vérifier si déjà initialisé (éviter les appels multiples)
+      if (normalizeVotesInitializedRef.current) {
+        return;
+      }
+      
+      // Vérifier si déjà exécuté dans cette session (localStorage)
+      const sessionKey = 'winstory_votes_normalized_session';
+      const lastNormalized = sessionStorage.getItem(sessionKey);
+      
+      if (lastNormalized) {
+        console.log('✅ [NORMALIZE VOTES] Already normalized in this session');
+        normalizeVotesInitializedRef.current = true;
+        return;
+      }
+      
+      try {
+        console.log('🔄 [NORMALIZE VOTES] Auto-normalizing wallet addresses...');
+        normalizeVotesInitializedRef.current = true;
+        
+        const response = await fetch('/api/moderation/normalize-votes', {
+          method: 'POST',
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          console.log(`✅ [NORMALIZE VOTES] Normalization complete: ${data.updated} votes updated, ${data.errors || 0} errors (total: ${data.total})`);
+          // Marquer comme normalisé dans cette session
+          sessionStorage.setItem(sessionKey, new Date().toISOString());
+        } else {
+          console.error('❌ [NORMALIZE VOTES] Error:', data.error);
+        }
+        
+        if (data.consoleLogs && DEBUG) {
+          console.log('📋 [NORMALIZE VOTES] Server logs:', data.consoleLogs);
+        }
+      } catch (error) {
+        console.error('❌ [NORMALIZE VOTES] Exception:', error);
+      }
+    };
+    
+    // Exécuter la normalisation après un court délai pour ne pas bloquer le rendu initial
+    const timeoutId = setTimeout(() => {
+      normalizeVotesAutomatically();
+    }, 1000);
+    
+    return () => clearTimeout(timeoutId);
+  }, []); // Tableau vide = exécuter une seule fois au montage
 
   // Load used scores when a campaign is selected
   useEffect(() => {
@@ -996,10 +1255,98 @@ export const useModeration = () => {
       console.log('Loading campaign for criteria:', type, subtype);
       
       // Convertir les paramètres UI vers les types Prisma
-      const prismaType = type === 'completion' ? 'COMPLETION' : 'INITIAL';
-      const prismaCreatorType = subtype === 'b2c-agencies' ? 'B2C_AGENCIES' :
-                               subtype === 'individual-creators' ? 'INDIVIDUAL_CREATORS' :
-                               subtype === 'for-b2c' ? 'FOR_B2C' : 'FOR_INDIVIDUALS';
+      // IMPORTANT: 
+      // - Les créations initiales (via /create) ont toujours type: 'INITIAL' avec creatorType: 'B2C_AGENCIES', 'INDIVIDUAL_CREATORS', ou 'FOR_B2C'
+      // - Les complétions (via /complete) ont toujours type: 'COMPLETION' avec creatorType: 'FOR_B2C' ou 'FOR_INDIVIDUALS'
+      let prismaType: string;
+      let prismaCreatorType: string;
+      
+      if (type === 'completion') {
+        // Onglet "Completion" : chercher les campagnes avec type: 'COMPLETION'
+        // Les complétions sont créées via /complete et ont toujours type: 'COMPLETION'
+        prismaType = 'COMPLETION';
+        prismaCreatorType = subtype === 'for-b2c' ? 'FOR_B2C' : 'FOR_INDIVIDUALS';
+      } else {
+        // Onglet "Initial Story" : chercher les campagnes avec type: 'INITIAL'
+        // Les créations initiales sont créées via /create et ont toujours type: 'INITIAL'
+        prismaType = 'INITIAL';
+        if (subtype === 'b2c-agencies') {
+          // "B2C & Agencies" inclut à la fois B2C_AGENCIES (agences) et FOR_B2C (créations B2C directes)
+          // On doit chercher les deux types et les combiner
+          const campaignsB2CAgencies = await fetchAvailableCampaigns('INITIAL', 'B2C_AGENCIES').catch(() => []);
+          const campaignsForB2C = await fetchAvailableCampaigns('INITIAL', 'FOR_B2C').catch(() => []);
+          const campaigns = [...(campaignsB2CAgencies || []), ...(campaignsForB2C || [])];
+          
+          if (campaigns && campaigns.length > 0) {
+            // Sélection intelligente avec priorité
+            let selectedCampaign: any = null;
+            
+            // 1. Priorité absolue : campagnes avec < 22 votes
+            const urgentCampaigns = campaigns.filter((c: any) => {
+              const totalVotes = c.progress?.total_votes || c.moderation_progress?.total_votes || 0;
+              return totalVotes < 22;
+            });
+            
+            if (urgentCampaigns.length > 0) {
+              selectedCampaign = urgentCampaigns[0];
+              console.log('✅ [LOAD CAMPAIGN] Selected urgent campaign (< 22 votes):', selectedCampaign.title);
+            }
+            
+            // Si toujours pas de campagne, sélection pondérée par nombre de votes
+            if (!selectedCampaign) {
+              const weighted = campaigns.map((c: any) => {
+                const totalVotes = c.progress?.total_votes || c.moderation_progress?.total_votes || 0;
+                return {
+                  campaign: c,
+                  weight: 1 / (totalVotes + 1)
+                };
+              });
+              
+              const totalWeight = weighted.reduce((sum, item) => sum + item.weight, 0);
+              let random = Math.random() * totalWeight;
+              
+              for (const item of weighted) {
+                random -= item.weight;
+                if (random <= 0) {
+                  selectedCampaign = item.campaign;
+                  break;
+                }
+              }
+              
+              if (!selectedCampaign) {
+                selectedCampaign = campaigns[0];
+              }
+              
+              console.log('✅ [LOAD CAMPAIGN] Selected campaign via weighted selection:', selectedCampaign.title);
+            }
+            
+            if (selectedCampaign) {
+              const session = await fetchCampaignById(selectedCampaign.id);
+              return session;
+            }
+          }
+          
+          console.log('No campaigns found for criteria:', type, subtype);
+          setCurrentSession(null);
+          setError(null);
+          return null;
+        } else if (subtype === 'individual-creators') {
+          prismaCreatorType = 'INDIVIDUAL_CREATORS';
+        } else {
+          // Fallback : ne devrait jamais arriver car les sous-onglets "for-b2c" et "for-individuals"
+          // sont uniquement dans l'onglet "Completion"
+          console.warn('⚠️ [LOAD CAMPAIGN] Unexpected subtype in Initial tab:', subtype);
+          prismaCreatorType = 'INDIVIDUAL_CREATORS';
+        }
+      }
+      
+      // Pour les autres cas (individual-creators, completion), utiliser la logique normale
+      if (!prismaCreatorType) {
+        console.error('❌ [LOAD CAMPAIGN] prismaCreatorType not set for:', type, subtype);
+        setCurrentSession(null);
+        setError(null);
+        return null;
+      }
       
       const campaigns = await fetchAvailableCampaigns(prismaType, prismaCreatorType);
       
@@ -1145,39 +1492,125 @@ export const useModeration = () => {
 
   // Mettre à jour les compteurs en appelant l'API avec les mêmes filtres que loadCampaignForCriteria
   // Cela garantit que les compteurs correspondent exactement aux campagnes réellement disponibles
+  console.log('🔄 [SUB TAB COUNTS] About to declare useEffect, account?.address:', account?.address);
+  
+  // TEST: Vérifier que useEffect est bien importé
+  console.log('🔄 [SUB TAB COUNTS] useEffect type:', typeof useEffect);
+  
   useEffect(() => {
+    console.log('🔄 [SUB TAB COUNTS] ========== useEffect STARTED ==========');
+    console.log('🔄 [SUB TAB COUNTS] account?.address:', account?.address);
+    console.log('🔄 [SUB TAB COUNTS] account object:', account);
+    
+    // Réinitialiser immédiatement les compteurs à 0 quand le wallet change ou se déconnecte
+    setSubTabCounts({ initial: { 'b2c-agencies': 0, 'individual-creators': 0 }, completion: { 'for-b2c': 0, 'for-individuals': 0 } });
+    
     if (!account?.address) {
-      // Réinitialiser les compteurs si pas de wallet
-      setSubTabCounts({ initial: { 'b2c-agencies': 0, 'individual-creators': 0 }, completion: { 'for-b2c': 0, 'for-individuals': 0 } });
+      console.log('🔄 [SUB TAB COUNTS] No wallet connected, counts reset to 0');
       return;
     }
+    
+    console.log('✅ [SUB TAB COUNTS] Wallet found, proceeding with calculation...');
+    
+    // Invalider le cache pour forcer le rechargement avec le nouveau wallet
+    lastFetchKeyRef.current = null;
+    lastFetchTimestampRef.current = 0;
+    campaignsCacheRef.current.clear();
     
     let isMounted = true;
     
     const calculateCounts = async () => {
       try {
-        // Appeler l'API avec les mêmes filtres que loadCampaignForCriteria pour chaque sous-onglet
-        const [initialB2C, initialIndividual, completionB2C, completionIndividual] = await Promise.all([
-          fetchAvailableCampaigns('INITIAL', 'B2C_AGENCIES'),
-          fetchAvailableCampaigns('INITIAL', 'INDIVIDUAL_CREATORS'),
-          fetchAvailableCampaigns('COMPLETION', 'FOR_B2C'),
-          fetchAvailableCampaigns('COMPLETION', 'FOR_INDIVIDUALS')
-        ]);
+        console.log('🔄 [SUB TAB COUNTS] Calculating counts for wallet:', account.address);
+        console.log('🔄 [SUB TAB COUNTS] Invalidating cache before calculation...');
         
-        if (!isMounted) return;
+        // Invalider complètement le cache avant de calculer les compteurs
+        lastFetchKeyRef.current = null;
+        lastFetchTimestampRef.current = 0;
+        campaignsCacheRef.current.clear();
+        
+        // Appeler l'API avec les mêmes filtres que loadCampaignForCriteria pour chaque sous-onglet
+        // IMPORTANT: 
+        // - Les créations initiales (via /create) ont toujours type: 'INITIAL' avec creatorType: 'B2C_AGENCIES', 'INDIVIDUAL_CREATORS', ou 'FOR_B2C'
+        // - Les complétions (via /complete) ont toujours type: 'COMPLETION' avec creatorType: 'FOR_B2C' ou 'FOR_INDIVIDUALS'
+        console.log('🔄 [SUB TAB COUNTS] Fetching campaigns for each sub-tab...');
+        
+        // Faire les requêtes séquentiellement pour éviter les annulations mutuelles
+        // et s'assurer que chaque requête se termine correctement
+        
+        // Initial Story > B2C & Agencies : type: 'INITIAL' + creatorType: 'B2C_AGENCIES' ou 'FOR_B2C'
+        // Note: Les créations B2C (via /create avec campaignType: 'B2C') ont creatorType: 'FOR_B2C' mais type: 'INITIAL'
+        // Elles doivent être comptées dans "B2C & Agencies" de l'onglet "Initial Story"
+        // IMPORTANT: skipCache=true pour forcer le rechargement et obtenir les données à jour
+        const initialB2CAll = await fetchAvailableCampaigns('INITIAL', 'B2C_AGENCIES', true).catch(err => {
+          console.error('❌ [SUB TAB COUNTS] Error fetching INITIAL B2C_AGENCIES:', err);
+          return [];
+        });
+        const initialB2CForB2C = await fetchAvailableCampaigns('INITIAL', 'FOR_B2C', true).catch(err => {
+          console.error('❌ [SUB TAB COUNTS] Error fetching INITIAL FOR_B2C:', err);
+          return [];
+        });
+        // Combiner les deux : B2C_AGENCIES (agences) et FOR_B2C (créations B2C directes)
+        const initialB2C = [...(initialB2CAll || []), ...(initialB2CForB2C || [])];
+        
+        // Initial Story > Individual Creators : type: 'INITIAL' + creatorType: 'INDIVIDUAL_CREATORS'
+        const initialIndividual = await fetchAvailableCampaigns('INITIAL', 'INDIVIDUAL_CREATORS', true).catch(err => {
+          console.error('❌ [SUB TAB COUNTS] Error fetching INITIAL INDIVIDUAL_CREATORS:', err);
+          return [];
+        });
+        
+        // Completion > For B2C : type: 'COMPLETION' + creatorType: 'FOR_B2C'
+        // Les complétions sont créées via /complete et ont toujours type: 'COMPLETION'
+        const completionB2C = await fetchAvailableCampaigns('COMPLETION', 'FOR_B2C', true).catch(err => {
+          console.error('❌ [SUB TAB COUNTS] Error fetching COMPLETION FOR_B2C:', err);
+          return [];
+        });
+        
+        // Completion > For Individuals : type: 'COMPLETION' + creatorType: 'FOR_INDIVIDUALS'
+        const completionIndividual = await fetchAvailableCampaigns('COMPLETION', 'FOR_INDIVIDUALS', true).catch(err => {
+          console.error('❌ [SUB TAB COUNTS] Error fetching COMPLETION FOR_INDIVIDUALS:', err);
+          return [];
+        });
+        
+        console.log('📊 [SUB TAB COUNTS] Raw results (modérables uniquement - excluant déjà modérées):', {
+          initialB2C: initialB2C?.length || 0,
+          initialIndividual: initialIndividual?.length || 0,
+          completionB2C: completionB2C?.length || 0,
+          completionIndividual: completionIndividual?.length || 0
+        });
+        
+        // Vérifier que les campagnes retournées sont bien modérables
+        // (non déjà modérées, non créées/complétées par le modérateur, status PENDING_MODERATION)
+        if (initialB2C && initialB2C.length > 0) {
+          console.log('✅ [SUB TAB COUNTS] Initial B2C campaigns (modérables):', initialB2C.map((c: any) => ({ id: c.id, title: c.title?.substring(0, 30) })));
+        }
+        if (completionB2C && completionB2C.length > 0) {
+          console.log('✅ [SUB TAB COUNTS] Completion B2C campaigns (modérables):', completionB2C.map((c: any) => ({ id: c.id, title: c.title?.substring(0, 30) })));
+        }
+        console.log('📊 [SUB TAB COUNTS] Raw results details:', {
+          initialB2C: Array.isArray(initialB2C) ? initialB2C : 'NOT ARRAY',
+          initialIndividual: Array.isArray(initialIndividual) ? initialIndividual : 'NOT ARRAY',
+          completionB2C: Array.isArray(completionB2C) ? completionB2C : 'NOT ARRAY',
+          completionIndividual: Array.isArray(completionIndividual) ? completionIndividual : 'NOT ARRAY'
+        });
+        
+        if (!isMounted) {
+          console.log('⚠️ [SUB TAB COUNTS] Component unmounted, skipping state update');
+          return;
+        }
         
         const nextCounts = {
           initial: {
-            'b2c-agencies': initialB2C?.length || 0,
-            'individual-creators': initialIndividual?.length || 0,
+            'b2c-agencies': Array.isArray(initialB2C) ? initialB2C.length : 0,
+            'individual-creators': Array.isArray(initialIndividual) ? initialIndividual.length : 0,
           },
           completion: {
-            'for-b2c': completionB2C?.length || 0,
-            'for-individuals': completionIndividual?.length || 0,
+            'for-b2c': Array.isArray(completionB2C) ? completionB2C.length : 0,
+            'for-individuals': Array.isArray(completionIndividual) ? completionIndividual.length : 0,
           }
         };
         
-        console.log('📊 [SUB TAB COUNTS] Calculated exact counts from API:', nextCounts);
+        console.log('📊 [SUB TAB COUNTS] Calculated exact counts from API:', JSON.stringify(nextCounts, null, 2));
         console.log('📊 [SUB TAB COUNTS] Breakdown:', {
           'INITIAL_B2C_AGENCIES': initialB2C?.length || 0,
           'INITIAL_INDIVIDUAL_CREATORS': initialIndividual?.length || 0,
@@ -1186,29 +1619,32 @@ export const useModeration = () => {
         });
         
         // Mettre à jour les compteurs
-        setSubTabCounts(prev => {
-          const changed =
-            prev.initial['b2c-agencies'] !== nextCounts.initial['b2c-agencies'] ||
-            prev.initial['individual-creators'] !== nextCounts.initial['individual-creators'] ||
-            prev.completion['for-b2c'] !== nextCounts.completion['for-b2c'] ||
-            prev.completion['for-individuals'] !== nextCounts.completion['for-individuals'];
-          if (changed) {
-            console.log('🔄 [SUB TAB COUNTS] Counts changed, updating:', nextCounts);
-            return nextCounts;
-          }
-          return prev;
-        });
+        console.log('🔄 [SUB TAB COUNTS] About to setSubTabCounts with:', JSON.stringify(nextCounts, null, 2));
+        setSubTabCounts(nextCounts);
+        console.log('✅ [SUB TAB COUNTS] Counts updated successfully, new state:', JSON.stringify(nextCounts, null, 2));
       } catch (error) {
         if (!isMounted) return;
         console.error('❌ [SUB TAB COUNTS] Error calculating counts:', error);
+        // En cas d'erreur, garder les compteurs à 0
+        setSubTabCounts({ initial: { 'b2c-agencies': 0, 'individual-creators': 0 }, completion: { 'for-b2c': 0, 'for-individuals': 0 } });
       }
     };
     
     // Calculer les compteurs au montage et après chaque changement de wallet
-    calculateCounts();
+    // Calculer immédiatement (pas de délai) pour un nouveau modérateur
+    console.log('🔄 [SUB TAB COUNTS] useEffect triggered, wallet:', account?.address, 'isMounted:', isMounted);
+    
+    // Vérifier que le wallet est bien connecté avant de calculer
+    if (account?.address) {
+      console.log('✅ [SUB TAB COUNTS] Wallet connected, calling calculateCounts...');
+      calculateCounts();
+    } else {
+      console.log('⚠️ [SUB TAB COUNTS] No wallet connected, skipping calculateCounts');
+    }
     
     return () => {
       isMounted = false;
+      console.log('🔄 [SUB TAB COUNTS] useEffect cleanup');
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [account?.address]);
