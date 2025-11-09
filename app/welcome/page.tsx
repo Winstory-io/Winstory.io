@@ -22,7 +22,6 @@ export default function Home() {
   const account = useActiveAccount();
   const { disconnect, isDisconnecting } = useDisconnect();
   const [showDisconnectMenu, setShowDisconnectMenu] = useState(false);
-  const [isForceDisconnected, setIsForceDisconnected] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   // Nettoyer automatiquement le cache à chaque visite de la page welcome
@@ -71,49 +70,77 @@ export default function Home() {
 
   const handleForceDisconnect = async () => {
     try {
-      // Essayer de déconnecter proprement via thirdweb
-      if (account && !isDisconnecting) {
-        try {
-          await disconnect();
-        } catch (disconnectError) {
-          // Si la déconnexion thirdweb échoue, on continue avec la déconnexion forcée locale
-          console.warn('⚠️ [WELCOME] Thirdweb disconnect failed (using force disconnect):', disconnectError);
-        }
-      }
-    } catch (error) {
-      // Si une erreur survient, on continue quand même
-      console.warn('⚠️ [WELCOME] Error during disconnect attempt (continuing anyway):', error);
-    } finally {
-      // Toujours marquer comme déconnecté et nettoyer, même si la déconnexion thirdweb a échoué
-      setIsForceDisconnected(true);
+      console.log('🔒 [WELCOME] Starting force disconnect...');
       
-      // Nettoyer le cache local
+      // Nettoyer le cache local AVANT de déconnecter
       if (typeof window !== 'undefined') {
         clearUserCache();
-        // Nettoyer aussi les données de modération
+        
+        // Nettoyer les données de modération
         const wallet = account?.address || '';
         if (wallet) {
           const storageKey = `winstory_moderation_voted_${wallet}`;
           localStorage.removeItem(storageKey);
         }
         
-        // Persister l'état de déconnexion forcée dans localStorage
-        localStorage.setItem('winstory_force_disconnected', 'true');
-        localStorage.setItem('winstory_force_disconnected_timestamp', Date.now().toString());
-        
-        // Nettoyer toutes les clés thirdweb possibles
-        const thirdwebKeys: string[] = [];
+        // Nettoyer TOUTES les clés thirdweb dans localStorage
+        const thirdwebLocalKeys: string[] = [];
         for (let i = 0; i < localStorage.length; i++) {
           const key = localStorage.key(i);
-          if (key && (key.startsWith('thirdweb') || key.includes('wallet') || key.includes('auth'))) {
-            thirdwebKeys.push(key);
+          if (key && (
+            key.includes('thirdweb') || 
+            key.includes('walletconnect') || 
+            key.includes('WALLETCONNECT') ||
+            key.includes('-walletLink') ||
+            key.includes('wagmi') ||
+            key.includes('wallet') && !key.includes('winstory')
+          )) {
+            thirdwebLocalKeys.push(key);
           }
         }
-        thirdwebKeys.forEach(key => localStorage.removeItem(key));
+        console.log('🧹 [WELCOME] Cleaning localStorage keys:', thirdwebLocalKeys);
+        thirdwebLocalKeys.forEach(key => localStorage.removeItem(key));
+        
+        // Nettoyer TOUTES les clés thirdweb dans sessionStorage
+        const thirdwebSessionKeys: string[] = [];
+        for (let i = 0; i < sessionStorage.length; i++) {
+          const key = sessionStorage.key(i);
+          if (key && (
+            key.includes('thirdweb') || 
+            key.includes('walletconnect') || 
+            key.includes('WALLETCONNECT') ||
+            key.includes('-walletLink') ||
+            key.includes('wagmi') ||
+            key.includes('wallet')
+          )) {
+            thirdwebSessionKeys.push(key);
+          }
+        }
+        console.log('🧹 [WELCOME] Cleaning sessionStorage keys:', thirdwebSessionKeys);
+        thirdwebSessionKeys.forEach(key => sessionStorage.removeItem(key));
       }
       
+      // Ensuite déconnecter via thirdweb
+      if (account && disconnect && !isDisconnecting) {
+        try {
+          await disconnect();
+          console.log('✅ [WELCOME] ThirdWeb disconnect successful');
+        } catch (disconnectError) {
+          console.warn('⚠️ [WELCOME] ThirdWeb disconnect failed:', disconnectError);
+        }
+      }
+      
+      console.log('✅ [WELCOME] Force disconnect completed');
+    } catch (error) {
+      console.error('❌ [WELCOME] Error during force disconnect:', error);
+    } finally {
       // Fermer le menu
       setShowDisconnectMenu(false);
+      
+      // Forcer un refresh de la page pour s'assurer que tout est nettoyé
+      setTimeout(() => {
+        window.location.reload();
+      }, 100);
     }
   };
 
@@ -121,27 +148,6 @@ export default function Home() {
     setShowDisconnectMenu(!showDisconnectMenu);
   };
 
-  // Charger l'état de déconnexion forcée depuis localStorage au montage
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const forceDisconnected = localStorage.getItem('winstory_force_disconnected') === 'true';
-      if (forceDisconnected) {
-        setIsForceDisconnected(true);
-      }
-    }
-  }, []);
-
-  // Réinitialiser l'état de déconnexion forcée si un nouveau compte se connecte
-  useEffect(() => {
-    if (account) {
-      setIsForceDisconnected(false);
-      // Nettoyer le flag de déconnexion forcée quand on se reconnecte
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('winstory_force_disconnected');
-        localStorage.removeItem('winstory_force_disconnected_timestamp');
-      }
-    }
-  }, [account]);
 
   // Fermer le menu si on clique en dehors
   useEffect(() => {
@@ -160,8 +166,8 @@ export default function Home() {
     };
   }, [showDisconnectMenu]);
 
-  // Déterminer si le wallet est connecté (compte en compte la déconnexion forcée)
-  const isWalletConnected = account && !isForceDisconnected;
+  // Déterminer si le wallet est connecté
+  const isWalletConnected = !!account;
 
 
   return (
@@ -323,7 +329,6 @@ export default function Home() {
                       client={client}
                       theme="dark"
                       onConnect={() => {
-                        setIsForceDisconnected(false);
                         setShowDisconnectMenu(false);
                       }}
                     />

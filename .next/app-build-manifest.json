@@ -5,11 +5,6 @@
       "static/chunks/main-app.js",
       "static/chunks/app/layout.js"
     ],
-    "/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/page.js"
-    ],
     "/welcome/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
@@ -36,15 +31,35 @@
       "static/css/app/moderation/page.css",
       "static/chunks/app/moderation/page.js"
     ],
+    "/api/moderation/normalize-votes/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/moderation/normalize-votes/route.js"
+    ],
     "/api/moderation/campaigns/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/api/moderation/campaigns/route.js"
     ],
+    "/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/page.js"
+    ],
+    "/api/moderation/staker-data/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/moderation/staker-data/route.js"
+    ],
     "/api/moderation/moderator-votes/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/api/moderation/moderator-votes/route.js"
+    ],
+    "/api/s3/presigned-url/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/s3/presigned-url/route.js"
     ],
     "/api/moderation/moderator-scores/route": [
       "static/chunks/webpack.js",
@@ -55,11 +70,6 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/api/moderation/dev-controls/route.js"
-    ],
-    "/api/s3/presigned-url/route": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/api/s3/presigned-url/route.js"
     ],
     "/api/moderation/vote-staking/route": [
       "static/chunks/webpack.js",
@@ -76,10 +86,10 @@
       "static/chunks/main-app.js",
       "static/chunks/app/api/xp/award-moderation/route.js"
     ],
-    "/api/moderation/normalize-votes/route": [
+    "/api/moderation/check-final-decision/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/api/moderation/normalize-votes/route.js"
+      "static/chunks/app/api/moderation/check-final-decision/route.js"
     ]
   }
 }

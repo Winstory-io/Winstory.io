@@ -17,6 +17,7 @@ import ModerationStatsModal from '../../components/ModerationStatsModal';
 import ModerationStatsDevControlsButton from '../../components/ModerationStatsDevControlsButton';
 import DevControlsButton from '../../components/DevControlsButton';
 import UltimateDevControls from '../../components/UltimateDevControls';
+import ModerationFeedback, { FeedbackType } from '../../components/ModerationFeedback';
 import styles from '../../styles/Moderation.module.css';
 import { useModeration } from '../../lib/hooks/useModeration';
 import { ModerationCampaign, getUICreatorType, getUICampaignType } from '../../lib/types';
@@ -43,6 +44,14 @@ const ModerationPageContent = () => {
   const [showRewardsModal, setShowRewardsModal] = useState(false);
   const [showStatsModal, setShowStatsModal] = useState(false);
   
+  // State for moderation feedback
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [feedbackType, setFeedbackType] = useState<FeedbackType>('valid-initial');
+  const [feedbackScore, setFeedbackScore] = useState<number | undefined>(undefined);
+  
+  // State pour bloquer l'UI pendant la sauvegarde du vote
+  const [isSavingVote, setIsSavingVote] = useState(false);
+  
   // States for staker data
   const [stakerData, setStakerData] = useState<{
     stakedAmount: number;
@@ -67,7 +76,6 @@ const ModerationPageContent = () => {
   const [isLoadingCampaign, setIsLoadingCampaign] = useState(false);
   const [isSwitching, setIsSwitching] = useState(false);
   const switchTokenRef = useRef(0);
-  const [isForceDisconnected, setIsForceDisconnected] = useState(false);
 
   // Only render videos from explicitly allowed prefixes in production
   const DEBUG_VIDEO = process.env.NEXT_PUBLIC_DEBUG_VIDEO === 'true' && process.env.NODE_ENV !== 'production';
@@ -511,12 +519,45 @@ const ModerationPageContent = () => {
     }
   }, [activeTab, activeSubTab, loadCampaignForCriteria, setCurrentSession, fetchAvailableCampaigns, updateSubTabCounts]);
 
+  // Fonction helper pour afficher le feedback et passer au contenu suivant
+  const showFeedbackAndNext = async (type: FeedbackType, score?: number) => {
+    // Afficher le feedback
+    setFeedbackType(type);
+    setFeedbackScore(score);
+    setShowFeedback(true);
+    
+    // Attendre 3 secondes
+    await new Promise(resolve => setTimeout(resolve, 3000));
+    
+    // Masquer le feedback
+    setShowFeedback(false);
+    
+    // Charger le contenu suivant
+    await goToNextAvailable();
+  };
+
   const handleInitialValid = async () => {
     if (!currentSession) return;
+    
+    // Bloquer l'UI pendant le traitement (éviter double-clic)
+    if (isSavingVote) {
+      console.warn('⚠️ [INITIAL VALID] Vote already in progress, ignoring click');
+      return;
+    }
+    
+    // Vérifier impérativement que le wallet est toujours connecté
+    if (!address?.address) {
+      console.error('❌ [INITIAL VALID] Wallet disconnected');
+      alert('❌ Votre wallet a été déconnecté.\n\nVeuillez reconnecter votre wallet et réessayer.');
+      return;
+    }
+    
+    setIsSavingVote(true);
     
     try {
       console.log('🔍 [INITIAL VALID] Starting validation:', {
         campaignId: currentSession.campaignId,
+        wallet: address.address,
         stakerData
       });
       
@@ -535,25 +576,45 @@ const ModerationPageContent = () => {
         console.log('✅ [INITIAL VALID] Initial content validated successfully');
         // Décrémenter immédiatement le compteur pour un feedback instantané
         decrementSubTabCount('initial', activeSubTab);
-        // Automatically go to next content immediately
-        await goToNextAvailable();
+        // Afficher le feedback UNIQUEMENT si l'action a réussi en base
+        await showFeedbackAndNext('valid-initial');
       } else {
         console.error('❌ [INITIAL VALID] Failed to validate initial content');
-        // Même en cas d'échec, essayer de charger le suivant si possible
-        console.log('🔄 [INITIAL VALID] Attempting to load next campaign anyway...');
-        await goToNextAvailable();
+        // Afficher un message d'erreur explicite
+        alert('❌ Erreur lors de la validation du contenu initial.\n\nL\'action n\'a pas été enregistrée en base de données.\n\nVeuillez réessayer ou vérifier votre connexion.');
       }
     } catch (error) {
       console.error('❌ [INITIAL VALID] Error during validation:', error);
+      // En cas d'erreur technique, afficher un message d'erreur
+      alert(`❌ Erreur technique lors de la validation:\n\n${error instanceof Error ? error.message : 'Erreur inconnue'}\n\nVeuillez réessayer.`);
+    } finally {
+      // Toujours débloquer l'UI à la fin
+      setIsSavingVote(false);
     }
   };
 
   const handleCompletionValid = async () => {
     if (!currentSession) return;
     
+    // Bloquer l'UI pendant le traitement (éviter double-clic)
+    if (isSavingVote) {
+      console.warn('⚠️ [COMPLETION VALID] Vote already in progress, ignoring click');
+      return;
+    }
+    
+    // Vérifier impérativement que le wallet est toujours connecté
+    if (!address?.address) {
+      console.error('❌ [COMPLETION VALID] Wallet disconnected');
+      alert('❌ Votre wallet a été déconnecté.\n\nVeuillez reconnecter votre wallet et réessayer.');
+      return;
+    }
+    
+    setIsSavingVote(true);
+    
     try {
       console.log('🔍 [COMPLETION VALID] Starting validation:', {
         campaignId: currentSession.campaignId,
+        wallet: address.address,
         stakerData
       });
       
@@ -572,16 +633,21 @@ const ModerationPageContent = () => {
         console.log('✅ [COMPLETION VALID] Completion validated successfully');
         // Décrémenter immédiatement le compteur pour un feedback instantané
         decrementSubTabCount('completion', activeSubTab);
-        // Automatically go to next content immediately
-        await goToNextAvailable();
+        // Afficher le feedback UNIQUEMENT si l'action a réussi en base
+        // Note: Le feedback sera affiché dans handleCompletionScore après le scoring
+        await showFeedbackAndNext('valid-completion');
       } else {
         console.error('❌ [COMPLETION VALID] Failed to validate completion');
-        // Même en cas d'échec, essayer de charger le suivant si possible
-        console.log('🔄 [COMPLETION VALID] Attempting to load next campaign anyway...');
-        await goToNextAvailable();
+        // Afficher un message d'erreur explicite
+        alert('❌ Erreur lors de la validation de la completion.\n\nL\'action n\'a pas été enregistrée en base de données.\n\nVeuillez réessayer ou vérifier votre connexion.');
       }
     } catch (error) {
       console.error('❌ [COMPLETION VALID] Error during validation:', error);
+      // En cas d'erreur technique, afficher un message d'erreur
+      alert(`❌ Erreur technique lors de la validation:\n\n${error instanceof Error ? error.message : 'Erreur inconnue'}\n\nVeuillez réessayer.`);
+    } finally {
+      // Toujours débloquer l'UI à la fin
+      setIsSavingVote(false);
     }
   };
 
@@ -591,10 +657,26 @@ const ModerationPageContent = () => {
       return;
     }
     
+    // Bloquer l'UI pendant le traitement (éviter double-clic)
+    if (isSavingVote) {
+      console.warn('⚠️ [INITIAL REFUSE] Vote already in progress, ignoring click');
+      return;
+    }
+    
+    // Vérifier impérativement que le wallet est toujours connecté
+    if (!address?.address) {
+      console.error('❌ [INITIAL REFUSE] Wallet disconnected');
+      alert('❌ Votre wallet a été déconnecté.\n\nVeuillez reconnecter votre wallet et réessayer.');
+      return;
+    }
+    
+    setIsSavingVote(true);
+    
     try {
       console.log('🔍 [INITIAL REFUSE] Starting refusal:', {
         campaignId: currentSession.campaignId,
         campaignType: currentSession.campaign?.type,
+        wallet: address.address,
         stakerData: stakerData ? {
           stakedAmount: stakerData.stakedAmount,
           stakeAgeDays: stakerData.stakeAgeDays,
@@ -623,24 +705,21 @@ const ModerationPageContent = () => {
         console.log('✅ [INITIAL REFUSE] Initial content refused successfully');
         // Décrémenter immédiatement le compteur pour un feedback instantané
         decrementSubTabCount('initial', activeSubTab);
-        // Automatically go to next content immediately
-        await goToNextAvailable();
+        // Afficher le feedback UNIQUEMENT si l'action a réussi en base
+        await showFeedbackAndNext('refuse-initial');
       } else {
         console.error('❌ [INITIAL REFUSE] Failed to refuse initial content');
         console.error('❌ [INITIAL REFUSE] Check the network tab and console logs above for details');
-        // Même en cas d'échec, essayer de charger le suivant si possible
-        console.log('🔄 [INITIAL REFUSE] Attempting to load next campaign anyway...');
-        await goToNextAvailable();
         
         // Vérifier si c'est un problème de vote déjà enregistré
-        const wallet = address?.address || '';
+        const wallet = address.address;
         const storageKey = `winstory_moderation_voted_${wallet}`;
         try {
           const votedData = localStorage.getItem(storageKey);
           if (votedData) {
             const votedIds = JSON.parse(votedData);
             if (votedIds.includes(currentSession.campaignId)) {
-              alert('Ce contenu a déjà été modéré.\n\nSi vous pensez que c\'est une erreur, le système va vérifier dans la base de données et autoriser le vote si nécessaire.\n\nVeuillez réessayer.');
+              alert('⚠️ Ce contenu a déjà été modéré par vous.\n\nLe système a détecté que vous avez déjà voté pour ce contenu.\n\nVeuillez passer au contenu suivant.');
               return;
             }
           }
@@ -648,23 +727,42 @@ const ModerationPageContent = () => {
           // Ignorer les erreurs de parsing
         }
         
-        // Afficher un message d'erreur à l'utilisateur avec plus de détails
-        alert('Erreur lors du refus de la création initiale.\n\nVeuillez:\n1. Ouvrir la console du navigateur (F12)\n2. Vérifier les logs précédents\n3. Vérifier l\'onglet Network pour voir la réponse de l\'API\n4. Réessayer si le problème persiste');
+        // Afficher un message d'erreur explicite
+        alert('❌ Erreur lors du refus du contenu initial.\n\nL\'action n\'a pas été enregistrée en base de données.\n\nVeuillez réessayer ou vérifier votre connexion.');
       }
     } catch (error) {
       console.error('❌ [INITIAL REFUSE] Error during refusal:', error);
       console.error('❌ [INITIAL REFUSE] Error stack:', error instanceof Error ? error.stack : 'No stack trace');
-      // Afficher un message d'erreur à l'utilisateur
-      alert(`Erreur lors du refus: ${error instanceof Error ? error.message : 'Erreur inconnue'}\n\nVérifiez la console pour plus de détails.`);
+      // En cas d'erreur technique, afficher un message d'erreur
+      alert(`❌ Erreur technique lors du refus:\n\n${error instanceof Error ? error.message : 'Erreur inconnue'}\n\nVeuillez réessayer.`);
+    } finally {
+      // Toujours débloquer l'UI à la fin
+      setIsSavingVote(false);
     }
   };
 
   const handleCompletionRefuse = async () => {
     if (!currentSession) return;
     
+    // Bloquer l'UI pendant le traitement (éviter double-clic)
+    if (isSavingVote) {
+      console.warn('⚠️ [COMPLETION REFUSE] Vote already in progress, ignoring click');
+      return;
+    }
+    
+    // Vérifier impérativement que le wallet est toujours connecté
+    if (!address?.address) {
+      console.error('❌ [COMPLETION REFUSE] Wallet disconnected');
+      alert('❌ Votre wallet a été déconnecté.\n\nVeuillez reconnecter votre wallet et réessayer.');
+      return;
+    }
+    
+    setIsSavingVote(true);
+    
     try {
       console.log('🔍 [COMPLETION REFUSE] Starting refusal:', {
         campaignId: currentSession.campaignId,
+        wallet: address.address,
         stakerData
       });
       
@@ -683,18 +781,20 @@ const ModerationPageContent = () => {
         console.log('✅ [COMPLETION REFUSE] Completion refused successfully');
         // Décrémenter immédiatement le compteur pour un feedback instantané
         decrementSubTabCount('completion', activeSubTab);
-        // Automatically go to next content immediately
-        await goToNextAvailable();
+        // Afficher le feedback UNIQUEMENT si l'action a réussi en base
+        await showFeedbackAndNext('refuse-completion');
       } else {
         console.error('❌ [COMPLETION REFUSE] Failed to refuse completion');
-        // Même en cas d'échec, essayer de charger le suivant si possible
-        console.log('🔄 [COMPLETION REFUSE] Attempting to load next campaign anyway...');
-        await goToNextAvailable();
+        // Afficher un message d'erreur explicite
+        alert('❌ Erreur lors du refus de la completion.\n\nL\'action n\'a pas été enregistrée en base de données.\n\nVeuillez réessayer ou vérifier votre connexion.');
       }
     } catch (error) {
       console.error('❌ [COMPLETION REFUSE] Error during refusal:', error);
-      // Afficher un message d'erreur à l'utilisateur
-      alert(`Erreur lors du refus: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
+      // En cas d'erreur technique, afficher un message d'erreur
+      alert(`❌ Erreur technique lors du refus:\n\n${error instanceof Error ? error.message : 'Erreur inconnue'}\n\nVeuillez réessayer.`);
+    } finally {
+      // Toujours débloquer l'UI à la fin
+      setIsSavingVote(false);
     }
   };
 
@@ -706,11 +806,28 @@ const ModerationPageContent = () => {
       await handleCompletionRefuse();
       return;
     }
+    
+    // Bloquer l'UI pendant le traitement (éviter double-clic)
+    if (isSavingVote) {
+      console.warn('⚠️ [COMPLETION SCORE] Vote already in progress, ignoring click');
+      return;
+    }
+    
+    // Vérifier impérativement que le wallet est toujours connecté
+    if (!address?.address) {
+      console.error('❌ [COMPLETION SCORE] Wallet disconnected');
+      setShowScoringModal(false);
+      alert('❌ Votre wallet a été déconnecté.\n\nVeuillez reconnecter votre wallet et réessayer.');
+      return;
+    }
+    
+    setIsSavingVote(true);
 
     try {
       console.log('🔍 [COMPLETION SCORE] Starting scoring:', {
         score,
         campaignId: currentSession.campaignId,
+        wallet: address.address,
         stakerData
       });
       
@@ -729,16 +846,22 @@ const ModerationPageContent = () => {
         setShowScoringModal(false);
         // Décrémenter immédiatement le compteur pour un feedback instantané
         decrementSubTabCount('completion', activeSubTab);
-        // Automatically go to next content immediately
-        await goToNextAvailable();
+        // Afficher le feedback UNIQUEMENT si l'action a réussi en base
+        await showFeedbackAndNext('valid-completion', score);
       } else {
         console.error('❌ [COMPLETION SCORE] Failed to submit score:', score);
-        // Même en cas d'échec, essayer de charger le suivant si possible
-        console.log('🔄 [COMPLETION SCORE] Attempting to load next campaign anyway...');
-        await goToNextAvailable();
+        setShowScoringModal(false);
+        // Afficher un message d'erreur explicite
+        alert(`❌ Erreur lors de l'attribution du score ${score}/100.\n\nL'action n'a pas été enregistrée en base de données.\n\nVeuillez réessayer ou vérifier votre connexion.`);
       }
     } catch (error) {
       console.error('❌ [COMPLETION SCORE] Error during submission:', error);
+      setShowScoringModal(false);
+      // En cas d'erreur technique, afficher un message d'erreur
+      alert(`❌ Erreur technique lors de l'attribution du score:\n\n${error instanceof Error ? error.message : 'Erreur inconnue'}\n\nVeuillez réessayer.`);
+    } finally {
+      // Toujours débloquer l'UI à la fin
+      setIsSavingVote(false);
     }
   };
 
@@ -752,17 +875,6 @@ const ModerationPageContent = () => {
     gap: '0' // Réduire l'espacement entre les éléments
   } as React.CSSProperties;
 
-  // Vérifier si l'utilisateur a été déconnecté de force
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const forceDisconnected = localStorage.getItem('winstory_force_disconnected') === 'true';
-      if (forceDisconnected) {
-        setIsForceDisconnected(true);
-        // Si déconnecté de force, rediriger vers welcome
-        router.push('/welcome');
-      }
-    }
-  }, [router]);
 
   // Debug: Afficher l'état actuel
     console.log('DEBUG: Current state', { 
@@ -774,7 +886,7 @@ const ModerationPageContent = () => {
   });
 
   // VÉRIFIER L'AUTHENTIFICATION EN PREMIER
-  if (!address?.address || isForceDisconnected) {
+  if (!address?.address) {
     return (
       <div className={styles.moderationBg}>
         {/* Dev Controls - TOUJOURS VISIBLE */}
@@ -822,11 +934,9 @@ const ModerationPageContent = () => {
             textAlign: 'center',
             maxWidth: '600px'
           }}>
-            {isForceDisconnected 
-              ? 'You have been disconnected. Please reconnect your wallet to access moderation.'
-              : 'Connect your wallet to access the moderation interface and start moderating campaigns.'}
+            Connect your wallet to access the moderation interface and start moderating campaigns.
           </p>
-          {!isForceDisconnected && <WalletConnect isBothLogin={true} />}
+          <WalletConnect isBothLogin={true} />
         </div>
       </div>
     );
@@ -1352,6 +1462,11 @@ const ModerationPageContent = () => {
             stakeYes={progress.stakeYes}
             stakeNo={progress.stakeNo}
           />
+          
+          {/* Feedback de modération */}
+          {showFeedback && (
+            <ModerationFeedback type={feedbackType} score={feedbackScore} />
+          )}
         </div>
       );
     } else if (isLoading) {
@@ -2028,6 +2143,70 @@ const ModerationPageContent = () => {
       
       {/* Dev Controls pour les statistiques de modération */}
       <ModerationStatsDevControlsButton />
+      
+      {/* Feedback de modération */}
+      {showFeedback && (
+        <ModerationFeedback type={feedbackType} score={feedbackScore} />
+      )}
+      
+      {/* Overlay de sauvegarde du vote (bloquer l'UI pendant l'enregistrement) */}
+      {isSavingVote && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0, 0, 0, 0.85)',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+            backdropFilter: 'blur(4px)'
+          }}
+        >
+          <div
+            style={{
+              width: '80px',
+              height: '80px',
+              borderRadius: '50%',
+              border: '4px solid rgba(255, 214, 0, 0.2)',
+              borderTopColor: '#FFD600',
+              animation: 'spin 1s linear infinite'
+            }}
+          />
+          <div
+            style={{
+              marginTop: '24px',
+              color: '#FFD600',
+              fontSize: '18px',
+              fontWeight: 600,
+              textAlign: 'center',
+              textShadow: '0 2px 8px rgba(255, 214, 0, 0.3)'
+            }}
+          >
+            Enregistrement de votre vote...
+          </div>
+          <div
+            style={{
+              marginTop: '8px',
+              color: '#999',
+              fontSize: '14px',
+              textAlign: 'center'
+            }}
+          >
+            Veuillez patienter
+          </div>
+          <style>{`
+            @keyframes spin {
+              from { transform: rotate(0deg); }
+              to { transform: rotate(360deg); }
+            }
+          `}</style>
+        </div>
+      )}
     </div>
   );
 };
