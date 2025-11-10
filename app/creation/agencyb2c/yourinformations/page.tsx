@@ -266,11 +266,49 @@ export default function AgencyB2CYourInformations() {
                 </div>
             )}
 
-            {/* Main Content */}
+            {/* Agency Information - Green Card (Authenticated) */}
             <div style={{ 
                 maxWidth: 500, 
                 width: '90vw', 
-                background: '#181818', 
+                background: '#0f2818', 
+                borderRadius: 16, 
+                padding: 24, 
+                border: '2px solid #00C46C',
+                marginBottom: 24
+            }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div>
+                        <h3 style={{ color: '#00C46C', fontWeight: 700, fontSize: 18, marginBottom: 8 }}>
+                            Agency:
+                        </h3>
+                        <div style={{ color: '#00C46C', fontSize: 16, fontWeight: 600 }}>
+                            {agencyName}
+                        </div>
+                        <div style={{ color: '#00C46C', fontSize: 14, opacity: 0.8, marginTop: 4 }}>
+                            {agencyEmail}
+                        </div>
+                    </div>
+                    <div style={{ 
+                        width: 48, 
+                        height: 48, 
+                        borderRadius: '50%', 
+                        background: '#00C46C',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                    }}>
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M20 6L9 17L4 12" stroke="#000" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            {/* B2C Client Information - Yellow Card (To be verified) */}
+            <div style={{ 
+                maxWidth: 500, 
+                width: '90vw', 
+                background: '#2a2416', 
                 borderRadius: 16, 
                 padding: 32, 
                 border: '2px solid #FFD600',
@@ -282,13 +320,13 @@ export default function AgencyB2CYourInformations() {
 
                 <div style={{ marginBottom: 24 }}>
                     <label style={{ display: 'block', color: '#FFD600', fontWeight: 600, marginBottom: 8 }}>
-                        Agency: {agencyName}
+                        B2C Client Company Name
                     </label>
                     <input
                         type="text"
                         value={b2cCompanyName}
                         onChange={(e) => setB2cCompanyName(e.target.value)}
-                        placeholder="B2C client company name"
+                        placeholder="Company name"
                         style={{
                             width: '100%',
                             padding: '12px',

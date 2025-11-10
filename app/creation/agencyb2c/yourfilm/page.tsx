@@ -135,7 +135,7 @@ export default function YourFilmAgencyPage() {
                 
                 // Sauvegarder seulement les métadonnées dans localStorage
                 localStorage.setItem("film", JSON.stringify({
-                    aiRequested: true, // Pour les agences, AI par défaut
+                    aiRequested: false, // User uploaded their own video, so no AI requested
                     videoId: videoId, // ID pour récupérer la vidéo depuis IndexedDB
                     fileName: video?.name || null,
                     fileSize: video?.size || null,
@@ -150,7 +150,7 @@ export default function YourFilmAgencyPage() {
         } else {
             // Pas de vidéo, sauvegarder quand même les données
             localStorage.setItem("film", JSON.stringify({
-                aiRequested: true,
+                aiRequested: false,
                 videoId: null,
                 fileName: null,
                 fileSize: null,

@@ -123,15 +123,20 @@ export default function AgencyB2CTokenRewardConfig({ onClose }: { onClose: () =>
   const handleConfirm = () => {
     if (!canConfirm) return;
 
+    const totalAmount = parseFloat(amountPerUser) * maxCompletions;
+
     const config = {
-      tokenName,
+      name: tokenName,  // Changed from tokenName to name for API consistency
+      tokenName,        // Keep tokenName for backward compatibility
       tokenSymbol,
       contractAddress,
       amountPerUser: parseFloat(amountPerUser),
+      totalAmount,      // Add totalAmount for API
       blockchain,
       tokenStandard,
       hasEnoughBalance,
-      walletAddress
+      walletAddress,
+      decimals: 18      // Add decimals for database
     };
 
     localStorage.setItem('standardTokenReward', JSON.stringify(config));

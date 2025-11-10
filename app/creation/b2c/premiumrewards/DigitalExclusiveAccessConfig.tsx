@@ -1,11 +1,13 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import styles from '../standardrewards/Rewards.module.css';
 
 export default function DigitalExclusiveAccessConfig({ onClose }: { onClose: () => void }) {
   const router = useRouter();
+  const pathname = usePathname();
+  const isAgencyB2C = pathname?.includes('/creation/agencyb2c/');
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [showAdditionalSettings, setShowAdditionalSettings] = useState(false);
   const [accessName, setAccessName] = useState('');
@@ -222,7 +224,7 @@ export default function DigitalExclusiveAccessConfig({ onClose }: { onClose: () 
     localStorage.setItem('premiumDigitalAccessReward', JSON.stringify(config));
     
     // Navigate to Recap page
-    router.push('/creation/b2c/recap');
+    router.push(isAgencyB2C ? '/creation/agencyb2c/recap' : '/creation/b2c/recap');
   };
 
   // Déterminer le type de contenu basé sur accessType

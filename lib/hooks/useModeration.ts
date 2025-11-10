@@ -86,11 +86,19 @@ export const useModeration = () => {
       }
       const abortController = new AbortController();
       fetchAbortControllerRef.current = abortController;
+      
+      // Timeout de 15 secondes pour éviter les requêtes bloquées
+      const timeoutId = setTimeout(() => {
+        console.warn('⏱️ [FETCH CAMPAIGNS] Request timeout after 15s, aborting...');
+        abortController.abort();
+      }, 15000);
 
       let response: Response;
       try {
         response = await fetch(url, { signal: abortController.signal });
+        clearTimeout(timeoutId);
       } catch (fetchError) {
+        clearTimeout(timeoutId);
         // Erreur réseau, CORS, ou requête annulée volontairement
         if ((fetchError as any)?.name === 'AbortError') {
           if (DEBUG) console.log('🛑 [FETCH CAMPAIGNS] Aborted previous in-flight request');
@@ -99,10 +107,22 @@ export const useModeration = () => {
           return cached;
         }
         const errorMessage = fetchError instanceof Error ? fetchError.message : 'Failed to connect to server';
-        if (DEBUG) console.error('❌ [FETCH CAMPAIGNS] Network error:', fetchError);
+        console.error('❌ [FETCH CAMPAIGNS] Network error:', {
+          error: errorMessage,
+          url,
+          fetchKey
+        });
         // Ne pas throw l'erreur, retourner un tableau vide pour éviter de casser l'UI
         setIsLoading(false);
         setError(`Network error: ${errorMessage}`);
+        
+        // Retourner le cache s'il existe, sinon tableau vide
+        const cached = campaignsCacheRef.current.get(fetchKey);
+        if (cached && cached.length > 0) {
+          console.warn('⚠️ [FETCH CAMPAIGNS] Using cached data due to network error');
+          return cached;
+        }
+        
         return [];
       }
 
@@ -120,16 +140,39 @@ export const useModeration = () => {
               errorData = { rawError: errorText };
             }
           }
-          if (DEBUG) console.error('❌ [FETCH CAMPAIGNS] API Error Response:', {
+          console.error('❌ [FETCH CAMPAIGNS] API Error Response:', {
             status: response.status,
             statusText: response.statusText,
             contentType: response.headers.get('content-type'),
             error: errorData.error || errorData.details || errorData.rawError || errorText
           });
-          throw new Error(errorData.error || errorData.details || errorData.rawError || `HTTP ${response.status}: ${response.statusText}`);
+          
+          // Ne pas throw, retourner tableau vide pour éviter de casser l'UI
+          const errorMsg = errorData.error || errorData.details || errorData.rawError || `HTTP ${response.status}: ${response.statusText}`;
+          setIsLoading(false);
+          setError(`API error: ${errorMsg}`);
+          
+          // Retourner le cache s'il existe, sinon tableau vide
+          const cached = campaignsCacheRef.current.get(fetchKey);
+          if (cached && cached.length > 0) {
+            console.warn('⚠️ [FETCH CAMPAIGNS] Using cached data due to API error');
+            return cached;
+          }
+          
+          return [];
         } catch (parseError) {
-          if (DEBUG) console.error('❌ [FETCH CAMPAIGNS] Error parsing error response:', parseError);
-          throw new Error(`Failed to fetch campaigns: ${response.status} ${response.statusText} - ${errorText || 'Unknown error'}`);
+          console.error('❌ [FETCH CAMPAIGNS] Error parsing error response:', parseError);
+          setIsLoading(false);
+          setError(`Failed to fetch campaigns: ${response.status} ${response.statusText}`);
+          
+          // Retourner le cache s'il existe, sinon tableau vide
+          const cached = campaignsCacheRef.current.get(fetchKey);
+          if (cached && cached.length > 0) {
+            console.warn('⚠️ [FETCH CAMPAIGNS] Using cached data due to parse error');
+            return cached;
+          }
+          
+          return [];
         }
       }
 
@@ -648,12 +691,39 @@ export const useModeration = () => {
           // IMPORTANT: Utiliser skipCache=true pour forcer le rechargement et obtenir les données à jour
           try {
             console.log('🔄 [MODERATION DECISION] Recalculating counts after vote (skipCache=true)...');
-            const initialB2CAll = await fetchAvailableCampaigns('INITIAL', 'B2C_AGENCIES', true).catch(() => []);
-            const initialB2CForB2C = await fetchAvailableCampaigns('INITIAL', 'FOR_B2C', true).catch(() => []);
+            
+            // Wrapper avec retry pour gérer les erreurs "Failed to fetch"
+            const fetchWithRetry = async (type: any, creatorType: any, maxRetries = 2): Promise<any[]> => {
+              for (let i = 0; i <= maxRetries; i++) {
+                try {
+                  const result = await fetchAvailableCampaigns(type, creatorType, true);
+                  return result || [];
+                } catch (error) {
+                  console.warn(`⚠️ [FETCH RETRY] Attempt ${i + 1}/${maxRetries + 1} failed for ${type}/${creatorType}:`, error instanceof Error ? error.message : error);
+                  
+                  if (i < maxRetries) {
+                    // Attendre avant de réessayer (backoff exponentiel)
+                    await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
+                  } else {
+                    // Dernier essai échoué, retourner tableau vide au lieu de throw
+                    console.error(`❌ [FETCH RETRY] All attempts failed for ${type}/${creatorType}, returning empty array`);
+                    return [];
+                  }
+                }
+              }
+              return [];
+            };
+            
+            // Charger tous les compteurs en parallèle avec retry
+            const [initialB2CAll, initialB2CForB2C, initialIndividual, completionB2C, completionIndividual] = await Promise.all([
+              fetchWithRetry('INITIAL', 'B2C_AGENCIES'),
+              fetchWithRetry('INITIAL', 'FOR_B2C'),
+              fetchWithRetry('INITIAL', 'INDIVIDUAL_CREATORS'),
+              fetchWithRetry('COMPLETION', 'FOR_B2C'),
+              fetchWithRetry('COMPLETION', 'FOR_INDIVIDUALS')
+            ]);
+            
             const initialB2C = [...(initialB2CAll || []), ...(initialB2CForB2C || [])];
-            const initialIndividual = await fetchAvailableCampaigns('INITIAL', 'INDIVIDUAL_CREATORS', true).catch(() => []);
-            const completionB2C = await fetchAvailableCampaigns('COMPLETION', 'FOR_B2C', true).catch(() => []);
-            const completionIndividual = await fetchAvailableCampaigns('COMPLETION', 'FOR_INDIVIDUALS', true).catch(() => []);
             
             const newCounts = {
               initial: {
@@ -670,6 +740,8 @@ export const useModeration = () => {
             setSubTabCounts(newCounts);
           } catch (err) {
             console.error('❌ [MODERATION DECISION] Error recalculating counts:', err);
+            // Ne pas throw, juste logger l'erreur pour ne pas casser le flux
+            console.warn('⚠️ [MODERATION DECISION] Continuing despite count recalculation error...');
           }
         };
         
