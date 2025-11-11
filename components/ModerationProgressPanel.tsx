@@ -233,12 +233,12 @@ const ModerationProgressPanel: React.FC<ModerationProgressPanelProps> = ({
               gap: '10px' // Augmenté de 8px à 10px
             }}>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <span style={{ fontSize: '10px', color: '#999', marginBottom: '2px' }}>Valid</span>
-                <span style={{ color: '#00FF00', fontSize: '16px', fontWeight: 'bold' }}>{Math.round(scoreYes * 100)}%</span>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                 <span style={{ fontSize: '10px', color: '#999', marginBottom: '2px' }}>Refuse</span>
                 <span style={{ color: '#FF0000', fontSize: '16px', fontWeight: 'bold' }}>{Math.round(scoreNo * 100)}%</span>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <span style={{ fontSize: '10px', color: '#999', marginBottom: '2px' }}>Valid</span>
+                <span style={{ color: '#00FF00', fontSize: '16px', fontWeight: 'bold' }}>{Math.round(scoreYes * 100)}%</span>
               </div>
             </div>
             <div style={{

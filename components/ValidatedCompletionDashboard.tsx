@@ -392,11 +392,11 @@ export default function ValidatedCompletionDashboard({
                 : `Completion Moderation by ${validationStatus?.numModerators} Stakers`
               }
             </div>
-            <div style={{ color: '#18C964', fontSize: 15, fontWeight: 700 }}> {/* Reduced from 18 */}
-              {validationStatus?.validVotes} Validated
-            </div>
-            <div style={{ color: '#FF3B30', fontSize: 15, fontWeight: 700, marginTop: 2 }}> {/* Reduced from 4 */}
+            <div style={{ color: '#FF3B30', fontSize: 15, fontWeight: 700 }}> {/* Reduced from 18 */}
               {validationStatus?.refuseVotes} Refused
+            </div>
+            <div style={{ color: '#18C964', fontSize: 15, fontWeight: 700, marginTop: 2 }}> {/* Reduced from 4 */}
+              {validationStatus?.validVotes} Validated
             </div>
             {validationStatus?.voteCanClose && (
               <div style={{ 

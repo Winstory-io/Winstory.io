@@ -106,12 +106,24 @@ export const useModeration = () => {
           setIsLoading(false);
           return cached;
         }
+        
+        // Extraire un message d'erreur significatif
         const errorMessage = fetchError instanceof Error ? fetchError.message : 'Failed to connect to server';
-        console.error('❌ [FETCH CAMPAIGNS] Network error:', {
-          error: errorMessage,
-          url,
-          fetchKey
-        });
+        const errorDetails = {
+          message: errorMessage,
+          type: fetchError instanceof Error ? fetchError.name : typeof fetchError,
+          url: url,
+          fetchKey: fetchKey
+        };
+        
+        // Logger l'erreur uniquement en mode DEBUG pour éviter le spam
+        if (DEBUG) {
+          console.error('❌ [FETCH CAMPAIGNS] Network error:', errorDetails);
+        } else {
+          // En production, log minimal
+          console.warn('⚠️ [FETCH CAMPAIGNS] Network error, using cache if available');
+        }
+        
         // Ne pas throw l'erreur, retourner un tableau vide pour éviter de casser l'UI
         setIsLoading(false);
         setError(`Network error: ${errorMessage}`);
@@ -119,7 +131,7 @@ export const useModeration = () => {
         // Retourner le cache s'il existe, sinon tableau vide
         const cached = campaignsCacheRef.current.get(fetchKey);
         if (cached && cached.length > 0) {
-          console.warn('⚠️ [FETCH CAMPAIGNS] Using cached data due to network error');
+          if (DEBUG) console.warn('⚠️ [FETCH CAMPAIGNS] Using cached data due to network error');
           return cached;
         }
         
@@ -627,14 +639,14 @@ export const useModeration = () => {
 
         console.log('🎉 [MODERATION DECISION] Vote finalized successfully');
         
-        // Sauvegarder le campaignId avant de réinitialiser la session
+        // Sauvegarder le campaignId avant de réinitialiser les caches
         const votedCampaignId = currentSession?.campaignId;
         
         // Invalider le cache et recalculer les compteurs après un vote réussi
         // pour que les bulles de notifications reflètent le nouveau "reste" disponible
         console.log('🔄 [MODERATION DECISION] Invalidating cache and recalculating counts after vote...');
         
-        // Réinitialiser complètement tous les états et caches
+        // Réinitialiser les caches (mais pas currentSession pour permettre l'affichage du feedback)
         lastFetchKeyRef.current = null;
         lastFetchTimestampRef.current = 0;
         lastSetKeyRef.current = null;
@@ -642,8 +654,8 @@ export const useModeration = () => {
         campaignsCacheRef.current.clear();
         setAllCampaigns([]);
         setAvailableCampaigns([]);
-        // Réinitialiser la session actuelle pour éviter d'afficher des contenus déjà modérés
-        setCurrentSession(null);
+        // NOTE: Ne pas réinitialiser currentSession ici pour permettre l'affichage du feedback
+        // La page de modération gérera la réinitialisation quand elle charge le contenu suivant
         
         // Vérifier que le vote est bien enregistré avant de recalculer
         // On va vérifier directement dans la base de données avec plusieurs tentatives
@@ -692,21 +704,26 @@ export const useModeration = () => {
           try {
             console.log('🔄 [MODERATION DECISION] Recalculating counts after vote (skipCache=true)...');
             
-            // Wrapper avec retry pour gérer les erreurs "Failed to fetch"
+            // Wrapper avec retry pour gérer les erreurs "Failed to fetch" de manière silencieuse
             const fetchWithRetry = async (type: any, creatorType: any, maxRetries = 2): Promise<any[]> => {
               for (let i = 0; i <= maxRetries; i++) {
                 try {
                   const result = await fetchAvailableCampaigns(type, creatorType, true);
                   return result || [];
                 } catch (error) {
-                  console.warn(`⚠️ [FETCH RETRY] Attempt ${i + 1}/${maxRetries + 1} failed for ${type}/${creatorType}:`, error instanceof Error ? error.message : error);
+                  // Logger uniquement en DEBUG pour éviter le spam
+                  if (DEBUG) {
+                    console.warn(`⚠️ [FETCH RETRY] Attempt ${i + 1}/${maxRetries + 1} failed for ${type}/${creatorType}:`, error instanceof Error ? error.message : error);
+                  }
                   
                   if (i < maxRetries) {
                     // Attendre avant de réessayer (backoff exponentiel)
                     await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
                   } else {
                     // Dernier essai échoué, retourner tableau vide au lieu de throw
-                    console.error(`❌ [FETCH RETRY] All attempts failed for ${type}/${creatorType}, returning empty array`);
+                    if (DEBUG) {
+                      console.error(`❌ [FETCH RETRY] All attempts failed for ${type}/${creatorType}, returning empty array`);
+                    }
                     return [];
                   }
                 }
@@ -736,12 +753,15 @@ export const useModeration = () => {
               }
             };
             
-            console.log('✅ [MODERATION DECISION] Updated counts after vote:', newCounts);
+            if (DEBUG) console.log('✅ [MODERATION DECISION] Updated counts after vote:', newCounts);
             setSubTabCounts(newCounts);
           } catch (err) {
-            console.error('❌ [MODERATION DECISION] Error recalculating counts:', err);
-            // Ne pas throw, juste logger l'erreur pour ne pas casser le flux
-            console.warn('⚠️ [MODERATION DECISION] Continuing despite count recalculation error...');
+            // Logger uniquement en DEBUG pour éviter le spam
+            if (DEBUG) {
+              console.error('❌ [MODERATION DECISION] Error recalculating counts:', err);
+              console.warn('⚠️ [MODERATION DECISION] Continuing despite count recalculation error...');
+            }
+            // Ne pas throw, juste continuer silencieusement pour ne pas casser le flux
           }
         };
         
@@ -942,14 +962,14 @@ export const useModeration = () => {
 
         console.log('🎉 [COMPLETION SCORE] Score finalized successfully:', score);
         
-        // Sauvegarder le campaignId avant de réinitialiser la session
+        // Sauvegarder le campaignId avant de réinitialiser les caches
         const votedCampaignId = currentSession?.campaignId;
         
         // Invalider le cache et recalculer les compteurs après un vote réussi
         // pour que les bulles de notifications reflètent le nouveau "reste" disponible
         console.log('🔄 [COMPLETION SCORE] Invalidating cache and recalculating counts after vote...');
         
-        // Réinitialiser complètement tous les états et caches
+        // Réinitialiser les caches (mais pas currentSession pour permettre l'affichage du feedback)
         lastFetchKeyRef.current = null;
         lastFetchTimestampRef.current = 0;
         lastSetKeyRef.current = null;
@@ -957,8 +977,8 @@ export const useModeration = () => {
         campaignsCacheRef.current.clear();
         setAllCampaigns([]);
         setAvailableCampaigns([]);
-        // Réinitialiser la session actuelle pour éviter d'afficher des contenus déjà modérés
-        setCurrentSession(null);
+        // NOTE: Ne pas réinitialiser currentSession ici pour permettre l'affichage du feedback
+        // La page de modération gérera la réinitialisation quand elle charge le contenu suivant
         
         // Vérifier que le vote est bien enregistré avant de recalculer
         // On va vérifier directement dans la base de données avec plusieurs tentatives
@@ -1005,13 +1025,28 @@ export const useModeration = () => {
           // Recalculer les compteurs pour mettre à jour les bulles de notifications
           // IMPORTANT: Utiliser skipCache=true pour forcer le rechargement et obtenir les données à jour
           try {
-            console.log('🔄 [COMPLETION SCORE] Recalculating counts after vote (skipCache=true)...');
-            const initialB2CAll = await fetchAvailableCampaigns('INITIAL', 'B2C_AGENCIES', true).catch(() => []);
-            const initialB2CForB2C = await fetchAvailableCampaigns('INITIAL', 'FOR_B2C', true).catch(() => []);
+            if (DEBUG) console.log('🔄 [COMPLETION SCORE] Recalculating counts after vote (skipCache=true)...');
+            
+            // Wrapper pour gérer les erreurs silencieusement
+            const fetchSilent = async (type: any, creatorType: any): Promise<any[]> => {
+              try {
+                const result = await fetchAvailableCampaigns(type, creatorType, true);
+                return result || [];
+              } catch (error) {
+                // Logger uniquement en DEBUG
+                if (DEBUG) {
+                  console.warn(`⚠️ [COMPLETION SCORE] Failed to fetch ${type}/${creatorType}:`, error instanceof Error ? error.message : error);
+                }
+                return [];
+              }
+            };
+            
+            const initialB2CAll = await fetchSilent('INITIAL', 'B2C_AGENCIES');
+            const initialB2CForB2C = await fetchSilent('INITIAL', 'FOR_B2C');
             const initialB2C = [...(initialB2CAll || []), ...(initialB2CForB2C || [])];
-            const initialIndividual = await fetchAvailableCampaigns('INITIAL', 'INDIVIDUAL_CREATORS', true).catch(() => []);
-            const completionB2C = await fetchAvailableCampaigns('COMPLETION', 'FOR_B2C', true).catch(() => []);
-            const completionIndividual = await fetchAvailableCampaigns('COMPLETION', 'FOR_INDIVIDUALS', true).catch(() => []);
+            const initialIndividual = await fetchSilent('INITIAL', 'INDIVIDUAL_CREATORS');
+            const completionB2C = await fetchSilent('COMPLETION', 'FOR_B2C');
+            const completionIndividual = await fetchSilent('COMPLETION', 'FOR_INDIVIDUALS');
             
             const newCounts = {
               initial: {
@@ -1024,10 +1059,14 @@ export const useModeration = () => {
               }
             };
             
-            console.log('✅ [COMPLETION SCORE] Updated counts after vote:', newCounts);
+            if (DEBUG) console.log('✅ [COMPLETION SCORE] Updated counts after vote:', newCounts);
             setSubTabCounts(newCounts);
           } catch (err) {
-            console.error('❌ [COMPLETION SCORE] Error recalculating counts:', err);
+            // Logger uniquement en DEBUG pour éviter le spam
+            if (DEBUG) {
+              console.error('❌ [COMPLETION SCORE] Error recalculating counts:', err);
+            }
+            // Ne pas throw, juste continuer silencieusement
           }
         };
         

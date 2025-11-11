@@ -160,34 +160,6 @@ const ModerationButtons: React.FC<ModerationButtonsProps> = ({
       }}>
         <button
           style={{
-            padding: '14px 24px', // Légèrement réduit pour un meilleur fit côte à côte
-            fontSize: '16px',
-            fontWeight: 700,
-            borderRadius: '10px',
-            border: 'none',
-            cursor: 'pointer',
-            background: 'linear-gradient(135deg, #37FF00 0%, #2eea8b 100%)',
-            color: '#000',
-            transition: 'all 0.3s ease',
-            boxShadow: '0 4px 20px rgba(55, 255, 0, 0.3)',
-            minWidth: '120px',
-            flex: '1'
-          }}
-          onClick={handleValidClick}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'translateY(-2px)';
-            e.currentTarget.style.boxShadow = '0 6px 25px rgba(55, 255, 0, 0.4)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = 'translateY(0)';
-            e.currentTarget.style.boxShadow = '0 4px 20px rgba(55, 255, 0, 0.3)';
-          }}
-        >
-          {activeTab === 'initial' ? 'Valid' : 'Valid & Score'}
-        </button>
-        
-        <button
-          style={{
             padding: '14px 24px',
             fontSize: '16px',
             fontWeight: 700,
@@ -212,6 +184,34 @@ const ModerationButtons: React.FC<ModerationButtonsProps> = ({
           }}
         >
           Refuse
+        </button>
+        
+        <button
+          style={{
+            padding: '14px 24px', // Légèrement réduit pour un meilleur fit côte à côte
+            fontSize: '16px',
+            fontWeight: 700,
+            borderRadius: '10px',
+            border: 'none',
+            cursor: 'pointer',
+            background: 'linear-gradient(135deg, #37FF00 0%, #2eea8b 100%)',
+            color: '#000',
+            transition: 'all 0.3s ease',
+            boxShadow: '0 4px 20px rgba(55, 255, 0, 0.3)',
+            minWidth: '120px',
+            flex: '1'
+          }}
+          onClick={handleValidClick}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translateY(-2px)';
+            e.currentTarget.style.boxShadow = '0 6px 25px rgba(55, 255, 0, 0.4)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '0 4px 20px rgba(55, 255, 0, 0.3)';
+          }}
+        >
+          {activeTab === 'initial' ? 'Valid' : 'Valid & Score'}
         </button>
       </div>
 

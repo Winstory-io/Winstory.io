@@ -234,13 +234,13 @@ const ModerationStatsModal: React.FC<ModerationStatsModalProps> = ({
               </h3>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
                 <div>
-                  <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#00FF00' }}>
-                    {validVotes} Valid ({validPercentage}%)
+                  <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#FF6B6B' }}>
+                    {refuseVotes} Refuse ({refusePercentage}%)
                   </div>
                 </div>
                 <div>
-                  <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#FF6B6B' }}>
-                    {refuseVotes} Refuse ({refusePercentage}%)
+                  <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#00FF00' }}>
+                    {validVotes} Valid ({validPercentage}%)
                   </div>
                 </div>
               </div>
@@ -253,15 +253,15 @@ const ModerationStatsModal: React.FC<ModerationStatsModalProps> = ({
                 marginBottom: '6px'
               }}>
                 <div style={{
-                  width: `${validPercentage}%`,
-                  height: '100%',
-                  background: 'linear-gradient(90deg, #00FF00, #00CC00)',
-                  float: 'left'
-                }}></div>
-                <div style={{
                   width: `${refusePercentage}%`,
                   height: '100%',
                   background: 'linear-gradient(90deg, #FF6B6B, #FF4444)',
+                  float: 'left'
+                }}></div>
+                <div style={{
+                  width: `${validPercentage}%`,
+                  height: '100%',
+                  background: 'linear-gradient(90deg, #00FF00, #00CC00)',
                   float: 'left'
                 }}></div>
               </div>

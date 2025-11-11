@@ -1,24 +1,34 @@
 {
   "pages": {
+    "/api/moderation/campaigns/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/moderation/campaigns/route.js"
+    ],
+    "/api/moderation/moderator-votes/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/moderation/moderator-votes/route.js"
+    ],
+    "/api/moderation/dev-controls/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/moderation/dev-controls/route.js"
+    ],
+    "/api/moderation/moderator-scores/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/moderation/moderator-scores/route.js"
+    ],
+    "/api/s3/presigned-url/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/s3/presigned-url/route.js"
+    ],
     "/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/layout.js"
-    ],
-    "/welcome/layout": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/welcome/layout.js"
-    ],
-    "/welcome/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/welcome/page.js"
-    ],
-    "/api/auth/[...nextauth]/route": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/api/auth/[...nextauth]/route.js"
     ],
     "/moderation/layout": [
       "static/chunks/webpack.js",
@@ -31,65 +41,60 @@
       "static/css/app/moderation/page.css",
       "static/chunks/app/moderation/page.js"
     ],
-    "/api/moderation/normalize-votes/route": [
+    "/welcome/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/api/moderation/normalize-votes/route.js"
+      "static/chunks/app/welcome/layout.js"
     ],
-    "/api/moderation/campaigns/route": [
+    "/welcome/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/api/moderation/campaigns/route.js"
+      "static/chunks/app/welcome/page.js"
     ],
     "/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/page.js"
     ],
-    "/api/moderation/staker-data/route": [
+    "/api/auth/[...nextauth]/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/api/moderation/staker-data/route.js"
+      "static/chunks/app/api/auth/[...nextauth]/route.js"
     ],
-    "/api/moderation/moderator-votes/route": [
+    "/api/moderation/normalize-votes/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/api/moderation/moderator-votes/route.js"
+      "static/chunks/app/api/moderation/normalize-votes/route.js"
     ],
-    "/api/s3/presigned-url/route": [
+    "/mywin/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/api/s3/presigned-url/route.js"
+      "static/chunks/app/mywin/layout.js"
     ],
-    "/api/moderation/moderator-scores/route": [
+    "/mywin/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/api/moderation/moderator-scores/route.js"
+      "static/chunks/app/mywin/page.js"
     ],
-    "/api/moderation/dev-controls/route": [
+    "/api/user/initialize/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/api/moderation/dev-controls/route.js"
+      "static/chunks/app/api/user/initialize/route.js"
     ],
-    "/api/moderation/vote-staking/route": [
+    "/api/user/stats/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/api/moderation/vote-staking/route.js"
+      "static/chunks/app/api/user/stats/route.js"
     ],
-    "/api/moderation/save-vote/route": [
+    "/mywin/creations/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/api/moderation/save-vote/route.js"
+      "static/chunks/app/mywin/creations/page.js"
     ],
-    "/api/xp/award-moderation/route": [
+    "/api/campaigns/moderation/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/api/xp/award-moderation/route.js"
-    ],
-    "/api/moderation/check-final-decision/route": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/api/moderation/check-final-decision/route.js"
+      "static/chunks/app/api/campaigns/moderation/route.js"
     ]
   }
 }

@@ -9,7 +9,7 @@ import ExplorerIcon from '@/components/icons/ExplorerIcon';
 import { useRouter } from 'next/navigation';
 import { useWalletAddress } from '@/lib/hooks/useWalletConnection';
 import { clearUserCache } from '@/lib/utils';
-import { useActiveAccount, useDisconnect, ConnectButton } from 'thirdweb/react';
+import { useActiveAccount, useActiveWallet, useDisconnect, ConnectButton } from 'thirdweb/react';
 import { createThirdwebClient } from "thirdweb";
 
 const client = createThirdwebClient({
@@ -20,7 +20,8 @@ export default function Home() {
   const router = useRouter();
   const walletAddress = useWalletAddress();
   const account = useActiveAccount();
-  const { disconnect, isDisconnecting } = useDisconnect();
+  const wallet = useActiveWallet();
+  const { disconnect } = useDisconnect();
   const [showDisconnectMenu, setShowDisconnectMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -121,9 +122,9 @@ export default function Home() {
       }
       
       // Ensuite déconnecter via thirdweb
-      if (account && disconnect && !isDisconnecting) {
+      if (wallet && disconnect) {
         try {
-          await disconnect();
+          disconnect(wallet);
           console.log('✅ [WELCOME] ThirdWeb disconnect successful');
         } catch (disconnectError) {
           console.warn('⚠️ [WELCOME] ThirdWeb disconnect failed:', disconnectError);
@@ -490,10 +491,10 @@ export default function Home() {
           }}
           onClick={() => router.push('/creation/youare')}
         >
-          <span style={{ fontSize: 56, marginLeft: -29, transition: 'all 0.3s ease' }}>
+          <span style={{ fontSize: 56, marginLeft: 21, transition: 'all 0.3s ease' }}>
             <CreationIcon />
           </span>
-          Create Campaign
+          Create
         </button>
         <button
           style={{
@@ -515,20 +516,48 @@ export default function Home() {
             e.currentTarget.style.textShadow = '0 0 20px rgba(255, 214, 0, 0.8), 0 0 40px rgba(255, 214, 0, 0.6), 0 0 60px rgba(255, 214, 0, 0.4)';
             e.currentTarget.style.transform = 'scale(1.05)';
             e.currentTarget.style.filter = 'drop-shadow(0 0 15px rgba(255, 214, 0, 0.7))';
+            // Appliquer l'effet de luminescence aux icônes
+            const icons = e.currentTarget.querySelectorAll('img');
+            icons.forEach(icon => {
+              icon.style.filter = 'drop-shadow(0 0 20px rgba(255, 214, 0, 0.9)) brightness(1.2)';
+            });
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.color = '#FFD600';
             e.currentTarget.style.textShadow = '0 0 10px rgba(255, 214, 0, 0.5)';
             e.currentTarget.style.transform = 'scale(1)';
             e.currentTarget.style.filter = 'none';
+            // Restaurer l'effet normal des icônes
+            const icons = e.currentTarget.querySelectorAll('img');
+            icons.forEach(icon => {
+              icon.style.filter = 'drop-shadow(0 0 10px rgba(255, 214, 0, 0.6))';
+            });
           }}
           // TODO: restreindre l'accès à /moderation à la possession d'un token spécifique dans le wallet
           onClick={() => router.push('/moderation')}
         >
-          <span style={{ fontSize: 56, marginLeft: -201, transition: 'all 0.3s ease' }}>
-            <ModerationIcon />
-          </span>
+          <img 
+            src="/refuse.svg" 
+            alt="Refuse" 
+            style={{ 
+              height: '150px', 
+              width: 'auto',
+              marginLeft: '222px',
+              transition: 'all 0.3s ease',
+              filter: 'drop-shadow(0 0 10px rgba(255, 214, 0, 0.6))'
+            }} 
+          />
           Moderate
+          <img 
+            src="/valid.svg" 
+            alt="Valid" 
+            style={{ 
+              height: '150px', 
+              width: 'auto',
+              transition: 'all 0.3s ease',
+              filter: 'drop-shadow(0 0 10px rgba(255, 214, 0, 0.6))'
+            }} 
+          />
         </button>
         <button
           style={{
@@ -572,7 +601,7 @@ export default function Home() {
           <span style={{ fontSize: 56, transition: 'all 0.3s ease', marginLeft: -18 }}>
             <CompletionIcon />
           </span>
-          <span style={{ marginLeft: -35 }}>Complete Campaign</span>
+          <span style={{ marginLeft: -35 }}>Complete</span>
         </button>
         
         {/* My Win - Positioned separately with green color */}

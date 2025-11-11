@@ -181,8 +181,8 @@ export default function ActiveCompletionDashboard() {
 			<div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: 24 }}>
 				<div style={{ color: '#FFD600', justifySelf: 'start' }}>
 					<div style={{ fontSize: 20, fontWeight: 800, marginBottom: 10 }}>Initial Moderation<br/>by {stats?.totalVotes || 0} Staker</div>
-					<div style={{ color: '#18C964', fontSize: 18, fontWeight: 700 }}>{stats?.validVotes || 0} Validated</div>
-					<div style={{ color: '#FF3B30', fontSize: 18, fontWeight: 700, marginTop: 6 }}>{stats?.refuseVotes || 0} Refused</div>
+					<div style={{ color: '#FF3B30', fontSize: 18, fontWeight: 700 }}>{stats?.refuseVotes || 0} Refused</div>
+					<div style={{ color: '#18C964', fontSize: 18, fontWeight: 700, marginTop: 6 }}>{stats?.validVotes || 0} Validated</div>
 				</div>
 
 				<DonutChart valid={stats?.validVotes || 0} refuse={stats?.refuseVotes || 0} />

@@ -298,16 +298,6 @@ const ModerationProgressPanelHybrid: React.FC<ModerationProgressPanelHybridProps
             
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
               <div style={{ flex: 1, textAlign: 'center' }}>
-                <div style={{ color: '#00FF00', fontSize: '12px', marginBottom: '4px' }}>OUI</div>
-                <div style={{ 
-                  fontSize: '16px', 
-                  fontWeight: 'bold',
-                  color: getScoreColor(scoreYes)
-                }}>
-                  {(scoreYes * 100).toFixed(1)}%
-                </div>
-              </div>
-              <div style={{ flex: 1, textAlign: 'center' }}>
                 <div style={{ color: '#FF0000', fontSize: '12px', marginBottom: '4px' }}>NON</div>
                 <div style={{ 
                   fontSize: '16px', 
@@ -315,6 +305,16 @@ const ModerationProgressPanelHybrid: React.FC<ModerationProgressPanelHybridProps
                   color: getScoreColor(scoreNo)
                 }}>
                   {(scoreNo * 100).toFixed(1)}%
+                </div>
+              </div>
+              <div style={{ flex: 1, textAlign: 'center' }}>
+                <div style={{ color: '#00FF00', fontSize: '12px', marginBottom: '4px' }}>OUI</div>
+                <div style={{ 
+                  fontSize: '16px', 
+                  fontWeight: 'bold',
+                  color: getScoreColor(scoreYes)
+                }}>
+                  {(scoreYes * 100).toFixed(1)}%
                 </div>
               </div>
             </div>
@@ -329,9 +329,9 @@ const ModerationProgressPanelHybrid: React.FC<ModerationProgressPanelHybridProps
                 overflow: 'hidden'
               }}>
                 <div style={{
-                  width: `${getScoreFillPercentage(scoreYes)}%`,
+                  width: `${getScoreFillPercentage(scoreNo)}%`,
                   height: '100%',
-                  background: `linear-gradient(90deg, ${getScoreColor(scoreYes)}, ${getScoreColor(scoreYes)}80)`,
+                  background: `linear-gradient(90deg, ${getScoreColor(scoreNo)}, ${getScoreColor(scoreNo)}80)`,
                   transition: 'width 0.3s ease'
                 }} />
               </div>
@@ -343,9 +343,9 @@ const ModerationProgressPanelHybrid: React.FC<ModerationProgressPanelHybridProps
                 overflow: 'hidden'
               }}>
                 <div style={{
-                  width: `${getScoreFillPercentage(scoreNo)}%`,
+                  width: `${getScoreFillPercentage(scoreYes)}%`,
                   height: '100%',
-                  background: `linear-gradient(90deg, ${getScoreColor(scoreNo)}, ${getScoreColor(scoreNo)}80)`,
+                  background: `linear-gradient(90deg, ${getScoreColor(scoreYes)}, ${getScoreColor(scoreYes)}80)`,
                   transition: 'width 0.3s ease'
                 }} />
               </div>
