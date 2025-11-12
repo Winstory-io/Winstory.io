@@ -272,6 +272,12 @@ export default function ItemRewardConfig({ onClose }: { onClose: () => void }) {
                 itemInfo,
                 walletAddress
               };
+              
+              // Clear all other premium reward types before saving the new one
+              localStorage.removeItem('premiumTokenReward');
+              localStorage.removeItem('premiumDigitalAccessReward');
+              localStorage.removeItem('premiumPhysicalAccessReward');
+              
               localStorage.setItem('premiumItemReward', JSON.stringify(config));
               router.push(isAgencyB2C ? '/creation/agencyb2c/recap' : '/creation/b2c/recap');
             }}

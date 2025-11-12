@@ -97,6 +97,11 @@ export default function AgencyB2CPhysicalExclusiveAccessConfig({ onClose }: { on
       walletAddress
     };
     
+    // Clear all other standard reward types before saving the new one
+    localStorage.removeItem('standardTokenReward');
+    localStorage.removeItem('standardItemReward');
+    localStorage.removeItem('standardDigitalAccessReward');
+    
     localStorage.setItem('standardPhysicalAccessReward', JSON.stringify(config));
     setIsConfirmed(true);
     

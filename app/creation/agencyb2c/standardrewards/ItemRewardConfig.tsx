@@ -93,6 +93,11 @@ export default function AgencyB2CItemRewardConfig({ onClose }: { onClose: () => 
       walletAddress
     };
     
+    // Clear all other standard reward types before saving the new one
+    localStorage.removeItem('standardTokenReward');
+    localStorage.removeItem('standardDigitalAccessReward');
+    localStorage.removeItem('standardPhysicalAccessReward');
+    
     localStorage.setItem('standardItemReward', JSON.stringify(config));
     setIsConfirmed(true);
     

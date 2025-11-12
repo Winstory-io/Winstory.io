@@ -175,6 +175,11 @@ export default function ItemRewardConfig({ onClose }: { onClose: () => void }) {
       walletAddress
     };
     
+    // Clear all other standard reward types before saving the new one
+    localStorage.removeItem('standardTokenReward');
+    localStorage.removeItem('standardDigitalAccessReward');
+    localStorage.removeItem('standardPhysicalAccessReward');
+    
     localStorage.setItem('standardItemReward', JSON.stringify(config));
     setIsConfirmed(true);
     

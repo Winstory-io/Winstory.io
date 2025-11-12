@@ -139,6 +139,11 @@ export default function AgencyB2CTokenRewardConfig({ onClose }: { onClose: () =>
       decimals: 18      // Add decimals for database
     };
 
+    // Clear all other standard reward types before saving the new one
+    localStorage.removeItem('standardItemReward');
+    localStorage.removeItem('standardDigitalAccessReward');
+    localStorage.removeItem('standardPhysicalAccessReward');
+    
     localStorage.setItem('standardTokenReward', JSON.stringify(config));
     setIsConfirmed(true);
 

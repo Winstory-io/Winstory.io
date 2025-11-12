@@ -176,6 +176,11 @@ export default function PhysicalExclusiveAccessConfig({ onClose }: { onClose: ()
       cancellationPolicy
     };
     
+    // Clear all other premium reward types before saving the new one
+    localStorage.removeItem('premiumTokenReward');
+    localStorage.removeItem('premiumItemReward');
+    localStorage.removeItem('premiumDigitalAccessReward');
+    
     localStorage.setItem('premiumPhysicalAccessReward', JSON.stringify(config));
     
     // Navigate to Recap page

@@ -219,6 +219,11 @@ export default function DigitalExclusiveAccessConfig({ onClose }: { onClose: () 
       privacyPolicy
     };
     
+    // Clear all other standard reward types before saving the new one
+    localStorage.removeItem('standardTokenReward');
+    localStorage.removeItem('standardItemReward');
+    localStorage.removeItem('standardPhysicalAccessReward');
+    
     localStorage.setItem('standardDigitalAccessReward', JSON.stringify(config));
     
     // Navigate to Premium rewards page

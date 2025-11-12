@@ -187,6 +187,11 @@ export default function TokenRewardConfig({ onClose }: { onClose: () => void }) 
     console.log('Has Enough Balance:', hasEnoughBalance);
     console.log('==========================================');
     
+    // Clear all other standard reward types before saving the new one
+    localStorage.removeItem('standardItemReward');
+    localStorage.removeItem('standardDigitalAccessReward');
+    localStorage.removeItem('standardPhysicalAccessReward');
+    
     localStorage.setItem('standardTokenReward', JSON.stringify(config));
     setIsConfirmed(true);
     

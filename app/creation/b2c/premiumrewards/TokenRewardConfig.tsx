@@ -273,6 +273,11 @@ export default function TokenRewardConfig({ onClose }: { onClose: () => void }) 
                 walletAddress
               };
               
+              // Clear all other premium reward types before saving the new one
+              localStorage.removeItem('premiumItemReward');
+              localStorage.removeItem('premiumDigitalAccessReward');
+              localStorage.removeItem('premiumPhysicalAccessReward');
+              
               // Sauvegarder aussi dans localStorage pour compatibilité
               localStorage.setItem('premiumTokenReward', JSON.stringify(premiumConfig));
               
