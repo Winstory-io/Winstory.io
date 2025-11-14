@@ -11,6 +11,7 @@ import { useWalletAddress } from '@/lib/hooks/useWalletConnection';
 import { clearUserCache } from '@/lib/utils';
 import { useActiveAccount, useActiveWallet, useDisconnect, ConnectButton } from 'thirdweb/react';
 import { createThirdwebClient } from "thirdweb";
+import ExplorerContent from '@/components/ExplorerContent';
 
 const client = createThirdwebClient({
   clientId: "4ddc5eed2e073e550a7307845d10f348",
@@ -24,6 +25,21 @@ export default function Home() {
   const { disconnect } = useDisconnect();
   const [showDisconnectMenu, setShowDisconnectMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const [scrollProgress, setScrollProgress] = useState(0);
+
+  // Track scroll progress for smooth transitions
+  useEffect(() => {
+    const handleScroll = () => {
+      const windowHeight = window.innerHeight;
+      const scrollY = window.scrollY;
+      // Calculate progress from 0 to 1 based on first viewport scroll
+      const progress = Math.min(scrollY / windowHeight, 1);
+      setScrollProgress(progress);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Nettoyer automatiquement le cache à chaque visite de la page welcome
   useEffect(() => {
@@ -171,28 +187,40 @@ export default function Home() {
   const isWalletConnected = !!account;
 
 
+  // Calculate dynamic styles based on scroll progress
+  const isSticky = scrollProgress > 0.05;
+  const explorerOpacity = scrollProgress > 0 ? 0 : 1; // Disappear immediately on scroll
+
   return (
     <div
       style={{
-        minHeight: '100vh',
+        minHeight: '200vh', // Two sections: Welcome + Explorer
         width: '100vw',
         background: '#000',
         color: '#FFD600',
         fontFamily: 'Inter, sans-serif',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
         position: 'relative',
       }}
     >
-      {/* Logo en haut à gauche */}
+      {/* Welcome Section - First viewport */}
       <div
         style={{
-          position: 'absolute',
+          minHeight: '100vh',
+          width: '100vw',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          position: 'relative',
+        }}
+      >
+      {/* Logo en haut à gauche - Fixed position */}
+      <div
+        style={{
+          position: 'fixed',
           top: 32,
           left: 24,
-          zIndex: 10,
+          zIndex: 9999,
           display: 'flex',
           alignItems: 'center',
         }}
@@ -234,13 +262,13 @@ export default function Home() {
         </button>
       </div>
 
-      {/* Zone en haut à droite avec wallet et tooltip */}
+      {/* Zone en haut à droite avec wallet et tooltip - Fixed position */}
       <div
         style={{
-          position: 'absolute',
+          position: 'fixed',
           top: 32,
           right: 32,
-          zIndex: 10,
+          zIndex: 9999,
           display: 'flex',
           alignItems: 'center',
           gap: '16px',
@@ -442,14 +470,31 @@ export default function Home() {
         }
       `}</style>
 
-      {/* Actions principales */}
+      {/* Actions principales - Sticky Navigation Bar */}
       <div
         style={{
+          position: isSticky ? 'fixed' : 'absolute',
+          top: isSticky ? '24px' : '50%',
+          left: '50%',
+          transform: isSticky 
+            ? 'translate(-50%, 0)' 
+            : 'translate(-50%, -50%)',
           display: 'flex',
-          flexDirection: 'column',
+          flexDirection: isSticky ? 'row' : 'column',
           alignItems: 'center',
-          gap: 48,
-          marginBottom: 80,
+          justifyContent: 'center',
+          gap: isSticky ? 48 : 48,
+          marginBottom: isSticky ? 0 : 80,
+          zIndex: 10000,
+          transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+          pointerEvents: 'auto',
+          background: isSticky ? 'rgba(0, 0, 0, 0.72)' : 'transparent',
+          backdropFilter: isSticky ? 'blur(20px) saturate(180%)' : 'none',
+          WebkitBackdropFilter: isSticky ? 'blur(20px) saturate(180%)' : 'none',
+          padding: isSticky ? '20px 64px' : '0',
+          borderRadius: isSticky ? '50px' : '0',
+          border: isSticky ? '1px solid rgba(255, 214, 0, 0.3)' : 'none',
+          boxShadow: isSticky ? '0 8px 32px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.1)' : 'none',
         }}
       >
         <button
@@ -458,40 +503,37 @@ export default function Home() {
             border: 'none',
             color: '#FFD600',
             fontWeight: 900,
-            fontSize: 40,
+            fontSize: isSticky ? 20 : 40,
             display: 'flex',
             alignItems: 'center',
-            gap: 24,
+            gap: isSticky ? 12 : 24,
             cursor: 'pointer',
-            transition: 'all 0.3s ease',
+            transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
             textShadow: '0 0 10px rgba(255, 214, 0, 0.5)',
             transform: 'scale(1)',
+            whiteSpace: 'nowrap',
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.color = '#FFF8DC';
             e.currentTarget.style.textShadow = '0 0 20px rgba(255, 214, 0, 0.8), 0 0 40px rgba(255, 214, 0, 0.6), 0 0 60px rgba(255, 214, 0, 0.4)';
             e.currentTarget.style.transform = 'scale(1.05)';
             e.currentTarget.style.filter = 'drop-shadow(0 0 15px rgba(255, 214, 0, 0.7))';
-            // Appliquer l'effet de luminescence à l'icône Creation
-            const icon = e.currentTarget.querySelector('img');
-            if (icon) {
-              icon.style.filter = 'drop-shadow(0 0 20px rgba(255, 214, 0, 0.9)) brightness(1.2)';
-            }
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.color = '#FFD600';
             e.currentTarget.style.textShadow = '0 0 10px rgba(255, 214, 0, 0.5)';
             e.currentTarget.style.transform = 'scale(1)';
             e.currentTarget.style.filter = 'none';
-            // Restaurer l'effet normal de l'icône
-            const icon = e.currentTarget.querySelector('img');
-            if (icon) {
-              icon.style.filter = 'drop-shadow(0 0 10px rgba(255, 214, 0, 0.6))';
-            }
           }}
           onClick={() => router.push('/creation/youare')}
         >
-          <span style={{ fontSize: 56, marginLeft: 21, transition: 'all 0.3s ease' }}>
+          <span style={{ 
+            fontSize: isSticky ? 28 : 56, 
+            marginLeft: isSticky ? 0 : 10, 
+            transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+            display: 'flex',
+            alignItems: 'center',
+          }}>
             <CreationIcon />
           </span>
           Create
@@ -502,36 +544,27 @@ export default function Home() {
             border: 'none',
             color: '#FFD600',
             fontWeight: 900,
-            fontSize: 40,
+            fontSize: isSticky ? 20 : 40,
             display: 'flex',
             alignItems: 'center',
-            gap: 24,
+            gap: isSticky ? 12 : 24,
             cursor: 'pointer',
-            transition: 'all 0.3s ease',
+            transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
             textShadow: '0 0 10px rgba(255, 214, 0, 0.5)',
             transform: 'scale(1)',
+            whiteSpace: 'nowrap',
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.color = '#FFF8DC';
             e.currentTarget.style.textShadow = '0 0 20px rgba(255, 214, 0, 0.8), 0 0 40px rgba(255, 214, 0, 0.6), 0 0 60px rgba(255, 214, 0, 0.4)';
             e.currentTarget.style.transform = 'scale(1.05)';
             e.currentTarget.style.filter = 'drop-shadow(0 0 15px rgba(255, 214, 0, 0.7))';
-            // Appliquer l'effet de luminescence aux icônes
-            const icons = e.currentTarget.querySelectorAll('img');
-            icons.forEach(icon => {
-              icon.style.filter = 'drop-shadow(0 0 20px rgba(255, 214, 0, 0.9)) brightness(1.2)';
-            });
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.color = '#FFD600';
             e.currentTarget.style.textShadow = '0 0 10px rgba(255, 214, 0, 0.5)';
             e.currentTarget.style.transform = 'scale(1)';
             e.currentTarget.style.filter = 'none';
-            // Restaurer l'effet normal des icônes
-            const icons = e.currentTarget.querySelectorAll('img');
-            icons.forEach(icon => {
-              icon.style.filter = 'drop-shadow(0 0 10px rgba(255, 214, 0, 0.6))';
-            });
           }}
           // TODO: restreindre l'accès à /moderation à la possession d'un token spécifique dans le wallet
           onClick={() => router.push('/moderation')}
@@ -540,10 +573,10 @@ export default function Home() {
             src="/refuse.svg" 
             alt="Refuse" 
             style={{ 
-              height: '150px', 
+              height: isSticky ? '60px' : '150px',
               width: 'auto',
-              marginLeft: '222px',
-              transition: 'all 0.3s ease',
+              marginLeft: isSticky ? '0' : '222px',
+              transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
               filter: 'drop-shadow(0 0 10px rgba(255, 214, 0, 0.6))'
             }} 
           />
@@ -552,9 +585,9 @@ export default function Home() {
             src="/valid.svg" 
             alt="Valid" 
             style={{ 
-              height: '150px', 
+              height: isSticky ? '60px' : '150px',
               width: 'auto',
-              transition: 'all 0.3s ease',
+              transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
               filter: 'drop-shadow(0 0 10px rgba(255, 214, 0, 0.6))'
             }} 
           />
@@ -565,46 +598,101 @@ export default function Home() {
             border: 'none',
             color: '#FFD600',
             fontWeight: 900,
-            fontSize: 40,
+            fontSize: isSticky ? 20 : 40,
             display: 'flex',
             alignItems: 'center',
-            gap: 24,
+            gap: isSticky ? 12 : 24,
             cursor: 'pointer',
-            transition: 'all 0.3s ease',
+            transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
             textShadow: '0 0 10px rgba(255, 214, 0, 0.5)',
             transform: 'scale(1)',
+            whiteSpace: 'nowrap',
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.color = '#FFF8DC';
             e.currentTarget.style.textShadow = '0 0 20px rgba(255, 214, 0, 0.8), 0 0 40px rgba(255, 214, 0, 0.6), 0 0 60px rgba(255, 214, 0, 0.4)';
             e.currentTarget.style.transform = 'scale(1.05)';
             e.currentTarget.style.filter = 'drop-shadow(0 0 15px rgba(255, 214, 0, 0.7))';
-            // Appliquer l'effet de luminescence à l'icône Completion
-            const icon = e.currentTarget.querySelector('img');
-            if (icon) {
-              icon.style.filter = 'drop-shadow(0 0 20px rgba(255, 214, 0, 0.9)) brightness(1.2)';
-            }
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.color = '#FFD600';
             e.currentTarget.style.textShadow = '0 0 10px rgba(255, 214, 0, 0.5)';
             e.currentTarget.style.transform = 'scale(1)';
             e.currentTarget.style.filter = 'none';
-            // Restaurer l'effet normal de l'icône
-            const icon = e.currentTarget.querySelector('img');
-            if (icon) {
-              icon.style.filter = 'drop-shadow(0 0 10px rgba(255, 214, 0, 0.6))';
-            }
           }}
           onClick={() => router.push('/completion/login')}
         >
-          <span style={{ fontSize: 56, transition: 'all 0.3s ease', marginLeft: -18 }}>
+          <span style={{ 
+            fontSize: isSticky ? 28 : 56, 
+            marginLeft: isSticky ? 0 : -18, 
+            transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+            display: 'flex',
+            alignItems: 'center',
+          }}>
             <CompletionIcon />
           </span>
-          <span style={{ marginLeft: -35 }}>Complete</span>
+          <span style={{ marginLeft: isSticky ? 0 : -35 }}>Complete</span>
         </button>
         
-        {/* My Win - Positioned separately with green color */}
+        {/* My Win - Only visible in sticky bar */}
+        {isSticky && (
+          <button
+            style={{
+              background: '#000',
+              border: '3px solid #00FF00',
+              borderRadius: '50%',
+              width: '70px',
+              height: '70px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              boxShadow: `
+                0 0 20px rgba(0, 255, 0, 0.6),
+                0 0 40px rgba(0, 255, 0, 0.4),
+                0 0 60px rgba(0, 255, 0, 0.2),
+                inset 0 0 20px rgba(0, 255, 0, 0.1)
+              `,
+              transition: 'all 0.3s ease',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'scale(1.05)';
+              e.currentTarget.style.boxShadow = `
+                0 0 25px rgba(0, 255, 0, 0.8),
+                0 0 50px rgba(0, 255, 0, 0.6),
+                0 0 75px rgba(0, 255, 0, 0.4),
+                inset 0 0 25px rgba(0, 255, 0, 0.2)
+              `;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'scale(1)';
+              e.currentTarget.style.boxShadow = `
+                0 0 20px rgba(0, 255, 0, 0.6),
+                0 0 40px rgba(0, 255, 0, 0.4),
+                0 0 60px rgba(0, 255, 0, 0.2),
+                inset 0 0 20px rgba(0, 255, 0, 0.1)
+              `;
+            }}
+            onClick={() => router.push('/mywin')}
+          >
+            <div style={{
+              color: '#00FF00',
+              fontWeight: 900,
+              fontSize: 16,
+              lineHeight: 1,
+              textAlign: 'center',
+              textShadow: '0 0 10px rgba(0, 255, 0, 0.8)',
+            }}>
+              <div>My</div>
+              <div>Win</div>
+            </div>
+          </button>
+        )}
+      </div>
+
+      {/* My Win - Fixed bottom right (only visible when not sticky) */}
+      {!isSticky && (
         <div style={{ 
           position: 'fixed', 
           bottom: '32px', 
@@ -664,9 +752,9 @@ export default function Home() {
             </div>
           </button>
         </div>
-      </div>
+      )}
 
-      {/* Explorer en bas */}
+      {/* Explorer en bas - Fades out on scroll */}
       <div
         style={{
           position: 'absolute',
@@ -675,6 +763,9 @@ export default function Home() {
           width: '100%',
           display: 'flex',
           justifyContent: 'center',
+          opacity: explorerOpacity,
+          pointerEvents: explorerOpacity > 0.1 ? 'auto' : 'none',
+          transition: 'opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
         }}
       >
         <button
@@ -704,13 +795,30 @@ export default function Home() {
             e.currentTarget.style.transform = 'scale(1)';
             e.currentTarget.style.filter = 'none';
           }}
-          onClick={() => router.push('/explorer')}
+          onClick={() => {
+            // Smooth scroll to explorer section
+            window.scrollTo({ top: window.innerHeight, behavior: 'smooth' });
+          }}
         >
           <span style={{ fontSize: 48, transition: 'all 0.3s ease' }}>
             <ExplorerIcon />
           </span>
           Explorer
         </button>
+      </div>
+      </div>
+
+      {/* Explorer Section - Second viewport */}
+      <div
+        style={{
+          minHeight: '100vh',
+          width: '100vw',
+          background: '#000',
+          paddingTop: isSticky ? '120px' : '0px', // Add padding when sticky bar is active
+          transition: 'padding-top 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+        }}
+      >
+        <ExplorerContent hideHeader={false} />
       </div>
     </div>
   );

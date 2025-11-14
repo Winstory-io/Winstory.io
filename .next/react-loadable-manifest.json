@@ -1,16 +1,4 @@
 {
-  "app/creation/b2c/premiumrewards/ItemRewardConfig.tsx -> ../../../../lib/blockchain-rpc": {
-    "id": "app/creation/b2c/premiumrewards/ItemRewardConfig.tsx -> ../../../../lib/blockchain-rpc",
-    "files": [
-      "static/chunks/_app-pages-browser_lib_blockchain-rpc_ts.js"
-    ]
-  },
-  "app/creation/b2c/premiumrewards/TokenRewardConfig.tsx -> ../../../../lib/blockchain-rpc": {
-    "id": "app/creation/b2c/premiumrewards/TokenRewardConfig.tsx -> ../../../../lib/blockchain-rpc",
-    "files": [
-      "static/chunks/_app-pages-browser_lib_blockchain-rpc_ts.js"
-    ]
-  },
   "node_modules/thirdweb/dist/esm/chains/constants.js -> ./utils.js": {
     "id": "node_modules/thirdweb/dist/esm/chains/constants.js -> ./utils.js",
     "files": []

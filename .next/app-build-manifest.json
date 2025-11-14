@@ -5,77 +5,35 @@
       "static/chunks/main-app.js",
       "static/chunks/app/layout.js"
     ],
-    "/creation/agencyb2c/yourinformations/page": [
+    "/explorer/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/creation/agencyb2c/yourinformations/page.js"
+      "static/chunks/app/explorer/layout.js"
+    ],
+    "/explorer/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/explorer/page.js"
     ],
     "/api/auth/[...nextauth]/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/api/auth/[...nextauth]/route.js"
     ],
-    "/api/auth/b2c-verification/route": [
+    "/welcome/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/api/auth/b2c-verification/route.js"
+      "static/chunks/app/welcome/layout.js"
     ],
-    "/creation/agencyb2c/yourwinstory/page": [
+    "/welcome/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/creation/agencyb2c/yourwinstory/page.js"
+      "static/chunks/app/welcome/page.js"
     ],
-    "/creation/agencyb2c/yourfilm/page": [
+    "/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/creation/agencyb2c/yourfilm/page.js"
-    ],
-    "/creation/agencyb2c/rewardsornot/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/creation/agencyb2c/rewardsornot/page.js"
-    ],
-    "/creation/agencyb2c/standardrewards/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/css/app/creation/agencyb2c/standardrewards/page.css",
-      "static/chunks/app/creation/agencyb2c/standardrewards/page.js"
-    ],
-    "/creation/agencyb2c/premiumrewards/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/css/app/creation/agencyb2c/premiumrewards/page.css",
-      "static/chunks/app/creation/agencyb2c/premiumrewards/page.js"
-    ],
-    "/creation/agencyb2c/recap/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/creation/agencyb2c/recap/page.js"
-    ],
-    "/api/s3/upload/route": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/api/s3/upload/route.js"
-    ],
-    "/api/campaigns/create/route": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/api/campaigns/create/route.js"
-    ],
-    "/api/xp/award-campaign-creation/route": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/api/xp/award-campaign-creation/route.js"
-    ],
-    "/api/xp/agency-client/route": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/api/xp/agency-client/route.js"
-    ],
-    "/creation/agencyb2c/mint/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/creation/agencyb2c/mint/page.js"
+      "static/chunks/app/page.js"
     ]
   }
 }

@@ -1,4 +1,4 @@
 {
-  "/creation/agencyb2c/recap/page": "app/creation/agencyb2c/recap/page.js",
-  "/creation/agencyb2c/premiumrewards/page": "app/creation/agencyb2c/premiumrewards/page.js"
+  "/explorer/page": "app/explorer/page.js",
+  "/welcome/page": "app/welcome/page.js"
 }
