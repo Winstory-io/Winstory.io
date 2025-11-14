@@ -1,4 +1,4 @@
 {
-  "/explorer/page": "app/explorer/page.js",
+  "/moderation/page": "app/moderation/page.js",
   "/welcome/page": "app/welcome/page.js"
 }

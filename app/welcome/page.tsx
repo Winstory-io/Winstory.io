@@ -483,7 +483,7 @@ export default function Home() {
           flexDirection: isSticky ? 'row' : 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          gap: isSticky ? 48 : 48,
+          gap: isSticky ? 40 : 48,
           marginBottom: isSticky ? 0 : 80,
           zIndex: 10000,
           transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -491,9 +491,9 @@ export default function Home() {
           background: isSticky ? 'rgba(0, 0, 0, 0.72)' : 'transparent',
           backdropFilter: isSticky ? 'blur(20px) saturate(180%)' : 'none',
           WebkitBackdropFilter: isSticky ? 'blur(20px) saturate(180%)' : 'none',
-          padding: isSticky ? '20px 64px' : '0',
-          borderRadius: isSticky ? '50px' : '0',
-          border: isSticky ? '1px solid rgba(255, 214, 0, 0.3)' : 'none',
+          padding: isSticky ? '24px 56px' : '0',
+          borderRadius: isSticky ? '80px' : '0',
+          border: isSticky ? '1px solid rgba(255, 214, 0, 0.4)' : 'none',
           boxShadow: isSticky ? '0 8px 32px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.1)' : 'none',
         }}
       >
@@ -503,10 +503,10 @@ export default function Home() {
             border: 'none',
             color: '#FFD600',
             fontWeight: 900,
-            fontSize: isSticky ? 20 : 40,
+            fontSize: 40,
             display: 'flex',
             alignItems: 'center',
-            gap: isSticky ? 12 : 24,
+            gap: isSticky ? 0 : 24,
             cursor: 'pointer',
             transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
             textShadow: '0 0 10px rgba(255, 214, 0, 0.5)',
@@ -528,7 +528,7 @@ export default function Home() {
           onClick={() => router.push('/creation/youare')}
         >
           <span style={{ 
-            fontSize: isSticky ? 28 : 56, 
+            fontSize: 56, 
             marginLeft: isSticky ? 0 : 10, 
             transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
             display: 'flex',
@@ -536,7 +536,7 @@ export default function Home() {
           }}>
             <CreationIcon />
           </span>
-          Create
+          {!isSticky && 'Create'}
         </button>
         <button
           style={{
@@ -544,10 +544,10 @@ export default function Home() {
             border: 'none',
             color: '#FFD600',
             fontWeight: 900,
-            fontSize: isSticky ? 20 : 40,
+            fontSize: 40,
             display: 'flex',
             alignItems: 'center',
-            gap: isSticky ? 12 : 24,
+            gap: 24,
             cursor: 'pointer',
             transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
             textShadow: '0 0 10px rgba(255, 214, 0, 0.5)',
@@ -569,28 +569,62 @@ export default function Home() {
           // TODO: restreindre l'accès à /moderation à la possession d'un token spécifique dans le wallet
           onClick={() => router.push('/moderation')}
         >
-          <img 
-            src="/refuse.svg" 
-            alt="Refuse" 
-            style={{ 
-              height: isSticky ? '60px' : '150px',
-              width: 'auto',
-              marginLeft: isSticky ? '0' : '222px',
-              transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
-              filter: 'drop-shadow(0 0 10px rgba(255, 214, 0, 0.6))'
-            }} 
-          />
-          Moderate
-          <img 
-            src="/valid.svg" 
-            alt="Valid" 
-            style={{ 
-              height: isSticky ? '60px' : '150px',
-              width: 'auto',
-              transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
-              filter: 'drop-shadow(0 0 10px rgba(255, 214, 0, 0.6))'
-            }} 
-          />
+          {isSticky ? (
+            // Mode sticky : icônes très proches
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: 0,
+            }}>
+              <img 
+                src="/refuse.svg" 
+                alt="Refuse" 
+                style={{ 
+                  height: '150px',
+                  width: 'auto',
+                  transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+                  filter: 'drop-shadow(0 0 10px rgba(255, 214, 0, 0.6))'
+                }} 
+              />
+              <img 
+                src="/valid.svg" 
+                alt="Valid" 
+                style={{ 
+                  height: '150px',
+                  width: 'auto',
+                  marginLeft: '-75px',
+                  transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+                  filter: 'drop-shadow(0 0 10px rgba(255, 214, 0, 0.6))'
+                }} 
+              />
+            </div>
+          ) : (
+            // Mode normal : disposition d'origine
+            <>
+              <img 
+                src="/refuse.svg" 
+                alt="Refuse" 
+                style={{ 
+                  height: '150px',
+                  width: 'auto',
+                  marginLeft: '222px',
+                  transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+                  filter: 'drop-shadow(0 0 10px rgba(255, 214, 0, 0.6))'
+                }} 
+              />
+              Moderate
+              <img 
+                src="/valid.svg" 
+                alt="Valid" 
+                style={{ 
+                  height: '150px',
+                  width: 'auto',
+                  transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+                  filter: 'drop-shadow(0 0 10px rgba(255, 214, 0, 0.6))'
+                }} 
+              />
+            </>
+          )}
         </button>
         <button
           style={{
@@ -598,10 +632,10 @@ export default function Home() {
             border: 'none',
             color: '#FFD600',
             fontWeight: 900,
-            fontSize: isSticky ? 20 : 40,
+            fontSize: 40,
             display: 'flex',
             alignItems: 'center',
-            gap: isSticky ? 12 : 24,
+            gap: isSticky ? 0 : 24,
             cursor: 'pointer',
             transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
             textShadow: '0 0 10px rgba(255, 214, 0, 0.5)',
@@ -623,7 +657,7 @@ export default function Home() {
           onClick={() => router.push('/completion/login')}
         >
           <span style={{ 
-            fontSize: isSticky ? 28 : 56, 
+            fontSize: 56, 
             marginLeft: isSticky ? 0 : -18, 
             transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
             display: 'flex',
@@ -631,7 +665,7 @@ export default function Home() {
           }}>
             <CompletionIcon />
           </span>
-          <span style={{ marginLeft: isSticky ? 0 : -35 }}>Complete</span>
+          {!isSticky && <span style={{ marginLeft: -35 }}>Complete</span>}
         </button>
         
         {/* My Win - Only visible in sticky bar */}
@@ -641,8 +675,8 @@ export default function Home() {
               background: '#000',
               border: '3px solid #00FF00',
               borderRadius: '50%',
-              width: '70px',
-              height: '70px',
+              width: '100px',
+              height: '100px',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
@@ -679,7 +713,7 @@ export default function Home() {
             <div style={{
               color: '#00FF00',
               fontWeight: 900,
-              fontSize: 16,
+              fontSize: 20,
               lineHeight: 1,
               textAlign: 'center',
               textShadow: '0 0 10px rgba(0, 255, 0, 0.8)',
