@@ -508,31 +508,39 @@ export default function Home() {
             alignItems: 'center',
             gap: isSticky ? 0 : 24,
             cursor: 'pointer',
-            transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+            transition: 'all 0.3s ease',
             textShadow: '0 0 10px rgba(255, 214, 0, 0.5)',
-            transform: 'scale(1)',
             whiteSpace: 'nowrap',
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.color = '#FFF8DC';
             e.currentTarget.style.textShadow = '0 0 20px rgba(255, 214, 0, 0.8), 0 0 40px rgba(255, 214, 0, 0.6), 0 0 60px rgba(255, 214, 0, 0.4)';
-            e.currentTarget.style.transform = 'scale(1.05)';
             e.currentTarget.style.filter = 'drop-shadow(0 0 15px rgba(255, 214, 0, 0.7))';
+            // Grossir l'icône
+            const icon = e.currentTarget.querySelector('span');
+            if (icon) {
+              icon.style.transform = isSticky ? 'scale(1.2)' : 'scale(1.05)';
+            }
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.color = '#FFD600';
             e.currentTarget.style.textShadow = '0 0 10px rgba(255, 214, 0, 0.5)';
-            e.currentTarget.style.transform = 'scale(1)';
             e.currentTarget.style.filter = 'none';
+            // Restaurer la taille de l'icône
+            const icon = e.currentTarget.querySelector('span');
+            if (icon) {
+              icon.style.transform = 'scale(1)';
+            }
           }}
           onClick={() => router.push('/creation/youare')}
         >
           <span style={{ 
             fontSize: 56, 
             marginLeft: isSticky ? 0 : 10, 
-            transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
             display: 'flex',
             alignItems: 'center',
+            transform: 'scale(1)',
           }}>
             <CreationIcon />
           </span>
@@ -549,22 +557,29 @@ export default function Home() {
             alignItems: 'center',
             gap: 24,
             cursor: 'pointer',
-            transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+            transition: 'all 0.3s ease',
             textShadow: '0 0 10px rgba(255, 214, 0, 0.5)',
-            transform: 'scale(1)',
             whiteSpace: 'nowrap',
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.color = '#FFF8DC';
             e.currentTarget.style.textShadow = '0 0 20px rgba(255, 214, 0, 0.8), 0 0 40px rgba(255, 214, 0, 0.6), 0 0 60px rgba(255, 214, 0, 0.4)';
-            e.currentTarget.style.transform = 'scale(1.05)';
             e.currentTarget.style.filter = 'drop-shadow(0 0 15px rgba(255, 214, 0, 0.7))';
+            // Grossir les deux icônes ensemble
+            const iconsWrapper = e.currentTarget.querySelector('div');
+            if (iconsWrapper && isSticky) {
+              iconsWrapper.style.transform = 'scale(1.2)';
+            }
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.color = '#FFD600';
             e.currentTarget.style.textShadow = '0 0 10px rgba(255, 214, 0, 0.5)';
-            e.currentTarget.style.transform = 'scale(1)';
             e.currentTarget.style.filter = 'none';
+            // Restaurer la taille des icônes
+            const iconsWrapper = e.currentTarget.querySelector('div');
+            if (iconsWrapper && isSticky) {
+              iconsWrapper.style.transform = 'scale(1)';
+            }
           }}
           // TODO: restreindre l'accès à /moderation à la possession d'un token spécifique dans le wallet
           onClick={() => router.push('/moderation')}
@@ -575,6 +590,8 @@ export default function Home() {
               display: 'flex', 
               alignItems: 'center', 
               gap: 0,
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              transform: 'scale(1)',
             }}>
               <img 
                 src="/refuse.svg" 
@@ -582,7 +599,7 @@ export default function Home() {
                 style={{ 
                   height: '150px',
                   width: 'auto',
-                  transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                   filter: 'drop-shadow(0 0 10px rgba(255, 214, 0, 0.6))'
                 }} 
               />
@@ -593,7 +610,7 @@ export default function Home() {
                   height: '150px',
                   width: 'auto',
                   marginLeft: '-75px',
-                  transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                   filter: 'drop-shadow(0 0 10px rgba(255, 214, 0, 0.6))'
                 }} 
               />
@@ -608,7 +625,7 @@ export default function Home() {
                   height: '150px',
                   width: 'auto',
                   marginLeft: '222px',
-                  transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+                  transition: 'all 0.3s ease',
                   filter: 'drop-shadow(0 0 10px rgba(255, 214, 0, 0.6))'
                 }} 
               />
@@ -619,7 +636,7 @@ export default function Home() {
                 style={{ 
                   height: '150px',
                   width: 'auto',
-                  transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+                  transition: 'all 0.3s ease',
                   filter: 'drop-shadow(0 0 10px rgba(255, 214, 0, 0.6))'
                 }} 
               />
@@ -637,31 +654,39 @@ export default function Home() {
             alignItems: 'center',
             gap: isSticky ? 0 : 24,
             cursor: 'pointer',
-            transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+            transition: 'all 0.3s ease',
             textShadow: '0 0 10px rgba(255, 214, 0, 0.5)',
-            transform: 'scale(1)',
             whiteSpace: 'nowrap',
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.color = '#FFF8DC';
             e.currentTarget.style.textShadow = '0 0 20px rgba(255, 214, 0, 0.8), 0 0 40px rgba(255, 214, 0, 0.6), 0 0 60px rgba(255, 214, 0, 0.4)';
-            e.currentTarget.style.transform = 'scale(1.05)';
             e.currentTarget.style.filter = 'drop-shadow(0 0 15px rgba(255, 214, 0, 0.7))';
+            // Grossir l'icône
+            const icon = e.currentTarget.querySelector('span');
+            if (icon) {
+              icon.style.transform = isSticky ? 'scale(1.2)' : 'scale(1.05)';
+            }
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.color = '#FFD600';
             e.currentTarget.style.textShadow = '0 0 10px rgba(255, 214, 0, 0.5)';
-            e.currentTarget.style.transform = 'scale(1)';
             e.currentTarget.style.filter = 'none';
+            // Restaurer la taille de l'icône
+            const icon = e.currentTarget.querySelector('span');
+            if (icon) {
+              icon.style.transform = 'scale(1)';
+            }
           }}
           onClick={() => router.push('/completion/login')}
         >
           <span style={{ 
             fontSize: 56, 
             marginLeft: isSticky ? 0 : -18, 
-            transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
             display: 'flex',
             alignItems: 'center',
+            transform: 'scale(1)',
           }}>
             <CompletionIcon />
           </span>

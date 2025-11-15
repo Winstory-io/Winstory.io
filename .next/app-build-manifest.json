@@ -35,6 +35,11 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/api/moderation/normalize-votes/route.js"
+    ],
+    "/creation/youare/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/creation/youare/page.js"
     ]
   }
 }

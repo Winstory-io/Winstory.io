@@ -1,4 +1,5 @@
 {
-  "/moderation/page": "app/moderation/page.js",
-  "/welcome/page": "app/welcome/page.js"
+  "/creation/youare/page": "app/creation/youare/page.js",
+  "/welcome/page": "app/welcome/page.js",
+  "/moderation/page": "app/moderation/page.js"
 }
