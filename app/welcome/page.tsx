@@ -862,8 +862,8 @@ export default function Home() {
             e.currentTarget.style.filter = 'none';
           }}
           onClick={() => {
-            // Smooth scroll to explorer section
-            window.scrollTo({ top: window.innerHeight, behavior: 'smooth' });
+            // Navigate to Explorer page
+            router.push('/explorer');
           }}
         >
           <span style={{ fontSize: 48, transition: 'all 0.3s ease' }}>
