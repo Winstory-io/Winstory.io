@@ -50,9 +50,10 @@ const SUB_TABS = [
 
 interface ExplorerContentProps {
   hideHeader?: boolean;
+  onVideoPlayingChange?: (isPlaying: boolean) => void;
 }
 
-export default function ExplorerContent({ hideHeader = false }: ExplorerContentProps) {
+export default function ExplorerContent({ hideHeader = false, onVideoPlayingChange }: ExplorerContentProps) {
   const [activeTab, setActiveTab] = useState('active');
   const [activeSubTab, setActiveSubTab] = useState('company');
   const [showIntro, setShowIntro] = useState(false);
@@ -93,6 +94,13 @@ export default function ExplorerContent({ hideHeader = false }: ExplorerContentP
     };
     checkAuth();
   }, []);
+
+  // Notify parent when video is playing
+  useEffect(() => {
+    if (onVideoPlayingChange) {
+      onVideoPlayingChange(!!selectedVideo);
+    }
+  }, [selectedVideo, onVideoPlayingChange]);
 
   // Handler for Complete button
   const handleCompleteClick = (campaign: CampaignVideo) => {

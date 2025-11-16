@@ -36,7 +36,7 @@ export default function VideoPlayerModal({ videoUrl, title, orientation = 'horiz
         style={{
           position: 'fixed',
           top: 32,
-          right: 32,
+          right: 80,
           width: 56,
           height: 56,
           borderRadius: '50%',

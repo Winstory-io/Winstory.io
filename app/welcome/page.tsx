@@ -26,6 +26,7 @@ export default function Home() {
   const [showDisconnectMenu, setShowDisconnectMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const [scrollProgress, setScrollProgress] = useState(0);
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
 
   // Track scroll progress for smooth transitions
   useEffect(() => {
@@ -215,16 +216,17 @@ export default function Home() {
         }}
       >
       {/* Logo en haut à gauche - Fixed position */}
-      <div
-        style={{
-          position: 'fixed',
-          top: 32,
-          left: 24,
-          zIndex: 9999,
-          display: 'flex',
-          alignItems: 'center',
-        }}
-      >
+      {!isVideoPlaying && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 32,
+            left: 24,
+            zIndex: 9999,
+            display: 'flex',
+            alignItems: 'center',
+          }}
+        >
         <button
           onClick={() => router.push('/')}
           style={{
@@ -261,19 +263,21 @@ export default function Home() {
           />
         </button>
       </div>
+      )}
 
       {/* Zone en haut à droite avec wallet et tooltip - Fixed position */}
-      <div
-        style={{
-          position: 'fixed',
-          top: 32,
-          right: 32,
-          zIndex: 9999,
-          display: 'flex',
-          alignItems: 'center',
-          gap: '16px',
-        }}
-      >
+      {!isVideoPlaying && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 32,
+            right: 32,
+            zIndex: 9999,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '16px',
+          }}
+        >
         {/* Affichage du wallet si connecté, sinon point rouge si déconnecté */}
         {isWalletConnected ? (
           /* Wallet Address Display with Disconnect Menu */
@@ -454,6 +458,7 @@ export default function Home() {
           <TipBox />
         </div>
       </div>
+      )}
 
       {/* Styles CSS pour l'animation pulse */}
       <style jsx>{`
@@ -471,32 +476,33 @@ export default function Home() {
       `}</style>
 
       {/* Actions principales - Sticky Navigation Bar */}
-      <div
-        style={{
-          position: isSticky ? 'fixed' : 'absolute',
-          top: isSticky ? '24px' : '50%',
-          left: '50%',
-          transform: isSticky 
-            ? 'translate(-50%, 0)' 
-            : 'translate(-50%, -50%)',
-          display: 'flex',
-          flexDirection: isSticky ? 'row' : 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: isSticky ? 40 : 48,
-          marginBottom: isSticky ? 0 : 80,
-          zIndex: 10000,
-          transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
-          pointerEvents: 'auto',
-          background: isSticky ? 'rgba(0, 0, 0, 0.72)' : 'transparent',
-          backdropFilter: isSticky ? 'blur(20px) saturate(180%)' : 'none',
-          WebkitBackdropFilter: isSticky ? 'blur(20px) saturate(180%)' : 'none',
-          padding: isSticky ? '24px 56px' : '0',
-          borderRadius: isSticky ? '80px' : '0',
-          border: isSticky ? '1px solid rgba(255, 214, 0, 0.4)' : 'none',
-          boxShadow: isSticky ? '0 8px 32px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.1)' : 'none',
-        }}
-      >
+      {!isVideoPlaying && (
+        <div
+          style={{
+            position: isSticky ? 'fixed' : 'absolute',
+            top: isSticky ? '24px' : '50%',
+            left: '50%',
+            transform: isSticky 
+              ? 'translate(-50%, 0)' 
+              : 'translate(-50%, -50%)',
+            display: 'flex',
+            flexDirection: isSticky ? 'row' : 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: isSticky ? 40 : 48,
+            marginBottom: isSticky ? 0 : 80,
+            zIndex: 10000,
+            transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+            pointerEvents: 'auto',
+            background: isSticky ? 'rgba(0, 0, 0, 0.72)' : 'transparent',
+            backdropFilter: isSticky ? 'blur(20px) saturate(180%)' : 'none',
+            WebkitBackdropFilter: isSticky ? 'blur(20px) saturate(180%)' : 'none',
+            padding: isSticky ? '24px 56px' : '0',
+            borderRadius: isSticky ? '80px' : '0',
+            border: isSticky ? '1px solid rgba(255, 214, 0, 0.4)' : 'none',
+            boxShadow: isSticky ? '0 8px 32px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.1)' : 'none',
+          }}
+        >
         <button
           style={{
             background: 'none',
@@ -749,9 +755,10 @@ export default function Home() {
           </button>
         )}
       </div>
+      )}
 
       {/* My Win - Fixed bottom right (only visible when not sticky) */}
-      {!isSticky && (
+      {!isSticky && !isVideoPlaying && (
         <div style={{ 
           position: 'fixed', 
           bottom: '32px', 
@@ -877,7 +884,10 @@ export default function Home() {
           transition: 'padding-top 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
         }}
       >
-        <ExplorerContent hideHeader={false} />
+        <ExplorerContent 
+          hideHeader={false} 
+          onVideoPlayingChange={setIsVideoPlaying}
+        />
       </div>
     </div>
   );
