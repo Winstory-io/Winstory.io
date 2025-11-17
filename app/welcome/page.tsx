@@ -27,6 +27,7 @@ export default function Home() {
   const menuRef = useRef<HTMLDivElement>(null);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+  const [isHoveringStickyBar, setIsHoveringStickyBar] = useState(false);
 
   // Track scroll progress for smooth transitions
   useEffect(() => {
@@ -478,6 +479,8 @@ export default function Home() {
       {/* Actions principales - Sticky Navigation Bar */}
       {!isVideoPlaying && (
         <div
+          onMouseEnter={() => setIsHoveringStickyBar(true)}
+          onMouseLeave={() => setIsHoveringStickyBar(false)}
           style={{
             position: isSticky ? 'fixed' : 'absolute',
             top: isSticky ? '24px' : '50%',
@@ -499,8 +502,16 @@ export default function Home() {
             WebkitBackdropFilter: isSticky ? 'blur(20px) saturate(180%)' : 'none',
             padding: isSticky ? '24px 56px' : '0',
             borderRadius: isSticky ? '80px' : '0',
-            border: isSticky ? '1px solid rgba(255, 214, 0, 0.4)' : 'none',
-            boxShadow: isSticky ? '0 8px 32px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.1)' : 'none',
+            border: isSticky 
+              ? isHoveringStickyBar 
+                ? '1px solid rgba(255, 214, 0, 0.8)' 
+                : '1px solid rgba(255, 214, 0, 0.4)' 
+              : 'none',
+            boxShadow: isSticky 
+              ? isHoveringStickyBar
+                ? '0 8px 32px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 0 20px rgba(255, 214, 0, 0.4), 0 0 40px rgba(255, 214, 0, 0.2)'
+                : '0 8px 32px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
+              : 'none',
           }}
         >
         <button
