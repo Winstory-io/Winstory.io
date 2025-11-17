@@ -1156,7 +1156,42 @@ export async function POST(request: NextRequest) {
     console.log('Creator Type:', creatorType);
 
     // ===================================
-    // 9. AWARD XP FOR CAMPAIGN CREATION
+    // 9. LOCK REWARDS AT MINT (if rewards configured)
+    // ===================================
+    if (hasRewards) {
+      console.log('🔒 Locking rewards at MINT...');
+      try {
+        const lockResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/rewards/lock`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            campaignId: campaignId,
+            creatorWallet: originalWalletAddress,
+            maxCompletions: maxCompletions
+          })
+        });
+
+        if (lockResponse.ok) {
+          const lockResult = await lockResponse.json();
+          console.log('✅ Rewards locked:', lockResult.data);
+          if (lockResult.data?.validationWarnings) {
+            console.warn('⚠️ Validation warnings:', lockResult.data.validationWarnings);
+          }
+        } else {
+          const errorData = await lockResponse.json();
+          console.warn('⚠️ Failed to lock rewards:', errorData.error);
+          // Ne pas faire échouer la création si lock échoue (sera géré ultérieurement)
+        }
+      } catch (lockError) {
+        console.error('❌ Error locking rewards:', lockError);
+        // Ne pas faire échouer la création si lock échoue
+      }
+    } else {
+      console.log('ℹ️ No rewards configured, skipping lock');
+    }
+
+    // ===================================
+    // 10. AWARD XP FOR CAMPAIGN CREATION
     // ===================================
     console.log('🎯 [XP] Starting XP award for campaign creation...');
     try {
@@ -1227,7 +1262,7 @@ export async function POST(request: NextRequest) {
     }
 
     // ===================================
-    // 10. REGISTER AGENCY B2C CLIENT (if applicable)
+    // 11. REGISTER AGENCY B2C CLIENT (if applicable)
     // ===================================
     if (data.campaignType === 'AGENCY_B2C' && data.clientInfo?.contactEmail) {
       console.log('🏢 [XP] Registering Agency B2C client for future XP...');

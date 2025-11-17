@@ -39,6 +39,43 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // ===================================
+    // CHECK IF WALLET ALREADY COMPLETED THIS CAMPAIGN
+    // ===================================
+    console.log('🔍 Checking if wallet already completed this campaign...');
+    const { data: existingCompletions, error: checkError } = await supabase
+      .from('completions')
+      .select('id, status')
+      .eq('original_campaign_id', data.campaignId)
+      .eq('completer_wallet', data.completerWallet.toLowerCase())
+      .in('status', ['in_progress', 'completed', 'validated']);
+
+    if (checkError) {
+      console.error('Error checking existing completions:', checkError);
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Failed to check existing completions',
+          details: checkError.message
+        },
+        { status: 500 }
+      );
+    }
+
+    if (existingCompletions && existingCompletions.length > 0) {
+      console.warn('⚠️ Wallet already completed this campaign');
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'You have already completed this campaign',
+          existingCompletionId: existingCompletions[0].id
+        },
+        { status: 400 }
+      );
+    }
+
+    console.log('✅ Wallet has not completed this campaign yet');
+
     // Generate completion ID
     const completionId = `completion_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 

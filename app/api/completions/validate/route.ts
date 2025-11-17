@@ -112,6 +112,33 @@ export async function POST(request: NextRequest) {
       }
 
       // ===================================
+      // DISTRIBUTE STANDARD REWARDS (BLOCKCHAIN)
+      // ===================================
+      try {
+        console.log('🎁 Distributing standard blockchain rewards for completion...');
+        const rewardResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/rewards/distribute-standard`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            completionId: data.completionId,
+            campaignId: completion.original_campaign_id,
+            completerWallet: completion.completer_wallet
+          })
+        });
+
+        if (rewardResponse.ok) {
+          const rewardResult = await rewardResponse.json();
+          console.log('✅ Standard rewards distributed:', rewardResult.data);
+        } else {
+          const errorData = await rewardResponse.json();
+          console.warn('⚠️ Failed to distribute standard rewards:', errorData.error);
+        }
+      } catch (rewardErr) {
+        console.error('❌ Error distributing standard rewards:', rewardErr);
+        // Ne pas faire échouer la validation si distribution échoue
+      }
+
+      // ===================================
       // DELIVER ACCESS REWARDS (DIGITAL/PHYSICAL)
       // ===================================
       try {
