@@ -1,5 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Mode standalone pour Docker (optimise la taille de l'image)
+  output: 'standalone',
+  
   // Configuration Turbopack moderne
   turbopack: {
     rules: {

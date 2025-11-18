@@ -1,0 +1,52 @@
+# Dependencies
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Next.js
+.next
+out
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Git
+.git
+.gitignore
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build outputs
+dist
+build
+*.log
+
+# Documentation
+*.md
+!README.md
+
+# Test files
+test-*.html
+test-*.js
+debug-*.html
+debug-*.js
+
+# Scripts de développement
+scripts/test-*.ts
+
+# Prisma (on garde le schema mais pas les migrations générées)
+prisma/migrations
+

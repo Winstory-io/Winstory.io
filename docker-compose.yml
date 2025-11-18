@@ -1,0 +1,67 @@
+# docker-compose.yml
+
+version: '3.8'
+
+services:
+  # 1. Conteneur pour l'application Next.js (Winstory.io)
+  app:
+    # Indique à Docker Compose de construire l'image en utilisant le Dockerfile
+    build:
+      context: .
+      dockerfile: Dockerfile
+    
+    # Nom du conteneur
+    container_name: winstory_app
+    
+    # Mappe les ports : Hôte:Conteneur
+    ports:
+      - "3000:3000"
+    
+    # Redémarrer automatiquement en cas d'échec
+    restart: always
+    
+    # Variables d'environnement pour l'application Next.js
+    # Docker Compose charge automatiquement les variables depuis un fichier .env à la racine
+    # Vous pouvez aussi les définir directement ici ou via un fichier .env
+    env_file:
+      - .env  # Charge les variables depuis .env (optionnel)
+    environment:
+      # Variables critiques pour le fonctionnement
+      NODE_ENV: production
+      DATABASE_URL: ${DATABASE_URL:-} # Connexion Supabase/PostgreSQL (depuis .env)
+      REDIS_HOST: redis              # Nom du service dans Docker Compose
+      REDIS_PORT: 6379
+      # Variables Supabase (depuis .env)
+      NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:-}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY:-}
+      # Variables AWS S3 (depuis .env)
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+      AWS_REGION: ${AWS_REGION:-}
+      AWS_S3_BUCKET_NAME: ${AWS_S3_BUCKET_NAME:-}
+      # Autres variables nécessaires (ajoutez-les selon vos besoins)
+      # NEXT_PUBLIC_THIRDWEB_CLIENT_ID: ${NEXT_PUBLIC_THIRDWEB_CLIENT_ID:-}
+      # NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
+      # NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-}
+      
+    # Dépendances : l'application ne doit démarrer qu'après Redis
+    depends_on:
+      - redis
+
+  # 2. Conteneur pour le service Redis (Pour les files d'attente BullMQ)
+  redis:
+    image: redis:6-alpine
+    container_name: winstory_redis
+    command: redis-server --appendonly yes
+    restart: always
+    volumes:
+      # Stocke les données de Redis sur l'hôte, même si le conteneur redémarre
+      - redis-data:/data
+    # Expose le port 6379 pour l'application (le port n'est pas exposé à l'extérieur par défaut, 
+    # mais l'application y accède via le réseau interne Docker)
+
+# Définition des volumes persistants
+volumes:
+  redis-data:
+    driver: local
+
