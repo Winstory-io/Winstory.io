@@ -202,8 +202,11 @@ export async function GET(request: NextRequest) {
       if (campaign.creator_infos) {
         if (Array.isArray(campaign.creator_infos) && campaign.creator_infos.length > 0) {
           creatorWallet = campaign.creator_infos[0].wallet_address || 'Unknown';
-        } else if (typeof campaign.creator_infos === 'object' && campaign.creator_infos.wallet_address) {
-          creatorWallet = campaign.creator_infos.wallet_address;
+        } else if (typeof campaign.creator_infos === 'object' && !Array.isArray(campaign.creator_infos)) {
+          const creatorInfo = campaign.creator_infos as { wallet_address?: string };
+          if (creatorInfo.wallet_address) {
+            creatorWallet = creatorInfo.wallet_address;
+          }
         }
       }
 

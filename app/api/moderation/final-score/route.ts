@@ -159,7 +159,7 @@ function calculateFinalScoreAndDecision(
 }
 
 // Fonction pour calculer le score final selon la formule Super-Modérateur
-export function calculateSuperModeratorFinalScore(
+function calculateSuperModeratorFinalScore(
   communityScore: number,
   superModeratorScore: number
 ): number {
@@ -169,7 +169,7 @@ export function calculateSuperModeratorFinalScore(
 }
 
 // Fonction pour déterminer la décision finale avec pouvoir de basculement
-export function calculateSuperModeratorFinalDecision(
+function calculateSuperModeratorFinalDecision(
   communityDecision: 'VALID' | 'REFUSE',
   superModeratorDecision: 'VALID' | 'REFUSE'
 ): 'VALID' | 'REFUSE' {

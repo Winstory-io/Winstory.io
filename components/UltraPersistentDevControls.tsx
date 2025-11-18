@@ -73,13 +73,15 @@ const UltraPersistentDevControls: React.FC<UltraPersistentDevControlsProps> = ({
       });
       
       button.addEventListener('mouseenter', (e) => {
-        e.currentTarget.style.background = '#FFE55C';
-        e.currentTarget.style.transform = 'scale(1.05)';
+        const target = e.currentTarget as HTMLElement;
+        target.style.background = '#FFE55C';
+        target.style.transform = 'scale(1.05)';
       });
       
       button.addEventListener('mouseleave', (e) => {
-        e.currentTarget.style.background = '#FFD600';
-        e.currentTarget.style.transform = 'scale(1)';
+        const target = e.currentTarget as HTMLElement;
+        target.style.background = '#FFD600';
+        target.style.transform = 'scale(1)';
       });
       
       document.body.appendChild(button);
@@ -126,13 +128,15 @@ const UltraPersistentDevControls: React.FC<UltraPersistentDevControlsProps> = ({
         });
         
         newButton.addEventListener('mouseenter', (e) => {
-          e.currentTarget.style.background = '#FFE55C';
-          e.currentTarget.style.transform = 'scale(1.05)';
+          const target = e.currentTarget as HTMLElement;
+          target.style.background = '#FFE55C';
+          target.style.transform = 'scale(1.05)';
         });
         
         newButton.addEventListener('mouseleave', (e) => {
-          e.currentTarget.style.background = '#FFD600';
-          e.currentTarget.style.transform = 'scale(1)';
+          const target = e.currentTarget as HTMLElement;
+          target.style.background = '#FFD600';
+          target.style.transform = 'scale(1)';
         });
         
         document.body.appendChild(newButton);

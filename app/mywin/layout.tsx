@@ -259,8 +259,7 @@ export default function MyWinLayout({
               </span>
             </button>
             
-            {/* Simple Disconnect Menu */
-            }
+            {/* Simple Disconnect Menu */}
             {showDisconnectMenu && (
               <div
                 style={{

@@ -1301,12 +1301,11 @@ export default function ValidatedCampaignDashboard({ forceValidated, onForceVali
 						backgroundColor: '#000',
 						borderRadius: 16,
 						padding: 24,
-						maxWidth: '90vw',
+						maxWidth: 1200,
 						maxHeight: '90vh',
 						border: '2px solid #18C964',
 						overflow: 'auto',
-						width: '100%',
-						maxWidth: 1200
+						width: '100%'
 					}} onClick={e => e.stopPropagation()}>
 						<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
 							<h3 style={{ color: '#18C964', fontSize: 24, fontWeight: 800, margin: 0 }}>

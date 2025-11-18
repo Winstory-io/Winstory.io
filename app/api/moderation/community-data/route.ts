@@ -61,7 +61,7 @@ export async function GET(request: NextRequest) {
       stakingPool: moderationData.staking_pool_total || 0
     };
 
-    consoleLogs.push(`✅ Données communautaires récupérées:`, result);
+    consoleLogs.push(`✅ Données communautaires récupérées: ${JSON.stringify(result)}`);
 
     return NextResponse.json({
       success: true,

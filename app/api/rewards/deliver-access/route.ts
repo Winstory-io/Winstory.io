@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
             mint_timing: 'immediate_on_validation', // Mint immediately on validation, no planned_at
             generated_at: new Date().toISOString()
           }
-        })
+        }).select() as unknown as Promise<any>
       );
     }
 
@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
           physical_reward_id: reward.id,
           shipping_address: null,
           fulfillment_status: 'pending'
-        })
+        }).select() as unknown as Promise<any>
       );
     }
 

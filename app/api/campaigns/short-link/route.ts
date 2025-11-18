@@ -194,7 +194,9 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const creatorWallet = campaign.creator_infos?.wallet_address;
+    const creatorWallet = Array.isArray(campaign.creator_infos) 
+      ? campaign.creator_infos[0]?.wallet_address 
+      : (campaign.creator_infos as any)?.wallet_address;
     if (!creatorWallet) {
       return NextResponse.json(
         { success: false, error: 'Creator wallet not found' },

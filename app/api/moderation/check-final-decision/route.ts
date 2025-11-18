@@ -152,14 +152,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    consoleLogs.push(`📊 Données de modération:`, {
+    consoleLogs.push(`📊 Données de modération: ${JSON.stringify({
       validVotes: moderationData.validVotes,
       refuseVotes: moderationData.refuseVotes,
       totalVotes: moderationData.totalVotes,
       stakeYes: moderationData.stakeYes,
       stakeNo: moderationData.stakeNo,
       mintPrice: moderationData.mintPrice,
-    });
+    })}`);
 
     // Vérifier les conditions de validation
     const votesOk = moderationData.totalVotes >= MIN_REQUIRED_VOTES;
@@ -186,7 +186,7 @@ export async function POST(request: NextRequest) {
     const isValidated = allConditionsMet && moderationResult.status === ModerationStatus.VALIDATED;
     const isRefused = allConditionsMet && moderationResult.status === ModerationStatus.REJECTED;
 
-    consoleLogs.push(`📊 État de validation:`, {
+    consoleLogs.push(`📊 État de validation: ${JSON.stringify({
       votesOk,
       stakingOk,
       ratioOk,
@@ -194,7 +194,7 @@ export async function POST(request: NextRequest) {
       moderationStatus: moderationResult.status,
       isValidated,
       isRefused,
-    });
+    })}`);
 
     // Si aucune décision finale n'est atteinte, retourner
     if (!isValidated && !isRefused) {

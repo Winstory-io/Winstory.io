@@ -24,38 +24,106 @@ export async function GET(request: NextRequest) {
     console.log('=== FETCHING USER STATS ===');
     console.log('Wallet Address:', walletAddress);
 
-    // 1. Compter les campagnes créées
-    const { count: createdCount, error: createdError } = await supabase
-      .from('campaigns')
-      .select('*', { count: 'exact', head: true })
-      .eq('original_creator_wallet', walletAddress);
+    const walletAddressLower = walletAddress.toLowerCase();
 
-    if (createdError) {
-      console.error('Error counting created campaigns:', createdError);
-      throw new Error(`Failed to count created campaigns: ${createdError.message}`);
+    // 1. Compter les campagnes créées (type INITIAL)
+    // Vérifier à la fois original_creator_wallet ET creator_infos.wallet_address
+    // pour s'assurer de capturer toutes les créations
+    let createdCount = 0;
+    
+    try {
+      // Méthode 1: Récupérer toutes les campagnes INITIAL avec leurs creator_infos
+      const { data: allInitialCampaigns, error: allInitialError } = await supabase
+        .from('campaigns')
+        .select(`
+          id,
+          original_creator_wallet,
+          creator_infos(wallet_address)
+        `)
+        .eq('type', 'INITIAL');
+
+      if (allInitialError) {
+        console.warn('⚠️ Error fetching campaigns with creator_infos, using fallback:', allInitialError.message);
+        throw allInitialError; // Forcer le fallback
+      }
+
+      if (allInitialCampaigns && allInitialCampaigns.length > 0) {
+        // Filtrer côté serveur pour vérifier les deux sources
+        const uniqueCreatedIds = new Set<string>();
+        for (const campaign of allInitialCampaigns) {
+          try {
+            const matchesOriginal = campaign.original_creator_wallet?.toLowerCase() === walletAddressLower;
+            
+            // Gérer creator_infos qui peut être un tableau ou un objet ou null
+            let matchesCreatorInfo = false;
+            if (campaign.creator_infos) {
+              if (Array.isArray(campaign.creator_infos) && campaign.creator_infos.length > 0) {
+                matchesCreatorInfo = campaign.creator_infos[0]?.wallet_address?.toLowerCase() === walletAddressLower;
+              } else if (typeof campaign.creator_infos === 'object' && !Array.isArray(campaign.creator_infos)) {
+                const creatorInfo = campaign.creator_infos as { wallet_address?: string };
+                if (creatorInfo.wallet_address) {
+                  matchesCreatorInfo = creatorInfo.wallet_address.toLowerCase() === walletAddressLower;
+                }
+              }
+            }
+            
+            if (matchesOriginal || matchesCreatorInfo) {
+              uniqueCreatedIds.add(campaign.id);
+            }
+          } catch (err) {
+            console.warn('⚠️ Error processing campaign:', campaign.id, err);
+            // Continuer avec les autres campagnes
+          }
+        }
+        createdCount = uniqueCreatedIds.size;
+        console.log(`📊 Creations: Found ${createdCount} campaign(s) created (checking both original_creator_wallet and creator_infos)`);
+      }
+    } catch (error) {
+      // Fallback: utiliser seulement original_creator_wallet
+      console.log('📊 Using fallback method for creations count');
+      const { count: countByOriginalWallet, error: errorByOriginal } = await supabase
+        .from('campaigns')
+        .select('*', { count: 'exact', head: true })
+        .eq('type', 'INITIAL')
+        .ilike('original_creator_wallet', walletAddressLower);
+
+      if (errorByOriginal) {
+        console.error('❌ Error in fallback method:', errorByOriginal);
+        throw new Error(`Failed to count created campaigns: ${errorByOriginal.message}`);
+      }
+      createdCount = countByOriginalWallet || 0;
+      console.log(`📊 Creations: Found ${createdCount} campaign(s) created (fallback method)`);
     }
 
-    // 2. Compter les campagnes complétées
+    // 2. Compter les campagnes complétées (type COMPLETION)
     const { count: completedCount, error: completedError } = await supabase
       .from('campaigns')
       .select('*', { count: 'exact', head: true })
-      .eq('completer_wallet', walletAddress);
+      .eq('type', 'COMPLETION')
+      .ilike('completer_wallet', walletAddressLower);
 
     if (completedError) {
       console.error('Error counting completed campaigns:', completedError);
       throw new Error(`Failed to count completed campaigns: ${completedError.message}`);
     }
 
-    // 3. Compter les modérations
+    console.log(`📊 Completions: Found ${completedCount || 0} campaign(s) completed`);
+
+    // 3. Compter les modérations (tous les contenus modérés)
+    // Chaque vote = 1 contenu modéré (campagne INITIAL ou COMPLETION)
+    // Un modérateur peut modérer une campagne INITIAL une fois, puis modérer plusieurs COMPLETIONS de cette même campagne
+    // On compte tous les votes : chaque vote = 1 contenu modéré
     const { count: moderatedCount, error: moderatedError } = await supabase
-      .from('moderation_sessions')
+      .from('moderation_votes')
       .select('*', { count: 'exact', head: true })
-      .eq('moderator_wallet', walletAddress);
+      .eq('moderator_wallet', walletAddress.toLowerCase());
 
     if (moderatedError) {
-      console.error('Error counting moderated campaigns:', moderatedError);
-      throw new Error(`Failed to count moderated campaigns: ${moderatedError.message}`);
+      console.error('Error counting moderated contents:', moderatedError);
+      throw new Error(`Failed to count moderated contents: ${moderatedError.message}`);
     }
+
+    console.log(`📊 Moderations: Found ${moderatedCount || 0} content(s) moderated (each vote = 1 content)`);
 
     // 4. Calculer le total WINC gagné
     const { data: wincRewards, error: wincError } = await supabase
