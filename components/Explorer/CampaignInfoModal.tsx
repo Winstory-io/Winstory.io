@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { CampaignVideo } from './VideoCard';
+import { getCompanyLogoFromUser } from '../../lib/utils/companyLogo';
 
 type CampaignInfoModalProps = {
   campaign: CampaignVideo;
@@ -87,26 +88,55 @@ export default function CampaignInfoModal({ campaign, onClose, onCompleteClick }
 
         {/* Company/Creator Name */}
         <div style={{ display: 'flex', alignItems: 'center', marginBottom: 20, gap: 12 }}>
-          <div
-            style={{
-              width: 48,
-              height: 48,
-              borderRadius: '50%',
-              background: 'linear-gradient(135deg, #00FFB0 0%, #00CC88 100%)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: 8,
-            }}
-          >
-            <Image
-              src={campaign.companyName ? '/company.svg' : '/individual.svg'}
-              alt={campaign.companyName ? 'Company' : 'Individual'}
-              width={32}
-              height={32}
-              style={{ filter: 'brightness(0)' }}
-            />
-          </div>
+          {(() => {
+            // Get company logo if available
+            const companyLogoUrl = campaign.companyDomain 
+              ? getCompanyLogoFromUser(undefined, campaign.companyDomain, 'dark')
+              : null;
+            
+            return (
+              <div
+                style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: '50%',
+                  background: campaign.companyName 
+                    ? 'linear-gradient(135deg, #00FFB0 0%, #00CC88 100%)'
+                    : 'linear-gradient(135deg, rgba(255, 214, 0, 0.2) 0%, rgba(255, 214, 0, 0.1) 100%)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: 8,
+                  overflow: 'hidden',
+                }}
+              >
+                {companyLogoUrl ? (
+                  <Image
+                    src={companyLogoUrl}
+                    alt={campaign.companyName || 'Company'}
+                    width={32}
+                    height={32}
+                    style={{
+                      objectFit: 'contain',
+                      padding: 2,
+                    }}
+                    onError={(e) => {
+                      e.currentTarget.src = '/company.svg';
+                      e.currentTarget.style.filter = 'brightness(0)';
+                    }}
+                  />
+                ) : (
+                  <Image
+                    src={campaign.companyName ? '/company.svg' : '/individual.svg'}
+                    alt={campaign.companyName ? 'Company' : 'Individual'}
+                    width={32}
+                    height={32}
+                    style={{ filter: 'brightness(0)' }}
+                  />
+                )}
+              </div>
+            );
+          })()}
           <span style={{ color: '#00FFB0', fontWeight: 700, fontSize: 20, textShadow: '0 0 10px rgba(0, 255, 176, 0.5)' }}>
             {displayName}
           </span>

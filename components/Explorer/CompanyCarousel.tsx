@@ -1,7 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
+import Image from 'next/image';
 import { CampaignVideo } from './VideoCard';
+import { getCompanyLogoFromUser } from '../../lib/utils/companyLogo';
 
 type CompanyCarouselProps = {
   videos: CampaignVideo[];
@@ -356,6 +358,65 @@ export default function CompanyCarousel({ videos, onInfoClick, onVideoClick, onC
           alignItems: 'center',
           position: 'relative',
         }}>
+          {/* Company Logo + Name - Above video, below yellow line */}
+          {currentVideo.companyName && (() => {
+            const companyLogoUrl = currentVideo.companyDomain 
+              ? getCompanyLogoFromUser(undefined, currentVideo.companyDomain, 'dark')
+              : null;
+            
+            return (
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 12,
+                marginBottom: 20,
+                padding: '12px 20px',
+                background: 'rgba(0, 0, 0, 0.4)',
+                borderRadius: 12,
+                border: '1px solid rgba(255, 214, 0, 0.2)',
+              }}>
+                {/* Company Logo */}
+                {companyLogoUrl && (
+                  <div style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: 8,
+                    overflow: 'hidden',
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                  }}>
+                    <Image
+                      src={companyLogoUrl}
+                      alt={currentVideo.companyName}
+                      width={40}
+                      height={40}
+                      style={{
+                        objectFit: 'contain',
+                        padding: 4,
+                      }}
+                      onError={(e) => {
+                        e.currentTarget.src = '/company.svg';
+                      }}
+                    />
+                  </div>
+                )}
+                {/* Company Name */}
+                <span style={{
+                  fontSize: 20,
+                  fontWeight: 800,
+                  color: '#FFD600',
+                  textShadow: '0 0 10px rgba(255, 214, 0, 0.5)',
+                }}>
+                  {currentVideo.companyName}
+                </span>
+              </div>
+            );
+          })()}
+          
           {/* Video with Bubbles */}
           <div
             key={currentVideo.id}

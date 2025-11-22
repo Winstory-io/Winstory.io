@@ -156,6 +156,9 @@ export default function ExplorerPage() {
   // Generate mock data for development
   const generateMockCampaigns = (): CampaignVideo[] => {
     const mockCampaigns: CampaignVideo[] = [];
+    // Company domains for logos
+    const companyDomains = ['nike.com', 'apple.com', 'tesla.com', 'spotify.com', 'netflix.com', 'airbnb.com', 'uber.com', 'stripe.com'];
+    const companyNames = ['Nike', 'Apple', 'Tesla', 'Spotify', 'Netflix', 'Airbnb', 'Uber', 'Stripe'];
     
     for (let i = 0; i < devCampaignCount; i++) {
       const isCompany = i % 2 === 0;
@@ -169,10 +172,13 @@ export default function ExplorerPage() {
           ? (i % 3 === 0 ? 'vertical' : 'horizontal')
           : devOrientation;
 
+      const companyIndex = Math.floor(i / 2) % companyDomains.length;
+
       mockCampaigns.push({
         id: `campaign-${i}`,
         title: `${isCompany ? 'Epic Brand Challenge' : 'Community Story Quest'} #${i + 1}`,
-        companyName: isCompany ? `Brand${i + 1}` : undefined,
+        companyName: isCompany ? companyNames[companyIndex] : undefined,
+        companyDomain: isCompany ? companyDomains[companyIndex] : undefined, // Add domain for logo
         creatorWallet: !isCompany ? `0x${Math.random().toString(16).substr(2, 40)}` : undefined,
         thumbnail: `https://picsum.photos/seed/${i}/${orientation === 'vertical' ? '360/640' : '640/360'}`,
         videoUrl: `https://example.com/video-${i}`,
@@ -195,6 +201,9 @@ export default function ExplorerPage() {
   const generateBestCompletionsCampaigns = (): CampaignVideo[] => {
     const campaigns: CampaignVideo[] = [];
     const campaignsToGenerate = Math.min(devPodiumCount, 5); // Max 5 campaigns
+    // Company domains for logos
+    const companyDomains = ['nike.com', 'apple.com', 'tesla.com', 'spotify.com', 'netflix.com'];
+    const companyNames = ['Nike', 'Apple', 'Tesla', 'Spotify', 'Netflix'];
 
     for (let campaignIndex = 0; campaignIndex < campaignsToGenerate; campaignIndex++) {
       const isCompany = campaignIndex % 2 === 0;
@@ -206,7 +215,8 @@ export default function ExplorerPage() {
       campaigns.push({
         id: `best-initial-${campaignIndex}`,
         title: `${isCompany ? 'Epic Brand Campaign' : 'Amazing Community Story'} #${campaignIndex + 1}`,
-        companyName: isCompany ? `TopBrand${campaignIndex + 1}` : undefined,
+        companyName: isCompany ? companyNames[campaignIndex % companyNames.length] : undefined,
+        companyDomain: isCompany ? companyDomains[campaignIndex % companyDomains.length] : undefined, // Add domain for logo
         creatorWallet: !isCompany ? `0x${Math.random().toString(16).substr(2, 40)}` : undefined,
         thumbnail: `https://picsum.photos/seed/best-${campaignIndex}/${orientation === 'vertical' ? '360/640' : '640/360'}`,
         videoUrl: `https://example.com/best-video-${campaignIndex}`,

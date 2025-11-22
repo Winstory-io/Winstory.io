@@ -2,11 +2,13 @@
 
 import React, { useState } from 'react';
 import Image from 'next/image';
+import { getCompanyLogoFromUser, getCompanyDomain } from '../../lib/utils/companyLogo';
 
 export type CampaignVideo = {
   id: string;
   title: string;
   companyName?: string;
+  companyDomain?: string; // Domain for logo retrieval (e.g., "nike.com", "uber.com")
   creatorWallet?: string;
   thumbnail: string;
   videoUrl: string;
@@ -67,6 +69,14 @@ export default function VideoCard({ video, onInfoClick, onVideoClick, variant = 
 
   const currentSize = getSizeStyles();
   const displayName = video.companyName || `@${video.creatorWallet?.slice(0, 6)}...${video.creatorWallet?.slice(-4)}`;
+  
+  // Get company logo URL if company domain is available
+  const getCompanyLogoUrl = (): string | null => {
+    if (!video.companyDomain) return null;
+    return getCompanyLogoFromUser(undefined, video.companyDomain, 'dark');
+  };
+  
+  const companyLogoUrl = getCompanyLogoUrl();
 
   return (
     <div
@@ -215,9 +225,40 @@ export default function VideoCard({ video, onInfoClick, onVideoClick, variant = 
               padding: 0,
               textShadow: '0 0 10px rgba(0, 255, 176, 0.5)',
               transition: 'all 0.2s',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
             }}
           >
-            {displayName}
+            {/* Company Logo */}
+            {companyLogoUrl && (
+              <div style={{
+                width: variant === 'carousel' ? 20 : 16,
+                height: variant === 'carousel' ? 20 : 16,
+                borderRadius: 4,
+                overflow: 'hidden',
+                background: 'rgba(255, 255, 255, 0.1)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}>
+                <Image
+                  src={companyLogoUrl}
+                  alt={video.companyName || 'Company'}
+                  width={variant === 'carousel' ? 20 : 16}
+                  height={variant === 'carousel' ? 20 : 16}
+                  style={{
+                    objectFit: 'contain',
+                    padding: 2,
+                  }}
+                  onError={(e) => {
+                    e.currentTarget.src = '/company.svg';
+                  }}
+                />
+              </div>
+            )}
+            <span>{displayName}</span>
           </button>
           <button
             onClick={(e) => {
