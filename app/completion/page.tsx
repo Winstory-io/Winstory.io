@@ -8,6 +8,7 @@ import CompletionVideoNavigator from '../../components/CompletionVideoNavigator'
 import CompletionInfo from '../../components/CompletionInfo';
 import CompletionTooltip from '../../components/CompletionTooltip';
 import DevControls from '../../components/DevControls';
+import { getCompanyLogoFromUser, getCompanyDomain } from '../../lib/utils/companyLogo';
 
 // Animation CSS pour l'effet de pulsation
 const pulseAnimation = `
@@ -96,6 +97,11 @@ const CompletionPage = () => {
   const [devForceInfo, setDevForceInfo] = useState(false);
   const [devAutoNavigate, setDevAutoNavigate] = useState(false);
   const [devAutoNavigateSpeed, setDevAutoNavigateSpeed] = useState(3000);
+  
+  // Logo Testing Dev Controls
+  const [devTestLogo, setDevTestLogo] = useState(false);
+  const [devTestLogoDomain, setDevTestLogoDomain] = useState('uber.com');
+  const [devTestLogoTheme, setDevTestLogoTheme] = useState<'light' | 'dark'>('dark');
 
   // Fetch approved campaigns from API
   useEffect(() => {
@@ -237,6 +243,8 @@ const CompletionPage = () => {
   // Generate mock campaigns for Dev Controls
   const generateMockCampaigns = (): Campaign[] => {
     const campaigns: Campaign[] = [];
+    // Use full domains for B2C companies so logos work correctly
+    const companyDomains = ['nike.com', 'apple.com', 'tesla.com', 'spotify.com', 'netflix.com', 'airbnb.com', 'uber.com', 'stripe.com'];
     const companyNames = ['Nike', 'Apple', 'Tesla', 'Spotify', 'Netflix', 'Airbnb', 'Uber', 'Stripe'];
     const individualNames = ['Alex Chen', 'Maria Rodriguez', 'James Wilson', 'Sarah Kim', 'David Brown', 'Emma Davis', 'Michael Johnson', 'Lisa Anderson'];
     const storyTitles = [
@@ -263,9 +271,13 @@ const CompletionPage = () => {
     for (let i = 0; i < devNumberOfCampaigns; i++) {
       const isB2C = i % 2 === 0;
       const creatorType = isB2C ? 'B2C_AGENCIES' : 'INDIVIDUAL_CREATORS';
+      const companyIndex = i % companyDomains.length;
       const creatorId = isB2C 
-        ? companyNames[i % companyNames.length].toLowerCase()
+        ? companyDomains[companyIndex] // Use full domain (e.g., "nike.com") instead of just "nike"
         : `0x${Math.random().toString(16).substr(2, 40)}`;
+      
+      // Note: We don't store in localStorage for mock campaigns because each campaign has a different company
+      // Instead, we use the creatorId directly which contains the domain (e.g., "nike.com")
       
       const completionVariation = (Math.random() - 0.5) * 40; // ±20%
       const completionPercent = Math.max(0, Math.min(100, devBaseCompletionPercent + completionVariation));
@@ -413,12 +425,116 @@ const CompletionPage = () => {
     }
   };
   
+  // Helper: Extract company domain/name from various sources
+  const getCompanyDomainFromCampaign = (): string | null => {
+    if (!currentCampaign) return null;
+    
+    // Check if this is a mock campaign (mock campaigns have IDs like "mock-campaign-X")
+    const isMockCampaign = currentCampaign.id?.startsWith('mock-campaign-');
+    
+    // For mock campaigns, ALWAYS use creatorId first (it contains the domain like "nike.com")
+    if (isMockCampaign && currentCampaign.creatorId) {
+      if (currentCampaign.creatorId.includes('.')) {
+        // It's already a domain, use it directly
+        return currentCampaign.creatorId.toLowerCase();
+      }
+      // If it's just a name, try to construct domain (shouldn't happen with our mock setup)
+      return `${currentCampaign.creatorId.toLowerCase()}.com`;
+    }
+    
+    // Check if localStorage is available
+    if (typeof window === 'undefined' || !window.localStorage) {
+      // If no localStorage, try to use creatorId directly if it looks like a domain
+      if (currentCampaign.creatorId && currentCampaign.creatorId.includes('.')) {
+        return getCompanyDomain(undefined, currentCampaign.creatorId);
+      }
+      return null;
+    }
+    
+    try {
+      // For agencies, prioritize client B2C information
+      if (currentCampaign.creatorType === 'B2C_AGENCIES') {
+        const b2cClient = JSON.parse(localStorage.getItem('b2cClient') || 'null');
+        const clientEmail = b2cClient?.contactEmail || localStorage.getItem('clientB2CEmail') || undefined;
+        const clientUrl = localStorage.getItem('clientB2CUrl') || undefined;
+        
+        if (clientEmail) {
+          return getCompanyDomain(clientEmail, undefined);
+        }
+        if (clientUrl) {
+          return getCompanyDomain(undefined, clientUrl);
+        }
+      }
+      
+      // For direct B2C companies
+      const userData = JSON.parse(localStorage.getItem('user') || 'null');
+      const email = userData?.email;
+      const companyData = JSON.parse(localStorage.getItem('company') || 'null');
+      const companyDomain = companyData?.name; // Domain extracted from email during login
+      const companyUrl = localStorage.getItem('companyUrl') || undefined;
+      
+      // Priority: companyUrl > email > companyDomain > creatorId
+      if (companyUrl) {
+        return getCompanyDomain(undefined, companyUrl);
+      }
+      if (email) {
+        return getCompanyDomain(email, undefined);
+      }
+      if (companyDomain) {
+        return companyDomain;
+      }
+      
+      // Fallback: try to extract from creatorId
+      // This is especially important for real campaigns that might have domain in creatorId
+      if (currentCampaign.creatorId) {
+        // If creatorId looks like a domain (contains a dot), use it directly
+        if (currentCampaign.creatorId.includes('.')) {
+          const domain = getCompanyDomain(undefined, currentCampaign.creatorId);
+          if (domain) {
+            return domain;
+          }
+          // If getCompanyDomain didn't work, use creatorId as-is if it contains a dot
+          return currentCampaign.creatorId.toLowerCase();
+        }
+        // If creatorId is just a company name (like "nike"), try to construct domain
+        // This is a fallback - ideally we should have the full domain from email
+        return currentCampaign.creatorId.toLowerCase();
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Error extracting company domain:', error);
+      // Last resort: try creatorId if it looks like a domain
+      if (currentCampaign.creatorId && currentCampaign.creatorId.includes('.')) {
+        return currentCampaign.creatorId.toLowerCase();
+      }
+      return null;
+    }
+  };
+
   // Dynamic identity based on campaign type
   const getIdentity = () => {
     if (!currentCampaign) return activeTab === 'b2c' ? '@Company' : '@0x12...89AB';
     
     if (currentCampaign.creatorType === 'B2C_AGENCIES' || currentCampaign.creatorType === 'FOR_B2C') {
-      return `@${currentCampaign.creatorId || 'Company'}`;
+      // Try to get the actual domain/company name from available data
+      const domain = getCompanyDomainFromCampaign();
+      if (domain) {
+        // Extract just the company name (without .com) for display in identity badge
+        // Handle cases like "nike.com" -> "nike" or "subdomain.company.com" -> "company"
+        const parts = domain.split('.');
+        const companyName = parts.length > 1 ? parts[parts.length - 2] : parts[0];
+        return `@${companyName.charAt(0).toUpperCase() + companyName.slice(1)}`; // Capitalize first letter
+      }
+      // Fallback: if creatorId is a domain, extract company name from it
+      if (currentCampaign.creatorId && currentCampaign.creatorId.includes('.')) {
+        const parts = currentCampaign.creatorId.split('.');
+        const companyName = parts.length > 1 ? parts[parts.length - 2] : parts[0];
+        return `@${companyName.charAt(0).toUpperCase() + companyName.slice(1)}`;
+      }
+      // Fallback to creatorId (should be company name)
+      const displayName = currentCampaign.creatorId || 'Company';
+      return `@${displayName.charAt(0).toUpperCase() + displayName.slice(1)}`;
     } else {
       const wallet = currentCampaign.creatorId || '0x1234567890123456789012345678901234567890';
       return `@${wallet.slice(0, 6)}...${wallet.slice(-4)}`;
@@ -429,6 +545,35 @@ const CompletionPage = () => {
   const getCompanyName = () => {
     if (!currentCampaign) return '';
     
+    // Dev Controls: Show test domain name when in test mode
+    if (devTestLogo && devTestLogoDomain) {
+      return devTestLogoDomain;
+    }
+    
+    // Check if this is a mock campaign
+    const isMockCampaign = currentCampaign.id?.startsWith('mock-campaign-');
+    
+    // For mock campaigns, use creatorId directly (it contains the domain)
+    if (isMockCampaign && currentCampaign.creatorId) {
+      if (currentCampaign.creatorId.includes('.')) {
+        return currentCampaign.creatorId; // Return full domain like "nike.com"
+      }
+      return currentCampaign.creatorId;
+    }
+    
+    // Get the actual domain from campaign data
+    const domain = getCompanyDomainFromCampaign();
+    if (domain) {
+      // For display, show the full domain or just the company name
+      // If it's a full domain (contains dot), show it as is
+      if (domain.includes('.')) {
+        return domain;
+      }
+      // Otherwise, it's just a company name, return it
+      return domain;
+    }
+    
+    // Fallback to localStorage or creatorId
     if (currentCampaign.creatorType === 'B2C_AGENCIES') {
       // For agencies, show both agency and client names
       const agencyName = localStorage.getItem('agencyName') || '';
@@ -447,9 +592,53 @@ const CompletionPage = () => {
       // For direct B2C companies, show company name
       const companyName = localStorage.getItem('companyName') || currentCampaign.creatorId || 'Company';
       return companyName;
+    } else if (currentCampaign.creatorType === 'INDIVIDUAL_CREATORS' || currentCampaign.creatorType === 'FOR_INDIVIDUALS') {
+      // For individuals, show the full wallet address (not truncated)
+      const wallet = currentCampaign.creatorId || '';
+      if (wallet && wallet.startsWith('0x')) {
+        return wallet; // Return full wallet address
+      }
+      return wallet || '';
     }
     
     return '';
+  };
+
+  // Get company logo URL using Logo.dev API
+  const getCompanyLogo = (): string | null => {
+    if (!currentCampaign) return null;
+    
+    // Dev Controls: Test logo with custom domain (works for any campaign type)
+    if (devTestLogo && devTestLogoDomain) {
+      return getCompanyLogoFromUser(undefined, devTestLogoDomain, devTestLogoTheme);
+    }
+    
+    // Only show logo for B2C companies (when not in test mode)
+    if (currentCampaign.creatorType !== 'B2C_AGENCIES' && currentCampaign.creatorType !== 'FOR_B2C') {
+      return null;
+    }
+    
+    // Use the same domain extraction logic as getCompanyDomainFromCampaign
+    const domain = getCompanyDomainFromCampaign();
+    if (!domain) {
+      console.log('[Logo] No domain found for logo');
+      return null;
+    }
+    
+    // Use 'dark' theme by default (for dark background of the completion page)
+    const logoTheme: 'light' | 'dark' = 'dark';
+    
+    // If domain doesn't contain a dot, it might be just a company name (like "nike")
+    // Try to construct the full domain by adding .com
+    let fullDomain = domain;
+    if (!domain.includes('.')) {
+      fullDomain = `${domain}.com`;
+      console.log('[Logo] Constructed domain from company name:', domain, '->', fullDomain);
+    }
+    
+    const logoUrl = getCompanyLogoFromUser(undefined, fullDomain, logoTheme);
+    console.log('[Logo] Using domain:', fullDomain, '->', logoUrl);
+    return logoUrl;
   };
 
   // Calculate time left (mock implementation)
@@ -924,20 +1113,78 @@ const CompletionPage = () => {
                   </div>
                 </button>
               </div>
-              {/* Company name à droite */}
+              {/* Company name avec logo à droite */}
               {getCompanyName() && (
                 <div style={{
-                  fontSize: 28,
-                  fontWeight: 800,
-                  color: '#fff',
-                  opacity: 0.9,
-                  textAlign: 'right',
-                  maxWidth: '250px',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap'
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 12,
+                  justifyContent: 'flex-end',
+                  maxWidth: '100%' // Allow more space for full wallet addresses
                 }}>
-                  {getCompanyName()}
+                  {/* Company Logo */}
+                  {(() => {
+                    const logoUrl = getCompanyLogo();
+                    if (logoUrl) {
+                      return (
+                        <div style={{
+                          position: 'relative',
+                          width: 40,
+                          height: 40,
+                          flexShrink: 0,
+                          borderRadius: 8,
+                          overflow: 'hidden',
+                          background: 'rgba(255, 255, 255, 0.1)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          border: '1px solid rgba(255, 255, 255, 0.2)'
+                        }}>
+                          <Image
+                            src={logoUrl}
+                            alt={getCompanyName()}
+                            width={40}
+                            height={40}
+                            style={{
+                              objectFit: 'contain',
+                              padding: 4
+                            }}
+                            onError={(e) => {
+                              // Fallback to default company icon if logo fails to load
+                              e.currentTarget.src = '/company.svg';
+                            }}
+                          />
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
+                  {/* Company Name / Wallet Address */}
+                  {(() => {
+                    const displayName = getCompanyName();
+                    const isWalletAddress = displayName.startsWith('0x') && displayName.length > 10;
+                    
+                    return (
+                      <div style={{
+                        fontSize: isWalletAddress ? 14 : 28, // Smaller font for wallet addresses
+                        fontWeight: 800,
+                        color: '#fff',
+                        opacity: 0.9,
+                        textAlign: 'right',
+                        overflow: isWalletAddress ? 'visible' : 'hidden',
+                        textOverflow: isWalletAddress ? 'clip' : 'ellipsis',
+                        whiteSpace: isWalletAddress ? 'normal' : 'nowrap',
+                        wordBreak: isWalletAddress ? 'break-all' : 'normal',
+                        flex: 1,
+                        minWidth: 0,
+                        maxWidth: isWalletAddress ? '100%' : '250px',
+                        fontFamily: isWalletAddress ? 'monospace' : 'inherit',
+                        lineHeight: isWalletAddress ? 1.4 : 1.2
+                      }}>
+                        {displayName}
+                      </div>
+                    );
+                  })()}
                 </div>
               )}
             </div>
@@ -1788,6 +2035,154 @@ const CompletionPage = () => {
                         style={{ width: '100%', accentColor: '#FFD600' }}
                       />
                     </div>
+                  )}
+                </div>
+
+                {/* Logo Testing Controls */}
+                <div style={{ borderTop: '1px solid #333', paddingTop: 12 }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: '#FFD600', marginBottom: 8 }}>
+                    🎨 Logo Testing
+                  </div>
+                  
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', marginBottom: 8 }}>
+                    <input
+                      type="checkbox"
+                      checked={devTestLogo}
+                      onChange={(e) => setDevTestLogo(e.target.checked)}
+                      style={{ accentColor: '#FFD600' }}
+                    />
+                    <span style={{ fontSize: 11 }}>Enable Logo Test Mode</span>
+                  </label>
+                  
+                  {devTestLogo && (
+                    <>
+                      <div style={{ marginBottom: 8 }}>
+                        <label style={{ fontSize: 11, color: '#ccc', display: 'block', marginBottom: 4 }}>
+                          Test Domain (e.g., uber.com, apple.com, nike.com)
+                        </label>
+                        <input
+                          type="text"
+                          value={devTestLogoDomain}
+                          onChange={(e) => setDevTestLogoDomain(e.target.value)}
+                          placeholder="uber.com"
+                          style={{
+                            width: '100%',
+                            padding: '6px 8px',
+                            background: '#222',
+                            border: '1px solid #444',
+                            borderRadius: 6,
+                            color: '#fff',
+                            fontSize: 11
+                          }}
+                        />
+                        <div style={{ fontSize: 10, color: '#888', marginTop: 4, marginBottom: 6 }}>
+                          Enter a domain to test the logo display
+                        </div>
+                        {/* Quick domain buttons */}
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 6 }}>
+                          {['uber.com', 'apple.com', 'nike.com', 'spotify.com', 'netflix.com', 'stripe.com'].map((domain) => (
+                            <button
+                              key={domain}
+                              onClick={() => setDevTestLogoDomain(domain)}
+                              style={{
+                                background: devTestLogoDomain === domain ? '#FFD600' : '#333',
+                                color: devTestLogoDomain === domain ? '#000' : '#fff',
+                                border: 'none',
+                                borderRadius: 4,
+                                padding: '4px 8px',
+                                fontSize: 9,
+                                cursor: 'pointer',
+                                whiteSpace: 'nowrap'
+                              }}
+                            >
+                              {domain}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      
+                      <div style={{ marginBottom: 8 }}>
+                        <label style={{ fontSize: 11, color: '#ccc', display: 'block', marginBottom: 4 }}>
+                          Theme: {devTestLogoTheme}
+                        </label>
+                        <div style={{ display: 'flex', gap: 4 }}>
+                          {(['dark', 'light'] as const).map((theme) => (
+                            <button
+                              key={theme}
+                              onClick={() => setDevTestLogoTheme(theme)}
+                              style={{
+                                background: devTestLogoTheme === theme ? '#FFD600' : '#333',
+                                color: devTestLogoTheme === theme ? '#000' : '#fff',
+                                border: 'none',
+                                borderRadius: 6,
+                                padding: '4px 8px',
+                                fontSize: 10,
+                                cursor: 'pointer',
+                                flex: 1,
+                                textTransform: 'capitalize'
+                              }}
+                            >
+                              {theme}
+                            </button>
+                          ))}
+                        </div>
+                        <div style={{ fontSize: 10, color: '#888', marginTop: 4 }}>
+                          Dark theme for dark backgrounds, Light for light backgrounds
+                        </div>
+                      </div>
+                      
+                      {/* Preview du logo */}
+                      <div style={{
+                        marginTop: 12,
+                        padding: 12,
+                        background: devTestLogoTheme === 'dark' ? '#111' : '#fff',
+                        border: '1px solid #444',
+                        borderRadius: 8,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: 8
+                      }}>
+                        <div style={{ fontSize: 10, color: '#888', marginBottom: 4 }}>
+                          Logo Preview:
+                        </div>
+                        <div style={{
+                          position: 'relative',
+                          width: 80,
+                          height: 80,
+                          borderRadius: 12,
+                          overflow: 'hidden',
+                          background: 'rgba(255, 255, 255, 0.1)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          border: '1px solid rgba(255, 255, 255, 0.2)'
+                        }}>
+                          <Image
+                            src={getCompanyLogoFromUser(undefined, devTestLogoDomain, devTestLogoTheme)}
+                            alt={`${devTestLogoDomain} logo`}
+                            width={80}
+                            height={80}
+                            style={{
+                              objectFit: 'contain',
+                              padding: 8
+                            }}
+                            onError={(e) => {
+                              e.currentTarget.src = '/company.svg';
+                            }}
+                          />
+                        </div>
+                        <div style={{
+                          fontSize: 10,
+                          color: '#888',
+                          textAlign: 'center',
+                          wordBreak: 'break-all',
+                          maxWidth: '100%'
+                        }}>
+                          {devTestLogoDomain}
+                        </div>
+                      </div>
+                    </>
                   )}
                 </div>
 
